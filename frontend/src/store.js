@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { useEffect } from 'react'
 import axios from 'axios'
 import config from './config'
 
@@ -28,24 +27,6 @@ const useStore = create((set, get) => ({
   darkMode: false,
   setDarkMode: (darkMode) => set({ darkMode }),
 
-  // Dark Mode persistence
-  initDarkMode: () => {
-    const saved = localStorage.getItem('appSettings')
-    if (saved) {
-      try {
-        const { darkMode } = JSON.parse(saved)
-        if (typeof darkMode === 'boolean') {
-          set({ darkMode })
-        }
-      } catch (error) {
-        console.warn('Failed to load dark mode setting:', error)
-      }
-    }
-  },
-  saveDarkMode: (darkMode) => {
-    const settings = JSON.stringify({ darkMode })
-    localStorage.setItem('appSettings', settings)
-  },
 
   // Actions
   reset: () => set({

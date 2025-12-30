@@ -62,20 +62,29 @@ function App() {
     darkMode,
     submit,
     reset,
-    setDarkMode,
-    initDarkMode,
-    saveDarkMode
+    setDarkMode
   } = useStore()
 
-  // Initialize dark mode from localStorage
+  // Initialize dark mode from localStorage (only on mount)
   useEffect(() => {
-    initDarkMode()
-  }, [initDarkMode])
+    const saved = localStorage.getItem('appSettings')
+    if (saved) {
+      try {
+        const { darkMode: savedDarkMode } = JSON.parse(saved)
+        if (typeof savedDarkMode === 'boolean' && savedDarkMode !== darkMode) {
+          setDarkMode(savedDarkMode)
+        }
+      } catch (error) {
+        console.warn('Failed to load dark mode setting:', error)
+      }
+    }
+  }, []) // Empty dependency array - only run on mount
 
   // Save dark mode changes to localStorage
   useEffect(() => {
-    saveDarkMode(darkMode)
-  }, [darkMode, saveDarkMode])
+    const settings = JSON.stringify({ darkMode })
+    localStorage.setItem('appSettings', settings)
+  }, [darkMode])
 
   // Responsive breakpoints
   const isMobile = useMediaQuery(staticTheme.breakpoints.down('md'))
