@@ -44,60 +44,30 @@ async function writeConfig(filename: string, data: any) {
   }
 }
 
-// Routes
-app.get('/api/config/emails', async (req, res) => {
-  const config = await readConfig('emails.json')
-  if (config) {
-    res.json(config)
-  } else {
-    res.status(500).json({ error: 'Failed to load email configuration' })
-  }
-})
+// Generic config endpoint
+const createConfigEndpoints = (name: string) => {
+  app.get(`/api/config/${name}`, async (req, res) => {
+    const config = await readConfig(`${name}.json`)
+    if (config) {
+      res.json(config)
+    } else {
+      res.status(500).json({ error: `Failed to load ${name} configuration` })
+    }
+  })
 
-app.post('/api/config/emails', async (req, res) => {
-  const success = await writeConfig('emails.json', req.body)
-  if (success) {
-    res.json({ success: true })
-  } else {
-    res.status(500).json({ error: 'Failed to save email configuration' })
-  }
-})
+  app.post(`/api/config/${name}`, async (req, res) => {
+    const success = await writeConfig(`${name}.json`, req.body)
+    if (success) {
+      res.json({ success: true })
+    } else {
+      res.status(500).json({ error: `Failed to save ${name} configuration` })
+    }
+  })
+}
 
-app.get('/api/config/reddit', async (req, res) => {
-  const config = await readConfig('reddit.json')
-  if (config) {
-    res.json(config)
-  } else {
-    res.status(500).json({ error: 'Failed to load reddit configuration' })
-  }
-})
-
-app.post('/api/config/reddit', async (req, res) => {
-  const success = await writeConfig('reddit.json', req.body)
-  if (success) {
-    res.json({ success: true })
-  } else {
-    res.status(500).json({ error: 'Failed to save reddit configuration' })
-  }
-})
-
-app.get('/api/config/app', async (req, res) => {
-  const config = await readConfig('app.json')
-  if (config) {
-    res.json(config)
-  } else {
-    res.status(500).json({ error: 'Failed to load app configuration' })
-  }
-})
-
-app.post('/api/config/app', async (req, res) => {
-  const success = await writeConfig('app.json', req.body)
-  if (success) {
-    res.json({ success: true })
-  } else {
-    res.status(500).json({ error: 'Failed to save app configuration' })
-  }
-})
+// Create endpoints for all configs
+const configs = ['emails', 'reddit', 'app', 'twitter', 'instagram', 'facebook', 'linkedin']
+configs.forEach(config => createConfigEndpoints(config))
 
 // Health check
 app.get('/api/health', (req, res) => {

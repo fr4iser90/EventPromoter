@@ -2,53 +2,93 @@
 
 Diese Dateien enthalten alle Einstellungen für dein EventPromoter-System. **Bearbeite sie direkt in deinem Code-Editor!**
 
-## 📧 `emails.json`
+## 📧 `emails.json` - Email-Konfiguration
 ```json
 {
-  "description": "Email recipients configuration",
-  "recipients": [
-    "dj-events@club.com",
-    "booking@venue.de"
-  ],
+  "recipients": ["email1@example.com", "email2@example.com"],
   "groups": {
-    "DJs & Promoter": ["dj-events@club.com"],
-    "Venue Manager": ["booking@venue.de"]
+    "DJs": ["dj@example.com"],
+    "Venues": ["venue@example.com"]
   }
 }
 ```
 
-**Bearbeiten:**
-- `"recipients"`: Array deiner Email-Empfänger
-- `"groups"`: Benannte Gruppen für schnelle Auswahl
-
-## 🔴 `reddit.json`
+## 🔴 `reddit.json` - Reddit-Subreddits
 ```json
 {
-  "description": "Reddit subreddits configuration",
-  "availableSubreddits": [
-    "DJs", "Techno", "berlin"
-  ],
+  "availableSubreddits": ["DJs", "Techno", "berlin"],
   "selectedSubreddit": "",
   "defaultSubreddits": ["DJs", "Techno"]
 }
 ```
 
-**Bearbeiten:**
-- `"availableSubreddits"`: Alle verfügbaren Subreddits
-- `"defaultSubreddits"`: Subreddits die nicht gelöscht werden können
-
-## ⚙️ `app.json`
+## ⚙️ `app.json` - App-Einstellungen
 ```json
 {
-  "description": "Application settings",
   "darkMode": false,
   "version": "1.0.0",
-  "lastUpdated": "2025-12-30"
+  "lastUpdated": "2025-12-30T12:00:00.000Z"
 }
 ```
 
-**Bearbeiten:**
-- `"darkMode"`: `true` für dunklen Modus, `false` für hell
+## 🐦 `twitter.json` - Twitter/X API
+```json
+{
+  "enabled": false,
+  "apiKey": "",
+  "apiSecret": "",
+  "accessToken": "",
+  "accessTokenSecret": "",
+  "bearerToken": "",
+  "webhookUrl": "",
+  "autoPost": true,
+  "hashtags": ["#event", "#party"]
+}
+```
+
+## 📸 `instagram.json` - Instagram API
+```json
+{
+  "enabled": false,
+  "username": "",
+  "password": "",
+  "appId": "",
+  "appSecret": "",
+  "accessToken": "",
+  "webhookUrl": "",
+  "autoPost": true,
+  "hashtags": ["#event", "#party", "#instagram"]
+}
+```
+
+## 📘 `facebook.json` - Facebook API
+```json
+{
+  "enabled": false,
+  "appId": "",
+  "appSecret": "",
+  "pageId": "",
+  "pageAccessToken": "",
+  "webhookUrl": "",
+  "autoPost": true,
+  "hashtags": ["#event", "#party", "#facebook"]
+}
+```
+
+## 💼 `linkedin.json` - LinkedIn API
+```json
+{
+  "enabled": false,
+  "clientId": "",
+  "clientSecret": "",
+  "accessToken": "",
+  "refreshToken": "",
+  "organizationId": "",
+  "webhookUrl": "",
+  "autoPost": true,
+  "hashtags": ["#event", "#party", "#linkedin", "#networking"]
+}
+```
 
 ## 🚀 Wie benutzt du es:
 
@@ -61,15 +101,25 @@ Diese Dateien enthalten alle Einstellungen für dein EventPromoter-System. **Bea
 - **Frontend → Dateien**: Änderungen im UI werden automatisch gespeichert
 - **Dateien → Frontend**: Beim nächsten Laden werden die Dateien gelesen
 
-## 📂 Dateipfade:
+## 📂 Alle Dateien:
 
 ```
-EventPromoter/
-├── config/
-│   ├── emails.json      ← Email-Listen & Gruppen
-│   ├── reddit.json      ← Reddit-Subreddits
-│   ├── app.json         ← App-Einstellungen
-│   └── README.md        ← Diese Datei
+EventPromoter/config/
+├── emails.json      ← Email-Listen & Gruppen
+├── reddit.json      ← Reddit-Subreddits
+├── app.json         ← App-Einstellungen (Dark Mode, etc.)
+├── twitter.json     ← Twitter API Credentials
+├── instagram.json   ← Instagram API Credentials
+├── facebook.json    ← Facebook API Credentials
+├── linkedin.json    ← LinkedIn API Credentials
+└── README.md        ← Diese Anleitung
 ```
+
+## 💡 Tipps:
+
+- **API Credentials**: Trage deine echten API Keys ein
+- **enabled**: Auf `true` setzen um Platform zu aktivieren
+- **hashtags**: Platform-spezifische Hashtags definieren
+- **Versionierung**: Committen für Backup & Versionierung
 
 **Perfekt für Versionierung und Backups!** 🎉

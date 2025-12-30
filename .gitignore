@@ -160,3 +160,6 @@ keys.json
 # Lock files (keep in git for reproducibility, but ignore if needed)
 # package-lock.json  # Uncomment if you want to ignore lock files
 # yarn.lock
+
+# test files
+test-data/
