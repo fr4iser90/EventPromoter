@@ -1,0 +1,28 @@
+{
+  "description": "Reddit subreddits configuration - Edit this file to manage your subreddit lists",
+  "availableSubreddits": [
+    "DJs",
+    "Techno",
+    "HouseMusic",
+    "EDM",
+    "berlin",
+    "EventPromoters",
+    "MusicEvents",
+    "leipzig",
+    "dresden",
+    "hamburg"
+  ],
+  "selectedSubreddit": "",
+  "defaultSubreddits": [
+    "DJs",
+    "Techno",
+    "HouseMusic",
+    "EDM",
+    "berlin",
+    "EventPromoters",
+    "MusicEvents",
+    "leipzig",
+    "dresden",
+    "hamburg"
+  ]
+}

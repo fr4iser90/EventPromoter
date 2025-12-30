@@ -33,6 +33,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import useStore from '../../store'
+import axios from 'axios'
 
 const DEFAULT_RECIPIENTS = [
   'dj-events@club.com',
@@ -63,29 +64,46 @@ function EmailPanel() {
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importData, setImportData] = useState('')
 
-  // Load from localStorage on mount
+  // Load from API on mount
   useEffect(() => {
-    const saved = localStorage.getItem('emailPanelData')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setRecipients(data.recipients || DEFAULT_RECIPIENTS)
-      setSelectedRecipients(data.selectedRecipients || [])
+    const loadConfig = async () => {
+      try {
+        const response = await axios.get('http://localhost:4000/api/config/emails')
+        const config = response.data
+
+        setRecipients(config.recipients || DEFAULT_RECIPIENTS)
+        setSelectedRecipients([])
+        setEmailGroups(config.groups || DEFAULT_EMAIL_GROUPS)
+      } catch (error) {
+        console.warn('Failed to load email config from API, using defaults:', error)
+        // Fallback to defaults
+        setRecipients(DEFAULT_RECIPIENTS)
+        setSelectedRecipients([])
+        setEmailGroups(DEFAULT_EMAIL_GROUPS)
+      }
     }
 
-    const savedGroups = localStorage.getItem('emailGroupsData')
-    if (savedGroups) {
-      const data = JSON.parse(savedGroups)
-      setEmailGroups(data.groups || DEFAULT_EMAIL_GROUPS)
-    }
+    loadConfig()
   }, [])
 
-  // Save to localStorage whenever data changes
+  // Save to API whenever data changes
   useEffect(() => {
-    const data = {
-      recipients,
-      selectedRecipients
+    const saveConfig = async () => {
+      try {
+        const config = {
+          recipients,
+          groups: emailGroups
+        }
+        await axios.post('http://localhost:4000/api/config/emails', config)
+      } catch (error) {
+        console.warn('Failed to save email config:', error)
+      }
     }
-    localStorage.setItem('emailPanelData', JSON.stringify(data))
+
+    // Only save if we have loaded data (avoid saving during initial load)
+    if (recipients.length >= 0) {
+      saveConfig()
+    }
 
     // Update platform settings
     if (selectedRecipients.length > 0) {
@@ -98,13 +116,7 @@ function EmailPanel() {
         }
       })
     }
-  }, [recipients, selectedRecipients])
-
-  // Save groups to localStorage whenever groups change
-  useEffect(() => {
-    const data = { groups: emailGroups }
-    localStorage.setItem('emailGroupsData', JSON.stringify(data))
-  }, [emailGroups])
+  }, [recipients, emailGroups])
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

@@ -65,25 +65,42 @@ function App() {
     setDarkMode
   } = useStore()
 
-  // Initialize dark mode from localStorage (only on mount)
+  // Initialize dark mode from API (only on mount)
   useEffect(() => {
-    const saved = localStorage.getItem('appSettings')
-    if (saved) {
+    const loadAppConfig = async () => {
       try {
-        const { darkMode: savedDarkMode } = JSON.parse(saved)
-        if (typeof savedDarkMode === 'boolean' && savedDarkMode !== darkMode) {
-          setDarkMode(savedDarkMode)
+        const response = await fetch('http://localhost:4000/api/config/app')
+        const config = await response.json()
+        if (config.darkMode !== undefined && config.darkMode !== darkMode) {
+          setDarkMode(config.darkMode)
         }
       } catch (error) {
-        console.warn('Failed to load dark mode setting:', error)
+        console.warn('Failed to load app config:', error)
       }
     }
+
+    loadAppConfig()
   }, []) // Empty dependency array - only run on mount
 
-  // Save dark mode changes to localStorage
+  // Save dark mode changes to API
   useEffect(() => {
-    const settings = JSON.stringify({ darkMode })
-    localStorage.setItem('appSettings', settings)
+    const saveAppConfig = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/config/app')
+        const currentConfig = await response.json()
+        const updatedConfig = { ...currentConfig, darkMode, lastUpdated: new Date().toISOString() }
+
+        await fetch('http://localhost:4000/api/config/app', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedConfig)
+        })
+      } catch (error) {
+        console.warn('Failed to save app config:', error)
+      }
+    }
+
+    saveAppConfig()
   }, [darkMode])
 
   // Responsive breakpoints
