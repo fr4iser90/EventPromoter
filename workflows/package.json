@@ -1,0 +1,30 @@
+{
+  "name": "n8n-workflows",
+  "version": "1.0.0",
+  "description": "Modular n8n workflow development system",
+  "main": "build-all.js",
+  "scripts": {
+    "build": "node build-all.js",
+    "build:workflow": "cd workflows/$WORKFLOW && node build.js",
+    "clean": "node build-all.js clean",
+    "help": "node build-all.js help"
+  },
+  "keywords": [
+    "n8n",
+    "workflows",
+    "automation",
+    "modular",
+    "javascript"
+  ],
+  "author": "fr4iser",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fr4iser/n8n-workflows.git"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

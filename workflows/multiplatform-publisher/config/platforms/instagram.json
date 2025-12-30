@@ -1,0 +1,34 @@
+{
+  "platform": "instagram",
+  "enabled": true,
+  "mode": "playwright",
+  "credentials": {
+    "INSTAGRAM_USERNAME": "your_instagram_username",
+    "INSTAGRAM_PASSWORD": "your_instagram_password",
+    "INSTAGRAM_CREDENTIALS_ID": "instagram_oauth_credentials"
+  },
+  "posting": {
+    "maxRetries": 3,
+    "timeout": 60000,
+    "waitBetweenPosts": 1800000,
+    "requireImage": true
+  },
+  "content": {
+    "maxLength": 2200,
+    "autoTruncate": true,
+    "includeHashtags": true,
+    "includeLinks": true,
+    "hashtagLimit": 30
+  },
+  "playwright": {
+    "headless": true,
+    "slowMo": 200,
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15",
+    "viewport": { "width": 390, "height": 844 }
+  },
+  "rateLimits": {
+    "postsPerHour": 1,
+    "postsPerDay": 10,
+    "followPause": 3600000
+  }
+}

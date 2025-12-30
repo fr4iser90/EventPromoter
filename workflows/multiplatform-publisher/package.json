@@ -1,0 +1,39 @@
+{
+  "name": "multiplatform-social-media-publisher",
+  "version": "1.0.0",
+  "description": "Multi-platform social media and email publisher with API and Playwright fallback",
+  "main": "core/config.json",
+  "scripts": {
+    "build": "node core/build.js",
+    "install-playwright": "npx playwright install chromium",
+    "test": "npm run build && echo 'Build completed successfully'",
+    "clean": "rm -rf node_modules package-lock.json && npm install"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0"
+  },
+  "keywords": [
+    "social-media",
+    "automation",
+    "n8n",
+    "playwright",
+    "api",
+    "posting"
+  ],
+  "author": "Multi-Platform Publisher",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "playwright": {
+    "browsers": ["chromium"]
+  }
+}

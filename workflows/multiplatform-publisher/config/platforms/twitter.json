@@ -1,0 +1,23 @@
+{
+  "platform": "twitter",
+  "enabled": true,
+  "mode": "api",
+  "credentials": {
+    "TWITTER_CREDENTIALS_ID": "twitter_oauth_credentials"
+  },
+  "posting": {
+    "maxRetries": 3,
+    "timeout": 30000,
+    "additionalFields": {}
+  },
+  "content": {
+    "maxLength": 280,
+    "autoTruncate": true,
+    "includeHashtags": true,
+    "includeLinks": true
+  },
+  "rateLimits": {
+    "postsPerHour": 300,
+    "postsPerDay": 3000
+  }
+}

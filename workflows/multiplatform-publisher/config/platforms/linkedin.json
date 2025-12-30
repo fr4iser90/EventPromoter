@@ -1,0 +1,26 @@
+{
+  "platform": "linkedin",
+  "enabled": false,
+  "mode": "api",
+  "credentials": {
+    "LINKEDIN_CREDENTIALS_ID": "linkedin_oauth_credentials"
+  },
+  "posting": {
+    "maxRetries": 3,
+    "timeout": 30000,
+    "postType": "text",
+    "visibility": "public"
+  },
+  "content": {
+    "maxLength": 3000,
+    "autoTruncate": true,
+    "includeHashtags": true,
+    "includeLinks": true,
+    "professionalTone": true
+  },
+  "rateLimits": {
+    "postsPerHour": 5,
+    "postsPerDay": 20,
+    "connectionRequestsPerDay": 20
+  }
+}

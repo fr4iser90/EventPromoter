@@ -1,0 +1,37 @@
+{
+  "platform": "facebook",
+  "enabled": true,
+  "mode": "playwright",
+  "credentials": {
+    "FACEBOOK_USERNAME": "your_facebook_email",
+    "FACEBOOK_PASSWORD": "your_facebook_password",
+    "FACEBOOK_PAGE_ID": "your_facebook_page_id",
+    "FACEBOOK_PAGE_NAME": "Your Page Name",
+    "FACEBOOK_CREDENTIALS_ID": "facebook_oauth_credentials"
+  },
+  "posting": {
+    "maxRetries": 3,
+    "timeout": 45000,
+    "waitBetweenPosts": 3600000,
+    "targetPage": true
+  },
+  "content": {
+    "maxLength": null,
+    "autoTruncate": false,
+    "includeHashtags": true,
+    "includeLinks": true,
+    "includeImages": true
+  },
+  "playwright": {
+    "headless": true,
+    "slowMo": 300,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "viewport": { "width": 1366, "height": 768 },
+    "locale": "de-DE"
+  },
+  "rateLimits": {
+    "postsPerHour": 5,
+    "postsPerDay": 50,
+    "pagePostsPerDay": 10
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "platform": "reddit",
+  "enabled": false,
+  "mode": "hybrid",
+  "credentials": {
+    "REDDIT_CREDENTIALS_ID": "reddit_oauth_credentials",
+    "REDDIT_USER_AGENT": "MultiPlatformPublisher/1.0 by your_username"
+  },
+  "posting": {
+    "maxRetries": 3,
+    "timeout": 30000,
+    "defaultSubreddit": "DJs",
+    "allowedSubreddits": [
+      "DJs",
+      "Techno",
+      "HouseMusic",
+      "EDM",
+      "berlin",
+      "EventPromoters",
+      "MusicEvents"
+    ],
+    "requireSubreddit": true
+  },
+  "content": {
+    "maxLength": null,
+    "autoTruncate": false,
+    "includeHashtags": false,
+    "includeLinks": true,
+    "markdownSupport": true,
+    "spoilerDefault": false,
+    "nsfwDefault": false
+  },
+  "subreddits": {
+    "DJs": {
+      "flair": "Event",
+      "nsfw": false,
+      "spoiler": false,
+      "postType": "self"
+    },
+    "Techno": {
+      "flair": "Event",
+      "nsfw": false,
+      "spoiler": false,
+      "postType": "self"
+    },
+    "HouseMusic": {
+      "flair": "Event",
+      "nsfw": false,
+      "spoiler": false,
+      "postType": "self"
+    },
+    "berlin": {
+      "flair": "Event",
+      "nsfw": false,
+      "spoiler": false,
+      "postType": "self"
+    }
+  },
+  "rateLimits": {
+    "postsPerHour": 10,
+    "postsPerDay": 100,
+    "karmaRequirement": 10
+  }
+}

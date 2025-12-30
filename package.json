@@ -1,0 +1,37 @@
+{
+    "name": "eventpromoter",
+    "version": "1.0.0",
+    "description": "Multi-platform social media publisher with web interface",
+    "private": true,
+    "workspaces": [
+      "frontend",
+      "backend",
+      "workflows"
+    ],
+    "scripts": {
+      "install:all": "npm install",
+      "build:all": "npm run build --workspaces",
+      "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
+      "dev:frontend": "npm run dev --workspace=frontend",
+      "dev:backend": "npm run dev --workspace=backend",
+      "build:frontend": "npm run build --workspace=frontend",
+      "build:backend": "npm run build --workspace=backend",
+      "build:workflows": "npm run build --workspace=workflows",
+      "clean": "npm run clean --workspaces",
+      "docker:up": "docker-compose up -d",
+      "docker:down": "docker-compose down",
+      "docker:logs": "docker-compose logs -f",
+      "test": "npm run test --workspaces",
+      "lint": "npm run lint --workspaces",
+      "lint:fix": "npm run lint:fix --workspaces"
+    },
+    "devDependencies": {
+      "concurrently": "^8.2.2"
+    },
+    "engines": {
+      "node": ">=18.0.0",
+      "npm": ">=9.0.0"
+    },
+    "author": "fr4iser",
+    "license": "MIT"
+  }

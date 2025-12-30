@@ -1,0 +1,67 @@
+{
+  "platform": "email",
+  "enabled": true,
+  "mode": "api",
+  "credentials": {
+    "SMTP_CREDENTIALS_ID": "email_smtp_credentials",
+    "EMAIL_FROM": "events@yourdomain.com"
+  },
+  "posting": {
+    "maxRetries": 3,
+    "timeout": 30000,
+    "sendHtml": true,
+    "sendPlainText": true,
+    "includeAttachments": true
+  },
+  "content": {
+    "maxLength": null,
+    "autoTruncate": false,
+    "includeImages": true,
+    "includeLinks": true,
+    "customSignature": true
+  },
+  "recipients": {
+    "defaultLists": {
+      "fans": [
+        "fan1@example.com",
+        "fan2@example.com",
+        "fan3@example.com"
+      ],
+      "vip": [
+        "vip1@example.com",
+        "vip2@example.com"
+      ],
+      "press": [
+        "press1@news.com",
+        "press2@musicmag.com"
+      ],
+      "partners": [
+        "partner1@venue.com",
+        "partner2@promo.com"
+      ]
+    },
+    "eventSpecific": {
+      "techno": ["techno-fans@example.com"],
+      "house": ["house-fans@example.com"],
+      "minimal": ["minimal-fans@example.com"]
+    },
+    "locationBased": {
+      "berlin": ["berlin-events@example.com"],
+      "hamburg": ["hamburg-events@example.com"],
+      "munich": ["munich-events@example.com"]
+    },
+    "admin": [
+      "admin@yourdomain.com",
+      "backup@yourdomain.com"
+    ]
+  },
+  "templates": {
+    "subject": "{{eventTitle}} - {{formattedDate}}",
+    "signature": "\n\n--\nYour Event Team\nwww.yourevents.com\n📧 events@yourdomain.com"
+  },
+  "rateLimits": {
+    "emailsPerHour": 100,
+    "emailsPerDay": 1000,
+    "maxRecipientsPerEmail": 50
+  }
+}

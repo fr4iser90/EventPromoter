@@ -1,0 +1,62 @@
+{
+  "platform": "notifications",
+  "enabled": true,
+  "discord": {
+    "enabled": true,
+    "webhookUrl": "${DISCORD_WEBHOOK_URL}",
+    "username": "Event Publisher Bot",
+    "avatarUrl": "https://example.com/bot-avatar.png",
+    "embedColor": 3447003,
+    "includeFields": true,
+    "mentionRoles": [],
+    "channels": {
+      "success": "#event-posts",
+      "errors": "#error-logs",
+      "warnings": "#warnings"
+    }
+  },
+  "telegram": {
+    "enabled": true,
+    "botToken": "${TELEGRAM_BOT_TOKEN}",
+    "chatId": "${TELEGRAM_CHAT_ID}",
+    "parseMode": "HTML",
+    "disablePreview": true,
+    "includeEmoji": true,
+    "channels": {
+      "main": "${TELEGRAM_CHAT_ID}",
+      "admin": "${TELEGRAM_ADMIN_CHAT_ID}",
+      "logs": "${TELEGRAM_LOG_CHAT_ID}"
+    }
+  },
+  "posting": {
+    "maxRetries": 3,
+    "timeout": 10000,
+    "sendOnSuccess": true,
+    "sendOnError": true,
+    "sendOnWarning": false,
+    "includeStats": true,
+    "includeTimestamps": true
+  },
+  "templates": {
+    "discord": {
+      "success": {
+        "title": "🎫 Event Posted Successfully",
+        "color": 3066993,
+        "fields": ["platforms", "duration", "timestamp"]
+      },
+      "error": {
+        "title": "❌ Posting Failed",
+        "color": 15158332,
+        "fields": ["error", "platforms", "timestamp"]
+      }
+    },
+    "telegram": {
+      "success": "🎫 <b>Event Posted Successfully</b>\\n✅ {successful}/{total} platforms\\n⏱️ {duration}ms",
+      "error": "❌ <b>Posting Failed</b>\\n❌ {failed} failed platforms\\n{errors}"
+    }
+  },
+  "rateLimits": {
+    "messagesPerMinute": 30,
+    "messagesPerHour": 500
+  }
+}

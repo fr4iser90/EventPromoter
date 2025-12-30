@@ -1,0 +1,133 @@
+{
+  "development": {
+    "mode": "hybrid",
+    "platforms": {
+      "twitter": {
+        "enabled": true,
+        "mode": "api"
+      },
+      "instagram": {
+        "enabled": true,
+        "mode": "playwright"
+      },
+      "facebook": {
+        "enabled": true,
+        "mode": "playwright"
+      },
+      "linkedin": {
+        "enabled": false,
+        "mode": "api"
+      },
+      "reddit": {
+        "enabled": false,
+        "mode": "hybrid"
+      },
+      "email": {
+        "enabled": true,
+        "mode": "api"
+      }
+    },
+    "playwright": {
+      "headless": false,
+      "slowMo": 100,
+      "timeout": 30000,
+      "retries": 2
+    },
+    "notifications": {
+      "discord": {
+        "enabled": true,
+        "webhookUrl": "${DISCORD_WEBHOOK_URL}"
+      },
+      "telegram": {
+        "enabled": true,
+        "botToken": "${TELEGRAM_BOT_TOKEN}",
+        "chatId": "${TELEGRAM_CHAT_ID}"
+      }
+    }
+  },
+  "production": {
+    "mode": "hybrid",
+    "platforms": {
+      "twitter": {
+        "enabled": true,
+        "mode": "api"
+      },
+      "instagram": {
+        "enabled": true,
+        "mode": "playwright"
+      },
+      "facebook": {
+        "enabled": true,
+        "mode": "playwright"
+      },
+      "linkedin": {
+        "enabled": true,
+        "mode": "api"
+      },
+      "reddit": {
+        "enabled": true,
+        "mode": "hybrid"
+      },
+      "email": {
+        "enabled": true,
+        "mode": "api"
+      }
+    },
+    "playwright": {
+      "headless": true,
+      "slowMo": 200,
+      "timeout": 45000,
+      "retries": 3
+    },
+    "notifications": {
+      "discord": {
+        "enabled": true,
+        "webhookUrl": "${DISCORD_WEBHOOK_URL}"
+      },
+      "telegram": {
+        "enabled": true,
+        "botToken": "${TELEGRAM_BOT_TOKEN}",
+        "chatId": "${TELEGRAM_CHAT_ID}"
+      }
+    }
+  },
+  "testing": {
+    "mode": "api-only",
+    "platforms": {
+      "twitter": {
+        "enabled": true,
+        "mode": "api"
+      },
+      "instagram": {
+        "enabled": false
+      },
+      "facebook": {
+        "enabled": false
+      },
+      "linkedin": {
+        "enabled": false
+      },
+      "reddit": {
+        "enabled": false
+      },
+      "email": {
+        "enabled": true,
+        "mode": "api"
+      }
+    },
+    "playwright": {
+      "headless": false,
+      "slowMo": 50,
+      "timeout": 20000,
+      "retries": 1
+    },
+    "notifications": {
+      "discord": {
+        "enabled": false
+      },
+      "telegram": {
+        "enabled": false
+      }
+    }
+  }
+}
