@@ -141,13 +141,13 @@ function EmailPanel() {
   }
 
   const handleRemoveRecipient = (emailToRemove) => {
-    // Remove from recipients list
+    // Remove from recipients list (allow removing ALL emails now)
     setRecipients(prev => prev.filter(e => e !== emailToRemove))
 
     // Remove from selected recipients
     setSelectedRecipients(prev => prev.filter(e => e !== emailToRemove))
 
-    // Remove from all groups (including default groups)
+    // Remove from all groups
     setEmailGroups(prev => {
       const updated = {}
       Object.entries(prev).forEach(([groupName, emails]) => {
@@ -295,6 +295,9 @@ function EmailPanel() {
           <Typography variant="subtitle2" gutterBottom>
             Email-Empfänger ({recipients.length})
           </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+            💡 Alle Email-Empfänger können entfernt werden. Verwende den roten Delete-Button.
+          </Typography>
           <List dense sx={{ maxHeight: 250, overflow: 'auto' }}>
             {recipients.map(email => (
               <ListItem key={email} sx={{ px: 0 }}>
@@ -308,15 +311,14 @@ function EmailPanel() {
                     sx={{ cursor: 'pointer', mr: 1, maxWidth: 180 }}
                   />
                 </Box>
-                {!DEFAULT_RECIPIENTS.includes(email) && (
-                  <IconButton
-                    size="small"
-                    onClick={() => handleRemoveRecipient(email)}
-                    color="error"
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                )}
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemoveRecipient(email)}
+                  color="error"
+                  title="Email entfernen"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
               </ListItem>
             ))}
           </List>
