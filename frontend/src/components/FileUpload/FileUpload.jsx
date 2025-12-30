@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { useDropzone } from 'react-dropzone'
 import {
   Box,
@@ -10,12 +10,15 @@ import {
   ListItemSecondaryAction,
   IconButton,
   Chip,
-  Alert
+  Alert,
+  Button
 } from '@mui/material'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import FolderIcon from '@mui/icons-material/Folder'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ImageIcon from '@mui/icons-material/Image'
 import DescriptionIcon from '@mui/icons-material/Description'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import useStore from '../../store'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -24,12 +27,14 @@ const ACCEPTED_TYPES = {
   'image/png': ['.png'],
   'image/gif': ['.gif'],
   'image/webp': ['.webp'],
+  'application/pdf': ['.pdf'],
   'text/plain': ['.txt'],
   'text/markdown': ['.md']
 }
 
 function FileUpload() {
   const { uploadedFiles, setUploadedFiles, error, setError } = useStore()
+  const folderInputRef = useRef(null)
 
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
     setError('')
@@ -42,7 +47,7 @@ function FileUpload() {
             case 'file-too-large':
               return `File "${file.file.name}" is too large. Maximum size is 10MB.`
             case 'file-invalid-type':
-              return `File "${file.file.name}" has an invalid type. Only JPG, PNG, GIF, WebP, TXT, and MD files are allowed.`
+              return `File "${file.file.name}" has an invalid type. Only JPG, PNG, GIF, WebP, PDF, TXT, and MD files are allowed.`
             default:
               return `File "${file.file.name}": ${error.message}`
           }
@@ -81,6 +86,42 @@ function FileUpload() {
     }
   }
 
+  // Handle folder selection
+  const handleFolderSelect = (event) => {
+    const files = Array.from(event.target.files)
+    const validFiles = files.filter(file =>
+      file.type in ACCEPTED_TYPES ||
+      ACCEPTED_TYPES[file.type]?.some(ext => file.name.toLowerCase().endsWith(ext))
+    )
+
+    if (validFiles.length === 0) {
+      setError('No supported files found in the selected folder. Supported: JPG, PNG, GIF, WebP, PDF, TXT, MD')
+      return
+    }
+
+    const oversizedFiles = validFiles.filter(file => file.size > MAX_FILE_SIZE)
+    if (oversizedFiles.length > 0) {
+      setError(`Some files are too large. Maximum size is 10MB. Skipped: ${oversizedFiles.map(f => f.name).join(', ')}`)
+      return
+    }
+
+    const newFiles = validFiles.map(file => ({
+      file,
+      id: Date.now() + Math.random(),
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+      type: file.type,
+      size: file.size
+    }))
+
+    setUploadedFiles([...uploadedFiles, ...newFiles])
+    setError('')
+
+    // Reset input
+    if (folderInputRef.current) {
+      folderInputRef.current.value = ''
+    }
+  }
+
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -90,7 +131,9 @@ function FileUpload() {
   }
 
   const getFileIcon = (type) => {
-    return type.startsWith('image/') ? <ImageIcon /> : <DescriptionIcon />
+    if (type === 'application/pdf') return <PictureAsPdfIcon />
+    if (type.startsWith('image/')) return <ImageIcon />
+    return <DescriptionIcon />
   }
 
   return (
@@ -125,8 +168,29 @@ function FileUpload() {
           or click to browse files
         </Typography>
         <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-          Supported: JPG, PNG, GIF, WebP images and TXT, MD text files (max 10MB each)
+          Supported: JPG, PNG, GIF, WebP images, PDF documents, TXT, MD text files (max 10MB each)
         </Typography>
+
+        {/* Folder selection button */}
+        <Box sx={{ mt: 2 }}>
+          <input
+            ref={folderInputRef}
+            type="file"
+            multiple
+            webkitdirectory=""
+            directory=""
+            style={{ display: 'none' }}
+            onChange={handleFolderSelect}
+          />
+          <Button
+            variant="outlined"
+            startIcon={<FolderIcon />}
+            onClick={() => folderInputRef.current?.click()}
+            size="small"
+          >
+            Select Folder
+          </Button>
+        </Box>
       </Box>
 
       {error && (
@@ -152,9 +216,15 @@ function FileUpload() {
                 />
                 <ListItemSecondaryAction>
                   <Chip
-                    label={fileData.type.startsWith('image/') ? 'Image' : 'Text'}
+                    label={
+                      fileData.type === 'application/pdf' ? 'PDF' :
+                      fileData.type.startsWith('image/') ? 'Image' : 'Text'
+                    }
                     size="small"
-                    color={fileData.type.startsWith('image/') ? 'primary' : 'secondary'}
+                    color={
+                      fileData.type === 'application/pdf' ? 'error' :
+                      fileData.type.startsWith('image/') ? 'primary' : 'secondary'
+                    }
                     sx={{ mr: 1 }}
                   />
                   <IconButton
