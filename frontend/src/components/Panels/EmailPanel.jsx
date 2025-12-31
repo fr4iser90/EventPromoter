@@ -40,7 +40,7 @@ import axios from 'axios'
 // Everything comes from config, no defaults needed
 
 function EmailPanel() {
-  const { platformSettings, setPlatformSettings, emailRecipients, setEmailRecipients } = useStore()
+  const { platformSettings, setPlatformSettings, platformContent, setPlatformContent } = useStore()
   const [customEmail, setCustomEmail] = useState('')
   const [recipients, setRecipients] = useState([])
   const [activeTab, setActiveTab] = useState(0)
@@ -52,22 +52,27 @@ function EmailPanel() {
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importData, setImportData] = useState('')
+  const [hasLoaded, setHasLoaded] = useState(false)
+  // Get selected recipients from platform content
+  const selectedRecipients = platformContent.email?.recipients || []
 
   // Load from API on mount
   useEffect(() => {
     const loadConfig = async () => {
       try {
+        console.log('EmailPanel: Loading email config...')
         const response = await axios.get('http://localhost:4000/api/config/emails')
         const config = response.data
+        console.log('EmailPanel: Loaded config:', config)
 
         setRecipients(config.recipients || [])
-        // selectedRecipients now come from store, not from config
         setEmailGroups(config.groups || {})
+        setHasLoaded(true)
+        console.log('EmailPanel: Recipients set:', config.recipients)
       } catch (error) {
-        console.warn('Failed to load email config from API, using defaults:', error)
+        console.warn('EmailPanel: Failed to load email config from API:', error)
         // Fallback to defaults
         setRecipients([])
-        setSelectedRecipients([])
         setEmailGroups({})
       }
     }
@@ -91,12 +96,12 @@ function EmailPanel() {
     }
 
     // Only save if we have loaded data (avoid saving during initial load)
-    if (recipients.length >= 0) {
+    if (hasLoaded) {
       saveConfig()
     }
 
     // Update platform settings
-    if (emailRecipients.length > 0) {
+    if (selectedRecipients.length > 0) {
       const currentSettings = platformSettings.email || {}
       setPlatformSettings({
         ...platformSettings,
@@ -130,16 +135,25 @@ function EmailPanel() {
     }
 
     setRecipients(prev => [...prev, email])
-    setEmailRecipients(prev => [...prev, email]) // Auto-select new email
     setCustomEmail('')
   }
 
   const handleToggleRecipient = (email) => {
-    setEmailRecipients(prev =>
-      prev.includes(email)
-        ? prev.filter(e => e !== email)
-        : [...prev, email]
-    )
+    console.log('EmailPanel: handleToggleRecipient called with:', email)
+    console.log('EmailPanel: current selected recipients:', selectedRecipients)
+
+    const newRecipients = selectedRecipients.includes(email)
+      ? selectedRecipients.filter(e => e !== email)
+      : [...selectedRecipients, email]
+
+    console.log('EmailPanel: new selected recipients will be:', newRecipients)
+
+    // Update platform content directly
+    const currentEmailContent = platformContent.email || {}
+    setPlatformContent('email', {
+      ...currentEmailContent,
+      recipients: newRecipients
+    })
   }
 
   const handleRemoveRecipient = (emailToRemove) => {
@@ -307,8 +321,8 @@ function EmailPanel() {
                   <Chip
                     label={email}
                     size="small"
-                    variant={emailRecipients.includes(email) ? "filled" : "outlined"}
-                    color={emailRecipients.includes(email) ? "primary" : "default"}
+                    variant={selectedRecipients.includes(email) ? "filled" : "outlined"}
+                    color={selectedRecipients.includes(email) ? "primary" : "default"}
                     onClick={() => handleToggleRecipient(email)}
                     sx={{ cursor: 'pointer', mr: 1, maxWidth: 180 }}
                   />
@@ -395,8 +409,8 @@ function EmailPanel() {
                     key={email}
                     label={email}
                     size="small"
-                    variant={emailRecipients.includes(email) ? "filled" : "outlined"}
-                    color="secondary"
+                    variant={selectedRecipients.includes(email) ? "filled" : "outlined"}
+                    color={selectedRecipients.includes(email) ? "secondary" : "default"}
                   />
                 ))}
               </Box>
@@ -407,16 +421,16 @@ function EmailPanel() {
 
       <Divider sx={{ my: 2 }} />
 
-      {/* Selected Recipients Summary */}
-      {emailRecipients.length > 0 && (
+      {/* Recipients Summary */}
+      {recipients.length > 0 && (
         <Alert severity="info" size="small">
-          {emailRecipients.length} Empfänger ausgewählt
+          {recipients.length} Empfänger konfiguriert • {selectedRecipients.length} ausgewählt für nächsten Versand
         </Alert>
       )}
 
-      {emailRecipients.length === 0 && (
+      {recipients.length === 0 && (
         <Alert severity="warning" size="small">
-          Keine Empfänger ausgewählt
+          Keine Empfänger konfiguriert - Emails können nicht versendet werden
         </Alert>
       )}
 

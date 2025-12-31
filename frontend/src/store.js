@@ -4,33 +4,27 @@ import axios from 'axios'
 import config from './config'
 
 const useStore = create((set, get) => ({
-  // Email recipients state (now in session)
-  emailRecipients: [],
 
-  setEmailRecipients: (recipients) => {
-    set({ emailRecipients: Array.isArray(recipients) ? recipients : [] })
-    get().saveSession()
-  },
-
-  // Load session from backend on init
+  // Load workspace from backend on init
   initialize: async () => {
     try {
-      console.log('Loading session from backend...')
-      const response = await axios.get('http://localhost:4000/api/session/state')
-      const sessionData = response.data
+      console.log('Loading workspace from backend...')
+      const response = await axios.get('http://localhost:4000/api/workspace')
+      const workspaceData = response.data
 
+      // Load current project data
+      const project = workspaceData.currentProject || {}
       set({
-        uploadedFiles: sessionData.uploadedFiles || [],
-        selectedHashtags: sessionData.selectedHashtags || [],
-        selectedPlatforms: sessionData.selectedPlatforms || [],
-        platformContent: sessionData.platformContent || {},
-        contentTemplates: sessionData.contentTemplates || [],
-        emailRecipients: sessionData.emailRecipients || []  // Load email recipients from session
+        uploadedFiles: project.uploadedFiles || [],
+        selectedHashtags: project.selectedHashtags || [],
+        selectedPlatforms: project.selectedPlatforms || [],
+        platformContent: project.platformContent || {},
+        contentTemplates: project.contentTemplates || []
       })
 
-      console.log('Session loaded:', sessionData)
+      console.log('Workspace loaded:', workspaceData)
     } catch (error) {
-      console.warn('Failed to load session from backend, using defaults:', error)
+      console.warn('Failed to load workspace from backend, using defaults:', error)
       // Keep default empty state
     }
 
@@ -38,50 +32,92 @@ const useStore = create((set, get) => ({
     await get().loadAppConfig()
   },
 
-  // Save session to backend whenever state changes
-  saveSession: async () => {
+  // Save workspace to backend whenever state changes
+  saveWorkspace: async () => {
     const state = get()
     try {
-      const sessionData = {
-        uploadedFiles: state.uploadedFiles,
-        selectedHashtags: state.selectedHashtags,
-        selectedPlatforms: state.selectedPlatforms,
-        platformContent: state.platformContent,
-        contentTemplates: state.contentTemplates,
-        emailRecipients: state.emailRecipients  // Save email recipients to session
+      const workspaceData = {
+        currentProject: {
+          id: `project-${Date.now()}`, // Generate new ID if needed
+          name: 'Current Event Project',
+          created: new Date().toISOString(),
+          // uploadedFiles are not serializable, skip them
+          selectedHashtags: state.selectedHashtags,
+          selectedPlatforms: state.selectedPlatforms,
+          platformContent: state.platformContent,
+          contentTemplates: state.contentTemplates
+        }
       }
 
-      await axios.post('http://localhost:4000/api/session/state', sessionData)
-      console.log('Session saved to backend')
+      await axios.post('http://localhost:4000/api/workspace', workspaceData)
+      console.log('Store: Workspace saved to backend successfully')
     } catch (error) {
-      console.warn('Failed to save session to backend:', error)
+      console.warn('Store: Failed to save workspace to backend:', error)
     }
   },
+
+  // Load workspace data
+  loadWorkspace: async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/workspace')
+      const workspaceData = response.data
+      const project = workspaceData.currentProject || {}
+
+      set({
+        // uploadedFiles are not serializable, keep current state
+        selectedHashtags: project.selectedHashtags || [],
+        selectedPlatforms: project.selectedPlatforms || [],
+        platformContent: project.platformContent || {},
+        contentTemplates: project.contentTemplates || []
+      })
+
+      console.log('Workspace loaded from backend')
+      return project
+    } catch (error) {
+      console.warn('Failed to load workspace:', error)
+      return null
+    }
+  },
+
+  // Create new project (reset workspace)
+  newProject: () => {
+    set({
+      uploadedFiles: [],
+      selectedHashtags: [],
+      selectedPlatforms: [],
+      platformContent: {},
+      contentTemplates: []
+    })
+    get().saveWorkspace()
+    console.log('New project created')
+  },
+
+  // Legacy removed - everything uses workspace now
 
   // File upload state
   uploadedFiles: [],
   setUploadedFiles: (files) => {
     set({ uploadedFiles: Array.isArray(files) ? files : [] })
-    get().saveSession()
+    // Don't save workspace for files - they're not serializable
   },
 
   // Hashtags state
   selectedHashtags: [],
   setSelectedHashtags: (hashtags) => {
     set({ selectedHashtags: Array.isArray(hashtags) ? hashtags : [] })
-    get().saveSession()
+    get().saveWorkspace()
   },
 
   // Platform state
   selectedPlatforms: [],
   setSelectedPlatforms: (platforms) => {
     set({ selectedPlatforms: Array.isArray(platforms) ? platforms : [] })
-    get().saveSession()
+    get().saveWorkspace()
   },
   platformSettings: {},
   setPlatformSettings: (settings) => {
     set({ platformSettings: settings })
-    get().saveSession()
+    get().saveWorkspace()
   },
 
   // UI state
@@ -128,11 +164,11 @@ const useStore = create((set, get) => ({
     set(state => ({
       platformContent: { ...state.platformContent, [platform]: content }
     }))
-    get().saveSession()
+    get().saveWorkspace()
   },
   resetPlatformContent: () => {
     set({ platformContent: {} })
-    get().saveSession()
+    get().saveWorkspace()
   },
 
   // Template system
@@ -149,7 +185,7 @@ const useStore = create((set, get) => ({
         contentTemplates: [...state.contentTemplates, template]
       }
     })
-    get().saveSession()
+    get().saveWorkspace()
   },
   loadTemplate: (templateId) => {
     set(state => {
@@ -159,13 +195,13 @@ const useStore = create((set, get) => ({
       }
       return state
     })
-    get().saveSession()
+    get().saveWorkspace()
   },
   deleteTemplate: (templateId) => {
     set(state => ({
       contentTemplates: state.contentTemplates.filter(t => t.id !== templateId)
     }))
-    get().saveSession()
+    get().saveWorkspace()
   },
 
 
@@ -208,6 +244,52 @@ const useStore = create((set, get) => ({
     return convertedFiles
   },
 
+  // Platform settings mapping - defines which workspace properties to load for each platform
+  platformSettingsMap: {
+    email: [], // Recipients are managed in platformContent.email.recipients
+    reddit: [], // Reddit settings are already in platformContent
+    twitter: [],
+    instagram: [],
+    facebook: [],
+    linkedin: []
+  },
+
+  // Publish parser - finalizes content before submission by loading platform-specific settings from backend
+  publishParser: async () => {
+    const state = get()
+    console.log('🚀 Running publish parser...')
+
+    try {
+      const finalizedContent = { ...state.platformContent }
+
+      // For each selected platform, finalize content
+      for (const platform of state.selectedPlatforms) {
+        const platformContent = finalizedContent[platform] || {}
+
+        // Email recipients are already in platformContent.email.recipients
+        // No need to load from backend - they're managed in the content
+
+        // Set defaults for missing required fields
+        if (platform === 'reddit' && !platformContent.subreddit) {
+          finalizedContent.reddit = {
+            ...finalizedContent.reddit,
+            subreddit: 'r/events'
+          }
+          console.log(`🟠 ${platform}: Set default subreddit`)
+        }
+      }
+
+      // Update platform content with finalized data
+      set({ platformContent: finalizedContent })
+
+      console.log('✅ Publish parser completed - all platform settings loaded from backend')
+      return finalizedContent
+    } catch (error) {
+      console.error('❌ Publish parser failed:', error)
+      throw error
+    }
+  },
+
   // Submit action via backend proxy
   submit: async () => {
     const state = get()
@@ -223,6 +305,10 @@ const useStore = create((set, get) => ({
         throw new Error('Please select at least one platform')
       }
 
+      // Run publish parser to finalize content
+      console.log('🎯 Starting publish process...')
+      const finalizedContent = await get().publishParser()
+
       // Convert files to base64
       console.log('Converting files to base64...')
       const processedFiles = await state.convertFilesToBase64(state.uploadedFiles)
@@ -237,7 +323,7 @@ const useStore = create((set, get) => ({
       const payload = {
         files: processedFiles,
         platforms: publishTo,
-        content: state.platformContent,
+        content: finalizedContent,  // Use finalized content from publish parser
         hashtags: state.selectedHashtags,
         n8nUrl: state.n8nWebhookUrl,
         eventData: {
@@ -260,6 +346,38 @@ const useStore = create((set, get) => ({
       })
 
       console.log('Backend response:', response.data)
+
+      // Save to history after successful publish
+      try {
+        const historyEntry = {
+          id: `published-${Date.now()}`,
+          name: state.platformContent.eventTitle || 'Event Promotion',
+          status: 'published',
+          platforms: state.selectedPlatforms,
+          publishedAt: new Date().toISOString(),
+          eventData: {
+            title: state.platformContent.eventTitle,
+            date: state.platformContent.eventDate,
+            time: state.platformContent.eventTime,
+            venue: state.platformContent.venue,
+            city: state.platformContent.city
+          },
+          stats: {} // Will be updated later with actual metrics
+        }
+
+        // Load current history and add new entry
+        const historyResponse = await axios.get('http://localhost:4000/api/history')
+        const historyData = historyResponse.data
+        const updatedHistory = {
+          projects: [historyEntry, ...historyData.projects]
+        }
+
+        await axios.post('http://localhost:4000/api/history', updatedHistory)
+        console.log('Project saved to history')
+      } catch (historyError) {
+        console.warn('Failed to save to history:', historyError)
+        // Don't fail the whole submit if history save fails
+      }
 
       set({
         isProcessing: false,

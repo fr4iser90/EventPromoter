@@ -1,0 +1,22 @@
+// Twitter-specific types
+
+export interface TwitterContent {
+  text: string
+  image?: string
+  link?: string
+}
+
+export interface TwitterConfig {
+  apiKey?: string
+  apiSecret?: string
+  accessToken?: string
+  accessTokenSecret?: string
+  username?: string
+}
+
+export interface TwitterValidation {
+  isValid: boolean
+  errors: string[]
+  characterCount: number
+  maxLength: number
+}

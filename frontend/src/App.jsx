@@ -15,7 +15,7 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import IconButton from '@mui/material/IconButton'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import FileUpload from './components/FileUpload/FileUpload'
-import EventParser from './components/EventParser/EventParser'
+import UploadParser from './components/Parser/UploadParser'
 import Preview from './components/Preview/Preview'
 import HashtagBuilder from './components/HashtagBuilder/HashtagBuilder'
 import PlatformSelector from './components/PlatformSelector/PlatformSelector'
@@ -277,7 +277,7 @@ function App() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <EventParser />
+              <UploadParser />
             </Box>
 
             <Box sx={{ mb: 4 }}>
