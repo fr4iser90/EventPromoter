@@ -11,6 +11,7 @@ import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
 import Brightness7Icon from '@mui/icons-material/Brightness7'
+import SettingsIcon from '@mui/icons-material/Settings'
 import IconButton from '@mui/material/IconButton'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import FileUpload from './components/FileUpload/FileUpload'
@@ -24,8 +25,9 @@ import TwitterPanel from './components/Panels/TwitterPanel'
 import FacebookPanel from './components/Panels/FacebookPanel'
 import InstagramPanel from './components/Panels/InstagramPanel'
 import LinkedInPanel from './components/Panels/LinkedInPanel'
+import SettingsModal from './components/SettingsModal/SettingsModal'
 import useStore from './store'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const createAppTheme = (darkMode) => createTheme({
   palette: {
@@ -61,10 +63,14 @@ function App() {
     error,
     successMessage,
     darkMode,
+    n8nWebhookUrl,
     submit,
     reset,
-    setDarkMode
+    setDarkMode,
+    setN8nWebhookUrl
   } = useStore()
+
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Initialize dark mode from API (only on mount)
   useEffect(() => {
@@ -75,6 +81,9 @@ function App() {
         if (config.darkMode !== undefined && config.darkMode !== darkMode) {
           setDarkMode(config.darkMode)
         }
+        if (config.n8nWebhookUrl && config.n8nWebhookUrl !== n8nWebhookUrl) {
+          setN8nWebhookUrl(config.n8nWebhookUrl)
+        }
       } catch (error) {
         console.warn('Failed to load app config:', error)
       }
@@ -83,13 +92,18 @@ function App() {
     loadAppConfig()
   }, []) // Empty dependency array - only run on mount
 
-  // Save dark mode changes to API
+  // Save configuration changes to API
   useEffect(() => {
     const saveAppConfig = async () => {
       try {
         const response = await fetch('http://localhost:4000/api/config/app')
         const currentConfig = await response.json()
-        const updatedConfig = { ...currentConfig, darkMode, lastUpdated: new Date().toISOString() }
+        const updatedConfig = {
+          ...currentConfig,
+          darkMode,
+          n8nWebhookUrl,
+          lastUpdated: new Date().toISOString()
+        }
 
         await fetch('http://localhost:4000/api/config/app', {
           method: 'POST',
@@ -102,7 +116,7 @@ function App() {
     }
 
     saveAppConfig()
-  }, [darkMode])
+  }, [darkMode, n8nWebhookUrl])
 
   // Responsive breakpoints
   const isMobile = useMediaQuery(staticTheme.breakpoints.down('md'))
@@ -176,6 +190,13 @@ function App() {
           <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
             Multi-Platform Social Media Publisher
           </Typography>
+          <IconButton
+            onClick={() => setSettingsOpen(true)}
+            color="inherit"
+            aria-label="open settings"
+          >
+            <SettingsIcon />
+          </IconButton>
           <IconButton
             onClick={toggleDarkMode}
             color="inherit"
@@ -348,6 +369,12 @@ function App() {
           )}
         </Box>
       </Box>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
 
     </ThemeProvider>
   )

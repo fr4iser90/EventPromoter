@@ -1,6 +1,6 @@
 {
-  "description": "Application settings - Edit this file for app-wide configuration",
+  "error": "Failed to load app configuration",
   "darkMode": true,
-  "version": "1.0.0",
-  "lastUpdated": "2025-12-30T18:37:32.379Z"
+  "lastUpdated": "2025-12-30T23:31:40.418Z",
+  "n8nWebhookUrl": "http://192.168.178.36:8150/webhook/multiplatform-publisher"
 }

@@ -27,6 +27,10 @@ const useStore = create((set, get) => ({
   darkMode: false,
   setDarkMode: (darkMode) => set({ darkMode }),
 
+  // N8N configuration
+  n8nWebhookUrl: 'http://localhost:5678/webhook/multiplatform-publisher',
+  setN8nWebhookUrl: (url) => set({ n8nWebhookUrl: url }),
+
 
   // Actions
   reset: () => set({
@@ -109,7 +113,7 @@ const useStore = create((set, get) => ({
       console.log('Sending data to n8n:', payload)
 
       // Send to n8n webhook
-      const response = await axios.post(config.n8nWebhookUrl, payload, {
+      const response = await axios.post(state.n8nWebhookUrl, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
