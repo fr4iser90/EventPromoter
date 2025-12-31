@@ -1,6 +1,5 @@
 {
-  "error": "Failed to load app configuration",
-  "darkMode": true,
-  "lastUpdated": "2025-12-30T23:31:40.418Z",
-  "n8nWebhookUrl": "http://192.168.178.36:8150/webhook/multiplatform-publisher"
+  "n8nWebhookUrl": "http://localhost:5678/webhook/multiplatform-publisher",
+  "darkMode": false,
+  "lastUpdated": "2025-12-31T12:01:59.999Z"
 }

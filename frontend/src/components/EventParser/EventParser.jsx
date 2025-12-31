@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Paper,
   Typography,
@@ -15,21 +15,333 @@ import {
   CircularProgress,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Menu,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material'
+import EmailPanel from '../Panels/EmailPanel'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
+import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { parseFileForEvent, formatEventForDisplay } from '../../utils/pdfParser'
 import useStore from '../../store'
 
+// Platform Preview Component
+function PlatformPreview({ platform, content, isActive }) {
+  const getPlatformConfig = (platform) => {
+    const configs = {
+      twitter: { icon: '🐦', color: '#1DA1F2', name: 'Twitter' },
+      instagram: { icon: '📸', color: '#E4405F', name: 'Instagram' },
+      facebook: { icon: '👥', color: '#1877F2', name: 'Facebook' },
+      linkedin: { icon: '💼', color: '#0A66C2', name: 'LinkedIn' },
+      email: { icon: '📧', color: '#EA4335', name: 'Email' }
+    }
+    return configs[platform] || { icon: '📝', color: '#666', name: platform }
+  }
+
+  const config = getPlatformConfig(platform)
+
+  return (
+    <Paper sx={{
+      p: 2,
+      mb: 2,
+      bgcolor: '#f8f9fa',
+      border: `2px solid ${isActive ? config.color : '#e0e0e0'}`
+    }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: config.color }}>
+        {config.icon} {config.name} Preview
+      </Typography>
+
+      <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e0e0e0' }}>
+        {platform === 'twitter' && (
+          <Typography variant="body2">
+            {content.text || 'No content yet...'}
+          </Typography>
+        )}
+
+        {platform === 'instagram' && (
+          <>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+              📸 Event Image
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {content.caption || 'No caption yet...'}
+            </Typography>
+          </>
+        )}
+
+        {platform === 'facebook' && (
+          <Typography variant="body2">
+            {content.text || 'No content yet...'}
+          </Typography>
+        )}
+
+        {platform === 'linkedin' && (
+          <Typography variant="body2">
+            {content.text || 'No LinkedIn content yet...'}
+          </Typography>
+        )}
+
+        {platform === 'reddit' && (
+          <>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Title: {content.title || 'No title...'}
+            </Typography>
+            <Typography variant="body2" sx={{ fontSize: '0.875rem', mb: 1 }}>
+              {content.body || 'No body content...'}
+            </Typography>
+            <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+              Subreddit: {content.subreddit || 'r/events'}
+            </Typography>
+          </>
+        )}
+
+        {platform === 'email' && (
+          <>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Subject: {content.subject || 'No subject...'}
+            </Typography>
+            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+              {content.html ? 'HTML Email Content...' : 'No content yet...'}
+            </Typography>
+          </>
+        )}
+      </Box>
+    </Paper>
+  )
+}
+
+// Platform Editor Component
+function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect, emailRecipients = [] }) {
+  const getPlatformConfig = (platform) => {
+    const configs = {
+      twitter: { icon: '🐦', color: '#1DA1F2', name: 'Twitter', limit: 280 },
+      instagram: { icon: '📸', color: '#E4405F', name: 'Instagram', limit: 2200 },
+      facebook: { icon: '👥', color: '#1877F2', name: 'Facebook', limit: 63206 },
+      linkedin: { icon: '💼', color: '#0A66C2', name: 'LinkedIn', limit: 3000 },
+      email: { icon: '📧', color: '#EA4335', name: 'Email', limit: null }
+    }
+    return configs[platform] || { icon: '📝', color: '#666', name: platform, limit: null }
+  }
+
+  const config = getPlatformConfig(platform)
+  const textLength = content.text?.length || content.caption?.length || 0
+  const isValid = config.limit ? textLength <= config.limit : textLength > 0
+
+  return (
+    <Paper
+      sx={{
+        p: 2,
+        mb: 2,
+        border: `2px solid ${isActive ? config.color : '#e0e0e0'}`,
+        cursor: 'pointer'
+      }}
+      onClick={onSelect}
+    >
+      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: config.color }}>
+        {config.icon} {config.name} Editor
+      </Typography>
+
+      {platform === 'twitter' && (
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          label="Tweet Text"
+          value={content.text || ''}
+          onChange={(e) => onChange('text', e.target.value)}
+          helperText={`Tweet text for Twitter`}
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+      )}
+
+      {platform === 'instagram' && (
+        <TextField
+          fullWidth
+          multiline
+          rows={6}
+          label="Instagram Caption"
+          value={content.caption || ''}
+          onChange={(e) => onChange('caption', e.target.value)}
+          helperText="Caption for Instagram post"
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+      )}
+
+      {platform === 'facebook' && (
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          label="Facebook Post"
+          value={content.text || ''}
+          onChange={(e) => onChange('text', e.target.value)}
+          helperText="Post text for Facebook"
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+      )}
+
+      {platform === 'linkedin' && (
+        <TextField
+          fullWidth
+          multiline
+          rows={6}
+          label="LinkedIn Post"
+          value={content.text || ''}
+          onChange={(e) => onChange('text', e.target.value)}
+          helperText="Professional post content for LinkedIn"
+          variant="outlined"
+          sx={{ mb: 2 }}
+        />
+      )}
+
+      {platform === 'reddit' && (
+        <>
+          <TextField
+            fullWidth
+            label="Reddit Title"
+            value={content.title || ''}
+            onChange={(e) => onChange('title', e.target.value)}
+            helperText="Post title for Reddit"
+            variant="outlined"
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Reddit Body"
+            value={content.body || ''}
+            onChange={(e) => onChange('body', e.target.value)}
+            helperText="Post body content for Reddit"
+            variant="outlined"
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Subreddit"
+            value={content.subreddit || ''}
+            onChange={(e) => onChange('subreddit', e.target.value)}
+            placeholder="e.g., r/berlin"
+            variant="outlined"
+            sx={{ mb: 2 }}
+          />
+        </>
+      )}
+
+      {platform === 'email' && (
+        <>
+          {/* Email Recipients Selection */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              📧 Email Recipients
+            </Typography>
+            <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
+              <InputLabel>Select Recipients</InputLabel>
+              <Select
+                multiple
+                value={content.recipients || []}
+                onChange={(e) => {
+                  console.log('Email recipients changed:', e.target.value);
+                  onChange('recipients', e.target.value);
+                }}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((email) => (
+                      <Chip key={email} label={email} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                {emailRecipients.map((email) => (
+                  <MenuItem key={email} value={email}>
+                    {email}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          <TextField
+            fullWidth
+            label="Email Subject"
+            value={content.subject || ''}
+            onChange={(e) => onChange('subject', e.target.value)}
+            variant="outlined"
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            multiline
+            rows={6}
+            label="Email HTML Content"
+            value={content.html || ''}
+            onChange={(e) => onChange('html', e.target.value)}
+            helperText="HTML content for email"
+            variant="outlined"
+            sx={{ mb: 2 }}
+          />
+        </>
+      )}
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {config.limit && (
+          <Typography variant="body2" color={textLength > config.limit ? "error" : "text.secondary"}>
+            Characters: {textLength}/{config.limit}
+          </Typography>
+        )}
+        <Chip
+          size="small"
+          color={isValid ? "success" : "warning"}
+          label={isValid ? "Ready" : "Draft"}
+        />
+      </Box>
+    </Paper>
+  )
+}
+
 function EventParser() {
-  const { uploadedFiles } = useStore()
+  const {
+    uploadedFiles,
+    selectedPlatforms,
+    platformContent,
+    setPlatformContent,
+    resetPlatformContent,
+    contentTemplates,
+    saveTemplate,
+    loadTemplate,
+    deleteTemplate
+  } = useStore()
+
   const [activeTab, setActiveTab] = useState(0)
   const [parsedData, setParsedData] = useState(null)
   const [isParsing, setIsParsing] = useState(false)
   const [parseError, setParseError] = useState('')
   const [editedData, setEditedData] = useState(null)
+  const [activePlatform, setActivePlatform] = useState('twitter')
+
+  // Template state
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
+  const [templateName, setTemplateName] = useState('')
+  const { emailRecipients } = useStore()
+  const [templateAnchorEl, setTemplateAnchorEl] = useState(null)
 
   // Handle file parsing
   const handleParseFile = async (file) => {
@@ -87,6 +399,50 @@ function EventParser() {
     }
   }
 
+  // Auto-generate platform content when data is parsed OR platforms change
+  useEffect(() => {
+    if (editedData && selectedPlatforms.length > 0) {
+      selectedPlatforms.forEach(platform => {
+        if (!platformContent[platform]) {
+          const content = generatePlatformContent(platform, editedData)
+
+
+
+          setPlatformContent(platform, content)
+        }
+      })
+    }
+  }, [editedData, selectedPlatforms, platformContent, setPlatformContent])
+
+  // Update email recipients when email platform is selected and recipients change
+  useEffect(() => {
+  }, [selectedPlatforms, emailRecipients, platformContent.email, setPlatformContent])
+
+  // Auto-save platform content to localStorage
+  useEffect(() => {
+    if (Object.keys(platformContent).length > 0) {
+      localStorage.setItem('eventpromoter_platformContent', JSON.stringify(platformContent))
+    }
+  }, [platformContent])
+
+  // Email recipients now come from store (session)
+  // No need to load from API anymore
+
+  // Load auto-saved content on component mount
+  useEffect(() => {
+    const saved = localStorage.getItem('eventpromoter_platformContent')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        Object.entries(parsed).forEach(([platform, content]) => {
+          setPlatformContent(platform, content)
+        })
+      } catch (error) {
+        console.warn('Failed to load auto-saved content:', error)
+      }
+    }
+  }, [setPlatformContent])
+
   // Auto-parse first PDF/image when files are uploaded
   React.useEffect(() => {
     if (uploadedFiles.length > 0 && !parsedData && !isParsing) {
@@ -96,6 +452,107 @@ function EventParser() {
       }
     }
   }, [uploadedFiles])
+
+  // Generate platform-specific content
+  const generatePlatformContent = (platform, data) => {
+    const baseText = `${data.title} - ${data.date} ${data.time}`
+    const venue = data.venue?.name ? ` @ ${data.venue.name}` : ''
+    const website = data.website ? ` ${data.website}` : ''
+
+    switch (platform) {
+      case 'twitter':
+        return {
+          text: baseText + venue + website + ' #event #party',
+          media: [],
+          charCount: (baseText + venue + website + ' #event #party').length
+        }
+      case 'instagram':
+        return {
+          caption: `📸 ${data.title}\n📅 ${data.date} ${data.time}\n📍 ${data.venue?.name || ''} ${data.venue?.address || ''}\n🎧 ${data.performers?.join(', ') || ''}\n🌐 ${data.website}\n#event #techno #party`,
+          image: null
+        }
+      case 'facebook':
+        return {
+          text: `${data.title} - ${data.date} um ${data.time} Uhr\n\nVeranstaltungsort: ${data.venue?.name || ''}, ${data.venue?.address || ''}\n\n${data.description || ''}\n\nTickets: ${data.website}`,
+          media: []
+        }
+      case 'linkedin':
+        return {
+          text: `${data.title} - ${data.date} ${data.time}\n\nVeranstaltung: ${data.venue?.name || ''}\nOrt: ${data.venue?.address || ''}, ${data.venue?.city || ''}\n\n${data.description || ''}\n\nWeitere Informationen: ${data.website}`
+        }
+      case 'reddit':
+        return {
+          title: `${data.title} - ${data.date}`,
+          body: `Event: ${data.title}\nDate: ${data.date} ${data.time}\nLocation: ${data.venue?.name || ''}, ${data.venue?.address || ''}\n\n${data.description || ''}\n\nMore info: ${data.website}`,
+          subreddit: 'r/events' // Default subreddit
+        }
+      case 'email':
+        return {
+          subject: `${data.title} - ${data.date}`,
+          html: `<h2>${data.title}</h2><p>Datum: ${data.date} ${data.time}</p><p>Ort: ${data.venue?.name || ''}</p><p>Mehr Infos: ${data.website}</p>`
+        }
+      default:
+        return { text: baseText + venue + website }
+    }
+  }
+
+  // Handle platform content changes with auto-save
+  const handlePlatformContentChange = (platform, field, value) => {
+    const currentContent = platformContent[platform] || {}
+    const updatedContent = { ...currentContent, [field]: value }
+
+    // Update character count for text fields
+    if (field === 'text' && platform === 'twitter') {
+      updatedContent.charCount = value.length
+    }
+
+    setPlatformContent(platform, updatedContent)
+  }
+
+  // Copy content from one platform to another
+  const copyContent = (fromPlatform, toPlatform) => {
+    if (platformContent[fromPlatform]) {
+      setPlatformContent(toPlatform, { ...platformContent[fromPlatform] })
+    }
+  }
+
+  // Reset all platform content
+  const resetContent = () => {
+    resetPlatformContent()
+    if (editedData && selectedPlatforms.length > 0) {
+      selectedPlatforms.forEach(platform => {
+        const content = generatePlatformContent(platform, editedData)
+        setPlatformContent(platform, content)
+      })
+    }
+  }
+
+  // Template handlers
+  const handleSaveTemplate = () => {
+    if (templateName.trim() && Object.keys(platformContent).length > 0) {
+      saveTemplate(templateName.trim(), platformContent)
+      setTemplateName('')
+      setTemplateDialogOpen(false)
+    }
+  }
+
+  const handleLoadTemplate = (templateId) => {
+    loadTemplate(templateId)
+    setTemplateAnchorEl(null)
+  }
+
+  const handleDeleteTemplate = (templateId) => {
+    deleteTemplate(templateId)
+    setTemplateAnchorEl(null)
+  }
+
+  const handleTemplateMenuClick = (event) => {
+    setTemplateAnchorEl(event.currentTarget)
+  }
+
+  const handleTemplateMenuClose = () => {
+    setTemplateAnchorEl(null)
+  }
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
@@ -148,7 +605,7 @@ function EventParser() {
             sx={{ mb: 3 }}
           >
             <Tab label="📄 Raw Data" />
-            <Tab label="✏️ Edit Event" />
+            <Tab label="🎨 Content Creation" />
             <Tab label="👁️ Platform Preview" />
           </Tabs>
 
@@ -170,139 +627,151 @@ function EventParser() {
             </Box>
           )}
 
-          {/* Tab 2: Edit Event Data */}
+          {/* Tab 2: Content Creation - Side-by-Side Layout */}
           {activeTab === 1 && editedData && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                Edit Event Data
+                🎨 Content Creation Studio
               </Typography>
 
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Event Title"
-                    value={editedData.title || ''}
-                    onChange={(e) => handleDataChange('title', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
+              {/* Side-by-Side Layout */}
+              <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
+                {/* EDITOR PANEL - Left Side */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    ✏️ Editor Panel
+                  </Typography>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Date"
-                    type="date"
-                    value={editedData.date || ''}
-                    onChange={(e) => handleDataChange('date', e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    variant="outlined"
-                  />
-                </Grid>
+                  {/* Platform Selector */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Active Platforms:
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {selectedPlatforms.map(platform => {
+                        const configs = {
+                          twitter: { icon: '🐦', color: 'primary' },
+                          instagram: { icon: '📸', color: 'secondary' },
+                          facebook: { icon: '👥', color: 'success' },
+                          linkedin: { icon: '💼', color: 'info' },
+                          email: { icon: '📧', color: 'warning' }
+                        }
+                        const config = configs[platform] || { icon: '📝', color: 'default' }
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Time"
-                    type="time"
-                    value={editedData.time || ''}
-                    onChange={(e) => handleDataChange('time', e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    variant="outlined"
-                  />
-                </Grid>
+                        return (
+                          <Chip
+                            key={platform}
+                            label={`${config.icon} ${platform}`}
+                            color={config.color}
+                            variant={platform === activePlatform ? "filled" : "outlined"}
+                            onClick={() => setActivePlatform(platform)}
+                            sx={{ cursor: 'pointer' }}
+                          />
+                        )
+                      })}
+                    </Box>
+                  </Box>
 
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Venue Name"
-                    value={editedData.venue?.name || ''}
-                    onChange={(e) => handleVenueChange('name', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
+                  {/* Platform Editors */}
+                  {selectedPlatforms.map(platform => (
+                    <PlatformEditor
+                      key={platform}
+                      platform={platform}
+                      content={platformContent[platform] || {}}
+                      onChange={(field, value) => handlePlatformContentChange(platform, field, value)}
+                      onCopy={() => copyContent(platform, activePlatform)}
+                      isActive={platform === activePlatform}
+                      onSelect={() => setActivePlatform(platform)}
+                      emailRecipients={emailRecipients}
+                    />
+                  ))}
 
-                <Grid item xs={12} sm={8}>
-                  <TextField
-                    fullWidth
-                    label="Address"
-                    value={editedData.venue?.address || ''}
-                    onChange={(e) => handleVenueChange('address', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
+                  {/* Content Controls */}
+                  <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Button variant="outlined" startIcon={<RefreshIcon />} onClick={resetContent}>
+                      Reset All
+                    </Button>
+                    <Button variant="outlined" startIcon={<ContentCopyIcon />}>
+                      Copy Between Platforms
+                    </Button>
+                    <Button variant="outlined" startIcon={<SaveIcon />} onClick={() => setTemplateDialogOpen(true)}>
+                      Save Template
+                    </Button>
+                    <Button variant="outlined" onClick={handleTemplateMenuClick}>
+                      Load Template ▼
+                    </Button>
+                  </Box>
 
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    fullWidth
-                    label="ZIP"
-                    value={editedData.venue?.zip || ''}
-                    onChange={(e) => handleVenueChange('zip', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
+                  {/* Template Menu */}
+                  <Menu
+                    anchorEl={templateAnchorEl}
+                    open={Boolean(templateAnchorEl)}
+                    onClose={handleTemplateMenuClose}
+                  >
+                    {contentTemplates.length === 0 ? (
+                      <MenuItem disabled>No templates saved</MenuItem>
+                    ) : (
+                      contentTemplates.map(template => (
+                        <MenuItem key={template.id} onClick={() => handleLoadTemplate(template.id)}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                            <Typography variant="body2">{template.name}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {new Date(template.createdAt).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      ))
+                    )}
+                  </Menu>
 
-                <Grid item xs={12} sm={8}>
-                  <TextField
-                    fullWidth
-                    label="City"
-                    value={editedData.venue?.city || ''}
-                    onChange={(e) => handleVenueChange('city', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
+                  {/* Template Controls */}
+                  <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+                    <Button variant="outlined" size="small">
+                      Save Template
+                    </Button>
+                    <Button variant="outlined" size="small">
+                      Load Template
+                    </Button>
+                  </Box>
+                </Box>
 
-                <Grid item xs={12} sm={4}>
-                  <TextField
-                    fullWidth
-                    label="Hall/Room"
-                    value={editedData.venue?.hall || ''}
-                    onChange={(e) => handleVenueChange('hall', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
+                {/* PREVIEW PANEL - Right Side */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                    👁️ Preview Panel
+                  </Typography>
 
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Performers (comma-separated)"
-                    value={editedData.performers?.join(', ') || ''}
-                    onChange={(e) => handlePerformersChange(e.target.value)}
-                    helperText="z.B. DJ H@jo, A.L.E.X."
-                    variant="outlined"
-                  />
-                </Grid>
+                  {/* Platform Previews */}
+                  {selectedPlatforms.map(platform => (
+                    <PlatformPreview
+                      key={platform}
+                      platform={platform}
+                      content={platformContent[platform] || {}}
+                      isActive={platform === activePlatform}
+                    />
+                  ))}
 
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Website"
-                    value={editedData.website || ''}
-                    onChange={(e) => handleDataChange('website', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Description"
-                    value={editedData.description || ''}
-                    onChange={(e) => handleDataChange('description', e.target.value)}
-                    variant="outlined"
-                  />
-                </Grid>
-              </Grid>
-
-              <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                <Button variant="contained" startIcon={<SaveIcon />}>
-                  Save Event
-                </Button>
-                <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleResetToParsed}>
-                  Reset to Parsed
-                </Button>
+                  {/* Status Summary */}
+                  <Paper sx={{ p: 2, mt: 2, bgcolor: '#f8f9fa' }}>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
+                      📊 Status Summary
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {selectedPlatforms.map(platform => {
+                        const content = platformContent[platform] || {}
+                        const isReady = content.text || content.caption || content.subject
+                        return (
+                          <Chip
+                            key={platform}
+                            size="small"
+                            color={isReady ? "success" : "warning"}
+                            label={`${platform}: ${isReady ? 'Ready' : 'Draft'}`}
+                          />
+                        )
+                      })}
+                    </Box>
+                  </Paper>
+                </Box>
               </Box>
             </Box>
           )}
@@ -402,6 +871,29 @@ function EventParser() {
           Upload a PDF or image file to parse event data automatically.
         </Alert>
       )}
+
+      {/* Template Save Dialog */}
+      <Dialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Save Content Template</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Template Name"
+            fullWidth
+            variant="outlined"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            placeholder="e.g., Club Techno Event"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTemplateDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleSaveTemplate} disabled={!templateName.trim()}>
+            Save Template
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   )
 }

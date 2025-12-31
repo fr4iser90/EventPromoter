@@ -33,30 +33,19 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import useStore from '../../store'
+
+// Recipients come from config, no defaults needed
 import axios from 'axios'
 
-const DEFAULT_RECIPIENTS = [
-  'dj-events@club.com',
-  'booking@venue.de',
-  'promo@agency.com'
-]
-
-const DEFAULT_EMAIL_GROUPS = {
-  'DJs & Promoter': ['dj-events@club.com', 'promo@agency.com'],
-  'Venue Manager': ['booking@venue.de', 'events@venue.de'],
-  'Event Agencies': ['promo@agency.com', 'events@agency.com']
-}
-
-const DEFAULT_GROUP_NAMES = Object.keys(DEFAULT_EMAIL_GROUPS)
+// Everything comes from config, no defaults needed
 
 function EmailPanel() {
-  const { platformSettings, setPlatformSettings } = useStore()
+  const { platformSettings, setPlatformSettings, emailRecipients, setEmailRecipients } = useStore()
   const [customEmail, setCustomEmail] = useState('')
-  const [recipients, setRecipients] = useState(DEFAULT_RECIPIENTS)
-  const [selectedRecipients, setSelectedRecipients] = useState([])
+  const [recipients, setRecipients] = useState([])
   const [activeTab, setActiveTab] = useState(0)
   const [emailError, setEmailError] = useState('')
-  const [emailGroups, setEmailGroups] = useState(DEFAULT_EMAIL_GROUPS)
+  const [emailGroups, setEmailGroups] = useState({})
   const [editingGroup, setEditingGroup] = useState(null)
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupEmails, setNewGroupEmails] = useState('')
@@ -71,15 +60,15 @@ function EmailPanel() {
         const response = await axios.get('http://localhost:4000/api/config/emails')
         const config = response.data
 
-        setRecipients(config.recipients || DEFAULT_RECIPIENTS)
-        setSelectedRecipients([])
-        setEmailGroups(config.groups || DEFAULT_EMAIL_GROUPS)
+        setRecipients(config.recipients || [])
+        // selectedRecipients now come from store, not from config
+        setEmailGroups(config.groups || {})
       } catch (error) {
         console.warn('Failed to load email config from API, using defaults:', error)
         // Fallback to defaults
-        setRecipients(DEFAULT_RECIPIENTS)
+        setRecipients([])
         setSelectedRecipients([])
-        setEmailGroups(DEFAULT_EMAIL_GROUPS)
+        setEmailGroups({})
       }
     }
 
@@ -93,6 +82,7 @@ function EmailPanel() {
         const config = {
           recipients,
           groups: emailGroups
+          // selectedRecipients now saved in session, not here
         }
         await axios.post('http://localhost:4000/api/config/emails', config)
       } catch (error) {
@@ -106,7 +96,7 @@ function EmailPanel() {
     }
 
     // Update platform settings
-    if (selectedRecipients.length > 0) {
+    if (emailRecipients.length > 0) {
       const currentSettings = platformSettings.email || {}
       setPlatformSettings({
         ...platformSettings,
@@ -140,12 +130,12 @@ function EmailPanel() {
     }
 
     setRecipients(prev => [...prev, email])
-    setSelectedRecipients(prev => [...prev, email]) // Auto-select new email
+    setEmailRecipients(prev => [...prev, email]) // Auto-select new email
     setCustomEmail('')
   }
 
   const handleToggleRecipient = (email) => {
-    setSelectedRecipients(prev =>
+    setEmailRecipients(prev =>
       prev.includes(email)
         ? prev.filter(e => e !== email)
         : [...prev, email]
@@ -207,7 +197,7 @@ function EmailPanel() {
   }
 
   const handleDeleteGroup = (groupName) => {
-    if (DEFAULT_GROUP_NAMES.includes(groupName)) return // Protect default groups
+    // All groups can be deleted now
 
     setEmailGroups(prev => {
       const updated = { ...prev }
@@ -317,8 +307,8 @@ function EmailPanel() {
                   <Chip
                     label={email}
                     size="small"
-                    variant={selectedRecipients.includes(email) ? "filled" : "outlined"}
-                    color={selectedRecipients.includes(email) ? "primary" : "default"}
+                    variant={emailRecipients.includes(email) ? "filled" : "outlined"}
+                    color={emailRecipients.includes(email) ? "primary" : "default"}
                     onClick={() => handleToggleRecipient(email)}
                     sx={{ cursor: 'pointer', mr: 1, maxWidth: 180 }}
                   />
@@ -392,11 +382,10 @@ function EmailPanel() {
                     <IconButton size="small" onClick={() => setEditingGroup(groupName)}>
                       <EditIcon />
                     </IconButton>
-                    {!DEFAULT_GROUP_NAMES.includes(groupName) && (
-                      <IconButton size="small" color="error" onClick={() => handleDeleteGroup(groupName)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    )}
+                    {/* All groups can be deleted */}
+                    <IconButton size="small" color="error" onClick={() => handleDeleteGroup(groupName)}>
+                      <DeleteIcon />
+                    </IconButton>
                   </>
                 )}
               </Box>
@@ -406,7 +395,7 @@ function EmailPanel() {
                     key={email}
                     label={email}
                     size="small"
-                    variant={selectedRecipients.includes(email) ? "filled" : "outlined"}
+                    variant={emailRecipients.includes(email) ? "filled" : "outlined"}
                     color="secondary"
                   />
                 ))}
@@ -419,13 +408,13 @@ function EmailPanel() {
       <Divider sx={{ my: 2 }} />
 
       {/* Selected Recipients Summary */}
-      {selectedRecipients.length > 0 && (
+      {emailRecipients.length > 0 && (
         <Alert severity="info" size="small">
-          {selectedRecipients.length} Empfänger ausgewählt
+          {emailRecipients.length} Empfänger ausgewählt
         </Alert>
       )}
 
-      {selectedRecipients.length === 0 && (
+      {emailRecipients.length === 0 && (
         <Alert severity="warning" size="small">
           Keine Empfänger ausgewählt
         </Alert>

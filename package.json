@@ -12,6 +12,7 @@
       "install:all": "npm install",
       "build:all": "npm run build --workspaces",
       "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
+      "dev:clean": "./dev-clean.sh",
       "dev:frontend": "npm run dev --workspace=frontend",
       "dev:backend": "npm run dev --workspace=backend",
       "build:frontend": "npm run build --workspace=frontend",

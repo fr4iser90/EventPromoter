@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -13,15 +13,19 @@ import {
 import useStore from '../../store'
 
 function SettingsModal({ open, onClose }) {
-  const { n8nWebhookUrl, setN8nWebhookUrl } = useStore()
-  const [tempN8nUrl, setTempN8nUrl] = useState(n8nWebhookUrl)
+  const { n8nWebhookUrl, setN8nWebhookUrl, loadAppConfig } = useStore()
+  const [tempN8nUrl, setTempN8nUrl] = useState('')
 
-  // Update temp value when modal opens
-  React.useEffect(() => {
+  // Load config and update temp value when modal opens
+  useEffect(() => {
     if (open) {
-      setTempN8nUrl(n8nWebhookUrl)
+      // Ensure config is loaded
+      loadAppConfig().then(() => {
+        // Use current n8nWebhookUrl after config is loaded
+        setTempN8nUrl(n8nWebhookUrl || 'http://localhost:5678/webhook/multiplatform-publisher')
+      })
     }
-  }, [open, n8nWebhookUrl])
+  }, [open, n8nWebhookUrl, loadAppConfig])
 
   const handleSave = () => {
     setN8nWebhookUrl(tempN8nUrl)

@@ -1,160 +1,7 @@
 {
-  "name": "Multi-Platform Social Media Publisher",
+  "name": "Multi-Platform API Executor - PRE-FORMATTED CONTENT",
   "active": false,
   "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "multiplatform-publisher",
-        "responseMode": "onReceived",
-        "options": {}
-      },
-      "id": "db1cb1a8-09b5-b190-4903-8a112cff091b",
-      "name": "Interface Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [
-        200,
-        200
-      ],
-      "webhookId": "interface-webhook"
-    },
-    {
-      "parameters": {
-        "formTitle": "Neues Event erstellen",
-        "formDescription": "Fülle alle Felder aus für die automatische Veröffentlichung auf Social Media",
-        "options": {
-          "formElements": [
-            {
-              "fieldLabel": "Event Titel",
-              "fieldName": "eventTitle",
-              "fieldType": "text",
-              "requiredField": true,
-              "placeholder": "z.B. Berghain Techno Night"
-            },
-            {
-              "fieldLabel": "Datum",
-              "fieldName": "eventDate",
-              "fieldType": "date",
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "Uhrzeit",
-              "fieldName": "eventTime",
-              "fieldType": "text",
-              "placeholder": "22:00",
-              "requiredField": false
-            },
-            {
-              "fieldLabel": "Veranstaltungsort",
-              "fieldName": "venue",
-              "fieldType": "text",
-              "requiredField": true,
-              "placeholder": "z.B. Berghain"
-            },
-            {
-              "fieldLabel": "Stadt",
-              "fieldName": "city",
-              "fieldType": "text",
-              "requiredField": true,
-              "placeholder": "z.B. Berlin"
-            },
-            {
-              "fieldLabel": "Beschreibung",
-              "fieldName": "description",
-              "fieldType": "textarea",
-              "requiredField": false,
-              "placeholder": "Erzähl etwas über das Event..."
-            },
-            {
-              "fieldLabel": "Bild-URL",
-              "fieldName": "imageUrl",
-              "fieldType": "text",
-              "requiredField": false,
-              "placeholder": "https://example.com/image.jpg"
-            },
-            {
-              "fieldLabel": "Ticket-URL",
-              "fieldName": "ticketUrl",
-              "fieldType": "text",
-              "requiredField": false,
-              "placeholder": "https://tickets.example.com"
-            },
-            {
-              "fieldLabel": "Email-Empfänger",
-              "fieldName": "emailRecipient",
-              "fieldType": "text",
-              "requiredField": true,
-              "placeholder": "deine@email.com"
-            }
-          ]
-        }
-      },
-      "id": "2f08c34e-7bd4-f408-424d-92227372bb92",
-      "name": "On form submission",
-      "type": "n8n-nodes-base.formTrigger",
-      "typeVersion": 2.2,
-      "position": [
-        -1260,
-        -1020
-      ]
-    },
-    {
-      "parameters": {},
-      "id": "ea301d6b-af9d-d8d8-48c3-9743977a93a1",
-      "name": "📁 Manual File Path Input",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -1260,
-        -1220
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "read",
-        "fileSelector": "={{ $json.filePath }}",
-        "options": {}
-      },
-      "id": "8f373439-4051-c8bd-4a4f-b129018dd32c",
-      "name": "📄 Read File from Path",
-      "type": "n8n-nodes-base.readWriteFile",
-      "typeVersion": 1,
-      "position": [
-        -1040,
-        -1220
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Parse manual input - detect markdown or images\n// DE: Manuelle Eingabe parsen - Markdown oder Bilder erkennen\n\nconst item = $input.item.json;\n\n// Check if input is markdown or just text\nlet content = item.content || item.text || '';\n\n// Detect if content is an image URL\nconst imageUrlRegex = /(https?:\\/\\/.*\\.(?:png|jpg|jpeg|gif|webp|svg))/i;\nconst imageMatch = content.match(imageUrlRegex);\n\n// Detect if content is markdown\nconst isMarkdown = content.includes('#') || content.includes('*') || content.includes('[') || content.includes('![');\n\nlet parsedData = {};\n\nif (imageMatch && content.trim() === imageMatch[0]) {\n  // Content is JUST an image URL\n  parsedData = {\n    eventTitle: \"Quick Image Post\",\n    eventDate: new Date().toISOString().split('T')[0], // Today's date\n    eventTime: \"12:00\",\n    venue: \"Online\",\n    city: \"Digital\",\n    description: \"Shared image\",\n    imageUrl: imageMatch[0],\n    ticketUrl: \"\",\n    emailRecipient: \"default@email.com\",\n    publishTo: {\n      twitter: true,\n      instagram: true,\n      facebook: false,\n      linkedin: false,\n      reddit: false,\n      email: false\n    },\n    emailRecipients: [\"default@email.com\"],\n    source: 'manual-image'\n  };\n} else if (isMarkdown) {\n  // Parse markdown content\n  // Simple markdown parser for event data\n  const lines = content.split('\\n');\n  let title = '';\n  let date = '';\n  let time = '22:00';\n  let venue = '';\n  let city = '';\n  let description = '';\n  let imageUrl = '';\n  let ticketUrl = '';\n\n  for (const line of lines) {\n    const trimmed = line.trim();\n    if (trimmed.startsWith('# ')) {\n      title = trimmed.substring(2).trim();\n    } else if (trimmed.includes('Date:') || trimmed.includes('Datum:')) {\n      date = trimmed.split(':')[1]?.trim() || '';\n    } else if (trimmed.includes('Time:') || trimmed.includes('Uhrzeit:')) {\n      time = trimmed.split(':')[1]?.trim() || '22:00';\n    } else if (trimmed.includes('Venue:') || trimmed.includes('Ort:')) {\n      venue = trimmed.split(':')[1]?.trim() || '';\n    } else if (trimmed.includes('City:') || trimmed.includes('Stadt:')) {\n      city = trimmed.split(':')[1]?.trim() || '';\n    } else if (trimmed.includes('Image:') || trimmed.includes('Bild:')) {\n      imageUrl = trimmed.split(':')[1]?.trim() || '';\n    } else if (trimmed.includes('Tickets:') || trimmed.includes('Tickets:')) {\n      ticketUrl = trimmed.split(':')[1]?.trim() || '';\n    } else if (trimmed && !trimmed.startsWith('#') && !trimmed.includes(':')) {\n      description += trimmed + ' ';\n    }\n  }\n\n  parsedData = {\n    eventTitle: title || \"Manual Event Post\",\n    eventDate: date || new Date().toISOString().split('T')[0],\n    eventTime: time,\n    venue: venue || \"TBA\",\n    city: city || \"TBA\",\n    description: description.trim() || \"Event description\",\n    imageUrl: imageUrl,\n    ticketUrl: ticketUrl,\n    emailRecipient: \"default@email.com\",\n    publishTo: {\n      twitter: true,\n      instagram: true,\n      facebook: false,\n      linkedin: false,\n      reddit: false,\n      email: false\n    },\n    emailRecipients: [\"default@email.com\"],\n    source: 'manual-markdown'\n  };\n} else {\n  // Plain text - treat as description\n  parsedData = {\n    eventTitle: \"Quick Text Post\",\n    eventDate: new Date().toISOString().split('T')[0],\n    eventTime: \"12:00\",\n    venue: \"Online\",\n    city: \"Digital\",\n    description: content,\n    imageUrl: \"\",\n    ticketUrl: \"\",\n    emailRecipient: \"default@email.com\",\n    publishTo: {\n      twitter: true,\n      instagram: false,\n      facebook: false,\n      linkedin: false,\n      reddit: false,\n      email: false\n    },\n    emailRecipients: [\"default@email.com\"],\n    source: 'manual-text'\n  };\n}\n\nreturn [{\n  json: parsedData\n}];\n"
-      },
-      "id": "4362bd96-78ab-b408-41e7-a174e39d6ba3",
-      "name": "🔍 Parse Manual Input (Markdown/Image)",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -840,
-        -1220
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://localhost:5678/webhook/upload-event",
-        "options": {
-          "formData": true
-        }
-      },
-      "id": "e4f25b0a-eee9-3d5d-4207-b3d68a4cb86f",
-      "name": "📎 File Upload (PDF/PNG/JPG)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 1,
-      "position": [
-        -1280,
-        -600
-      ]
-    },
     {
       "parameters": {
         "httpMethod": "POST",
@@ -162,174 +9,39 @@
         "responseMode": "responseNode"
       },
       "id": "db1cb1a8-09b5-b190-4903-8a112cff091b",
-      "name": "📥 Webhook Trigger (API)",
+      "name": "📥 Webhook Trigger (API) - PRE-FORMATTED CONTENT",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -1280,
-        -800
+        -1000,
+        0
       ],
       "webhookId": "dj-event-webhook"
-    },
-    {
-      "parameters": {
-        "respondWith": "allIncomingItems"
-      },
-      "id": "0b96c802-0f57-4ef6-4700-89c6caae9042",
-      "name": "✅ Webhook Response",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        1720,
-        -940
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Validate and prepare input data\n// DE: Eingabedaten validieren und vorbereiten\nconst item = $input.item.json;\n\n// Check if this is interface data or form data / Prüfen ob Interface- oder Form-Daten\nconst isInterfaceData = item.files && Array.isArray(item.files);\n\n// Interface data validation / Interface-Daten validierung\nif (isInterfaceData) {\n  // Required fields for interface data\n  if (!item.files || item.files.length === 0) {\n    throw new Error('No files provided');\n  }\n  if (!item.publishTo || Object.keys(item.publishTo).length === 0) {\n    throw new Error('No platforms selected for publishing');\n  }\n\n  // Create content from files and hashtags / Inhalt aus Dateien und Hashtags erstellen\n  const imageFiles = item.files.filter(f => f.isImage);\n  const textFiles = item.files.filter(f => !f.isImage);\n\n  // Use first text file as main content or create from hashtags\n  let eventTitle = 'Multi-Platform Post';\n  let description = '';\n\n  if (textFiles.length > 0) {\n    // Try to extract title from first text file\n    const firstTextFile = textFiles[0];\n    const contentLines = Buffer.from(firstTextFile.base64, 'base64').toString().split('\\n');\n    eventTitle = contentLines[0]?.trim() || 'Multi-Platform Post';\n    description = contentLines.slice(1).join('\\n').trim();\n  }\n\n  // Add hashtags to description\n  if (item.hashtags && item.hashtags.length > 0) {\n    description += '\\n\\n' + item.hashtags.join(' ');\n  }\n\n  // Prepare output for interface data / Ausgabe für Interface-Daten vorbereiten\n  return [{\n    json: {\n      eventTitle: eventTitle,\n      eventDate: new Date().toISOString().split('T')[0], // Today's date\n      eventTime: new Date().toTimeString().slice(0,5), // Current time\n      formattedDate: new Date().toLocaleDateString('de-DE', {\n        weekday: 'long',\n        year: 'numeric',\n        month: 'long',\n        day: 'numeric'\n      }),\n      venue: 'Online',\n      city: 'Web',\n      description: description,\n      imageUrl: imageFiles.length > 0 ? `data:${imageFiles[0].type};base64,${imageFiles[0].base64}` : '',\n      ticketUrl: '',\n      publishTo: item.publishTo,\n      emailRecipients: [],\n      redditSubreddit: item.platformSettings?.reddit?.subreddit || '',\n      redditFlair: item.platformSettings?.reddit?.flair || '',\n      redditNsfw: false,\n      redditSpoiler: false,\n      redditPostType: 'text',\n      // Interface-specific data\n      interfaceData: {\n        files: item.files,\n        hashtags: item.hashtags || [],\n        platformSettings: item.platformSettings || {},\n        metadata: item.metadata || {}\n      },\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\n// Form data validation / Form-Daten validierung\nconst requiredFields = ['eventTitle', 'eventDate', 'venue', 'city'];\nconst missingFields = requiredFields.filter(field => !item[field]);\n\nif (missingFields.length > 0) {\n  throw new Error(`Missing required fields: ${missingFields.join(', ')}`);\n}\n\n// Set defaults / Standardwerte setzen\nconst publishTo = item.publishTo || {\n  twitter: true,\n  instagram: true,\n  facebook: true,\n  linkedin: false,\n  reddit: false,\n  email: false\n};\n\n// Format date / Datum formatieren\nlet formattedDate = item.eventDate;\nif (item.eventDate && item.eventTime) {\n  const date = new Date(`${item.eventDate}T${item.eventTime}`);\n  formattedDate = date.toLocaleDateString('de-DE', {\n    weekday: 'long',\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric'\n  });\n}\n\n// Prepare output / Ausgabe vorbereiten\nreturn [{\n  json: {\n    eventTitle: item.eventTitle,\n    eventDate: item.eventDate,\n    eventTime: item.eventTime || '22:00',\n    formattedDate: formattedDate,\n    venue: item.venue,\n    city: item.city,\n    description: item.description || '',\n    imageUrl: item.imageUrl || '',\n    ticketUrl: item.ticketUrl || '',\n    publishTo: publishTo,\n    emailRecipients: item.emailRecipients || [],\n    // Reddit-specific fields / Reddit-spezifische Felder\n    redditSubreddit: item.redditSubreddit || '',\n    redditFlair: item.redditFlair || '',\n    redditNsfw: item.redditNsfw || false,\n    redditSpoiler: item.redditSpoiler || false,\n    redditPostType: item.redditPostType || 'text', // 'text' or 'link'\n    timestamp: new Date().toISOString()\n  }\n}];\n"
-      },
-      "id": "0ae3ea30-45b9-78f7-4809-8dc561e5914a",
-      "name": "🔍 Validate & Prepare Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -560,
-        -920
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Validate platform credentials and requirements\n// DE: Plattform-Credentials und Anforderungen validieren\n\nconst item = $input.item.json;\n\n// Platform validation rules\nconst platformRules = {\n  twitter: {\n    required: ['eventTitle'],\n    maxLength: 280,\n    supports: ['text']\n  },\n  instagram: {\n    required: ['eventTitle', 'imageUrl'],\n    maxLength: 2200,\n    supports: ['image', 'text']\n  },\n  facebook: {\n    required: ['eventTitle'],\n    maxLength: null, // No strict limit\n    supports: ['text', 'image']\n  },\n  linkedin: {\n    required: ['eventTitle'],\n    maxLength: 3000,\n    supports: ['text', 'image']\n  },\n  reddit: {\n    required: ['eventTitle', 'redditSubreddit'],\n    maxLength: null,\n    supports: ['text', 'image']\n  },\n  email: {\n    required: ['eventTitle', 'emailRecipients'],\n    maxLength: null,\n    supports: ['text', 'image', 'html']\n  }\n};\n\nconst validationResults = [];\nlet hasErrors = false;\n\n// Check each enabled platform\nfor (const [platform, enabled] of Object.entries(item.publishTo || {})) {\n  if (!enabled) continue;\n\n  const rules = platformRules[platform];\n  if (!rules) {\n    validationResults.push({\n      platform,\n      valid: false,\n      error: `Unknown platform: ${platform}`\n    });\n    hasErrors = true;\n    continue;\n  }\n\n  // Check required fields\n  const missingFields = rules.required.filter(field => !item[field]);\n  if (missingFields.length > 0) {\n    validationResults.push({\n      platform,\n      valid: false,\n      error: `Missing required fields: ${missingFields.join(', ')}`\n    });\n    hasErrors = true;\n    continue;\n  }\n\n  // Check content length if applicable\n  if (rules.maxLength && item[`${platform}Text`] && item[`${platform}Text`].length > rules.maxLength) {\n    validationResults.push({\n      platform,\n      valid: false,\n      error: `Content too long: ${item[`${platform}Text`].length} > ${rules.maxLength} characters`\n    });\n    hasErrors = true;\n    continue;\n  }\n\n  // Platform-specific validations\n  if (platform === 'reddit' && !item.redditSubreddit) {\n    validationResults.push({\n      platform,\n      valid: false,\n      error: 'Reddit subreddit is required'\n    });\n    hasErrors = true;\n    continue;\n  }\n\n  if (platform === 'email' && (!item.emailRecipients || item.emailRecipients.length === 0)) {\n    validationResults.push({\n      platform,\n      valid: false,\n      error: 'Email recipients are required'\n    });\n    hasErrors = true;\n    continue;\n  }\n\n  validationResults.push({\n    platform,\n    valid: true,\n    supports: rules.supports\n  });\n}\n\nif (hasErrors) {\n  throw new Error(`Platform validation failed:\\n${validationResults\n    .filter(r => !r.valid)\n    .map(r => `${r.platform}: ${r.error}`)\n    .join('\\n')}`);\n}\n\nreturn [{\n  json: {\n    ...item,\n    platformValidation: validationResults,\n    validationPassed: true,\n    validatedAt: new Date().toISOString()\n  }\n}];\n"
-      },
-      "id": "10afe4e3-b742-b089-4619-818ca21249b4",
-      "name": "✅ Validate Platforms",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -360,
-        -920
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Validate image and ticket URLs\n// DE: Bild- und Ticket-URLs validieren\n\nconst item = $input.item.json;\nconst axios = require('axios');\n\nasync function validateUrl(url, timeout = 5000) {\n  if (!url) return { valid: true, reachable: false }; // Optional URL\n\n  try {\n    // Basic URL format validation\n    new URL(url);\n\n    // Try to reach the URL (HEAD request for efficiency)\n    const response = await axios.head(url, {\n      timeout,\n      headers: {\n        'User-Agent': 'n8n-workflow/1.0 (URL Validation)'\n      }\n    });\n\n    return {\n      valid: true,\n      reachable: response.status >= 200 && response.status < 400,\n      statusCode: response.status,\n      contentType: response.headers['content-type']\n    };\n  } catch (error) {\n    return {\n      valid: false,\n      reachable: false,\n      error: error.message,\n      reason: error.code || 'Unknown error'\n    };\n  }\n}\n\nasync function main() {\n  const results = {};\n\n  // Validate image URL\n  if (item.imageUrl) {\n    console.log(`🔍 Validating image URL: ${item.imageUrl}`);\n    results.imageUrl = await validateUrl(item.imageUrl);\n\n    if (results.imageUrl.valid && results.imageUrl.reachable) {\n      // Check if it's actually an image\n      const contentType = results.imageUrl.contentType;\n      if (contentType && !contentType.startsWith('image/')) {\n        results.imageUrl.warning = `URL does not point to an image (Content-Type: ${contentType})`;\n      }\n    }\n  }\n\n  // Validate ticket URL\n  if (item.ticketUrl) {\n    console.log(`🔍 Validating ticket URL: ${item.ticketUrl}`);\n    results.ticketUrl = await validateUrl(item.ticketUrl);\n  }\n\n  // Check for validation errors\n  const imageError = results.imageUrl && !results.imageUrl.valid;\n  const ticketError = results.ticketUrl && !results.ticketUrl.valid;\n\n  if (imageError || ticketError) {\n    const errors = [];\n    if (imageError) errors.push(`Image URL: ${results.imageUrl.error}`);\n    if (ticketError) errors.push(`Ticket URL: ${results.ticketUrl.error}`);\n\n    throw new Error(`URL validation failed:\\n${errors.join('\\n')}`);\n  }\n\n  // Log warnings\n  if (results.imageUrl?.warning) {\n    console.warn(`⚠️  ${results.imageUrl.warning}`);\n  }\n\n  return [{\n    json: {\n      ...item,\n      urlValidation: results,\n      urlsValidated: true,\n      validatedAt: new Date().toISOString()\n    }\n  }];\n}\n\nreturn main();\n"
-      },
-      "id": "418f0b72-98dc-06e0-4ee0-a8e012ade0c9",
-      "name": "🔗 Validate URLs",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -140,
-        -920
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Format content for different platforms\n// DE: Content für verschiedene Plattformen formatieren\nconst item = $input.item.json;\n\n// Base text / Basistext\nconst baseText = `${item.eventTitle}\\n\\n📅 ${item.formattedDate}\\n🕐 ${item.eventTime}\\n📍 ${item.venue}, ${item.city}\\n\\n${item.description || ''}`.trim();\n\n// Twitter/X format (280 chars max) / Twitter/X Format (max. 280 Zeichen)\nlet twitterText = baseText;\nif (item.ticketUrl) {\n  twitterText += `\\n\\n🎫 Tickets: ${item.ticketUrl}`;\n}\n// Truncate if too long / Kürzen falls zu lang\nif (twitterText.length > 280) {\n  twitterText = twitterText.substring(0, 277) + '...';\n}\n\n// Instagram format (2200 chars max, supports emojis) / Instagram Format (max. 2200 Zeichen)\nlet instagramText = `${item.eventTitle}\\n\\n📅 ${item.formattedDate}\\n🕐 ${item.eventTime}\\n📍 ${item.venue}, ${item.city}\\n\\n${item.description || ''}`;\nif (item.ticketUrl) {\n  instagramText += `\\n\\n🎫 Link in Bio oder: ${item.ticketUrl}`;\n}\ninstagramText += `\\n\\n#DJ #Event #${item.city.replace(/\\s/g, '')} #Nightlife`;\n\n// Facebook format / Facebook Format\nlet facebookText = `${item.eventTitle}\\n\\n📅 ${item.formattedDate}\\n🕐 ${item.eventTime}\\n📍 ${item.venue}, ${item.city}\\n\\n${item.description || ''}`;\nif (item.ticketUrl) {\n  facebookText += `\\n\\n🎫 Tickets: ${item.ticketUrl}`;\n}\n\n// LinkedIn format (professional tone) / LinkedIn Format (professioneller Ton)\nlet linkedinText = `🎧 ${item.eventTitle}\\n\\n📅 Date: ${item.formattedDate}\\n🕐 Time: ${item.eventTime}\\n📍 Location: ${item.venue}, ${item.city}\\n\\n${item.description || 'Join us for an amazing night!'}`;\nif (item.ticketUrl) {\n  linkedinText += `\\n\\n🎫 Get your tickets: ${item.ticketUrl}`;\n}\n\n// Reddit format (Markdown supported) / Reddit Format (Markdown unterstützt)\nlet redditText = `# ${item.eventTitle}\\n\\n**📅 Date:** ${item.formattedDate}\\n**🕐 Time:** ${item.eventTime}\\n**📍 Location:** ${item.venue}, ${item.city}\\n\\n${item.description || ''}\\n\\n---\\n\\n**Event Details:**\\n- **Venue:** ${item.venue}\\n- **City:** ${item.city}\\n- **Date:** ${item.formattedDate}\\n- **Time:** ${item.eventTime}`;\n\nif (item.ticketUrl) {\n  redditText += `\\n\\n**🎫 [Get Tickets](${item.ticketUrl})**`;\n}\n\nif (item.imageUrl) {\n  redditText += `\\n\\n![Event Image](${item.imageUrl})`;\n}\n\nredditText += `\\n\\n---\\n\\n*Posted by automated system*`;\n\n// Email format (HTML) / E-Mail Format (HTML)\nconst emailHtml = `\\n  <h2>${item.eventTitle}</h2>\\n  <p><strong>📅 Date:</strong> ${item.formattedDate}</p>\\n  <p><strong>🕐 Time:</strong> ${item.eventTime}</p>\\n  <p><strong>📍 Location:</strong> ${item.venue}, ${item.city}</p>\\n  ${item.description ? `<p>${item.description}</p>` : ''}\\n  ${item.ticketUrl ? `<p><a href=\"${item.ticketUrl}\" style=\"background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">🎫 Get Tickets</a></p>` : ''}\\n`;\n\nconst emailText = `${item.eventTitle}\\n\\nDate: ${item.formattedDate}\\nTime: ${item.eventTime}\\nLocation: ${item.venue}, ${item.city}\\n\\n${item.description || ''}\\n\\n${item.ticketUrl ? `Tickets: ${item.ticketUrl}` : ''}`;\n\nreturn [{\n  json: {\n    ...item,\n    twitterText: twitterText,\n    instagramText: instagramText,\n    facebookText: facebookText,\n    linkedinText: linkedinText,\n    redditText: redditText,\n    emailHtml: emailHtml,\n    emailText: emailText\n  }\n}];\n"
-      },
-      "id": "5823eac4-7520-1b96-437e-a4c949968b15",
-      "name": "✏️ Format Content for Platforms",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        80,
-        -920
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Generate relevant hashtags for different platforms\n// DE: Relevante Hashtags für verschiedene Plattformen generieren\n\nconst item = $input.item.json;\n\n// Base hashtags for different categories\nconst hashtagDatabase = {\n  music: ['#Music', '#LiveMusic', '#Concert', '#DJ', '#Techno', '#House', '#Electronic'],\n  location: (city) => [`#${city.replace(/\\s+/g, '')}`, `#${city}Events`, `#${city}Nightlife`],\n  event: ['#Event', '#Nightlife', '#Club', '#Party', '#Festival', '#LiveEvent'],\n  platform: {\n    instagram: ['#Instamusic', '#ClubLife', '#NightOut'],\n    twitter: ['#NowPlaying', '#MusicEvent'],\n    facebook: ['#LocalEvent', '#Community'],\n    linkedin: ['#Networking', '#ProfessionalEvent'],\n    reddit: ['#MusicCommunity', '#EventShare']\n  }\n};\n\nfunction generateHashtags() {\n  const hashtags = new Set();\n\n  // Add music-related hashtags\n  hashtagDatabase.music.forEach(tag => hashtags.add(tag));\n\n  // Add location-based hashtags\n  if (item.city) {\n    const locationTags = hashtagDatabase.location(item.city);\n    locationTags.forEach(tag => hashtags.add(tag));\n  }\n\n  // Add event-related hashtags\n  hashtagDatabase.event.forEach(tag => hashtags.add(tag));\n\n  // Add platform-specific hashtags\n  for (const [platform, enabled] of Object.entries(item.publishTo || {})) {\n    if (enabled && hashtagDatabase.platform[platform]) {\n      hashtagDatabase.platform[platform].forEach(tag => hashtags.add(tag));\n    }\n  }\n\n  // Extract hashtags from description\n  if (item.description) {\n    const descriptionHashtags = item.description.match(/#\\w+/g);\n    if (descriptionHashtags) {\n      descriptionHashtags.forEach(tag => hashtags.add(tag));\n    }\n  }\n\n  // Convert to array and sort\n  const result = Array.from(hashtags).sort();\n\n  // Limit to reasonable amount per platform\n  const limits = {\n    twitter: 5,      // Twitter prefers fewer hashtags\n    instagram: 10,   // Instagram can handle more\n    facebook: 8,\n    linkedin: 3,     // LinkedIn prefers professional look\n    reddit: 5,\n    email: 0         // Email usually doesn't need hashtags\n  };\n\n  return result.slice(0, limits[item.currentPlatform] || 5);\n}\n\n// Generate hashtags for each platform\nconst enhancedItem = { ...item };\n\nfor (const [platform, enabled] of Object.entries(item.publishTo || {})) {\n  if (enabled) {\n    // Temporarily set current platform for hashtag generation\n    enhancedItem.currentPlatform = platform;\n    const platformHashtags = generateHashtags();\n\n    // Add hashtags to platform-specific text\n    const textKey = `${platform}Text`;\n    if (enhancedItem[textKey]) {\n      // Only add hashtags if not already present\n      const existingHashtags = enhancedItem[textKey].match(/#\\w+/g) || [];\n      const newHashtags = platformHashtags.filter(tag => !existingHashtags.includes(tag));\n\n      if (newHashtags.length > 0) {\n        enhancedItem[textKey] += '\\n\\n' + newHashtags.join(' ');\n      }\n    }\n\n    enhancedItem[`${platform}Hashtags`] = platformHashtags;\n  }\n}\n\nreturn [{\n  json: {\n    ...enhancedItem,\n    hashtagsGenerated: true,\n    generatedAt: new Date().toISOString()\n  }\n}];\n"
-      },
-      "id": "9dc9eeb8-d1da-40bc-4417-b55f9b79dc2c",
-      "name": "🏷️ Generate Hashtags",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        260,
-        -920
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Collect results from all posting operations\n// DE: Sammelt Ergebnisse aller Posting-Operationen\nconst results = [];\nconst allItems = $input.all();\n\n// Get original event data from first item / Hole ursprüngliche Event-Daten vom ersten Item\nconst inputData = allItems[0]?.json || {};\n\n// Platform detection from data / Plattform-Erkennung aus Daten\nconst detectPlatform = (item) => {\n  // Check for platform-specific fields / Prüfe plattform-spezifische Felder\n  if (item.id_str || item.id) return 'Twitter/X';\n  if (item.instagram_id || item.media_id) return 'Instagram';\n  if (item.post_id || item.facebook_id) return 'Facebook';\n  if (item.linkedin_id || item.urn) return 'LinkedIn';\n  if (item.messageId || item.emailId) return 'Email';\n  if (item.name && item.name.startsWith('t3_')) return 'Reddit';\n  // Fallback: check for error or success indicators / Fallback: Prüfe Fehler- oder Erfolgs-Indikatoren\n  if (item.error) return 'Unknown Platform';\n  return 'Unknown Platform';\n};\n\n// Collect all outputs / Alle Ausgaben sammeln\nallItems.forEach((item) => {\n  const platform = detectPlatform(item.json);\n  const hasError = item.json.error || item.json.errorMessage || false;\n\n  results.push({\n    platform: platform,\n    success: !hasError,\n    data: item.json,\n    timestamp: new Date().toISOString()\n  });\n});\n\n// If no results collected, create summary from input / Falls keine Ergebnisse gesammelt, erstelle Zusammenfassung aus Eingabe\nif (results.length === 0 && inputData.eventTitle) {\n  results.push({\n    platform: 'No platforms enabled',\n    success: true,\n    data: { message: 'No platforms were enabled for posting' },\n    timestamp: new Date().toISOString()\n  });\n}\n\nreturn [{\n  json: {\n    eventTitle: inputData.eventTitle || 'Unknown Event',\n    eventDate: inputData.eventDate || '',\n    timestamp: new Date().toISOString(),\n    results: results,\n    summary: {\n      total: results.length,\n      successful: results.filter(r => r.success).length,\n      failed: results.filter(r => !r.success).length\n    }\n  }\n}];\n"
-      },
-      "id": "67620867-d83e-dbb1-4e84-955f64112179",
-      "name": "📊 Collect Results",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1080,
-        -940
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Enhanced logging and monitoring for all posting operations\n// DE: Erweiterte Protokollierung und Überwachung aller Posting-Operationen\n\nconst item = $input.item.json;\n\n// Create detailed execution log\nconst executionLog = {\n  eventId: `${item.eventTitle}-${Date.now()}`,\n  timestamp: new Date().toISOString(),\n  event: {\n    title: item.eventTitle,\n    date: item.eventDate,\n    venue: item.venue,\n    city: item.city\n  },\n  platforms: {},\n  summary: {\n    totalPlatforms: 0,\n    successful: 0,\n    failed: 0,\n    skipped: 0\n  }\n};\n\n// Analyze platform results\nif (item.results && Array.isArray(item.results)) {\n  item.results.forEach(result => {\n    executionLog.summary.totalPlatforms++;\n\n    executionLog.platforms[result.platform] = {\n      success: result.success,\n      timestamp: result.timestamp,\n      data: result.data\n    };\n\n    if (result.success) {\n      executionLog.summary.successful++;\n    } else {\n      executionLog.summary.failed++;\n    }\n  });\n}\n\n// Calculate skipped platforms\nconst enabledPlatforms = Object.keys(item.publishTo || {}).filter(p => item.publishTo[p]);\nexecutionLog.summary.skipped = enabledPlatforms.length - executionLog.summary.totalPlatforms;\n\n// Performance metrics\nexecutionLog.performance = {\n  totalDuration: Date.now() - new Date(item.timestamp).getTime(),\n  platformsPerSecond: executionLog.summary.totalPlatforms / ((Date.now() - new Date(item.timestamp).getTime()) / 1000)\n};\n\n// Generate human-readable summary\nlet summaryText = `🎫 Event: ${item.eventTitle}\\n`;\nsummaryText += `📅 Date: ${item.formattedDate}\\n`;\nsummaryText += `📍 Location: ${item.venue}, ${item.city}\\n\\n`;\n\nsummaryText += `📊 Posting Results:\\n`;\nsummaryText += `✅ Successful: ${executionLog.summary.successful}\\n`;\nsummaryText += `❌ Failed: ${executionLog.summary.failed}\\n`;\nsummaryText += `⏭️  Skipped: ${executionLog.summary.skipped}\\n\\n`;\n\nif (executionLog.summary.failed > 0) {\n  summaryText += `⚠️  Failed Platforms:\\n`;\n  Object.entries(executionLog.platforms).forEach(([platform, data]) => {\n    if (!data.success) {\n      summaryText += `• ${platform}: ${data.data?.error || 'Unknown error'}\\n`;\n    }\n  });\n}\n\n// Log to console for n8n logs\nconsole.log('='.repeat(50));\nconsole.log('🎫 MULTI-PLATFORM POSTING LOG');\nconsole.log('='.repeat(50));\nconsole.log(summaryText);\nconsole.log(`⏱️  Total Duration: ${executionLog.performance.totalDuration}ms`);\nconsole.log('='.repeat(50));\n\n// Return enhanced data\nreturn [{\n  json: {\n    ...item,\n    executionLog: executionLog,\n    summaryText: summaryText,\n    logGenerated: true\n  }\n}];\n"
-      },
-      "id": "85af0bda-bf6f-bf40-4246-ac4b0132fc2a",
-      "name": "📋 Enhanced Logging",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1240,
-        -940
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// EN: Send notifications to Discord/Telegram about posting results\n// DE: Sende Benachrichtigungen an Discord/Telegram über Posting-Ergebnisse\n\nconst item = $input.item.json;\nconst axios = require('axios');\n\nasync function sendDiscordNotification(webhookUrl, message) {\n  try {\n    await axios.post(webhookUrl, {\n      content: message,\n      embeds: [{\n        title: \"🎫 Multi-Platform Event Posting\",\n        description: item.summaryText,\n        color: item.executionLog?.summary?.failed > 0 ? 0xff0000 : 0x00ff00,\n        fields: [\n          {\n            name: \"📊 Results\",\n            value: `✅ ${item.executionLog?.summary?.successful || 0} | ❌ ${item.executionLog?.summary?.failed || 0} | ⏭️ ${item.executionLog?.summary?.skipped || 0}`,\n            inline: true\n          },\n          {\n            name: \"⏱️ Duration\",\n            value: `${item.executionLog?.performance?.totalDuration || 0}ms`,\n            inline: true\n          },\n          {\n            name: \"📅 Event\",\n            value: `${item.eventTitle} - ${item.formattedDate}`,\n            inline: false\n          }\n        ],\n        timestamp: new Date().toISOString()\n      }]\n    });\n    return { platform: 'discord', success: true };\n  } catch (error) {\n    return { platform: 'discord', success: false, error: error.message };\n  }\n}\n\nasync function sendTelegramNotification(botToken, chatId, message) {\n  try {\n    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;\n    await axios.post(url, {\n      chat_id: chatId,\n      text: message,\n      parse_mode: 'HTML',\n      disable_web_page_preview: true\n    });\n    return { platform: 'telegram', success: true };\n  } catch (error) {\n    return { platform: 'telegram', success: false, error: error.message };\n  }\n}\n\nasync function main() {\n  const notifications = [];\n\n  // Discord Notification\n  const discordWebhook = $env.DISCORD_WEBHOOK_URL;\n  if (discordWebhook) {\n    console.log('📢 Sending Discord notification...');\n    const discordResult = await sendDiscordNotification(discordWebhook, item.summaryText);\n    notifications.push(discordResult);\n\n    if (discordResult.success) {\n      console.log('✅ Discord notification sent');\n    } else {\n      console.error('❌ Discord notification failed:', discordResult.error);\n    }\n  }\n\n  // Telegram Notification\n  const telegramBotToken = $env.TELEGRAM_BOT_TOKEN;\n  const telegramChatId = $env.TELEGRAM_CHAT_ID;\n\n  if (telegramBotToken && telegramChatId) {\n    console.log('📢 Sending Telegram notification...');\n\n    // Format message for Telegram (HTML)\n    const telegramMessage = `\n🎫 <b>Multi-Platform Event Posting</b>\n\n📅 <b>${item.eventTitle}</b>\n📍 ${item.venue}, ${item.city}\n🕐 ${item.formattedDate}\n\n📊 <b>Results:</b>\n✅ Successful: ${item.executionLog?.summary?.successful || 0}\n❌ Failed: ${item.executionLog?.summary?.failed || 0}\n⏭️ Skipped: ${item.executionLog?.summary?.skipped || 0}\n\n⏱️ Duration: ${item.executionLog?.performance?.totalDuration || 0}ms\n    `.trim();\n\n    const telegramResult = await sendTelegramNotification(telegramBotToken, telegramChatId, telegramMessage);\n    notifications.push(telegramResult);\n\n    if (telegramResult.success) {\n      console.log('✅ Telegram notification sent');\n    } else {\n      console.error('❌ Telegram notification failed:', telegramResult.error);\n    }\n  }\n\n  // If no notification methods configured, log to console\n  if (notifications.length === 0) {\n    console.log('ℹ️  No notification methods configured');\n    console.log('📊 Posting Summary:');\n    console.log(item.summaryText);\n  }\n\n  return [{\n    json: {\n      ...item,\n      notifications: notifications,\n      notificationsSent: notifications.length > 0,\n      notificationTimestamp: new Date().toISOString()\n    }\n  }];\n}\n\nreturn main();\n"
-      },
-      "id": "5b113556-0105-8e2a-43e8-b75fd3af7a67",
-      "name": "📢 Send Notifications",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1400,
-        -940
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": [
-          {
-            "id": "merge-001",
-            "name": "finalResult",
-            "value": "={{ $json }}",
-            "type": "object"
-          }
-        ]
-      },
-      "id": "d91bd30c-2921-332f-4cbd-8a6e447fa8a2",
-      "name": "🔀 Merge Results",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1560,
-        -940
-      ]
     },
     {
       "parameters": {
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.publishTo.twitter }}"
+              "value1": "={{ $json.twitter !== undefined }}",
+              "value2": true
             }
           ]
-        },
-        "additionalFields": {}
+        }
       },
       "id": "9b235081-7c85-c87b-4929-becf7057566d",
-      "name": "🐦 Post to Twitter/X?",
+      "name": "🐦 Has Twitter Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        420,
-        -1340
+        200,
+        -200
       ]
     },
     {
       "parameters": {
+        "resource": "tweet",
+        "text": "={{ $json.twitter.text }}",
         "additionalFields": {}
       },
       "id": "2c3fe310-333f-277b-4f32-ab8676d78d8b",
@@ -337,8 +49,8 @@
       "type": "n8n-nodes-base.twitter",
       "typeVersion": 2,
       "position": [
-        680,
-        -1340
+        400,
+        -200
       ]
     },
     {
@@ -346,32 +58,33 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.publishTo.instagram }}"
+              "value1": "={{ $json.instagram !== undefined }}",
+              "value2": true
             }
           ]
-        },
-        "additionalFields": {}
+        }
       },
       "id": "780e148d-85b9-639f-4d15-836c6d558325",
-      "name": "📷 Post to Instagram?",
+      "name": "📸 Has Instagram Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        420,
-        -1160
+        200,
+        0
       ]
     },
     {
       "parameters": {
+        "operation": "createPost",
         "additionalFields": {}
       },
       "id": "0088e969-08ca-7f61-457e-9b96c9b9ae29",
-      "name": "📷 Post to Instagram",
+      "name": "📸 Post to Instagram",
       "type": "n8n-nodes-base.instagram",
       "typeVersion": 1,
       "position": [
-        680,
-        -1160
+        400,
+        0
       ]
     },
     {
@@ -379,32 +92,34 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.publishTo.facebook }}"
+              "value1": "={{ $json.facebook !== undefined }}",
+              "value2": true
             }
           ]
-        },
-        "additionalFields": {}
+        }
       },
       "id": "2b3674c3-9ad8-5f3b-4b8a-8844a4829632",
-      "name": "👤 Post to Facebook?",
+      "name": "👥 Has Facebook Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        420,
-        -960
+        200,
+        200
       ]
     },
     {
       "parameters": {
+        "resource": "post",
+        "message": "={{ $json.facebook.text }}",
         "additionalFields": {}
       },
       "id": "bc4d5d06-12ab-45fd-4c7d-81ec0d2322db",
-      "name": "👤 Post to Facebook Page",
+      "name": "👥 Post to Facebook Page",
       "type": "n8n-nodes-base.facebook",
       "typeVersion": 2.1,
       "position": [
-        680,
-        -960
+        400,
+        200
       ]
     },
     {
@@ -412,19 +127,19 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.publishTo.linkedin }}"
+              "value1": "={{ $json.linkedin !== undefined }}",
+              "value2": true
             }
           ]
-        },
-        "additionalFields": {}
+        }
       },
       "id": "fc65904b-3706-7780-4226-b3416b384a85",
-      "name": "💼 Post to LinkedIn?",
+      "name": "💼 Has LinkedIn Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        420,
-        -780
+        200,
+        400
       ]
     },
     {
@@ -436,8 +151,8 @@
       "type": "n8n-nodes-base.linkedIn",
       "typeVersion": 1,
       "position": [
-        680,
-        -780
+        400,
+        400
       ]
     },
     {
@@ -445,37 +160,35 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.publishTo.email && $json.emailRecipients && $json.emailRecipients.length > 0 }}"
+              "value1": "={{ $json.email !== undefined }}",
+              "value2": true
             }
           ]
         }
       },
       "id": "669903d2-b36d-5ec7-4d7d-a5fe796e212a",
-      "name": "📧 Send Email?",
+      "name": "📧 Has Email Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        420,
-        -600
+        200,
+        600
       ]
     },
     {
       "parameters": {
-        "fromEmail": "={{ $env.EMAIL_FROM || 'noreply@example.com' }}",
-        "toEmail": "={{ $json.emailRecipients.join(',') }}",
-        "subject": "={{ $json.eventTitle }} - {{ $json.formattedDate }}",
-        "html": "={{ $json.emailHtml }}",
-        "options": {
-          "attachments": "={{ $json.imageUrl ? [{ url: $json.imageUrl, name: 'event-image.jpg' }] : [] }}"
-        }
+        "fromEmail": "noreply@eventpromoter.com",
+        "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
+        "subject": "={{ $json.email.subject }}",
+        "html": "={{ $json.email.html }}"
       },
       "id": "759aad6f-89e1-c521-4728-9c3c10aa5117",
       "name": "📧 Send Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        680,
-        -600
+        400,
+        600
       ]
     },
     {
@@ -483,26 +196,27 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.publishTo.reddit && $json.redditSubreddit }}"
+              "value1": "={{ $json.reddit !== undefined }}",
+              "value2": true
             }
           ]
         }
       },
       "id": "a4723b69-5eea-653b-4de3-834ea019da1d",
-      "name": "🔴 Post to Reddit?",
+      "name": "🔴 Has Reddit Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        420,
-        -400
+        200,
+        800
       ]
     },
     {
       "parameters": {
         "resource": "post",
-        "subreddit": "DJs",
-        "title": "={{ $json.eventTitle }}",
-        "text": "={{ $json.redditText }}",
+        "subreddit": "={{ $json.reddit.subreddit }}",
+        "title": "={{ $json.reddit.title }}",
+        "text": "={{ $json.reddit.text }}",
         "additionalFields": {}
       },
       "id": "ebab7789-9a78-84d0-4746-823b1570e99c",
@@ -510,8 +224,8 @@
       "type": "n8n-nodes-base.reddit",
       "typeVersion": 1,
       "position": [
-        680,
-        -400
+        400,
+        800
       ]
     },
     {
@@ -520,50 +234,12 @@
         "options": {}
       },
       "id": "0b96c802-0f57-4ef6-4700-89c6caae9042",
-      "name": "✅ Webhook Response",
+      "name": "✅ Send Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1760,
-        -940
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "message",
-        "guildId": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        },
-        "sendTo": "user",
-        "userId": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        },
-        "options": {}
-      },
-      "id": "eb638535-6f25-008d-414d-b30fe88ce5fd",
-      "name": "Discord",
-      "type": "n8n-nodes-base.discord",
-      "typeVersion": 2,
-      "position": [
-        1760,
-        -780
-      ]
-    },
-    {
-      "parameters": {
-        "additionalFields": {}
-      },
-      "id": "66f72527-2972-c9f2-4838-a0bb98dd78d1",
-      "name": "Telegram",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1760,
-        -1100
+        600,
+        0
       ]
     },
     {
@@ -728,73 +404,135 @@
     }
   ],
   "connections": {
-    "Interface Webhook": {
+    "📥 Webhook Trigger (API) - PRE-FORMATTED CONTENT": {
       "main": [
         [
           {
-            "node": "🔍 Validate & Prepare Data",
+            "node": "🐦 Has Twitter Content?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📸 Has Instagram Content?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "👥 Has Facebook Content?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💼 Has LinkedIn Content?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📧 Has Email Content?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔴 Has Reddit Content?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "On form submission": {
+    "🐦 Has Twitter Content?": {
       "main": [
         [
           {
-            "node": "🔍 Validate & Prepare Data",
+            "node": "🐦 Post to Twitter/X",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "🐦 Post to Twitter/X": {
+      "main": [
+        [
+          {
+            "node": "✅ Send Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "📁 Manual File Path Input": {
+    "📸 Has Instagram Content?": {
       "main": [
         [
           {
-            "node": "📄 Read File from Path",
+            "node": "📸 Post to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "📸 Post to Instagram": {
+      "main": [
+        [
+          {
+            "node": "✅ Send Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "📄 Read File from Path": {
+    "👥 Has Facebook Content?": {
       "main": [
         [
           {
-            "node": "🔍 Parse Manual Input (Markdown/Image)",
+            "node": "👥 Post to Facebook Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "👥 Post to Facebook Page": {
+      "main": [
+        [
+          {
+            "node": "✅ Send Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "🔍 Parse Manual Input (Markdown/Image)": {
+    "💼 Has LinkedIn Content?": {
       "main": [
         [
           {
-            "node": "🔍 Validate & Prepare Data",
+            "node": "💼 Post to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "💼 Post to LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "✅ Send Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "📎 File Upload (PDF/PNG/JPG)": {
-      "main": [
-        [
-          {
-            "node": "🔍 Validate & Prepare Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📧 Send Email?": {
+    "📧 Has Email Content?": {
       "main": [
         [
           {
@@ -810,164 +548,14 @@
       "main": [
         [
           {
-            "node": "📊 Collect Results",
+            "node": "✅ Send Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "📥 Webhook Trigger (API)": {
-      "main": [
-        [
-          {
-            "node": "🔍 Validate & Prepare Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🔍 Validate & Prepare Data": {
-      "main": [
-        [
-          {
-            "node": "✅ Validate Platforms",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "✅ Validate Platforms": {
-      "main": [
-        [
-          {
-            "node": "🔗 Validate URLs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🔗 Validate URLs": {
-      "main": [
-        [
-          {
-            "node": "✏️ Format Content for Platforms",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "✏️ Format Content for Platforms": {
-      "main": [
-        [
-          {
-            "node": "🏷️ Generate Hashtags",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🏷️ Generate Hashtags": {
-      "main": [
-        [
-          {
-            "node": "🐦 Post to Twitter/X?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "📷 Post to Instagram?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "👤 Post to Facebook?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "💼 Post to LinkedIn?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "📧 Send Email?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "🔴 Post to Reddit?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🐦 Post to Twitter/X?": {
-      "main": [
-        [
-          {
-            "node": "🐦 Post to Twitter/X",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "📷 Post to Instagram?": {
-      "main": [
-        [
-          {
-            "node": "📷 Post to Instagram",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "👤 Post to Facebook?": {
-      "main": [
-        [
-          {
-            "node": "👤 Post to Facebook Page",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "💼 Post to LinkedIn?": {
-      "main": [
-        [
-          {
-            "node": "💼 Post to LinkedIn",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "email-send": {
-      "main": [
-        [
-          {
-            "node": "📊 Collect Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🔴 Post to Reddit?": {
+    "🔴 Has Reddit Content?": {
       "main": [
         [
           {
@@ -979,120 +567,11 @@
         []
       ]
     },
-    "🐦 Post to Twitter/X": {
-      "main": [
-        [
-          {
-            "node": "📊 Collect Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📷 Post to Instagram": {
-      "main": [
-        [
-          {
-            "node": "📊 Collect Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "👤 Post to Facebook Page": {
-      "main": [
-        [
-          {
-            "node": "📊 Collect Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "💼 Post to LinkedIn": {
-      "main": [
-        [
-          {
-            "node": "📊 Collect Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "🔴 Post to Reddit": {
       "main": [
         [
           {
-            "node": "📊 Collect Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "reddit-post": {
-      "main": [
-        [
-          {
-            "node": "📊 Collect Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📊 Collect Results": {
-      "main": [
-        [
-          {
-            "node": "📋 Enhanced Logging",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📋 Enhanced Logging": {
-      "main": [
-        [
-          {
-            "node": "📢 Send Notifications",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📢 Send Notifications": {
-      "main": [
-        [
-          {
-            "node": "Discord",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Telegram",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "🔀 Merge Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🔀 Merge Results": {
-      "main": [
-        [
-          {
-            "node": "✅ Webhook Response",
+            "node": "✅ Send Response",
             "type": "main",
             "index": 0
           }

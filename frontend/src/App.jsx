@@ -90,6 +90,9 @@ function App() {
     }
 
     loadAppConfig()
+
+    // Load session data
+    useStore.getState().initialize()
   }, []) // Empty dependency array - only run on mount
 
   // Save configuration changes to API
@@ -278,15 +281,15 @@ function App() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
+              <PlatformSelector />
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
               <Preview files={safeUploadedFiles} />
             </Box>
 
             <Box sx={{ mb: 4 }}>
               <HashtagBuilder />
-            </Box>
-
-            <Box sx={{ mb: 4 }}>
-              <PlatformSelector />
             </Box>
 
             {error && (
