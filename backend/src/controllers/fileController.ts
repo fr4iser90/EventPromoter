@@ -174,7 +174,7 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID required' })
       }
 
-      const EventDir = path.join(process.cwd(), 'workspaces', eventId, 'files')
+      const EventDir = path.join(process.cwd(), 'events', eventId, 'files')
 
       if (!fs.existsSync(EventDir)) {
         return res.json({ files: [] })

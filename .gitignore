@@ -169,6 +169,6 @@ deu.traineddata
 # test files
 test-data/
 
-# workspace files
-workspaces/*
+# event files
+backend/events/*
 

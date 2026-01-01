@@ -1,4 +1,6 @@
 import { Request, Response } from 'express'
+import path from 'path'
+import fs from 'fs'
 import { SmartParsingService, ParsedEventData, DuplicateCheckResult } from '../services/smartParsingService.js'
 import { PlatformParsingService } from '../services/platformParsingService.js'
 import { UploadedFile } from '../types/index.js'
@@ -13,22 +15,24 @@ export class ParsingController {
         return res.status(400).json({ error: 'File ID required' })
       }
 
-      // Get file info from event workspace
-      // This would come from the uploaded file refs in the current event
-      const file: UploadedFile = {
-        id: fileId,
-        name: req.body.name || 'unknown',
-        filename: req.body.filename || 'unknown',
-        url: `/api/files/${req.body.eventId}/${req.body.filename}`,
-        path: req.body.path,
-        size: req.body.size || 0,
-        type: req.body.type || 'unknown',
-        uploadedAt: req.body.uploadedAt || new Date().toISOString(),
-        isImage: req.body.isImage || false
+      // Get file info from request body
+      const eventId = req.body.eventId
+      const filename = req.body.filename
+
+      if (!eventId || !filename) {
+        return res.status(400).json({ error: 'Event ID and filename required' })
+      }
+
+      // Construct file path
+      const filePath = path.join(process.cwd(), 'events', eventId, 'files', filename)
+
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found on server' })
       }
 
       // Parse the file
-      const { parsedData, duplicateCheck } = await SmartParsingService.parseFile(file)
+      const { parsedData, duplicateCheck } = await SmartParsingService.parseFileFromPath(filePath, filename, eventId)
 
       res.json({
         success: true,
@@ -48,31 +52,25 @@ export class ParsingController {
   // Parse file and apply platform-specific optimizations
   static async parseForPlatforms(req: Request, res: Response) {
     try {
-      const { fileId, platforms } = req.body
+      const { parsedData, platforms, eventId } = req.body
 
-      if (!fileId) {
-        return res.status(400).json({ error: 'File ID required' })
+      if (!parsedData) {
+        return res.status(400).json({ error: 'Parsed data required' })
       }
 
       if (!platforms || !Array.isArray(platforms)) {
         return res.status(400).json({ error: 'Platforms array required' })
       }
 
-      // Get file info
-      const file: UploadedFile = {
-        id: fileId,
-        name: req.body.name || 'unknown',
-        filename: req.body.filename || 'unknown',
-        url: `/api/files/${req.body.eventId}/${req.body.filename}`,
-        path: req.body.path,
-        size: req.body.size || 0,
-        type: req.body.type || 'unknown',
-        uploadedAt: req.body.uploadedAt || new Date().toISOString(),
-        isImage: req.body.isImage || false
+      if (!eventId) {
+        return res.status(400).json({ error: 'Event ID required' })
       }
 
-      // Parse the file
-      const { parsedData, duplicateCheck } = await SmartParsingService.parseFile(file)
+      // Save parsed data to event folder
+      await SmartParsingService.saveParsedData(eventId, parsedData)
+
+      // Check for duplicates
+      const duplicateCheck = await SmartParsingService.checkForDuplicates(parsedData.hash, eventId)
 
       // Apply platform-specific parsing
       const platformContent: Record<string, any> = {}

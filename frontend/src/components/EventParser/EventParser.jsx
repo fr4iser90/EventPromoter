@@ -37,7 +37,6 @@ import SaveIcon from '@mui/icons-material/Save'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { parseFileForEvent, formatEventForDisplay } from '../../utils/pdfParser'
 import useStore from '../../store'
 
 // Platform Preview Component
@@ -343,28 +342,6 @@ function EventParser() {
   const { emailRecipients } = useStore()
   const [templateAnchorEl, setTemplateAnchorEl] = useState(null)
 
-  // Handle file parsing
-  const handleParseFile = async (file) => {
-    setIsParsing(true)
-    setParseError('')
-    setParsedData(null)
-
-    try {
-      const result = await parseFileForEvent(file)
-
-      if (result.success) {
-        setParsedData(result)
-        setEditedData({ ...result.data })
-        setActiveTab(1) // Switch to edit tab after successful parsing
-      } else {
-        setParseError(result.error)
-      }
-    } catch (error) {
-      setParseError('Parsing failed: ' + error.message)
-    } finally {
-      setIsParsing(false)
-    }
-  }
 
   // Handle data editing
   const handleDataChange = (field, value) => {
@@ -395,7 +372,7 @@ function EventParser() {
   // Reset to parsed data
   const handleResetToParsed = () => {
     if (parsedData) {
-      setEditedData({ ...parsedData.data })
+      setEditedData({ ...parsedData })
     }
   }
 
@@ -443,30 +420,32 @@ function EventParser() {
     }
   }, [setPlatformContent])
 
-  // Auto-parse first PDF/image when files are uploaded
+  // Load parsed data when component mounts or files change
   React.useEffect(() => {
-    const parseFirstFile = async () => {
-      if (uploadedFileRefs.length > 0 && !parsedData && !isParsing) {
-        const firstFileRef = uploadedFileRefs[0]
-        if (firstFileRef && (firstFileRef.type === 'application/pdf' || firstFileRef.type.startsWith('image/'))) {
+    const loadParsedData = async () => {
+      if (uploadedFileRefs.length > 0) {
+        const currentEventId = useStore.getState().currentEvent?.id
+        if (currentEventId) {
           try {
-            setIsParsing(true)
-            // Download file from server
-            const response = await fetch(firstFileRef.url)
-            const blob = await response.blob()
-            const file = new File([blob], firstFileRef.name, { type: firstFileRef.type })
-            await handleParseFile(file)
+            const response = await fetch(`http://localhost:4000/api/parsing/data/${currentEventId}`)
+            if (response.ok) {
+              const data = await response.json()
+              if (data.success && data.parsedData) {
+                console.log('Loaded existing parsed data from backend')
+                setParsedData(data.parsedData)
+                setEditedData({ ...data.parsedData })
+                setActiveTab(1) // Switch to edit tab if we have data
+              }
+            }
           } catch (error) {
-            console.error('Failed to download and parse file:', error)
-          } finally {
-            setIsParsing(false)
+            console.log('No existing parsed data found')
           }
         }
       }
     }
 
-    parseFirstFile()
-  }, [uploadedFileRefs, isParsing]) // Removed parsedData to prevent infinite loop
+    loadParsedData()
+  }, [uploadedFileRefs]) // Load when files change
 
   // Generate platform-specific content
   const generatePlatformContent = (platform, data) => {
@@ -644,7 +623,7 @@ function EventParser() {
                 Raw Extracted Data
               </Typography>
               <Alert severity="info" sx={{ mb: 2 }}>
-                Confidence: {parsedData.data.confidence}% | Pages: {parsedData.pages}
+                Confidence: {parsedData.confidence}% | Parsed: {new Date(parsedData.parsedAt).toLocaleString()}
                 {parsedData.ocrConfidence && ` | OCR: ${parsedData.ocrConfidence}%`}
               </Alert>
               <Paper sx={{ p: 2, bgcolor: 'grey.50', fontFamily: 'monospace', maxHeight: 400, overflow: 'auto' }}>

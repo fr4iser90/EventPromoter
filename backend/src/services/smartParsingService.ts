@@ -85,7 +85,7 @@ export class SmartParsingService {
       rawText,
       confidence,
       parsedAt: new Date().toISOString(),
-      hash: this.generateEventHash(rawText)
+      hash: '' // Will be set after parsing
     }
 
     // Extract event information using regex patterns
@@ -156,15 +156,18 @@ export class SmartParsingService {
       .join(' ')
       .trim()
 
+    // Generate hash from structured data
+    parsed.hash = this.generateEventHash(parsed)
+
     return parsed
   }
 
   // Generate hash for duplicate detection (Title + Date + Venue)
-  private static generateEventHash(rawText: string): string {
-    // Extract key fields for hash
-    const title = this.extractField(rawText, 'title') || ''
-    const date = this.extractField(rawText, 'date') || ''
-    const venue = this.extractField(rawText, 'venue') || ''
+  private static generateEventHash(parsedData: ParsedEventData): string {
+    // Use structured data for consistent hashing
+    const title = parsedData.title || ''
+    const date = parsedData.date || ''
+    const venue = parsedData.venue?.name || parsedData.venue || ''
 
     const hashInput = `${title}${date}${venue}`.toLowerCase().trim()
     return crypto.createHash('md5').update(hashInput).digest('hex')
@@ -260,6 +263,58 @@ export class SmartParsingService {
 
     fs.writeFileSync(parsedDataPath, JSON.stringify(parsedData, null, 2))
     console.log(`Saved parsed data for event ${eventId}`)
+  }
+
+  // Parse file from path (for backend parsing)
+  static async parseFileFromPath(filePath: string, filename: string, eventId: string): Promise<{
+    parsedData: ParsedEventData
+    duplicateCheck: DuplicateCheckResult
+  }> {
+    console.log(`Starting backend parsing for file: ${filename}`)
+
+    try {
+      // Extract text from file
+      const { text, confidence } = await this.extractText(filePath, this.getMimeType(filename))
+
+      if (!text || text.trim().length === 0) {
+        throw new Error('No text could be extracted from file')
+      }
+
+      // Parse structured data
+      const parsedData = this.parseEventData(text, confidence)
+
+      // Check for duplicates
+      const duplicateCheck = await this.checkForDuplicates(parsedData.hash, eventId)
+
+      // Save parsed data
+      await this.saveParsedData(eventId, parsedData)
+
+      console.log(`Successfully parsed file: ${filename}`)
+      console.log(`Duplicate check: ${duplicateCheck.isDuplicate ? 'DUPLICATE FOUND' : 'NO DUPLICATE'}`)
+
+      return {
+        parsedData,
+        duplicateCheck
+      }
+
+    } catch (error) {
+      console.error(`Failed to parse file ${filename}:`, error)
+      throw error
+    }
+  }
+
+  // Get MIME type from filename
+  private static getMimeType(filename: string): string {
+    const ext = path.extname(filename).toLowerCase()
+    switch (ext) {
+      case '.pdf': return 'application/pdf'
+      case '.jpg':
+      case '.jpeg': return 'image/jpeg'
+      case '.png': return 'image/png'
+      case '.gif': return 'image/gif'
+      case '.webp': return 'image/webp'
+      default: return 'application/octet-stream'
+    }
   }
 
   // Load parsed data from event folder

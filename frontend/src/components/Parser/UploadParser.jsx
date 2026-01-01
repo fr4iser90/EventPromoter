@@ -40,12 +40,12 @@ import SaveIcon from '@mui/icons-material/Save'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import { parseFileForEvent, formatEventForDisplay } from '../../utils/pdfParser'
 import useStore from '../../store'
 
 function UploadParser() {
   const {
     uploadedFileRefs,
+    currentEvent,
     selectedPlatforms,
     platformContent,
     setPlatformContent,
@@ -70,28 +70,6 @@ function UploadParser() {
   const { emailRecipients } = useStore()
   const [templateAnchorEl, setTemplateAnchorEl] = useState(null)
 
-  // Handle file parsing
-  const handleParseFile = async (file) => {
-    setIsParsing(true)
-    setParseError('')
-    setParsedData(null)
-
-    try {
-      const result = await parseFileForEvent(file)
-
-      if (result.success) {
-        setParsedData(result)
-        setEditedData({ ...result.data })
-        setActiveTab(1) // Switch to edit tab after successful parsing
-      } else {
-        setParseError(result.error)
-      }
-    } catch (error) {
-      setParseError('Parsing failed: ' + error.message)
-    } finally {
-      setIsParsing(false)
-    }
-  }
 
   // Handle data editing
   const handleDataChange = (field, value) => {
@@ -122,7 +100,7 @@ function UploadParser() {
   // Reset to parsed data
   const handleResetToParsed = () => {
     if (parsedData) {
-      setEditedData({ ...parsedData.data })
+      setEditedData({ ...parsedData })
     }
   }
 
@@ -160,30 +138,40 @@ function UploadParser() {
     }
   }, [setPlatformContent])
 
-  // Auto-parse first PDF/image when files are uploaded
+  // Load parsed data when component mounts or files change
   React.useEffect(() => {
-    const parseFirstFile = async () => {
-      if (uploadedFileRefs.length > 0 && !parsedData && !isParsing) {
-        const firstFileRef = uploadedFileRefs[0]
-        if (firstFileRef && (firstFileRef.type === 'application/pdf' || firstFileRef.type.startsWith('image/'))) {
+    const loadParsedData = async () => {
+      console.log('UploadParser useEffect triggered, uploadedFileRefs:', uploadedFileRefs.length)
+      if (uploadedFileRefs.length > 0) {
+        const currentEventId = useStore.getState().currentEvent?.id
+        console.log('Current event ID:', currentEventId)
+        if (currentEventId) {
           try {
-            setIsParsing(true)
-            // Download file from server
-            const response = await fetch(firstFileRef.url)
-            const blob = await response.blob()
-            const file = new File([blob], firstFileRef.name, { type: firstFileRef.type })
-            await handleParseFile(file)
+            console.log('Fetching parsed data from:', `http://localhost:4000/api/parsing/data/${currentEventId}`)
+            const response = await fetch(`http://localhost:4000/api/parsing/data/${currentEventId}`)
+            console.log('API response status:', response.status, 'ok:', response.ok)
+            if (response.ok) {
+              const data = await response.json()
+              console.log('API response data:', data)
+              if (data.success && data.parsedData) {
+                console.log('Setting parsed data in UI:', data.parsedData)
+                setParsedData(data.parsedData)
+                setEditedData({ ...data.parsedData })
+                console.log('Parsed data set, activeTab will be set to 1')
+                setActiveTab(1) // Switch to edit tab if we have data
+              }
+            } else {
+              console.log('API response not ok:', response.status)
+            }
           } catch (error) {
-            console.error('Failed to download and parse file:', error)
-          } finally {
-            setIsParsing(false)
+            console.log('Error loading parsed data:', error)
           }
         }
       }
     }
 
-    parseFirstFile()
-  }, [uploadedFileRefs, isParsing]) // Removed parsedData to prevent infinite loop
+    loadParsedData()
+  }, [uploadedFileRefs, currentEvent?.id]) // Load when files or event changes
 
   // Generate platform-specific content
   const generatePlatformContent = (platform, data) => {
@@ -342,6 +330,9 @@ function UploadParser() {
         </Alert>
       )}
 
+      {/* Debug */}
+      {console.log('Rendering UploadParser, parsedData:', parsedData)}
+
       {/* Parsed Data Display */}
       {parsedData && (
         <>
@@ -362,7 +353,7 @@ function UploadParser() {
                 Raw Extracted Data
               </Typography>
               <Alert severity="info" sx={{ mb: 2 }}>
-                Confidence: {parsedData.data.confidence}% | Pages: {parsedData.pages}
+                Confidence: {parsedData.confidence}% | Parsed: {new Date(parsedData.parsedAt).toLocaleString()}
                 {parsedData.ocrConfidence && ` | OCR: ${parsedData.ocrConfidence}%`}
               </Alert>
               <Paper sx={{ p: 2, bgcolor: 'grey.50', fontFamily: 'monospace', maxHeight: 400, overflow: 'auto' }}>

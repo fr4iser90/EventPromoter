@@ -9,22 +9,8 @@ const useStore = create((set, get) => ({
   initialize: async () => {
     try {
       console.log('Loading event workspace from backend...')
-      const response = await axios.get('http://localhost:4000/api/event')
-      const eventWorkspaceData = response.data
-
-      // Load current event data
-      const event = eventWorkspaceData.currentEvent || {}
-      set({
-        currentEvent: event,
-        uploadedFileRefs: event.uploadedFileRefs || [],
-        selectedHashtags: event.selectedHashtags || [],
-        selectedPlatforms: event.selectedPlatforms || [],
-        platformContent: event.platformContent || {},
-        emailRecipients: event.emailRecipients || [],
-        contentTemplates: event.contentTemplates || []
-      })
-
-      console.log('Event workspace loaded:', eventWorkspaceData)
+      await get().loadEventWorkspace()
+      console.log('Event workspace initialized successfully')
     } catch (error) {
       console.warn('Failed to load event workspace from backend, using defaults:', error)
       // Keep default empty state
@@ -167,7 +153,11 @@ const useStore = create((set, get) => ({
         // Update uploaded file references
         const currentRefs = get().uploadedFileRefs
         const newRefs = [...currentRefs, ...response.data.files]
-        set({ uploadedFileRefs: newRefs })
+        set({
+          uploadedFileRefs: newRefs,
+          parsedData: null, // Reset parsed data when new files are uploaded
+          duplicateFound: null // Reset duplicate state
+        })
         get().saveEventWorkspace()
 
         console.log('Files uploaded successfully:', response.data.files.length)
@@ -217,26 +207,34 @@ const useStore = create((set, get) => ({
       const eventId = get().currentEvent?.id || 'default'
       const selectedPlatforms = get().selectedPlatforms
 
-      // Parse the most recent file
+      // Parse the most recent file using backend
       const latestFile = uploadedFiles[uploadedFiles.length - 1]
 
-      console.log('Starting auto-parsing for file:', latestFile.name)
+      console.log('Starting backend parsing for file:', latestFile.name)
 
-      const response = await axios.post('http://localhost:4000/api/parsing/platforms', {
-        fileId: latestFile.id,
+      // First parse the file
+      const parseResponse = await axios.post(`http://localhost:4000/api/parsing/file/${latestFile.id}`, {
         eventId: eventId,
-        name: latestFile.name,
         filename: latestFile.filename,
-        path: latestFile.path,
-        size: latestFile.size,
-        type: latestFile.type,
-        uploadedAt: latestFile.uploadedAt,
-        isImage: latestFile.isImage,
+        name: latestFile.name,
+        type: latestFile.type
+      })
+
+      if (!parseResponse.data.success) {
+        throw new Error(parseResponse.data.error || 'File parsing failed')
+      }
+
+      const { parsedData, duplicateCheck } = parseResponse.data
+
+      // Now apply platform-specific parsing
+      const platformResponse = await axios.post('http://localhost:4000/api/parsing/platforms', {
+        parsedData: parsedData,
+        eventId: eventId,
         platforms: selectedPlatforms
       })
 
-      if (response.data.success) {
-        const { parsedData, duplicateCheck, platformContent } = response.data
+      if (platformResponse.data.success) {
+        const { platformContent } = platformResponse.data
 
         // Check for duplicates
         if (duplicateCheck.isDuplicate) {
@@ -254,14 +252,14 @@ const useStore = create((set, get) => ({
           get().applyParsedContent(parsedData, platformContent)
         }
 
-        console.log('Auto-parsing completed successfully')
+        console.log('Backend parsing completed successfully')
       } else {
-        throw new Error('Parsing failed')
+        throw new Error('Platform parsing failed')
       }
 
     } catch (error) {
-      console.error('Auto-parsing error:', error)
-      set({ error: 'Failed to parse uploaded files' })
+      console.error('Backend parsing error:', error)
+      set({ error: 'Failed to parse uploaded files: ' + error.message })
     } finally {
       set({ isProcessing: false })
     }

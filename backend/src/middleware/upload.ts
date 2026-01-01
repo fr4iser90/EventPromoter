@@ -5,7 +5,7 @@ import { Request } from 'express'
 
 // Create workspace directory structure
 const createWorkspaceDir = (eventId: string): string => {
-  const workspaceDir = path.join(process.cwd(), 'workspaces', eventId, 'files')
+  const workspaceDir = path.join(process.cwd(), 'events', eventId, 'files')
   if (!fs.existsSync(workspaceDir)) {
     fs.mkdirSync(workspaceDir, { recursive: true })
   }
@@ -71,5 +71,5 @@ export const getFileUrl = (eventId: string, filename: string): string => {
 
 // Get file path helper
 export const getFilePath = (eventId: string, filename: string): string => {
-  return path.join(process.cwd(), 'workspaces', eventId, 'files', filename)
+  return path.join(process.cwd(), 'events', eventId, 'files', filename)
 }
