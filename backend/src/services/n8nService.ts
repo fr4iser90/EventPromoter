@@ -90,6 +90,19 @@ export class N8nService {
       }
     }
 
+    // Transform files to include full URLs for n8n
+    if (n8nPayload.files && Array.isArray(n8nPayload.files)) {
+      n8nPayload.files = n8nPayload.files.map(file => {
+        // If file has URL, ensure it's a full URL
+        if (file.url && file.url.startsWith('/api/files/')) {
+          // Convert relative URL to absolute URL
+          const baseUrl = process.env.BASE_URL || 'http://localhost:4000'
+          file.url = `${baseUrl}${file.url}`
+        }
+        return file
+      })
+    }
+
     return n8nPayload
   }
 }

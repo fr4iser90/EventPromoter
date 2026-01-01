@@ -10,56 +10,56 @@ export class HistoryController {
       res.json(history)
     } catch (error) {
       console.error('Error getting history:', error)
-      res.json({ projects: [] })
+      res.json({ Events: [] })
     }
   }
 
-  static async addProject(req: Request, res: Response) {
+  static async addEvent(req: Request, res: Response) {
     try {
-      const project = req.body
-      const success = await HistoryService.addProject(project)
+      const Event = req.body
+      const success = await HistoryService.addEvent(Event)
 
       if (success) {
         res.json({ success: true })
       } else {
-        res.status(500).json({ error: 'Failed to add project to history' })
+        res.status(500).json({ error: 'Failed to add Event to history' })
       }
     } catch (error) {
-      console.error('Error adding project to history:', error)
-      res.status(500).json({ error: 'Failed to add project to history' })
+      console.error('Error adding Event to history:', error)
+      res.status(500).json({ error: 'Failed to add Event to history' })
     }
   }
 
-  static async updateProject(req: Request, res: Response) {
+  static async updateEvent(req: Request, res: Response) {
     try {
-      const { projectId } = req.params
+      const { eventId } = req.params
       const updates = req.body
-      const success = await HistoryService.updateProject(projectId, updates)
+      const success = await HistoryService.updateEvent(eventId, updates)
 
       if (success) {
         res.json({ success: true })
       } else {
-        res.status(404).json({ error: 'Project not found' })
+        res.status(404).json({ error: 'Event not found' })
       }
     } catch (error) {
-      console.error('Error updating project:', error)
-      res.status(500).json({ error: 'Failed to update project' })
+      console.error('Error updating Event:', error)
+      res.status(500).json({ error: 'Failed to update Event' })
     }
   }
 
-  static async deleteProject(req: Request, res: Response) {
+  static async deleteEvent(req: Request, res: Response) {
     try {
-      const { projectId } = req.params
-      const success = await HistoryService.deleteProject(projectId)
+      const { eventId } = req.params
+      const success = await HistoryService.deleteEvent(eventId)
 
       if (success) {
         res.json({ success: true })
       } else {
-        res.status(404).json({ error: 'Project not found' })
+        res.status(404).json({ error: 'Event not found' })
       }
     } catch (error) {
-      console.error('Error deleting project:', error)
-      res.status(500).json({ error: 'Failed to delete project' })
+      console.error('Error deleting Event:', error)
+      res.status(500).json({ error: 'Failed to delete Event' })
     }
   }
 

@@ -16,6 +16,7 @@ import {
 import PublishIcon from '@mui/icons-material/Publish'
 import axios from 'axios'
 import useStore from '../../store'
+import PublishResults from '../PublishResults/PublishResults'
 
 function PublishParser() {
   const {
@@ -29,6 +30,8 @@ function PublishParser() {
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [validationErrors, setValidationErrors] = useState([])
+  const [showResults, setShowResults] = useState(false)
+  const [publishSessionId, setPublishSessionId] = useState(null)
 
   // Validate content before publishing
   const validateForPublish = () => {
@@ -108,7 +111,11 @@ function PublishParser() {
   // Execute the publish process
   const handleConfirmPublish = async () => {
     setShowConfirmDialog(false)
-    await submit()
+    const sessionId = await submit()
+    if (sessionId) {
+      setPublishSessionId(sessionId)
+      setShowResults(true)
+    }
   }
 
   // Get platform status
@@ -269,6 +276,13 @@ function PublishParser() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Publish Results Panel */}
+      <PublishResults
+        open={showResults}
+        onClose={() => setShowResults(false)}
+        publishSessionId={publishSessionId}
+      />
     </Paper>
   )
 }

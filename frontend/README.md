@@ -78,7 +78,7 @@ VITE_API_BASE_URL=http://localhost:3001
 ### Platform Settings
 Platform credentials are stored locally in the browser. In production, implement secure server-side storage.
 
-## 📁 Project Structure
+## 📁 Event Structure
 
 ```
 interface/
@@ -196,4 +196,4 @@ npm run preview
 
 ## 📄 License
 
-This project is part of the Multi-Platform Social Media Publisher and follows the same license terms.
+This Event is part of the Multi-Platform Social Media Publisher and follows the same license terms.

@@ -162,5 +162,13 @@ keys.json
 # package-lock.json  # Uncomment if you want to ignore lock files
 # yarn.lock
 
+# trained data OCR
+eng.traineddata
+deu.traineddata
+
 # test files
 test-data/
+
+# workspace files
+workspaces/*
+

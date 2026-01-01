@@ -33,10 +33,10 @@ const ACCEPTED_TYPES = {
 }
 
 function FileUpload() {
-  const { uploadedFiles, setUploadedFiles, error, setError } = useStore()
+  const { uploadedFileRefs, uploadFiles, removeUploadedFile, parseUploadedFiles, error, setError, isProcessing } = useStore()
   const folderInputRef = useRef(null)
 
-  const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
+  const onDrop = useCallback(async (acceptedFiles, rejectedFiles) => {
     setError('')
 
     // Handle rejected files
@@ -58,17 +58,20 @@ function FileUpload() {
       return
     }
 
-    // Add accepted files
-    const newFiles = acceptedFiles.map(file => ({
-      file,
-      id: Date.now() + Math.random(),
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
-      type: file.type,
-      size: file.size
-    }))
+    try {
+      // Upload files to server
+      await uploadFiles(acceptedFiles)
+      setError(null)
 
-    setUploadedFiles([...uploadedFiles, ...newFiles])
-  }, [uploadedFiles, setUploadedFiles, setError])
+      // Automatically start parsing after upload
+      setTimeout(() => {
+        parseUploadedFiles()
+      }, 1000) // Small delay to ensure upload is complete
+
+    } catch (error) {
+      setError('Failed to upload files')
+    }
+  }, [uploadFiles, setError])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -77,12 +80,11 @@ function FileUpload() {
     multiple: true
   })
 
-  const removeFile = (fileId) => {
-    setUploadedFiles(uploadedFiles.filter(f => f.id !== fileId))
-    // Clean up object URLs
-    const fileToRemove = uploadedFiles.find(f => f.id === fileId)
-    if (fileToRemove?.preview) {
-      URL.revokeObjectURL(fileToRemove.preview)
+  const removeFile = async (fileId) => {
+    try {
+      await removeUploadedFile(fileId)
+    } catch (error) {
+      setError('Failed to remove file')
     }
   }
 
@@ -199,19 +201,19 @@ function FileUpload() {
         </Alert>
       )}
 
-      {uploadedFiles.length > 0 && (
+      {uploadedFileRefs.length > 0 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Uploaded Files ({uploadedFiles.length})
+            Uploaded Files ({uploadedFileRefs.length})
           </Typography>
           <List>
-            {uploadedFiles.map((fileData) => (
+            {uploadedFileRefs.map((fileData) => (
               <ListItem key={fileData.id} divider>
                 <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                   {getFileIcon(fileData.type)}
                 </Box>
                 <ListItemText
-                  primary={fileData.file.name}
+                  primary={fileData.name}
                   secondary={formatFileSize(fileData.size)}
                 />
                 <ListItemSecondaryAction>

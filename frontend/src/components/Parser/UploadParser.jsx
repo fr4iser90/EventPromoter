@@ -45,7 +45,7 @@ import useStore from '../../store'
 
 function UploadParser() {
   const {
-    uploadedFiles,
+    uploadedFileRefs,
     selectedPlatforms,
     platformContent,
     setPlatformContent,
@@ -162,13 +162,28 @@ function UploadParser() {
 
   // Auto-parse first PDF/image when files are uploaded
   React.useEffect(() => {
-    if (uploadedFiles.length > 0 && !parsedData && !isParsing) {
-      const firstFile = uploadedFiles[0]?.file
-      if (firstFile && (firstFile.type === 'application/pdf' || firstFile.type.startsWith('image/'))) {
-        handleParseFile(firstFile)
+    const parseFirstFile = async () => {
+      if (uploadedFileRefs.length > 0 && !parsedData && !isParsing) {
+        const firstFileRef = uploadedFileRefs[0]
+        if (firstFileRef && (firstFileRef.type === 'application/pdf' || firstFileRef.type.startsWith('image/'))) {
+          try {
+            setIsParsing(true)
+            // Download file from server
+            const response = await fetch(firstFileRef.url)
+            const blob = await response.blob()
+            const file = new File([blob], firstFileRef.name, { type: firstFileRef.type })
+            await handleParseFile(file)
+          } catch (error) {
+            console.error('Failed to download and parse file:', error)
+          } finally {
+            setIsParsing(false)
+          }
+        }
       }
     }
-  }, [uploadedFiles])
+
+    parseFirstFile()
+  }, [uploadedFileRefs, isParsing]) // Removed parsedData to prevent infinite loop
 
   // Generate platform-specific content
   const generatePlatformContent = (platform, data) => {
@@ -279,17 +294,30 @@ function UploadParser() {
       </Typography>
 
       {/* File Selection */}
-      {uploadedFiles.length > 0 && (
+      {uploadedFileRefs.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle2" gutterBottom>
             Select file to parse:
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            {uploadedFiles.map((fileData, index) => (
+            {uploadedFileRefs.map((fileData, index) => (
               <Chip
-                key={index}
-                label={`${fileData.file.name} (${fileData.file.type.split('/')[1].toUpperCase()})`}
-                onClick={() => handleParseFile(fileData.file)}
+                key={fileData.id}
+                label={`${fileData.name} (${fileData.type.split('/')[1].toUpperCase()})`}
+                onClick={async () => {
+                  try {
+                    setIsParsing(true)
+                    // Download file from server
+                    const response = await fetch(fileData.url)
+                    const blob = await response.blob()
+                    const file = new File([blob], fileData.name, { type: fileData.type })
+                    await handleParseFile(file)
+                  } catch (error) {
+                    console.error('Failed to download file:', error)
+                  } finally {
+                    setIsParsing(false)
+                  }
+                }}
                 variant={isParsing ? "outlined" : "filled"}
                 color="primary"
                 disabled={isParsing}
@@ -582,7 +610,7 @@ function UploadParser() {
       )}
 
       {/* No data state */}
-      {!parsedData && !isParsing && uploadedFiles.length === 0 && (
+      {!parsedData && !isParsing && uploadedFileRefs.length === 0 && (
         <Alert severity="info">
           Upload a PDF or image file to parse event data automatically.
         </Alert>

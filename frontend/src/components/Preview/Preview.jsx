@@ -14,9 +14,9 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import useStore from '../../store'
 
 function Preview() {
-  const { uploadedFiles } = useStore()
-  const imageFiles = uploadedFiles.filter(file => file.type.startsWith('image/'))
-  const textFiles = uploadedFiles.filter(file => !file.type.startsWith('image/'))
+  const { uploadedFileRefs } = useStore()
+  const imageFiles = uploadedFileRefs.filter(file => file.type.startsWith('image/'))
+  const textFiles = uploadedFileRefs.filter(file => !file.type.startsWith('image/'))
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
@@ -24,7 +24,7 @@ function Preview() {
         👁️ Preview
       </Typography>
 
-      {uploadedFiles.length === 0 ? (
+      {uploadedFileRefs.length === 0 ? (
         <Typography variant="body1" color="text.secondary">
           No files uploaded yet. Upload some files to see the preview.
         </Typography>
@@ -43,16 +43,16 @@ function Preview() {
                       <CardMedia
                         component="img"
                         height="200"
-                        image={fileData.preview}
-                        alt={fileData.file.name}
+                        image={fileData.url}
+                        alt={fileData.name}
                         sx={{ objectFit: 'cover' }}
                       />
                       <CardContent sx={{ py: 1 }}>
                         <Typography variant="body2" noWrap>
-                          {fileData.file.name}
+                          {fileData.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {fileData.file.name.split('.').pop().toUpperCase()}
+                          {fileData.name.split('.').pop().toUpperCase()}
                         </Typography>
                       </CardContent>
                     </Card>
@@ -76,7 +76,7 @@ function Preview() {
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                           <DescriptionIcon sx={{ mr: 1, color: 'text.secondary' }} />
                           <Typography variant="subtitle1">
-                            {fileData.file.name}
+                            {fileData.name}
                           </Typography>
                         </Box>
                         <Divider sx={{ mb: 1 }} />
@@ -92,7 +92,7 @@ function Preview() {
                           }}
                         >
                           <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                            {fileData.file.name}
+                            {fileData.name}
                             <br />
                             Size: {(fileData.size / 1024).toFixed(1)} KB
                             <br />

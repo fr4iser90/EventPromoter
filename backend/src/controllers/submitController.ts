@@ -1,14 +1,17 @@
-// Submit controller for handling project submissions
+// Submit controller for handling Event submissions
 
 import { Request, Response } from 'express'
 import { ValidationService } from '../services/validationService.js'
 import { N8nService } from '../services/n8nService.js'
 import { HistoryService } from '../services/historyService.js'
 import { ConfigService } from '../services/configService.js'
-import { WorkspaceService } from '../services/workspaceService.js'
+import { EventService } from '../services/eventService.js'
+import { PublishTrackingService, PublishResult } from '../services/publishTrackingService.js'
 
 export class SubmitController {
   static async submit(req: Request, res: Response) {
+    let publishSessionId: string | null = null
+
     try {
       const {
         files,
@@ -21,6 +24,11 @@ export class SubmitController {
 
       console.log('Received submit request:', { files: files?.length, platforms, n8nUrl })
       console.log('Content structure:', JSON.stringify(content, null, 2))
+
+      // Start publish tracking session
+      const eventId = eventData?.id || `event-${Date.now()}`
+      const platformList = Object.keys(platforms || {})
+      publishSessionId = PublishTrackingService.startPublishSession(eventId, platformList)
 
       // Validate event data
       if (eventData) {
@@ -98,22 +106,55 @@ export class SubmitController {
           stats: {} // Will be updated later with actual metrics
         }
 
-        await HistoryService.addProject(historyEntry)
-        console.log('Project saved to history')
+        await HistoryService.addEvent(historyEntry)
+        console.log('Event saved to history')
       } catch (historyError) {
         console.warn('Failed to save to history:', historyError)
         // Don't fail the whole submission if history save fails
+      }
+
+      // Add success tracking for all platforms
+      if (publishSessionId) {
+        for (const platform of platformList) {
+          const result: PublishResult = {
+            platform,
+            success: true,
+            data: {
+              status: 'submitted_to_n8n',
+              submittedAt: new Date().toISOString()
+            }
+          }
+          PublishTrackingService.addPublishResult(publishSessionId, result)
+        }
       }
 
       res.json({
         success: true,
         n8nResponse: n8nResult.data,
         message: 'Successfully submitted to N8N',
-        historySaved: true
+        historySaved: true,
+        publishSessionId
       })
 
     } catch (error: any) {
       console.error('Submit error:', error)
+
+      // Track the error in publish session
+      if (publishSessionId) {
+        const platformList = Object.keys(platforms || {})
+        for (const platform of platformList) {
+          const result: PublishResult = {
+            platform,
+            success: false,
+            error: error.message || 'Unknown error',
+            data: {
+              status: 'failed',
+              failedAt: new Date().toISOString()
+            }
+          }
+          PublishTrackingService.addPublishResult(publishSessionId, result)
+        }
+      }
 
       if (error.type) {
         // Custom error from N8nService

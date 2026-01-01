@@ -1,10 +1,10 @@
 // Type definitions for the EventPromoter backend
 
-export interface Project {
+export interface Event {
   id: string
   name: string
   created: string
-  uploadedFiles: FileData[]
+  uploadedFileRefs: UploadedFile[] // References to uploaded files on server
   selectedHashtags: string[]
   selectedPlatforms: string[]
   platformContent: Record<string, any>
@@ -12,8 +12,18 @@ export interface Project {
   contentTemplates: any[]
 }
 
-export interface Workspace {
-  currentProject: Project
+export interface EventWorkspace {
+  currentEvent: Event
+}
+
+export interface PlatformContent {
+  text: string
+  media?: string[]
+  metadata?: Record<string, any>
+}
+
+export interface PlatformParser {
+  parse(eventData: ParsedEventData): PlatformContent
 }
 
 export interface HistoryEntry {
@@ -27,7 +37,7 @@ export interface HistoryEntry {
 }
 
 export interface History {
-  projects: HistoryEntry[]
+  Events: HistoryEntry[]
 }
 
 export interface EventData {
@@ -43,6 +53,19 @@ export interface FileData {
   type: string
   size: number
   base64: string
+  isImage: boolean
+}
+
+// New interface for uploaded files (stored on server)
+export interface UploadedFile {
+  id: string
+  name: string
+  filename: string
+  url: string
+  path: string
+  size: number
+  type: string
+  uploadedAt: string
   isImage: boolean
 }
 

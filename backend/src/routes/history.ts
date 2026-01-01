@@ -5,19 +5,19 @@ import { HistoryController } from '../controllers/historyController.js'
 
 const router = Router()
 
-// GET /api/history - Get project history
+// GET /api/history - Get Event history
 router.get('/', HistoryController.getHistory)
 
-// POST /api/history - Add project to history
-router.post('/', HistoryController.addProject)
+// POST /api/history - Add Event to history
+router.post('/', HistoryController.addEvent)
 
 // GET /api/history/analytics - Get analytics
 router.get('/analytics', HistoryController.getAnalytics)
 
-// PATCH /api/history/:projectId - Update project
-router.patch('/:projectId', HistoryController.updateProject)
+// PATCH /api/history/:eventId - Update Event
+router.patch('/:eventId', HistoryController.updateEvent)
 
-// DELETE /api/history/:projectId - Delete project
-router.delete('/:projectId', HistoryController.deleteProject)
+// DELETE /api/history/:eventId - Delete Event
+router.delete('/:eventId', HistoryController.deleteEvent)
 
 export default router

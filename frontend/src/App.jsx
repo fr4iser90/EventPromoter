@@ -26,6 +26,7 @@ import FacebookPanel from './components/Panels/FacebookPanel'
 import InstagramPanel from './components/Panels/InstagramPanel'
 import LinkedInPanel from './components/Panels/LinkedInPanel'
 import SettingsModal from './components/SettingsModal/SettingsModal'
+import DuplicateDialog from './components/DuplicateDialog/DuplicateDialog'
 import useStore from './store'
 import { useEffect, useState } from 'react'
 
@@ -56,7 +57,7 @@ const staticTheme = createTheme({
 
 function App() {
   const {
-    uploadedFiles,
+    uploadedFileRefs,
     selectedHashtags,
     selectedPlatforms,
     isProcessing,
@@ -127,7 +128,7 @@ function App() {
   // Ensure arrays are always arrays
   const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
   const safeSelectedHashtags = Array.isArray(selectedHashtags) ? selectedHashtags : []
-  const safeUploadedFiles = Array.isArray(uploadedFiles) ? uploadedFiles : []
+  const safeUploadedFileRefs = Array.isArray(uploadedFileRefs) ? uploadedFileRefs : []
 
   const handleSubmit = async () => {
     await submit()
@@ -137,7 +138,7 @@ function App() {
     reset()
   }
 
-  const canSubmit = safeUploadedFiles.length > 0 && safeSelectedPlatforms.length > 0
+  const canSubmit = safeUploadedFileRefs.length > 0 && safeSelectedPlatforms.length > 0
 
   // Create theme based on dark mode state
   const theme = createAppTheme(darkMode)
@@ -285,7 +286,7 @@ function App() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <Preview files={safeUploadedFiles} />
+              <Preview files={safeUploadedFileRefs} />
             </Box>
 
             <Box sx={{ mb: 4 }}>
@@ -329,7 +330,7 @@ function App() {
 
             <Box sx={{ mb: 2, textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
-                Files: {safeUploadedFiles.length} • Hashtags: {safeSelectedHashtags.length} • Platforms: {safeSelectedPlatforms.length}
+                Files: {safeUploadedFileRefs.length} • Hashtags: {safeSelectedHashtags.length} • Platforms: {safeSelectedPlatforms.length}
               </Typography>
             </Box>
           </Box>
@@ -372,6 +373,9 @@ function App() {
           )}
         </Box>
       </Box>
+
+      {/* Duplicate Dialog */}
+      <DuplicateDialog />
 
       {/* Settings Modal */}
       <SettingsModal

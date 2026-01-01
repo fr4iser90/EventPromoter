@@ -5,26 +5,28 @@ import config from './config'
 
 const useStore = create((set, get) => ({
 
-  // Load workspace from backend on init
+  // Load event workspace from backend on init
   initialize: async () => {
     try {
-      console.log('Loading workspace from backend...')
-      const response = await axios.get('http://localhost:4000/api/workspace')
-      const workspaceData = response.data
+      console.log('Loading event workspace from backend...')
+      const response = await axios.get('http://localhost:4000/api/event')
+      const eventWorkspaceData = response.data
 
-      // Load current project data
-      const project = workspaceData.currentProject || {}
+      // Load current event data
+      const event = eventWorkspaceData.currentEvent || {}
       set({
-        uploadedFiles: project.uploadedFiles || [],
-        selectedHashtags: project.selectedHashtags || [],
-        selectedPlatforms: project.selectedPlatforms || [],
-        platformContent: project.platformContent || {},
-        contentTemplates: project.contentTemplates || []
+        currentEvent: event,
+        uploadedFileRefs: event.uploadedFileRefs || [],
+        selectedHashtags: event.selectedHashtags || [],
+        selectedPlatforms: event.selectedPlatforms || [],
+        platformContent: event.platformContent || {},
+        emailRecipients: event.emailRecipients || [],
+        contentTemplates: event.contentTemplates || []
       })
 
-      console.log('Workspace loaded:', workspaceData)
+      console.log('Event workspace loaded:', eventWorkspaceData)
     } catch (error) {
-      console.warn('Failed to load workspace from backend, using defaults:', error)
+      console.warn('Failed to load event workspace from backend, using defaults:', error)
       // Keep default empty state
     }
 
@@ -33,91 +35,302 @@ const useStore = create((set, get) => ({
   },
 
   // Save workspace to backend whenever state changes
-  saveWorkspace: async () => {
+  saveEventWorkspace: async () => {
     const state = get()
     try {
-      const workspaceData = {
-        currentProject: {
-          id: `project-${Date.now()}`, // Generate new ID if needed
-          name: 'Current Event Project',
-          created: new Date().toISOString(),
-          // uploadedFiles are not serializable, skip them
+      const eventWorkspaceData = {
+        currentEvent: {
+          id: state.currentEvent?.id || `event-${Date.now()}`,
+          name: state.currentEvent?.name || 'Current Event',
+          created: state.currentEvent?.created || new Date().toISOString(),
+          uploadedFileRefs: state.uploadedFileRefs, // File references are serializable
           selectedHashtags: state.selectedHashtags,
           selectedPlatforms: state.selectedPlatforms,
           platformContent: state.platformContent,
+          emailRecipients: state.emailRecipients || [],
           contentTemplates: state.contentTemplates
         }
       }
 
-      await axios.post('http://localhost:4000/api/workspace', workspaceData)
-      console.log('Store: Workspace saved to backend successfully')
+      await axios.post('http://localhost:4000/api/event', eventWorkspaceData)
+      console.log('Store: Event workspace saved to backend successfully')
     } catch (error) {
-      console.warn('Store: Failed to save workspace to backend:', error)
+      console.warn('Store: Failed to save event workspace to backend:', error)
     }
   },
 
-  // Load workspace data
-  loadWorkspace: async () => {
+  // Check if file exists on server
+  checkFileExists: async (fileUrl) => {
     try {
-      const response = await axios.get('http://localhost:4000/api/workspace')
-      const workspaceData = response.data
-      const project = workspaceData.currentProject || {}
+      const response = await axios.head(fileUrl.replace('/api/files/', 'http://localhost:4000/api/files/'))
+      return response.status === 200
+    } catch (error) {
+      return false
+    }
+  },
+
+  // Check if parsed data exists for event
+  checkParsedDataExists: async (eventId) => {
+    try {
+      const response = await axios.get(`http://localhost:4000/api/parsing/data/${eventId}`)
+      return response.status === 200
+    } catch (error) {
+      return false
+    }
+  },
+
+  // Load event workspace data with validation
+  loadEventWorkspace: async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/event')
+      const eventWorkspaceData = response.data
+      const event = eventWorkspaceData.currentEvent || {}
+
+      // Validate uploaded file references
+      const validatedFileRefs = []
+      if (event.uploadedFileRefs && Array.isArray(event.uploadedFileRefs)) {
+        for (const fileRef of event.uploadedFileRefs) {
+          const fileExists = await get().checkFileExists(fileRef.url)
+          if (fileExists) {
+            validatedFileRefs.push(fileRef)
+          } else {
+            console.warn(`File not found on server, removing from refs: ${fileRef.name}`)
+          }
+        }
+      }
 
       set({
-        // uploadedFiles are not serializable, keep current state
-        selectedHashtags: project.selectedHashtags || [],
-        selectedPlatforms: project.selectedPlatforms || [],
-        platformContent: project.platformContent || {},
-        contentTemplates: project.contentTemplates || []
+        currentEvent: event,
+        uploadedFileRefs: validatedFileRefs, // Only load existing files
+        selectedHashtags: event.selectedHashtags || [],
+        selectedPlatforms: event.selectedPlatforms || [],
+        platformContent: event.platformContent || {},
+        emailRecipients: event.emailRecipients || [],
+        contentTemplates: event.contentTemplates || []
       })
 
-      console.log('Workspace loaded from backend')
-      return project
+      console.log(`Event workspace loaded from backend (${validatedFileRefs.length} valid files)`)
+      return event
     } catch (error) {
       console.warn('Failed to load workspace:', error)
       return null
     }
   },
 
-  // Create new project (reset workspace)
-  newProject: () => {
+  // Create new Event (reset workspace)
+  newEvent: () => {
     set({
-      uploadedFiles: [],
+      uploadedFileRefs: [],
       selectedHashtags: [],
       selectedPlatforms: [],
       platformContent: {},
       contentTemplates: []
     })
-    get().saveWorkspace()
-    console.log('New project created')
+    get().saveEventWorkspace()
+    console.log('New Event created')
   },
 
   // Legacy removed - everything uses workspace now
 
-  // File upload state
-  uploadedFiles: [],
-  setUploadedFiles: (files) => {
-    set({ uploadedFiles: Array.isArray(files) ? files : [] })
-    // Don't save workspace for files - they're not serializable
+  // Event state
+  currentEvent: null,
+  duplicateFound: null, // For duplicate event detection
+
+  // File upload state - now stores references to uploaded files on server
+  uploadedFileRefs: [],
+  setUploadedFileRefs: (fileRefs) => {
+    set({ uploadedFileRefs: Array.isArray(fileRefs) ? fileRefs : [] })
+    get().saveEventWorkspace()
+  },
+
+  // Upload files to server
+  uploadFiles: async (files) => {
+    try {
+      set({ isProcessing: true, error: null })
+
+      const formData = new FormData()
+      const eventId = get().currentEvent?.id || 'default'
+      formData.append('eventId', eventId)
+
+      // Add all files to FormData
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+
+      const response = await axios.post('http://localhost:4000/api/files/upload-multiple', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      if (response.data.success) {
+        // Update uploaded file references
+        const currentRefs = get().uploadedFileRefs
+        const newRefs = [...currentRefs, ...response.data.files]
+        set({ uploadedFileRefs: newRefs })
+        get().saveEventWorkspace()
+
+        console.log('Files uploaded successfully:', response.data.files.length)
+        return response.data.files
+      } else {
+        throw new Error('Upload failed')
+      }
+    } catch (error) {
+      console.error('File upload error:', error)
+      set({ error: error.message || 'Upload failed' })
+      throw error
+    } finally {
+      set({ isProcessing: false })
+    }
+  },
+
+  // Remove uploaded file
+  removeUploadedFile: async (fileId) => {
+    try {
+      const eventId = get().currentEvent?.id || 'default'
+      const fileRef = get().uploadedFileRefs.find(f => f.id === fileId)
+
+      if (fileRef) {
+        // Delete from server
+        await axios.delete(`http://localhost:4000/api/files/${eventId}/${fileRef.filename}`)
+      }
+
+      // Remove from local state
+      const updatedRefs = get().uploadedFileRefs.filter(f => f.id !== fileId)
+      set({ uploadedFileRefs: updatedRefs })
+      get().saveEventWorkspace()
+
+    } catch (error) {
+      console.error('Remove file error:', error)
+      set({ error: 'Failed to remove file' })
+    }
+  },
+
+  // Parse uploaded files automatically
+  parseUploadedFiles: async () => {
+    const uploadedFiles = get().uploadedFileRefs
+    if (uploadedFiles.length === 0) return
+
+    try {
+      set({ isProcessing: true, error: null })
+
+      const eventId = get().currentEvent?.id || 'default'
+      const selectedPlatforms = get().selectedPlatforms
+
+      // Parse the most recent file
+      const latestFile = uploadedFiles[uploadedFiles.length - 1]
+
+      console.log('Starting auto-parsing for file:', latestFile.name)
+
+      const response = await axios.post('http://localhost:4000/api/parsing/platforms', {
+        fileId: latestFile.id,
+        eventId: eventId,
+        name: latestFile.name,
+        filename: latestFile.filename,
+        path: latestFile.path,
+        size: latestFile.size,
+        type: latestFile.type,
+        uploadedAt: latestFile.uploadedAt,
+        isImage: latestFile.isImage,
+        platforms: selectedPlatforms
+      })
+
+      if (response.data.success) {
+        const { parsedData, duplicateCheck, platformContent } = response.data
+
+        // Check for duplicates
+        if (duplicateCheck.isDuplicate) {
+          // Ask user what to do with duplicate
+          set({
+            duplicateFound: {
+              existingEventId: duplicateCheck.existingEventId,
+              existingEvent: duplicateCheck.existingEvent,
+              newParsedData: parsedData,
+              newPlatformContent: platformContent
+            }
+          })
+        } else {
+          // No duplicate, use the parsed content
+          get().applyParsedContent(parsedData, platformContent)
+        }
+
+        console.log('Auto-parsing completed successfully')
+      } else {
+        throw new Error('Parsing failed')
+      }
+
+    } catch (error) {
+      console.error('Auto-parsing error:', error)
+      set({ error: 'Failed to parse uploaded files' })
+    } finally {
+      set({ isProcessing: false })
+    }
+  },
+
+  // Apply parsed content to platform content
+  applyParsedContent: (parsedData, platformContent) => {
+    const updatedPlatformContent = { ...get().platformContent }
+
+    // Apply platform-specific content
+    Object.keys(platformContent).forEach(platform => {
+      if (platformContent[platform]) {
+        updatedPlatformContent[platform] = {
+          ...updatedPlatformContent[platform],
+          ...platformContent[platform]
+        }
+      }
+    })
+
+    set({ platformContent: updatedPlatformContent })
+    get().saveEventWorkspace()
+
+    console.log('Applied parsed content to platforms')
+  },
+
+  // Handle duplicate resolution
+  resolveDuplicate: async (useExisting) => {
+    const duplicateData = get().duplicateFound
+    if (!duplicateData) return
+
+    try {
+      if (useExisting) {
+        // Load existing parsed data
+        const response = await axios.get(`http://localhost:4000/api/parsing/data/${duplicateData.existingEventId}`)
+        if (response.data.success) {
+          // Apply existing content
+          get().applyParsedContent(response.data.parsedData, {}) // Platform content would need to be regenerated
+        }
+      } else {
+        // Use new parsed content
+        get().applyParsedContent(duplicateData.newParsedData, duplicateData.newPlatformContent)
+      }
+
+      // Clear duplicate state
+      set({ duplicateFound: null })
+
+    } catch (error) {
+      console.error('Duplicate resolution error:', error)
+      set({ error: 'Failed to resolve duplicate' })
+    }
   },
 
   // Hashtags state
   selectedHashtags: [],
   setSelectedHashtags: (hashtags) => {
     set({ selectedHashtags: Array.isArray(hashtags) ? hashtags : [] })
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
 
   // Platform state
   selectedPlatforms: [],
   setSelectedPlatforms: (platforms) => {
     set({ selectedPlatforms: Array.isArray(platforms) ? platforms : [] })
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
   platformSettings: {},
   setPlatformSettings: (settings) => {
     set({ platformSettings: settings })
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
 
   // UI state
@@ -164,11 +377,11 @@ const useStore = create((set, get) => ({
     set(state => ({
       platformContent: { ...state.platformContent, [platform]: content }
     }))
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
   resetPlatformContent: () => {
     set({ platformContent: {} })
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
 
   // Template system
@@ -185,7 +398,7 @@ const useStore = create((set, get) => ({
         contentTemplates: [...state.contentTemplates, template]
       }
     })
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
   loadTemplate: (templateId) => {
     set(state => {
@@ -195,13 +408,13 @@ const useStore = create((set, get) => ({
       }
       return state
     })
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
   deleteTemplate: (templateId) => {
     set(state => ({
       contentTemplates: state.contentTemplates.filter(t => t.id !== templateId)
     }))
-    get().saveWorkspace()
+    get().saveEventWorkspace()
   },
 
 
@@ -237,7 +450,7 @@ const useStore = create((set, get) => ({
           isImage: fileData.file.type.startsWith('image/')
         })
       } catch (error) {
-        console.error(`Error converting file ${fileData.file.name}:`, error)
+        console.error(`Error converting file ${fileData.name}:`, error)
       }
     }
 
@@ -297,7 +510,7 @@ const useStore = create((set, get) => ({
 
     try {
       // Basic frontend validation (detailed validation happens in backend)
-      if (state.uploadedFiles.length === 0) {
+      if (state.uploadedFileRefs.length === 0) {
         throw new Error('Please upload at least one file')
       }
 
@@ -309,9 +522,15 @@ const useStore = create((set, get) => ({
       console.log('🎯 Starting publish process...')
       const finalizedContent = await get().publishParser()
 
-      // Convert files to base64
-      console.log('Converting files to base64...')
-      const processedFiles = await state.convertFilesToBase64(state.uploadedFiles)
+      // Use uploaded file references (URLs) instead of converting to base64
+      console.log('Using uploaded file references...')
+      const processedFiles = state.uploadedFileRefs.map(fileRef => ({
+        name: fileRef.name,
+        url: fileRef.url,
+        type: fileRef.type,
+        size: fileRef.size,
+        isImage: fileRef.isImage
+      }))
 
       // Prepare publishTo object
       const publishTo = {}
@@ -369,11 +588,11 @@ const useStore = create((set, get) => ({
         const historyResponse = await axios.get('http://localhost:4000/api/history')
         const historyData = historyResponse.data
         const updatedHistory = {
-          projects: [historyEntry, ...historyData.projects]
+          Events: [historyEntry, ...historyData.Events]
         }
 
         await axios.post('http://localhost:4000/api/history', updatedHistory)
-        console.log('Project saved to history')
+        console.log('Event saved to history')
       } catch (historyError) {
         console.warn('Failed to save to history:', historyError)
         // Don't fail the whole submit if history save fails
@@ -383,6 +602,9 @@ const useStore = create((set, get) => ({
         isProcessing: false,
         successMessage: `Content successfully submitted to ${state.selectedPlatforms.length} platform(s)!`
       })
+
+      // Return session ID for results tracking
+      return response.data.publishSessionId
 
     } catch (error) {
       console.error('Submission error:', error)
@@ -408,3 +630,4 @@ const useStore = create((set, get) => ({
 }))
 
 export default useStore
+export { useStore }
