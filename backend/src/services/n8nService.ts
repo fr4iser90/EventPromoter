@@ -92,7 +92,7 @@ export class N8nService {
 
     // Transform files to include full URLs for n8n
     if (n8nPayload.files && Array.isArray(n8nPayload.files)) {
-      n8nPayload.files = n8nPayload.files.map(file => {
+      n8nPayload.files = n8nPayload.files.map((file: any) => {
         // If file has URL, ensure it's a full URL
         if (file.url && file.url.startsWith('/api/files/')) {
           // Convert relative URL to absolute URL

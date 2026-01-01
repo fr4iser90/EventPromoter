@@ -1,6 +1,6 @@
-import { ParsedEventData, PlatformContent, PlatformParser } from '../../types/index.js'
+import { ParsedEventData, PlatformContent } from '../../types/index.js'
 
-export class EmailParser implements PlatformParser {
+export class EmailParser {
   static parse(eventData: ParsedEventData): PlatformContent {
     const subject = `🎵 ${eventData.title || 'Event Invitation'}`
 

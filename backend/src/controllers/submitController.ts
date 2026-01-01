@@ -11,16 +11,16 @@ import { PublishTrackingService, PublishResult } from '../services/publishTracki
 export class SubmitController {
   static async submit(req: Request, res: Response) {
     let publishSessionId: string | null = null
+    const {
+      files,
+      platforms,
+      content,
+      hashtags,
+      n8nUrl,
+      eventData
+    } = req.body
 
     try {
-      const {
-        files,
-        platforms,
-        content,
-        hashtags,
-        n8nUrl,
-        eventData
-      } = req.body
 
       console.log('Received submit request:', { files: files?.length, platforms, n8nUrl })
       console.log('Content structure:', JSON.stringify(content, null, 2))
@@ -141,8 +141,7 @@ export class SubmitController {
 
       // Track the error in publish session
       if (publishSessionId) {
-        const platformList = Object.keys(platforms || {})
-        for (const platform of platformList) {
+        for (const platform of Object.keys(platforms || {})) {
           const result: PublishResult = {
             platform,
             success: false,

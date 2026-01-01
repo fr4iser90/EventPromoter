@@ -1,6 +1,6 @@
-import { ParsedEventData, PlatformContent, PlatformParser } from '../../types/index.js'
+import { ParsedEventData, PlatformContent } from '../../types/index.js'
 
-export class TwitterParser implements PlatformParser {
+export class TwitterParser {
   static parse(eventData: ParsedEventData): PlatformContent {
     let text = ''
 
@@ -28,6 +28,18 @@ export class TwitterParser implements PlatformParser {
         text += `, ${eventData.city}`
       }
       text += '\n'
+    }
+
+    // Lineup (if available)
+    if (eventData.lineup && eventData.lineup.length > 0) {
+      if (eventData.lineup.length === 1) {
+        text += `🎤 ${eventData.lineup[0]}\n`
+      } else if (eventData.lineup.length === 2) {
+        text += `🎤 ${eventData.lineup.join(' & ')}\n`
+      } else {
+        // More than 2 artists - show first 2 + "and more"
+        text += `🎤 ${eventData.lineup.slice(0, 2).join(', ')} & more\n`
+      }
     }
 
     // Price
@@ -98,6 +110,16 @@ export class TwitterParser implements PlatformParser {
       if (title.includes('house')) hashtags.push('#HouseMusic')
       if (title.includes('dj')) hashtags.push('#DJ')
       if (title.includes('live')) hashtags.push('#LiveMusic')
+    }
+
+    // Genre-based hashtags
+    if (eventData.genre) {
+      const genre = eventData.genre.toLowerCase()
+      if (genre.includes('techno')) hashtags.push('#TechnoMusic')
+      if (genre.includes('house')) hashtags.push('#HouseMusic')
+      if (genre.includes('electronic')) hashtags.push('#ElectronicMusic')
+      if (genre.includes('synth')) hashtags.push('#SynthPop')
+      if (genre.includes('pop')) hashtags.push('#PopMusic')
     }
 
     // Limit to 5 hashtags for Twitter

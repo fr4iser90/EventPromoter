@@ -22,9 +22,25 @@ export interface PlatformContent {
   metadata?: Record<string, any>
 }
 
-export interface PlatformParser {
-  parse(eventData: ParsedEventData): PlatformContent
+export interface ParsedEventData {
+  title?: string
+  date?: string
+  time?: string
+  venue?: string
+  city?: string
+  description?: string
+  price?: string
+  organizer?: string
+  website?: string
+  lineup?: string[] // Array of artists/DJs/bands
+  genre?: string // Music genre or event type
+  rawText: string
+  confidence: number
+  parsedAt: string
+  hash: string // For duplicate detection
 }
+
+// Platform parsers use static methods - no interface needed
 
 export interface HistoryEntry {
   id: string

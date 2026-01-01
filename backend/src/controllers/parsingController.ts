@@ -1,7 +1,8 @@
 import { Request, Response } from 'express'
 import path from 'path'
 import fs from 'fs'
-import { SmartParsingService, ParsedEventData, DuplicateCheckResult } from '../services/smartParsingService.js'
+import { ContentExtractionService, DuplicateCheckResult } from '../services/contentParsingService.js'
+import { ParsedEventData } from '../types/index.js'
 import { PlatformParsingService } from '../services/platformParsingService.js'
 import { UploadedFile } from '../types/index.js'
 
@@ -32,7 +33,7 @@ export class ParsingController {
       }
 
       // Parse the file
-      const { parsedData, duplicateCheck } = await SmartParsingService.parseFileFromPath(filePath, filename, eventId)
+      const { parsedData, duplicateCheck } = await ContentExtractionService.parseFileFromPath(filePath, filename, eventId)
 
       res.json({
         success: true,
@@ -67,10 +68,10 @@ export class ParsingController {
       }
 
       // Save parsed data to event folder
-      await SmartParsingService.saveParsedData(eventId, parsedData)
+      await ContentExtractionService.saveParsedData(eventId, parsedData)
 
       // Check for duplicates
-      const duplicateCheck = await SmartParsingService.checkForDuplicates(parsedData.hash, eventId)
+      const duplicateCheck = await ContentExtractionService.checkForDuplicates(parsedData.hash, eventId)
 
       // Apply platform-specific parsing
       const platformContent: Record<string, any> = {}
@@ -110,7 +111,7 @@ export class ParsingController {
         return res.status(400).json({ error: 'Event ID required' })
       }
 
-      const parsedData = await SmartParsingService.loadParsedData(eventId)
+      const parsedData = await ContentExtractionService.loadParsedData(eventId)
 
       if (!parsedData) {
         return res.status(404).json({ error: 'No parsed data found for this event' })
@@ -139,7 +140,7 @@ export class ParsingController {
         return res.status(400).json({ error: 'Hash required' })
       }
 
-      const duplicateCheck = await SmartParsingService.checkForDuplicates(hash, excludeEventId)
+      const duplicateCheck = await ContentExtractionService.checkForDuplicates(hash, excludeEventId)
 
       res.json({
         success: true,

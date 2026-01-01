@@ -1,6 +1,6 @@
-import { ParsedEventData, PlatformContent, PlatformParser } from '../../types/index.js'
+import { ParsedEventData, PlatformContent } from '../../types/index.js'
 
-export class InstagramParser implements PlatformParser {
+export class InstagramParser {
   static parse(eventData: ParsedEventData): PlatformContent {
     let text = ''
 
@@ -32,6 +32,15 @@ export class InstagramParser implements PlatformParser {
         text += ` in ${eventData.city}`
       }
       text += '\n\n'
+    }
+
+    // Lineup (detailed for Instagram)
+    if (eventData.lineup && eventData.lineup.length > 0) {
+      text += `🎤 Lineup:\n`
+      eventData.lineup.forEach((artist: string) => {
+        text += `• ${artist}\n`
+      })
+      text += '\n'
     }
 
     // Description

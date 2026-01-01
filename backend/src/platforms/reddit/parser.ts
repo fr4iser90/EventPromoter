@@ -1,6 +1,6 @@
-import { ParsedEventData, PlatformContent, PlatformParser } from '../../types/index.js'
+import { ParsedEventData, PlatformContent } from '../../types/index.js'
 
-export class RedditParser implements PlatformParser {
+export class RedditParser {
   static parse(eventData: ParsedEventData): PlatformContent {
     const title = eventData.title || 'Techno Event'
 

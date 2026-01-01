@@ -8,6 +8,8 @@ export interface PublishResult {
     emailRecipients?: string[]
     sentAt?: string
     status?: string
+    submittedAt?: string
+    failedAt?: string
     metrics?: Record<string, any>
   }
 }

@@ -1,6 +1,6 @@
-import { ParsedEventData, PlatformContent, PlatformParser } from '../../types/index.js'
+import { ParsedEventData, PlatformContent } from '../../types/index.js'
 
-export class FacebookParser implements PlatformParser {
+export class FacebookParser {
   static parse(eventData: ParsedEventData): PlatformContent {
     let text = ''
 
