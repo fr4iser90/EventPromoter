@@ -46,6 +46,7 @@ function UploadParser() {
   const {
     uploadedFileRefs,
     currentEvent,
+    parsingStatus,
     selectedPlatforms,
     platformContent,
     setPlatformContent,
@@ -138,40 +139,32 @@ function UploadParser() {
     }
   }, [setPlatformContent])
 
-  // Load parsed data when component mounts or files change
+  // Load parsed data when component mounts, files change, or parsing completes
   React.useEffect(() => {
     const loadParsedData = async () => {
-      console.log('UploadParser useEffect triggered, uploadedFileRefs:', uploadedFileRefs.length)
-      if (uploadedFileRefs.length > 0) {
-        const currentEventId = useStore.getState().currentEvent?.id
-        console.log('Current event ID:', currentEventId)
-        if (currentEventId) {
-          try {
-            console.log('Fetching parsed data from:', `http://localhost:4000/api/parsing/data/${currentEventId}`)
-            const response = await fetch(`http://localhost:4000/api/parsing/data/${currentEventId}`)
-            console.log('API response status:', response.status, 'ok:', response.ok)
-            if (response.ok) {
-              const data = await response.json()
-              console.log('API response data:', data)
-              if (data.success && data.parsedData) {
-                console.log('Setting parsed data in UI:', data.parsedData)
-                setParsedData(data.parsedData)
-                setEditedData({ ...data.parsedData })
-                console.log('Parsed data set, activeTab will be set to 1')
-                setActiveTab(1) // Switch to edit tab if we have data
-              }
-            } else {
-              console.log('API response not ok:', response.status)
+      const currentEventId = currentEvent?.id
+      if (currentEventId) {
+        try {
+          const response = await fetch(`http://localhost:4000/api/parsing/data/${currentEventId}`)
+          if (response.ok) {
+            const data = await response.json()
+            if (data.success && data.parsedData) {
+              setParsedData(data.parsedData)
+              setEditedData({ ...data.parsedData })
+              setActiveTab(0) // Switch to raw data tab to show parsed results
             }
-          } catch (error) {
-            console.log('Error loading parsed data:', error)
           }
+        } catch (error) {
+          console.log('No existing parsed data found')
         }
       }
     }
 
-    loadParsedData()
-  }, [uploadedFileRefs, currentEvent?.id]) // Load when files or event changes
+    // Load data when files exist or parsing just completed
+    if (uploadedFileRefs.length > 0 || parsingStatus === 'completed') {
+      loadParsedData()
+    }
+  }, [uploadedFileRefs, parsingStatus, currentEvent?.id]) // React to file changes, parsing status, and event changes
 
   // Generate platform-specific content
   const generatePlatformContent = (platform, data) => {
@@ -285,34 +278,31 @@ function UploadParser() {
       {uploadedFileRefs.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle2" gutterBottom>
-            Select file to parse:
+            Uploaded Files (Backend parsing in progress...):
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {uploadedFileRefs.map((fileData, index) => (
               <Chip
                 key={fileData.id}
                 label={`${fileData.name} (${fileData.type.split('/')[1].toUpperCase()})`}
-                onClick={async () => {
-                  try {
-                    setIsParsing(true)
-                    // Download file from server
-                    const response = await fetch(fileData.url)
-                    const blob = await response.blob()
-                    const file = new File([blob], fileData.name, { type: fileData.type })
-                    await handleParseFile(file)
-                  } catch (error) {
-                    console.error('Failed to download file:', error)
-                  } finally {
-                    setIsParsing(false)
-                  }
-                }}
-                variant={isParsing ? "outlined" : "filled"}
-                color="primary"
-                disabled={isParsing}
+                variant="outlined"
+                color="info"
                 size="small"
               />
             ))}
           </Box>
+
+          {!parsedData && parsingStatus === 'parsing' && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Backend is processing your files. Parsed data will appear here automatically...
+            </Alert>
+          )}
+
+          {!parsedData && parsingStatus === 'idle' && uploadedFileRefs.length > 0 && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              Click "Parse Files" to start processing your uploaded files.
+            </Alert>
+          )}
         </Box>
       )}
 
@@ -329,9 +319,6 @@ function UploadParser() {
           {parseError}
         </Alert>
       )}
-
-      {/* Debug */}
-      {console.log('Rendering UploadParser, parsedData:', parsedData)}
 
       {/* Parsed Data Display */}
       {parsedData && (

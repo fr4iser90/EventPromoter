@@ -156,7 +156,8 @@ const useStore = create((set, get) => ({
         set({
           uploadedFileRefs: newRefs,
           parsedData: null, // Reset parsed data when new files are uploaded
-          duplicateFound: null // Reset duplicate state
+          duplicateFound: null, // Reset duplicate state
+          parsingStatus: 'idle' // Reset parsing status for new files
         })
         get().saveEventWorkspace()
 
@@ -202,7 +203,7 @@ const useStore = create((set, get) => ({
     if (uploadedFiles.length === 0) return
 
     try {
-      set({ isProcessing: true, error: null })
+      set({ isProcessing: true, error: null, parsingStatus: 'parsing' })
 
       const eventId = get().currentEvent?.id || 'default'
       const selectedPlatforms = get().selectedPlatforms
@@ -221,6 +222,7 @@ const useStore = create((set, get) => ({
       })
 
       if (!parseResponse.data.success) {
+        set({ parsingStatus: 'error' })
         throw new Error(parseResponse.data.error || 'File parsing failed')
       }
 
@@ -245,21 +247,24 @@ const useStore = create((set, get) => ({
               existingEvent: duplicateCheck.existingEvent,
               newParsedData: parsedData,
               newPlatformContent: platformContent
-            }
+            },
+            parsingStatus: 'completed'
           })
         } else {
           // No duplicate, use the parsed content
           get().applyParsedContent(parsedData, platformContent)
+          set({ parsingStatus: 'completed' })
         }
 
         console.log('Backend parsing completed successfully')
       } else {
+        set({ parsingStatus: 'error' })
         throw new Error('Platform parsing failed')
       }
 
     } catch (error) {
       console.error('Backend parsing error:', error)
-      set({ error: 'Failed to parse uploaded files: ' + error.message })
+      set({ error: 'Failed to parse uploaded files: ' + error.message, parsingStatus: 'error' })
     } finally {
       set({ isProcessing: false })
     }
@@ -340,6 +345,10 @@ const useStore = create((set, get) => ({
   setSuccessMessage: (message) => set({ successMessage: message }),
   darkMode: false,
   setDarkMode: (darkMode) => set({ darkMode }),
+
+  // Parsing status tracking
+  parsingStatus: 'idle', // 'idle', 'parsing', 'completed', 'error'
+  setParsingStatus: (status) => set({ parsingStatus: status }),
 
   // N8N configuration
   n8nWebhookUrl: 'http://localhost:5678/webhook/multiplatform-publisher',
