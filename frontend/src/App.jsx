@@ -14,6 +14,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7'
 import SettingsIcon from '@mui/icons-material/Settings'
 import IconButton from '@mui/material/IconButton'
 import useMediaQuery from '@mui/material/useMediaQuery'
+import EventHistory from './components/EventHistory/EventHistory'
 import FileUpload from './components/FileUpload/FileUpload'
 import UploadParser from './components/Parser/UploadParser'
 import Preview from './components/Preview/Preview'
@@ -273,8 +274,13 @@ function App() {
           </Box>
 
           <Box sx={{ flex: 1, overflow: 'auto' }}>
-            <Box sx={{ mb: 4 }}>
-              <FileUpload />
+            <Box sx={{ mb: 4, display: 'flex', gap: 3 }}>
+              <Box sx={{ flex: 1 }}>
+                <FileUpload />
+              </Box>
+              <Box sx={{ flex: 1 }}>
+                <EventHistory />
+              </Box>
             </Box>
 
             <Box sx={{ mb: 4 }}>

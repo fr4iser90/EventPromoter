@@ -2,16 +2,138 @@
 
 import { History, HistoryEntry } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
+import fs from 'fs'
+import path from 'path'
 
 const HISTORY_FILE = 'history.json'
 
 export class HistoryService {
   static async getHistory(): Promise<History> {
-    const data = await readConfig(HISTORY_FILE)
-    if (!data) {
+    try {
+      const events = await this.scanEventsDirectory()
+      return { Events: events }
+    } catch (error) {
+      console.warn('Failed to scan events directory:', error)
       return { Events: [] }
     }
-    return data
+  }
+
+  private static async scanEventsDirectory(): Promise<HistoryEntry[]> {
+    const eventsDir = path.join(process.cwd(), 'events')
+
+    if (!fs.existsSync(eventsDir)) {
+      return []
+    }
+
+    const eventFolders = fs.readdirSync(eventsDir)
+      .filter(item => {
+        const itemPath = path.join(eventsDir, item)
+        return fs.statSync(itemPath).isDirectory()
+      })
+      .sort((a, b) => {
+        // Sort by creation time (newest first)
+        const aPath = path.join(eventsDir, a)
+        const bPath = path.join(eventsDir, b)
+        return fs.statSync(bPath).mtime.getTime() - fs.statSync(aPath).mtime.getTime()
+      })
+
+    const events: HistoryEntry[] = []
+
+    for (const eventId of eventFolders) {
+      try {
+        const eventEntry = await this.createHistoryEntryFromEvent(eventId)
+        if (eventEntry) {
+          events.push(eventEntry)
+        }
+      } catch (error) {
+        console.warn(`Failed to process event ${eventId}:`, error)
+      }
+    }
+
+    return events
+  }
+
+  private static async createHistoryEntryFromEvent(eventId: string): Promise<HistoryEntry | null> {
+    const eventDir = path.join(process.cwd(), 'events', eventId)
+
+    // Load parsed data
+    const parsedDataPath = path.join(eventDir, 'parsed-data.json')
+    let parsedData: any = {}
+    if (fs.existsSync(parsedDataPath)) {
+      try {
+        parsedData = JSON.parse(fs.readFileSync(parsedDataPath, 'utf8'))
+      } catch (error) {
+        console.warn(`Failed to parse parsed-data.json for ${eventId}:`, error)
+      }
+    }
+
+    // Load platform content to determine used platforms
+    const platformContentDir = path.join(eventDir, 'platform-content')
+    let platforms: string[] = []
+    if (fs.existsSync(platformContentDir)) {
+      platforms = fs.readdirSync(platformContentDir)
+        .filter(file => file.endsWith('.json'))
+        .map(file => file.replace('.json', ''))
+    }
+
+    // Get files
+    const filesDir = path.join(eventDir, 'files')
+    let files: any[] = []
+    if (fs.existsSync(filesDir)) {
+      const fileNames = fs.readdirSync(filesDir)
+      files = fileNames.map(fileName => {
+        const filePath = path.join(filesDir, fileName)
+        const stats = fs.statSync(filePath)
+
+        return {
+          id: fileName,
+          name: fileName,
+          size: stats.size,
+          type: this.getMimeType(fileName),
+          uploadedAt: stats.mtime.toISOString()
+        }
+      })
+    }
+
+    // Get event stats
+    const eventStats = fs.statSync(eventDir)
+
+    return {
+      id: eventId,
+      name: parsedData.title || `Event ${eventId}`,
+      status: platforms.length > 0 ? 'published' : 'draft',
+      platforms,
+      publishedAt: platforms.length > 0 ? eventStats.mtime.toISOString() : undefined,
+      eventData: {
+        title: parsedData.title,
+        date: parsedData.date,
+        time: parsedData.time,
+        venue: parsedData.venue,
+        city: parsedData.city
+      },
+      files,
+      stats: {
+        fileCount: files.length,
+        platformCount: platforms.length,
+        createdAt: eventStats.birthtime.toISOString(),
+        modifiedAt: eventStats.mtime.toISOString()
+      }
+    }
+  }
+
+  private static getMimeType(filename: string): string {
+    const ext = filename.toLowerCase().split('.').pop()
+    const mimeTypes: Record<string, string> = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'pdf': 'application/pdf',
+      'txt': 'text/plain',
+      'md': 'text/markdown'
+    }
+    return mimeTypes[ext || ''] || 'application/octet-stream'
   }
 
   static async saveHistory(history: History): Promise<boolean> {

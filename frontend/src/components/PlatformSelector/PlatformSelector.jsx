@@ -288,7 +288,7 @@ function PlatformSelector() {
         {safeSelectedPlatforms.length > 0 && (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1, mt: 2 }}>
             {safeSelectedPlatforms.map(platformId => {
-              const platform = PLATFORMS.find(p => p.id === platformId)
+              const platform = platforms.find(p => p.id === platformId)
               return (
                 <Typography key={platformId} variant="body2" sx={{ color: platform.color }}>
                   {platform.name}
