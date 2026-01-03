@@ -93,9 +93,21 @@ export class EmailValidator {
       }
     }
 
+    const warnings: string[] = []
+
+    // Add warnings for optimization
+    if (content.subject && content.subject.length < 10) {
+      warnings.push('Subject is quite short - consider making it more descriptive')
+    }
+
+    if (!content.html.includes('<img') && !content.attachments?.length) {
+      warnings.push('Consider adding images or attachments to make the email more engaging')
+    }
+
     return {
       isValid: errors.length === 0,
       errors,
+      warnings,
       recipientCount: content.recipients?.length || 0,
       totalSize
     }

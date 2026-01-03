@@ -33,7 +33,7 @@ import {
   Select
 } from '@mui/material'
 import EmailPanel from '../Panels/EmailPanel'
-import PlatformEditor from '../PlatformEditor/PlatformEditor'
+import GenericPlatformEditor from '../GenericPlatformEditor/GenericPlatformEditor'
 import PlatformPreview from '../PlatformPreview/PlatformPreview'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
@@ -398,7 +398,7 @@ function UploadParser() {
 
                   {/* Active Platform Editor */}
                   {activePlatform && (
-                    <PlatformEditor
+                    <GenericPlatformEditor
                       platform={activePlatform}
                       content={platformContent[activePlatform] || {}}
                       onChange={(field, value) => handlePlatformContentChange(activePlatform, field, value)}

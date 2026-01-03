@@ -131,6 +131,43 @@ export class ParsingController {
     }
   }
 
+  // Save platform content changes
+  static async savePlatformContent(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+      const { platform, content } = req.body
+
+      if (!eventId) {
+        return res.status(400).json({ error: 'Event ID required' })
+      }
+
+      if (!platform || !content) {
+        return res.status(400).json({ error: 'Platform and content required' })
+      }
+
+      // Load existing parsed data
+      const existingData = await ContentExtractionService.loadParsedData(eventId)
+      if (!existingData) {
+        return res.status(404).json({ error: 'Event data not found' })
+      }
+
+      // Save platform content to separate file
+      await ContentExtractionService.savePlatformContent(eventId, platform, content)
+
+      res.json({
+        success: true,
+        message: `Platform content for ${platform} saved successfully`
+      })
+
+    } catch (error: any) {
+      console.error('Save platform content error:', error)
+      res.status(500).json({
+        error: 'Failed to save platform content',
+        details: error.message
+      })
+    }
+  }
+
   // Check for duplicate events
   static async checkDuplicate(req: Request, res: Response) {
     try {

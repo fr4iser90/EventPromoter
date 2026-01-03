@@ -1,6 +1,6 @@
 // Validation service for business logic validation
 
-import { ValidationResult, PlatformValidation } from '../types/index.js'
+import { PlatformValidationResult, PlatformValidation } from '../types/index.js'
 import { PlatformManager } from './platformManager.js'
 
 export class ValidationService {
@@ -39,7 +39,7 @@ export class ValidationService {
     }
   }
 
-  static validatePlatforms(platformContent: any, selectedPlatforms: string[]): ValidationResult {
+  static validatePlatforms(platformContent: any, selectedPlatforms: string[]): PlatformValidationResult {
     const validationResults: PlatformValidation[] = []
     let hasErrors = false
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Paper,
   Typography,
@@ -8,11 +8,32 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  CircularProgress
 } from '@mui/material'
+import useStore from '../../store'
 
 function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect }) {
   const [availableRecipients, setAvailableRecipients] = useState([])
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  const { savePlatformContent } = useStore()
+
+  // Debounced auto-save function
+  const debouncedSave = useCallback(
+    debounce(async (platform, content) => {
+      setIsSaving(true)
+      try {
+        await savePlatformContent(platform, content)
+        setLastSaved(new Date())
+      } catch (error) {
+        console.error('Auto-save failed:', error)
+      } finally {
+        setIsSaving(false)
+      }
+    }, 1000), // 1 second delay
+    [savePlatformContent]
+  )
 
   // Load platform-specific settings from backend
   useEffect(() => {
@@ -49,6 +70,14 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
 
     loadPlatformSettings()
   }, [platform])
+
+  // Auto-save when content changes
+  useEffect(() => {
+    if (content && Object.keys(content).length > 0) {
+      debouncedSave(platform, content)
+    }
+  }, [content, platform, debouncedSave])
+
   const getPlatformConfig = (platform) => {
     const configs = {
       twitter: { icon: '🐦', color: '#1DA1F2', name: 'Twitter', limit: 280 },
@@ -230,11 +259,26 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {config.limit && (
-          <Typography variant="body2" color={textLength > config.limit ? "error" : "text.secondary"}>
-            Characters: {textLength}/{config.limit}
-          </Typography>
-        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {config.limit && (
+            <Typography variant="body2" color={textLength > config.limit ? "error" : "text.secondary"}>
+              Characters: {textLength}/{config.limit}
+            </Typography>
+          )}
+          {isSaving && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <CircularProgress size={14} />
+              <Typography variant="body2" color="text.secondary">
+                Saving...
+              </Typography>
+            </Box>
+          )}
+          {lastSaved && !isSaving && (
+            <Typography variant="body2" color="text.secondary">
+              Saved {new Date(lastSaved).toLocaleTimeString()}
+            </Typography>
+          )}
+        </Box>
         <Chip
           size="small"
           color={isValid ? "success" : "warning"}

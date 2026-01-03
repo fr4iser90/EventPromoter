@@ -1,7 +1,9 @@
 // Event service for managing current event data
 
-import { EventWorkspace, Event } from '../types/index.js'
+import { EventWorkspace, Event, UploadedFile } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
+import fs from 'fs'
+import path from 'path'
 
 const EVENT_FILE = 'event.json'
 
@@ -57,5 +59,121 @@ export class EventService {
       }
     }
     return await this.saveEventWorkspace(defaultEventWorkspace)
+  }
+
+  static async loadEventFiles(eventId: string, fileIds: string[]): Promise<UploadedFile[]> {
+    const eventDir = path.join(process.cwd(), 'events', eventId, 'files')
+
+    if (!fs.existsSync(eventDir)) {
+      throw new Error(`Event directory not found: ${eventDir}`)
+    }
+
+    const loadedFiles: UploadedFile[] = []
+
+    for (const fileId of fileIds) {
+      const filePath = path.join(eventDir, fileId)
+
+      if (fs.existsSync(filePath)) {
+        const stats = fs.statSync(filePath)
+        const fileName = path.basename(fileId)
+
+        loadedFiles.push({
+          id: fileId,
+          name: fileName,
+          filename: fileName,
+          url: `/api/files/${eventId}/${fileId}`,
+          path: path.join('events', eventId, 'files', fileName),
+          size: stats.size,
+          type: this.getMimeType(fileName),
+          uploadedAt: stats.mtime.toISOString(),
+          isImage: this.getMimeType(fileName).startsWith('image/')
+        })
+      }
+    }
+
+    return loadedFiles
+  }
+
+  static async loadEventData(eventId: string): Promise<any> {
+    const eventDir = path.join(process.cwd(), 'events', eventId)
+
+    if (!fs.existsSync(eventDir)) {
+      return null
+    }
+
+    // Load parsed data
+    const parsedDataPath = path.join(eventDir, 'parsed-data.json')
+    let parsedData = null
+    if (fs.existsSync(parsedDataPath)) {
+      try {
+        parsedData = JSON.parse(fs.readFileSync(parsedDataPath, 'utf8'))
+      } catch (error) {
+        console.warn(`Failed to load parsed data for event ${eventId}:`, error)
+      }
+    }
+
+    // Load platform content
+    const platformContentDir = path.join(eventDir, 'platform-content')
+    let platformContent: Record<string, any> = {}
+    if (fs.existsSync(platformContentDir)) {
+      const platformFiles = fs.readdirSync(platformContentDir)
+      for (const platformFile of platformFiles) {
+        if (platformFile.endsWith('.json')) {
+          const platform = platformFile.replace('.json', '')
+          try {
+            const contentPath = path.join(platformContentDir, platformFile)
+            platformContent[platform] = JSON.parse(fs.readFileSync(contentPath, 'utf8'))
+          } catch (error) {
+            console.warn(`Failed to load platform content for ${platform}:`, error)
+          }
+        }
+      }
+    }
+
+    // Load file references
+    const filesDir = path.join(eventDir, 'files')
+    let uploadedFileRefs: UploadedFile[] = []
+    if (fs.existsSync(filesDir)) {
+      const fileNames = fs.readdirSync(filesDir)
+      uploadedFileRefs = fileNames.map(fileName => {
+        const filePath = path.join(filesDir, fileName)
+        const stats = fs.statSync(filePath)
+
+        return {
+          id: fileName,
+          name: fileName,
+          filename: fileName,
+          url: `/api/files/${eventId}/${fileName}`,
+          path: path.join('events', eventId, 'files', fileName),
+          size: stats.size,
+          type: this.getMimeType(fileName),
+          uploadedAt: stats.mtime.toISOString(),
+          isImage: this.getMimeType(fileName).startsWith('image/')
+        }
+      })
+    }
+
+    return {
+      id: eventId,
+      parsedData,
+      platformContent,
+      uploadedFileRefs,
+      loadedAt: new Date().toISOString()
+    }
+  }
+
+  private static getMimeType(filename: string): string {
+    const ext = filename.toLowerCase().split('.').pop()
+    const mimeTypes: Record<string, string> = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'pdf': 'application/pdf',
+      'txt': 'text/plain',
+      'md': 'text/markdown'
+    }
+    return mimeTypes[ext || ''] || 'application/octet-stream'
   }
 }

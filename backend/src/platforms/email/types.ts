@@ -28,6 +28,7 @@ export interface EmailConfig {
 export interface EmailValidation {
   isValid: boolean
   errors: string[]
+  warnings: string[]
   recipientCount: number
   totalSize: number
 }

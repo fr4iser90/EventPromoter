@@ -17,6 +17,7 @@ export interface TwitterConfig {
 export interface TwitterValidation {
   isValid: boolean
   errors: string[]
+  warnings: string[]
   characterCount: number
   maxLength: number
 }

@@ -8,6 +8,7 @@ import historyRoutes from './history.js'
 import configRoutes from './config.js'
 import submitRoutes from './submit.js'
 import fileRoutes from './files.js'
+import platformRoutes from './platforms.js'
 
 const router = Router()
 
@@ -19,6 +20,7 @@ router.use('/history', historyRoutes)
 router.use('/config', configRoutes)
 router.use('/submit', submitRoutes)
 router.use('/files', fileRoutes)
+router.use('/platforms', platformRoutes)
 
 // Health check (could be moved to a health controller)
 router.get('/health', (req, res) => {

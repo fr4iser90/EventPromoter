@@ -386,6 +386,31 @@ const useStore = create((set, get) => ({
     }))
     get().saveEventWorkspace()
   },
+
+  // Save platform content changes to backend (for auto-save)
+  savePlatformContent: async (platform, content) => {
+    const state = get()
+    const eventId = state.currentEvent?.id
+
+    if (!eventId) {
+      console.warn('No current event ID, cannot save platform content')
+      return
+    }
+
+    try {
+      await axios.put(`http://localhost:4000/api/parsing/platform-content/${eventId}`, {
+        platform,
+        content: {
+          ...content,
+          lastModified: new Date().toISOString()
+        }
+      })
+      console.log(`Platform content for ${platform} saved to backend`)
+    } catch (error) {
+      console.warn(`Failed to save platform content for ${platform}:`, error)
+      // Don't throw error for auto-save failures
+    }
+  },
   resetPlatformContent: () => {
     set({ platformContent: {} })
     get().saveEventWorkspace()

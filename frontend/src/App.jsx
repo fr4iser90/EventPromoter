@@ -20,7 +20,7 @@ import Preview from './components/Preview/Preview'
 import HashtagBuilder from './components/HashtagBuilder/HashtagBuilder'
 import PlatformSelector from './components/PlatformSelector/PlatformSelector'
 import RedditPanel from './components/Panels/RedditPanel'
-import EmailPanel from './components/Panels/EmailPanel'
+import DynamicPanelWrapper from './components/DynamicPanelWrapper/DynamicPanelWrapper'
 import TwitterPanel from './components/Panels/TwitterPanel'
 import FacebookPanel from './components/Panels/FacebookPanel'
 import InstagramPanel from './components/Panels/InstagramPanel'
@@ -166,7 +166,7 @@ function App() {
 
   if (showInstagramPanel) rightPanels.push({ key: 'instagram', component: <InstagramPanel /> })
   if (showLinkedInPanel) rightPanels.push({ key: 'linkedin', component: <LinkedInPanel /> })
-  if (showEmailPanel) rightPanels.push({ key: 'email', component: <EmailPanel /> })
+  if (showEmailPanel) rightPanels.push({ key: 'email', component: <DynamicPanelWrapper platform="email" /> })
 
   // Check if panels should be shown
   const hasLeftPanels = leftPanels.length > 0
@@ -278,11 +278,11 @@ function App() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <UploadParser />
+              <PlatformSelector />
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <PlatformSelector />
+              <UploadParser />
             </Box>
 
             <Box sx={{ mb: 4 }}>
@@ -305,7 +305,7 @@ function App() {
               </Alert>
             )}
 
-            <Box sx={{ mb: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Box sx={{ mt: 6, mb: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
               <Button
                 variant="contained"
                 size="large"

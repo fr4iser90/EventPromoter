@@ -70,4 +70,38 @@ export class EventController {
       res.status(500).json({ error: 'Failed to reset event workspace' })
     }
   }
+
+  static async loadEventFiles(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+      const { fileIds } = req.body
+
+      if (!fileIds || !Array.isArray(fileIds)) {
+        return res.status(400).json({ error: 'fileIds array is required' })
+      }
+
+      const files = await EventService.loadEventFiles(eventId, fileIds)
+      res.json({ success: true, files })
+    } catch (error) {
+      console.error('Error loading event files:', error)
+      res.status(500).json({ error: 'Failed to load event files' })
+    }
+  }
+
+  static async loadEventData(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+
+      const eventData = await EventService.loadEventData(eventId)
+
+      if (!eventData) {
+        return res.status(404).json({ error: 'Event not found' })
+      }
+
+      res.json(eventData)
+    } catch (error) {
+      console.error('Error loading event data:', error)
+      res.status(500).json({ error: 'Failed to load event data' })
+    }
+  }
 }

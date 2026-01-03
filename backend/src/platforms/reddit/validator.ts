@@ -83,9 +83,25 @@ export class RedditValidator {
       }
     }
 
+    const warnings: string[] = []
+
+    // Add warnings for optimization
+    if ((content.title?.length || 0) < 20) {
+      warnings.push('Title is quite short - Reddit titles with 20+ characters perform better')
+    }
+
+    if (!content.text || content.text.length < 50) {
+      warnings.push('Post text is quite short - consider providing more detailed content')
+    }
+
+    if (content.title && !content.title.includes('?') && !content.title.includes('!') && !content.title.includes('[')) {
+      warnings.push('Consider making your title more engaging with questions, brackets, or excitement')
+    }
+
     return {
       isValid: errors.length === 0,
       errors,
+      warnings,
       titleLength: content.title?.length || 0,
       textLength: content.text?.length || 0,
       maxTitleLength: this.MAX_TITLE_LENGTH

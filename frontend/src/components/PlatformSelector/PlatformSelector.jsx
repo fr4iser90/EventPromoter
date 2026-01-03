@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Paper,
   Typography,
@@ -18,7 +18,9 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Divider
+  Divider,
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
 import TwitterIcon from '@mui/icons-material/Twitter'
@@ -29,57 +31,130 @@ import RedditIcon from '@mui/icons-material/Reddit'
 import EmailIcon from '@mui/icons-material/Email'
 import useStore from '../../store'
 
-const PLATFORMS = [
-  {
-    id: 'twitter',
-    name: 'Twitter/X',
-    icon: TwitterIcon,
-    color: '#1DA1F2',
-    settings: ['apiKey', 'apiSecret', 'accessToken', 'accessTokenSecret']
-  },
-  {
-    id: 'instagram',
-    name: 'Instagram',
-    icon: InstagramIcon,
-    color: '#E4405F',
-    settings: ['username', 'password', 'twoFactorEnabled']
-  },
-  {
-    id: 'facebook',
-    name: 'Facebook',
-    icon: FacebookIcon,
-    color: '#1877F2',
-    settings: ['pageId', 'pageName', 'accessToken']
-  },
-  {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    icon: LinkedInIcon,
-    color: '#0A66C2',
-    settings: ['profileId', 'companyId', 'accessToken']
-  },
-  {
-    id: 'reddit',
-    name: 'Reddit',
-    icon: RedditIcon,
-    color: '#FF4500',
-    settings: ['subreddit', 'username', 'password', 'flair']
-  },
-  {
-    id: 'email',
-    name: 'Email',
-    icon: EmailIcon,
-    color: '#EA4335',
-    settings: ['recipients', 'subject', 'smtpServer']
-  }
-]
+// Icon mapping for dynamic loading
+const ICON_MAP = {
+  twitter: TwitterIcon,
+  instagram: InstagramIcon,
+  facebook: FacebookIcon,
+  linkedin: LinkedInIcon,
+  reddit: RedditIcon,
+  email: EmailIcon
+}
+
+// Color mapping for platforms
+const COLOR_MAP = {
+  twitter: '#1DA1F2',
+  instagram: '#E4405F',
+  facebook: '#1877F2',
+  linkedin: '#0A66C2',
+  reddit: '#FF4500',
+  email: '#EA4335'
+}
 
 function PlatformSelector() {
   const { selectedPlatforms, setSelectedPlatforms, platformSettings, setPlatformSettings } = useStore()
   const [settingsDialog, setSettingsDialog] = useState({ open: false, platform: null })
+  const [platforms, setPlatforms] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Load platforms dynamically from backend
+  useEffect(() => {
+    const loadPlatforms = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('http://localhost:4000/api/platforms')
+        if (!response.ok) {
+          throw new Error(`Failed to load platforms: ${response.status}`)
+        }
+        const data = await response.json()
+
+        // Enhance platform data with icons and colors
+        const enhancedPlatforms = data.platforms.map(platform => ({
+          ...platform,
+          icon: ICON_MAP[platform.id] || SettingsIcon,
+          color: COLOR_MAP[platform.id] || '#666',
+          settings: getDefaultSettingsForPlatform(platform.id)
+        }))
+
+        setPlatforms(enhancedPlatforms)
+        setError(null)
+      } catch (err) {
+        console.error('Failed to load platforms:', err)
+        setError(err.message)
+        // Fallback to hardcoded platforms for development
+        setPlatforms(getFallbackPlatforms())
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadPlatforms()
+  }, [])
 
   // Ensure selectedPlatforms is always an array
   const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
+
+  // Get default settings for platform (for backwards compatibility)
+  const getDefaultSettingsForPlatform = (platformId) => {
+    const defaults = {
+      twitter: ['apiKey', 'apiSecret', 'accessToken', 'accessTokenSecret'],
+      instagram: ['username', 'password', 'twoFactorEnabled'],
+      facebook: ['pageId', 'pageName', 'accessToken'],
+      linkedin: ['profileId', 'companyId', 'accessToken'],
+      reddit: ['subreddit', 'username', 'password', 'flair'],
+      email: ['recipients', 'subject', 'smtpServer']
+    }
+    return defaults[platformId] || []
+  }
+
+  // Fallback platforms for development/offline mode
+  const getFallbackPlatforms = () => {
+    return [
+      {
+        id: 'twitter',
+        name: 'Twitter/X',
+        icon: TwitterIcon,
+        color: '#1DA1F2',
+        settings: ['apiKey', 'apiSecret', 'accessToken', 'accessTokenSecret']
+      },
+      {
+        id: 'instagram',
+        name: 'Instagram',
+        icon: InstagramIcon,
+        color: '#E4405F',
+        settings: ['username', 'password', 'twoFactorEnabled']
+      },
+      {
+        id: 'facebook',
+        name: 'Facebook',
+        icon: FacebookIcon,
+        color: '#1877F2',
+        settings: ['pageId', 'pageName', 'accessToken']
+      },
+      {
+        id: 'linkedin',
+        name: 'LinkedIn',
+        icon: LinkedInIcon,
+        color: '#0A66C2',
+        settings: ['profileId', 'companyId', 'accessToken']
+      },
+      {
+        id: 'reddit',
+        name: 'Reddit',
+        icon: RedditIcon,
+        color: '#FF4500',
+        settings: ['subreddit', 'username', 'password', 'flair']
+      },
+      {
+        id: 'email',
+        name: 'Email',
+        icon: EmailIcon,
+        color: '#EA4335',
+        settings: ['recipients', 'subject', 'smtpServer']
+      }
+    ]
+  }
 
 
   const handlePlatformToggle = (platformId) => {
@@ -117,6 +192,27 @@ function PlatformSelector() {
     return platformSettings[platform.id] || {}
   }
 
+  if (loading) {
+    return (
+      <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
+        <CircularProgress sx={{ mb: 2 }} />
+        <Typography>Loading platforms...</Typography>
+      </Paper>
+    )
+  }
+
+  if (error) {
+    return (
+      <Paper elevation={2} sx={{ p: 3 }}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Failed to load platforms from server: {error}
+          <br />
+          Using fallback configuration.
+        </Alert>
+      </Paper>
+    )
+  }
+
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
@@ -124,7 +220,7 @@ function PlatformSelector() {
       </Typography>
 
       <Grid container spacing={2}>
-        {PLATFORMS.map((platform) => {
+        {platforms.map((platform) => {
           const IconComponent = platform.icon
           const isSelected = safeSelectedPlatforms.includes(platform.id)
 

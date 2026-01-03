@@ -8,6 +8,7 @@ export class TwitterValidator {
 
   static validateContent(content: TwitterContent): TwitterValidation {
     const errors: string[] = []
+    const warnings: string[] = []
     let characterCount = content.text?.length || 0
 
     // Check required fields
@@ -41,9 +42,15 @@ export class TwitterValidator {
       }
     }
 
+    // Add warnings for optimization
+    if (characterCount < 50) {
+      warnings.push('Tweet is quite short - consider adding more content')
+    }
+
     return {
       isValid: errors.length === 0,
       errors,
+      warnings,
       characterCount,
       maxLength: this.MAX_LENGTH
     }

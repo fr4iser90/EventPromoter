@@ -1,5 +1,6 @@
 import { createWorker } from 'tesseract.js'
-import pdfParse from 'pdf-parse'
+// Dynamic import for CommonJS module in ES module environment
+let pdfParse: any = null
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
@@ -60,9 +61,14 @@ export class ContentExtractionService {
       await this.initOCR()
 
       if (mimeType === 'application/pdf') {
-        // PDF parsing
+        // PDF parsing - dynamic import for CommonJS module
+        if (!pdfParse) {
+          const pdfModule = await import('pdf-parse')
+          pdfParse = pdfModule.default || pdfModule
+        }
+
         const dataBuffer = fs.readFileSync(filePath)
-        const data = await (pdfParse as any)(dataBuffer)
+        const data = await pdfParse(dataBuffer)
         return {
           text: data.text,
           confidence: 0.9, // PDFs usually have good text extraction
@@ -421,7 +427,7 @@ export class ContentExtractionService {
     return { isDuplicate: false, similarity: 0 }
   }
 
-  // Save parsed data to event folder
+  // Save parsed data to event folder (without platformContent - stored separately)
   static async saveParsedData(eventId: string, parsedData: ParsedEventData): Promise<void> {
     const eventDir = path.join(process.cwd(), 'events', eventId)
     const parsedDataPath = path.join(eventDir, 'parsed-data.json')
@@ -431,7 +437,10 @@ export class ContentExtractionService {
       fs.mkdirSync(eventDir, { recursive: true })
     }
 
-    fs.writeFileSync(parsedDataPath, JSON.stringify(parsedData, null, 2))
+    // Save only event metadata (platformContent is stored separately)
+    const { platformContent, ...eventMetadata } = parsedData
+
+    fs.writeFileSync(parsedDataPath, JSON.stringify(eventMetadata, null, 2))
     console.log(`Saved parsed data for event ${eventId}`)
   }
 
@@ -511,11 +520,64 @@ export class ContentExtractionService {
     }
 
     try {
-      return JSON.parse(fs.readFileSync(parsedDataPath, 'utf8'))
+      const parsedData = JSON.parse(fs.readFileSync(parsedDataPath, 'utf8'))
+
+      // Load platform content from separate files
+      const platformContent = await this.loadPlatformContent(eventId)
+      if (platformContent) {
+        parsedData.platformContent = platformContent
+      }
+
+      return parsedData
     } catch (error) {
       console.error(`Failed to load parsed data for event ${eventId}:`, error)
       return null
     }
+  }
+
+  // Load platform content from separate files
+  static async loadPlatformContent(eventId: string): Promise<Record<string, any> | null> {
+    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
+
+    if (!fs.existsSync(platformContentDir)) {
+      return null
+    }
+
+    const platformContent: Record<string, any> = {}
+    const platforms = ['twitter', 'instagram', 'facebook', 'linkedin', 'reddit', 'email']
+
+    for (const platform of platforms) {
+      const platformFile = path.join(platformContentDir, `${platform}.json`)
+      if (fs.existsSync(platformFile)) {
+        try {
+          platformContent[platform] = JSON.parse(fs.readFileSync(platformFile, 'utf8'))
+        } catch (error) {
+          console.warn(`Failed to load platform content for ${platform}:`, error)
+        }
+      }
+    }
+
+    return Object.keys(platformContent).length > 0 ? platformContent : null
+  }
+
+  // Save platform content to separate file
+  static async savePlatformContent(eventId: string, platform: string, content: any): Promise<void> {
+    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
+    const platformFile = path.join(platformContentDir, `${platform}.json`)
+
+    // Ensure directory exists
+    if (!fs.existsSync(platformContentDir)) {
+      fs.mkdirSync(platformContentDir, { recursive: true })
+    }
+
+    // Add lastModified timestamp
+    const contentWithTimestamp = {
+      ...content,
+      lastModified: new Date().toISOString()
+    }
+
+    fs.writeFileSync(platformFile, JSON.stringify(contentWithTimestamp, null, 2))
+    console.log(`Saved platform content for ${platform} in separate file`)
   }
 
   // Main parsing method

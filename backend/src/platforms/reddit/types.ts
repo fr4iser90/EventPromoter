@@ -18,6 +18,7 @@ export interface RedditConfig {
 export interface RedditValidation {
   isValid: boolean
   errors: string[]
+  warnings: string[]
   titleLength: number
   textLength: number
   maxTitleLength: number

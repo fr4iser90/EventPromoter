@@ -1,29 +1,27 @@
 import { ParsedEventData, PlatformContent } from '../types/index.js'
-import { TwitterParser } from '../platforms/twitter/parser.js'
-import { InstagramParser } from '../platforms/instagram/parser.js'
-import { FacebookParser } from '../platforms/facebook/parser.js'
-import { LinkedInParser } from '../platforms/linkedin/parser.js'
-import { RedditParser } from '../platforms/reddit/parser.js'
-import { EmailParser } from '../platforms/email/parser.js'
+import { getPlatformPlugin, getAllPlatformNames } from '../platforms/index.js'
 
 export class PlatformParsingService {
-  // Main method to parse content for a specific platform
+  // Main method to parse content for a specific platform using plugin architecture
   static async parseForPlatform(platform: string, parsedData: ParsedEventData): Promise<PlatformContent> {
-    switch (platform.toLowerCase()) {
-      case 'twitter':
-        return TwitterParser.parse(parsedData)
-      case 'instagram':
-        return InstagramParser.parse(parsedData)
-      case 'facebook':
-        return FacebookParser.parse(parsedData)
-      case 'linkedin':
-        return LinkedInParser.parse(parsedData)
-      case 'reddit':
-        return RedditParser.parse(parsedData)
-      case 'email':
-        return EmailParser.parse(parsedData)
-      default:
-        throw new Error(`Unsupported platform: ${platform}`)
+    const plugin = getPlatformPlugin(platform.toLowerCase())
+
+    if (!plugin) {
+      throw new Error(`Unsupported platform: ${platform}. Available platforms: ${getAllPlatformNames().join(', ')}`)
     }
+
+    // Use the plugin's parser to generate platform-specific content
+    return plugin.parser.parse(parsedData)
+  }
+
+  // Get all available platforms
+  static getAvailablePlatforms(): string[] {
+    return getAllPlatformNames()
+  }
+
+  // Get platform capabilities
+  static getPlatformCapabilities(platform: string) {
+    const plugin = getPlatformPlugin(platform.toLowerCase())
+    return plugin?.capabilities || []
   }
 }

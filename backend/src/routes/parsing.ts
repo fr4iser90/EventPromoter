@@ -15,4 +15,7 @@ router.get('/data/:eventId', ParsingController.getParsedData)
 // Check for duplicate events
 router.post('/duplicate-check', ParsingController.checkDuplicate)
 
+// Save platform content changes
+router.put('/platform-content/:eventId', ParsingController.savePlatformContent)
+
 export default router

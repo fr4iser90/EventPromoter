@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import {
   Box,
@@ -11,7 +11,8 @@ import {
   IconButton,
   Chip,
   Alert,
-  Button
+  Button,
+  Collapse
 } from '@mui/material'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import FolderIcon from '@mui/icons-material/Folder'
@@ -19,6 +20,8 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import ImageIcon from '@mui/icons-material/Image'
 import DescriptionIcon from '@mui/icons-material/Description'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import useStore from '../../store'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -35,6 +38,7 @@ const ACCEPTED_TYPES = {
 function FileUpload() {
   const { uploadedFileRefs, uploadFiles, removeUploadedFile, parseUploadedFiles, error, setError, isProcessing } = useStore()
   const folderInputRef = useRef(null)
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const onDrop = useCallback(async (acceptedFiles, rejectedFiles) => {
     setError('')
@@ -139,10 +143,35 @@ function FileUpload() {
   }
 
   return (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        📁 File Upload
-      </Typography>
+    <Paper elevation={2} sx={{ p: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: 'pointer',
+          mb: isExpanded ? 2 : 0
+        }}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <Typography variant="h6">
+          📁 File Upload
+        </Typography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {!isExpanded && uploadedFileRefs.length > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              {uploadedFileRefs.length} file{uploadedFileRefs.length !== 1 ? 's' : ''} uploaded
+            </Typography>
+          )}
+          <IconButton size="small">
+            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Box>
+      </Box>
+
+      <Collapse in={isExpanded}>
+        <Box sx={{ pt: isExpanded ? 1 : 0 }}>
 
       <Box
         {...getRootProps()}
@@ -242,6 +271,8 @@ function FileUpload() {
           </List>
         </Box>
       )}
+      </Box>
+      </Collapse>
     </Paper>
   )
 }
