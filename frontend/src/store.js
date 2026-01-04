@@ -57,6 +57,9 @@ const useStore = create((set, get) => ({
     // Load user preferences
     await get().loadUserPreferences()
 
+    // Load global configurations
+    await get().loadGlobalConfigs()
+
     // Load last selected platforms if no platforms are currently selected
     get().loadLastSelectedPlatforms()
   },
@@ -138,7 +141,29 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // Complete event restore
+  // Load global configurations (separate from user preferences)
+  loadGlobalConfigs: async () => {
+    try {
+      const [emailConfig, hashtagConfig] = await Promise.all([
+        axios.get('http://localhost:4000/api/config/emails.json'),
+        axios.get('http://localhost:4000/api/config/hashtags.json')
+      ])
+
+      set({
+        globalEmailConfig: emailConfig.data,
+        globalHashtagConfig: hashtagConfig.data
+      })
+
+      console.log('Global configs loaded:', {
+        emails: emailConfig.data.available?.length || 0,
+        hashtags: hashtagConfig.data.available?.length || 0
+      })
+    } catch (error) {
+      console.warn('Failed to load global configs:', error)
+    }
+  },
+
+  // Complete event restore (only event-specific data, no global overrides)
   restoreEvent: async (eventId) => {
     try {
       console.log(`🔄 Starting complete restore of event ${eventId}...`)
@@ -147,17 +172,17 @@ const useStore = create((set, get) => ({
       const response = await axios.get(`http://localhost:4000/api/event/${eventId}/restore`)
       const restoreData = response.data.event
 
-      // Reset current state first
+      // Reset current state first (but keep global configs)
       get().newEvent()
 
-      // Restore all data
+      // Restore ONLY event-specific data (not global configs)
       set({
         currentEvent: restoreData.event,
         uploadedFileRefs: restoreData.files,
-        selectedPlatforms: restoreData.platforms,
-        platformContent: restoreData.content,
-        selectedHashtags: restoreData.hashtags,
-        emailRecipients: restoreData.emailRecipients
+        selectedPlatforms: restoreData.platforms || [],
+        selectedHashtags: restoreData.hashtags || [],
+        selectedEmails: restoreData.selectedEmails || restoreData.emailRecipients || [], // Handle old format
+        platformContent: restoreData.content || {}
       })
 
       // Update workflow state to reflect restored data
@@ -167,9 +192,10 @@ const useStore = create((set, get) => ({
       get().saveEventWorkspace()
 
       console.log(`✅ Event ${eventId} completely restored:`, {
-        files: restoreData.files.length,
-        platforms: restoreData.platforms.length,
-        contentKeys: Object.keys(restoreData.content).length
+        files: restoreData.files?.length || 0,
+        platforms: restoreData.platforms?.length || 0,
+        emails: restoreData.selectedEmails?.length || restoreData.emailRecipients?.length || 0,
+        contentKeys: Object.keys(restoreData.content || {}).length
       })
 
       return restoreData
@@ -295,18 +321,25 @@ const useStore = create((set, get) => ({
   // File upload state - now stores references to uploaded files on server
   uploadedFileRefs: [],
 
-  // Email recipients (synced with user preferences)
-  emailRecipients: [],
+  // Event-specific selections (separate from global configs)
+  selectedEmails: [],        // Selected emails for current event (NOT global config)
+  selectedHashtags: [],      // Selected hashtags for current event
+  selectedPlatforms: [],     // Selected platforms for current event
+
+  // Global configs loaded from backend
+  globalEmailConfig: null,   // Global email configuration from /config/emails.json
+  globalHashtagConfig: null, // Global hashtag configuration from /config/hashtags.json
   setUploadedFileRefs: (fileRefs) => {
     set({ uploadedFileRefs: Array.isArray(fileRefs) ? fileRefs : [] })
     get().saveEventWorkspace()
   },
 
-  setEmailRecipients: (recipients) => {
-    const newRecipients = Array.isArray(recipients) ? recipients : []
-    set({ emailRecipients: newRecipients })
-    get().updateUserPreferences({ emailRecipients: newRecipients })
+  setSelectedEmails: (emails) => {
+    const newEmails = Array.isArray(emails) ? emails : []
+    set({ selectedEmails: newEmails })
     get().saveEventWorkspace()
+    get().updateWorkflowState()
+    get().debouncedSave()
   },
 
   // Upload files to server
@@ -507,7 +540,6 @@ const useStore = create((set, get) => ({
   },
 
   // Platform state
-  selectedPlatforms: [],
   setSelectedPlatforms: (platforms) => {
     const newPlatforms = Array.isArray(platforms) ? platforms : []
     set({ selectedPlatforms: newPlatforms })

@@ -122,7 +122,7 @@ export class EventController {
       // Get all files for this event
       const files = await EventService.getEventFiles(eventId) || []
 
-      // Structure the complete restore data
+      // Structure the complete restore data (only event-specific, no global overrides)
       const restoreData = {
         event: {
           id: eventData.id,
@@ -133,7 +133,7 @@ export class EventController {
         platforms: eventData.selectedPlatforms || [],
         content: platformContent,
         hashtags: eventData.selectedHashtags || [],
-        emailRecipients: eventData.emailRecipients || []
+        selectedEmails: eventData.selectedEmails || eventData.emailRecipients || [] // Handle both old and new format
       }
 
       console.log(`Event ${eventId} restore data prepared:`, {

@@ -19,10 +19,10 @@ export class EventService {
           created: new Date().toISOString(),
           uploadedFileRefs: [], // References to uploaded files
           selectedHashtags: [],
-          selectedPlatforms: [],
-          platformContent: {},
-          emailRecipients: [],
-          contentTemplates: []
+        selectedPlatforms: [],
+        selectedEmails: [],        // Event-specific email selections
+        platformContent: {},
+        contentTemplates: []
         }
       }
     }
@@ -53,8 +53,8 @@ export class EventService {
         uploadedFileRefs: [],
         selectedHashtags: [],
         selectedPlatforms: [],
+        selectedEmails: [],        // Event-specific email selections
         platformContent: {},
-        emailRecipients: [],
         contentTemplates: []
       }
     }

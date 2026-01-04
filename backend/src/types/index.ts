@@ -5,10 +5,10 @@ export interface Event {
   name: string
   created: string
   uploadedFileRefs: UploadedFile[] // References to uploaded files on server
-  selectedHashtags: string[]
-  selectedPlatforms: string[]
+  selectedHashtags: string[]      // Event-specific hashtag selections
+  selectedPlatforms: string[]     // Event-specific platform selections
+  selectedEmails: string[]        // Event-specific email selections
   platformContent: Record<string, any>
-  emailRecipients: string[]
   contentTemplates: any[]
 }
 
