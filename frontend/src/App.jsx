@@ -7,11 +7,16 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
+import LinearProgress from '@mui/material/LinearProgress'
+import Chip from '@mui/material/Chip'
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
 import Brightness7Icon from '@mui/icons-material/Brightness7'
 import SettingsIcon from '@mui/icons-material/Settings'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
+import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
 import IconButton from '@mui/material/IconButton'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import EventHistory from './components/EventHistory/EventHistory'
@@ -28,7 +33,7 @@ import InstagramPanel from './components/Panels/InstagramPanel'
 import LinkedInPanel from './components/Panels/LinkedInPanel'
 import SettingsModal from './components/SettingsModal/SettingsModal'
 import DuplicateDialog from './components/DuplicateDialog/DuplicateDialog'
-import useStore from './store'
+import useStore, { WORKFLOW_STATES } from './store'
 import { useEffect, useState } from 'react'
 
 const createAppTheme = (darkMode) => createTheme({
@@ -68,6 +73,8 @@ function App() {
     successMessage,
     darkMode,
     n8nWebhookUrl,
+    workflowState,
+    autoSaving,
     submit,
     reset,
     setDarkMode,
@@ -141,7 +148,42 @@ function App() {
     reset()
   }
 
-  const canSubmit = safeUploadedFileRefs.length > 0 && safeSelectedPlatforms.length > 0
+  // Determine what UI elements should be enabled based on workflow state
+  const canUploadFiles = workflowState === WORKFLOW_STATES.INITIAL
+  const canSelectPlatforms = [WORKFLOW_STATES.EVENT_READY, WORKFLOW_STATES.FILES_UPLOADED, WORKFLOW_STATES.PLATFORMS_SELECTED, WORKFLOW_STATES.CONTENT_READY].includes(workflowState)
+  const canEditContent = [WORKFLOW_STATES.PLATFORMS_SELECTED, WORKFLOW_STATES.CONTENT_READY].includes(workflowState)
+  const canSubmit = workflowState === WORKFLOW_STATES.CONTENT_READY && !isProcessing
+  const canReset = workflowState !== WORKFLOW_STATES.INITIAL
+
+  // Workflow progress calculation
+  const getWorkflowProgress = () => {
+    const states = Object.values(WORKFLOW_STATES)
+    const currentIndex = states.indexOf(workflowState)
+    return ((currentIndex + 1) / states.length) * 100
+  }
+
+  const getWorkflowStepInfo = () => {
+    switch (workflowState) {
+      case WORKFLOW_STATES.INITIAL:
+        return { label: '📁 Upload Files', description: 'Start by uploading your event files' }
+      case WORKFLOW_STATES.FILES_UPLOADED:
+        return { label: '🎯 Select Platforms', description: 'Choose where to publish your content' }
+      case WORKFLOW_STATES.EVENT_READY:
+        return { label: '🎯 Select Platforms', description: 'Choose where to publish your content' }
+      case WORKFLOW_STATES.PLATFORMS_SELECTED:
+        return { label: '✏️ Create Content', description: 'Write platform-specific content' }
+      case WORKFLOW_STATES.CONTENT_READY:
+        return { label: '📤 Ready to Publish', description: 'Review and publish your content' }
+      case WORKFLOW_STATES.PUBLISHING:
+        return { label: '🚀 Publishing...', description: 'Sending content to platforms' }
+      case WORKFLOW_STATES.PUBLISHED:
+        return { label: '✅ Published!', description: 'Content successfully published' }
+      default:
+        return { label: 'Unknown', description: '' }
+    }
+  }
+
+  const workflowStep = getWorkflowStepInfo()
 
   // Create theme based on dark mode state
   const theme = createAppTheme(darkMode)
@@ -212,6 +254,45 @@ function App() {
             {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Box>
+      </Box>
+
+      {/* Workflow Progress Indicator */}
+      <Box sx={{
+        px: 2,
+        py: 1,
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+          <Chip
+            label={workflowStep.label}
+            color={workflowState === WORKFLOW_STATES.PUBLISHED ? 'success' :
+                   workflowState === WORKFLOW_STATES.PUBLISHING ? 'warning' :
+                   workflowState === WORKFLOW_STATES.CONTENT_READY ? 'primary' : 'default'}
+            size="small"
+            icon={workflowState === WORKFLOW_STATES.PUBLISHED ? <CheckCircleIcon /> :
+                  workflowState === WORKFLOW_STATES.INITIAL ? <RadioButtonUncheckedIcon /> :
+                  <RadioButtonCheckedIcon />}
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
+            {workflowStep.description}
+          </Typography>
+        </Box>
+        <LinearProgress
+          variant="determinate"
+          value={getWorkflowProgress()}
+          sx={{
+            height: 4,
+            borderRadius: 2,
+            bgcolor: 'grey.200',
+            '& .MuiLinearProgress-bar': {
+              bgcolor: workflowState === WORKFLOW_STATES.PUBLISHED ? 'success.main' :
+                      workflowState === WORKFLOW_STATES.PUBLISHING ? 'warning.main' :
+                      workflowState === WORKFLOW_STATES.CONTENT_READY ? 'primary.main' : 'grey.400'
+            }
+          }}
+        />
       </Box>
 
       {/* Layout Container - Always 1/3, 1/3, 1/3 */}
@@ -286,7 +367,7 @@ function App() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <PlatformSelector />
+              <PlatformSelector disabled={!canSelectPlatforms} />
             </Box>
 
             <Box sx={{ mb: 4 }}>
@@ -294,6 +375,7 @@ function App() {
                 selectedPlatforms={safeSelectedPlatforms}
                 platformContent={platformContent}
                 onPlatformContentChange={setPlatformContent}
+                disabled={!canEditContent}
               />
             </Box>
 
@@ -302,8 +384,27 @@ function App() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <HashtagBuilder />
+              <HashtagBuilder disabled={!canEditContent} />
             </Box>
+
+            {/* Next Step Guidance */}
+            {workflowState === WORKFLOW_STATES.INITIAL && safeUploadedFileRefs.length === 0 && (
+              <Alert severity="info" sx={{ mb: 4 }} icon={<span>👆</span>}>
+                <strong>Start here:</strong> Upload your event files (PDF, images, documents) to begin creating content.
+              </Alert>
+            )}
+
+            {workflowState === WORKFLOW_STATES.FILES_UPLOADED && safeSelectedPlatforms.length === 0 && (
+              <Alert severity="info" sx={{ mb: 4 }} icon={<span>🎯</span>}>
+                <strong>Next:</strong> Select the platforms where you want to publish your content.
+              </Alert>
+            )}
+
+            {workflowState === WORKFLOW_STATES.PLATFORMS_SELECTED && (
+              <Alert severity="info" sx={{ mb: 4 }} icon={<span>✏️</span>}>
+                <strong>Next:</strong> Create platform-specific content in the editors above, then publish when ready.
+              </Alert>
+            )}
 
             {error && (
               <Alert severity="error" sx={{ mb: 4 }}>
@@ -324,26 +425,66 @@ function App() {
                 onClick={handleSubmit}
                 disabled={!canSubmit || isProcessing}
                 startIcon={isProcessing ? <CircularProgress size={20} /> : <SendIcon />}
-                sx={{ minWidth: 200 }}
+                sx={{
+                  minWidth: 200,
+                  transition: 'all 0.3s ease',
+                  ...(canSubmit && !isProcessing && {
+                    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                    '&:hover': {
+                      boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
+                      transform: 'translateY(-1px)'
+                    }
+                  })
+                }}
               >
-                {isProcessing ? 'Sending to n8n...' : 'Publish Content'}
+                {isProcessing ? `Publishing to ${safeSelectedPlatforms.length} platform${safeSelectedPlatforms.length !== 1 ? 's' : ''}...` : '🚀 Publish Content'}
               </Button>
 
               <Button
                 variant="outlined"
                 size="large"
                 onClick={handleReset}
-                disabled={isProcessing}
+                disabled={isProcessing || !canReset}
                 startIcon={<RefreshIcon />}
+                color="warning"
+                sx={{
+                  opacity: canReset ? 1 : 0.5,
+                  transition: 'opacity 0.3s ease'
+                }}
               >
-                Reset
+                🔄 Start Fresh
               </Button>
             </Box>
 
             <Box sx={{ mb: 2, textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary">
-                Files: {safeUploadedFileRefs.length} • Hashtags: {safeSelectedHashtags.length} • Platforms: {safeSelectedPlatforms.length}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 1, flexWrap: 'wrap' }}>
+                <Chip
+                  label={`📁 ${safeUploadedFileRefs.length} Files`}
+                  size="small"
+                  color={safeUploadedFileRefs.length > 0 ? 'success' : 'default'}
+                  variant={safeUploadedFileRefs.length > 0 ? 'filled' : 'outlined'}
+                />
+                <Chip
+                  label={`🎯 ${safeSelectedPlatforms.length} Platforms`}
+                  size="small"
+                  color={safeSelectedPlatforms.length > 0 ? 'success' : 'default'}
+                  variant={safeSelectedPlatforms.length > 0 ? 'filled' : 'outlined'}
+                />
+                <Chip
+                  label={`🏷️ ${safeSelectedHashtags.length} Hashtags`}
+                  size="small"
+                  color={safeSelectedHashtags.length > 0 ? 'info' : 'default'}
+                  variant={safeSelectedHashtags.length > 0 ? 'filled' : 'outlined'}
+                />
+                {autoSaving && (
+                  <Chip
+                    label="💾 Saving..."
+                    size="small"
+                    color="primary"
+                    variant="filled"
+                  />
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>

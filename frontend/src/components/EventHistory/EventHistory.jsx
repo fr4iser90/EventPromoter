@@ -67,18 +67,12 @@ function EventHistory() {
 
   const handleLoadEventData = async (event) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/event/${event.id}/load-data`)
-
-      if (response.ok) {
-        const eventData = await response.json()
-        alert(`Loaded event data for "${event.name}"`)
-        console.log('Event data loaded:', eventData)
-      } else {
-        throw new Error('Failed to load event data')
-      }
+      // Use the complete restore functionality
+      await useStore.getState().restoreEvent(event.id)
+      alert(`✅ "${event.name}" wurde vollständig wiederhergestellt!\n\nAlle Dateien, Plattformen und Inhalte wurden geladen.`)
     } catch (error) {
-      console.error('Failed to load event data:', error)
-      alert('Failed to load event data')
+      console.error('Failed to restore event:', error)
+      alert(`❌ Fehler beim Wiederherstellen von "${event.name}": ${error.message}`)
     }
   }
 

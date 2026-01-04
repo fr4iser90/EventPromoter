@@ -104,4 +104,80 @@ export class EventController {
       res.status(500).json({ error: 'Failed to load event data' })
     }
   }
+
+  static async restoreEvent(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+
+      // Load complete event data
+      const eventData = await EventService.loadEventData(eventId)
+
+      if (!eventData) {
+        return res.status(404).json({ error: 'Event not found' })
+      }
+
+      // Load platform content for this event
+      const platformContent = await EventService.getEventPlatformContent(eventId) || {}
+
+      // Get all files for this event
+      const files = await EventService.getEventFiles(eventId) || []
+
+      // Structure the complete restore data
+      const restoreData = {
+        event: {
+          id: eventData.id,
+          name: eventData.name,
+          created: eventData.created
+        },
+        files: files,
+        platforms: eventData.selectedPlatforms || [],
+        content: platformContent,
+        hashtags: eventData.selectedHashtags || [],
+        emailRecipients: eventData.emailRecipients || []
+      }
+
+      console.log(`Event ${eventId} restore data prepared:`, {
+        files: files.length,
+        platforms: restoreData.platforms.length,
+        contentKeys: Object.keys(restoreData.content).length
+      })
+
+      res.json({
+        success: true,
+        event: restoreData
+      })
+    } catch (error) {
+      console.error('Error restoring event:', error)
+      res.status(500).json({ error: 'Failed to restore event' })
+    }
+  }
+
+  static async getEventPlatformContent(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+      const platformContent = await EventService.getEventPlatformContent(eventId)
+      res.json({ platformContent })
+    } catch (error) {
+      console.error('Error getting event platform content:', error)
+      res.status(500).json({ error: 'Failed to get platform content' })
+    }
+  }
+
+  static async saveEventPlatformContent(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+      const platformContent = req.body
+
+      const success = await EventService.saveEventPlatformContent(eventId, platformContent)
+
+      if (success) {
+        res.json({ success: true })
+      } else {
+        res.status(500).json({ error: 'Failed to save platform content' })
+      }
+    } catch (error) {
+      console.error('Error saving event platform content:', error)
+      res.status(500).json({ error: 'Failed to save platform content' })
+    }
+  }
 }

@@ -38,28 +38,8 @@ function RedditPanel() {
   const [nsfwAllowed, setNsfwAllowed] = useState(false)
   const [spoilerEnabled, setSpoilerEnabled] = useState(false)
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('redditPanelData')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setAvailableSubreddits(data.availableSubreddits || DEFAULT_SUBREDDITS)
-      setSelectedSubreddit(data.selectedSubreddit || '')
-      setNsfwAllowed(data.nsfwAllowed || false)
-      setSpoilerEnabled(data.spoilerEnabled || false)
-    }
-  }, [])
-
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    const data = {
-      availableSubreddits,
-      selectedSubreddit,
-      nsfwAllowed,
-      spoilerEnabled
-    }
-    localStorage.setItem('redditPanelData', JSON.stringify(data))
-  }, [availableSubreddits, selectedSubreddit, nsfwAllowed, spoilerEnabled])
+  // Panel settings are now managed by backend
+  // No localStorage persistence needed
 
   // Update platform settings when selection changes
   useEffect(() => {

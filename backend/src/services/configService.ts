@@ -50,4 +50,64 @@ export class ConfigService {
     }
     return await this.saveEmailConfig({ ...current, ...updates })
   }
+
+  // Environment variable access
+  static getEnvVar(key: string, defaultValue?: string): string | undefined {
+    return process.env[key] || defaultValue
+  }
+
+  static getRequiredEnvVar(key: string): string {
+    const value = process.env[key]
+    if (!value) {
+      throw new Error(`Required environment variable ${key} is not set`)
+    }
+    return value
+  }
+
+  // Platform settings from environment variables
+  static getPlatformSettings(platform: string): Record<string, any> {
+    const settings: Record<string, any> = {}
+    const prefix = platform.toUpperCase()
+
+    // Common patterns for different platforms
+    const patterns = {
+      email: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD', 'FROM_EMAIL', 'FROM_NAME'],
+      facebook: ['APP_ID', 'APP_SECRET', 'ACCESS_TOKEN'],
+      twitter: ['API_KEY', 'API_SECRET', 'ACCESS_TOKEN', 'ACCESS_TOKEN_SECRET'],
+      instagram: ['ACCESS_TOKEN', 'CLIENT_ID'],
+      linkedin: ['CLIENT_ID', 'CLIENT_SECRET', 'ACCESS_TOKEN'],
+      reddit: ['CLIENT_ID', 'CLIENT_SECRET', 'USERNAME', 'PASSWORD']
+    }
+
+    const platformPatterns = patterns[platform as keyof typeof patterns] || []
+    platformPatterns.forEach(pattern => {
+      const envKey = `${prefix}_${pattern}`
+      const value = this.getEnvVar(envKey)
+      if (value) {
+        // Convert pattern to camelCase for settings
+        const settingKey = pattern.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+        settings[settingKey] = value
+      }
+    })
+
+    return settings
+  }
+
+  // User preferences
+  static async getUserPreferences(): Promise<any> {
+    return await this.getConfig('user-preferences')
+  }
+
+  static async saveUserPreferences(preferences: any): Promise<boolean> {
+    const updatedPreferences = {
+      ...preferences,
+      lastUpdated: new Date().toISOString()
+    }
+    return await this.saveConfig('user-preferences', updatedPreferences)
+  }
+
+  static async updateUserPreferences(updates: Partial<any>): Promise<boolean> {
+    const current = await this.getUserPreferences() || {}
+    return await this.saveUserPreferences({ ...current, ...updates })
+  }
 }

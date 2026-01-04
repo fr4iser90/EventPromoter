@@ -25,44 +25,8 @@ function InstagramPanel() {
   const [maxHashtags, setMaxHashtags] = useState(30)
   const [requireImage, setRequireImage] = useState(true)
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('instagramPanelData')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setAccountType(data.accountType || 'business')
-      setPostingMode(data.postingMode || 'post')
-      setHashtagStrategy(data.hashtagStrategy || 'moderate')
-      setMaxHashtags(data.maxHashtags || 30)
-      setRequireImage(data.requireImage !== undefined ? data.requireImage : true)
-    }
-  }, [])
-
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    const data = {
-      accountType,
-      postingMode,
-      hashtagStrategy,
-      maxHashtags,
-      requireImage
-    }
-    localStorage.setItem('instagramPanelData', JSON.stringify(data))
-
-    // Update platform settings
-    const currentSettings = platformSettings.instagram || {}
-    setPlatformSettings({
-      ...platformSettings,
-      instagram: {
-        ...currentSettings,
-        accountType,
-        postingMode,
-        hashtagStrategy,
-        maxHashtags,
-        requireImage
-      }
-    })
-  }, [accountType, postingMode, hashtagStrategy, maxHashtags, requireImage])
+  // Panel settings are now managed by backend
+  // No localStorage persistence needed
 
   const getHashtagStrategyDescription = (strategy) => {
     switch (strategy) {

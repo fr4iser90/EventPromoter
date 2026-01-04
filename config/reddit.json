@@ -1,6 +1,5 @@
 {
-  "description": "Reddit subreddits configuration - Edit this file to manage your subreddit lists",
-  "availableSubreddits": [
+  "available": [
     "DJs",
     "Techno",
     "HouseMusic",
@@ -12,17 +11,23 @@
     "dresden",
     "hamburg"
   ],
-  "selectedSubreddit": "",
-  "defaultSubreddits": [
-    "DJs",
-    "Techno",
-    "HouseMusic",
-    "EDM",
-    "berlin",
-    "EventPromoters",
-    "MusicEvents",
-    "leipzig",
-    "dresden",
-    "hamburg"
-  ]
+  "selected": [],
+  "groups": {
+    "Music": [
+      "DJs",
+      "Techno",
+      "HouseMusic",
+      "EDM"
+    ],
+    "Location": [
+      "berlin",
+      "leipzig",
+      "dresden",
+      "hamburg"
+    ],
+    "Community": [
+      "EventPromoters",
+      "MusicEvents"
+    ]
+  }
 }

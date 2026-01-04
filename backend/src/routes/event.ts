@@ -26,4 +26,13 @@ router.post('/:eventId/load-files', EventController.loadEventFiles)
 // GET /api/event/:eventId/load-data - Load complete event data
 router.get('/:eventId/load-data', EventController.loadEventData)
 
+// GET /api/event/:eventId/restore - Complete event restore with all data
+router.get('/:eventId/restore', EventController.restoreEvent)
+
+// GET /api/event/:eventId/platform-content - Get platform content for event
+router.get('/:eventId/platform-content', EventController.getEventPlatformContent)
+
+// PUT /api/event/:eventId/platform-content - Save platform content for event
+router.put('/:eventId/platform-content', EventController.saveEventPlatformContent)
+
 export default router

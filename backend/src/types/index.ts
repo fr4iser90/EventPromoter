@@ -203,3 +203,19 @@ export interface PlatformValidation {
   errors?: string[]
   supports?: string[]
 }
+
+export interface PlatformSettingsResponse {
+  success: boolean
+  platform: string
+  settings: {
+    config?: PanelConfig
+    hasCredentials: boolean
+    configured: boolean
+  }
+}
+
+export interface PlatformSettingsUpdate {
+  success: boolean
+  message: string
+  platform: string
+}

@@ -33,44 +33,8 @@ function LinkedInPanel() {
     { id: 'personal', name: 'Persönliches Profil', followers: null }
   ]
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('linkedinPanelData')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setPostType(data.postType || 'text')
-      setTargetAudience(data.targetAudience || 'connections')
-      setSelectedCompany(data.selectedCompany || '')
-      setIncludeArticle(data.includeArticle || false)
-      setProfessionalTone(data.professionalTone !== undefined ? data.professionalTone : true)
-    }
-  }, [])
-
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    const data = {
-      postType,
-      targetAudience,
-      selectedCompany,
-      includeArticle,
-      professionalTone
-    }
-    localStorage.setItem('linkedinPanelData', JSON.stringify(data))
-
-    // Update platform settings
-    const currentSettings = platformSettings.linkedin || {}
-    setPlatformSettings({
-      ...platformSettings,
-      linkedin: {
-        ...currentSettings,
-        postType,
-        targetAudience,
-        selectedCompany,
-        includeArticle,
-        professionalTone
-      }
-    })
-  }, [postType, targetAudience, selectedCompany, includeArticle, professionalTone])
+  // Panel settings are now managed by backend
+  // No localStorage persistence needed
 
   return (
     <Paper elevation={3} sx={{

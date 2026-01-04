@@ -30,41 +30,8 @@ function FacebookPanel() {
     { id: 'page3', name: 'Personal Profile', followers: null }
   ]
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('facebookPanelData')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setSelectedPage(data.selectedPage || '')
-      setPostingType(data.postingType || 'post')
-      setSchedulePost(data.schedulePost || false)
-      setPrivacy(data.privacy || 'public')
-    }
-  }, [])
-
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    const data = {
-      selectedPage,
-      postingType,
-      schedulePost,
-      privacy
-    }
-    localStorage.setItem('facebookPanelData', JSON.stringify(data))
-
-    // Update platform settings
-    const currentSettings = platformSettings.facebook || {}
-    setPlatformSettings({
-      ...platformSettings,
-      facebook: {
-        ...currentSettings,
-        selectedPage,
-        postingType,
-        schedulePost,
-        privacy
-      }
-    })
-  }, [selectedPage, postingType, schedulePost, privacy])
+  // Panel settings are now managed by backend
+  // No localStorage persistence needed
 
   return (
     <Paper elevation={3} sx={{

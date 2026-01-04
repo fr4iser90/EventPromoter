@@ -94,6 +94,40 @@ export class EventService {
     return loadedFiles
   }
 
+  static async getEventFiles(eventId: string): Promise<UploadedFile[]> {
+    const eventDir = path.join(process.cwd(), 'events', eventId, 'files')
+
+    if (!fs.existsSync(eventDir)) {
+      return [] // Return empty array if no files directory exists
+    }
+
+    const files: UploadedFile[] = []
+    const fileNames = fs.readdirSync(eventDir)
+
+    for (const fileName of fileNames) {
+      const filePath = path.join(eventDir, fileName)
+
+      if (fs.statSync(filePath).isFile()) {
+        const stats = fs.statSync(filePath)
+        const fileId = fileName
+
+        files.push({
+          id: fileId,
+          name: fileName,
+          filename: fileName,
+          url: `/api/files/${eventId}/${fileId}`,
+          path: path.join('events', eventId, 'files', fileName),
+          size: stats.size,
+          type: this.getMimeType(fileName),
+          uploadedAt: stats.mtime.toISOString(),
+          isImage: this.getMimeType(fileName).startsWith('image/')
+        })
+      }
+    }
+
+    return files
+  }
+
   static async loadEventData(eventId: string): Promise<any> {
     const eventDir = path.join(process.cwd(), 'events', eventId)
 
@@ -175,5 +209,56 @@ export class EventService {
       'md': 'text/markdown'
     }
     return mimeTypes[ext || ''] || 'application/octet-stream'
+  }
+
+  static async getEventPlatformContent(eventId: string): Promise<Record<string, any>> {
+    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
+
+    if (!fs.existsSync(platformContentDir)) {
+      return {}
+    }
+
+    const platformContent: Record<string, any> = {}
+    const platformFiles = fs.readdirSync(platformContentDir)
+
+    for (const platformFile of platformFiles) {
+      if (platformFile.endsWith('.json')) {
+        const platform = platformFile.replace('.json', '')
+        const contentPath = path.join(platformContentDir, platformFile)
+
+        try {
+          const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'))
+          platformContent[platform] = content
+        } catch (error) {
+          console.warn(`Failed to load platform content for ${platform}:`, error)
+        }
+      }
+    }
+
+    return platformContent
+  }
+
+  static async saveEventPlatformContent(eventId: string, platformContent: Record<string, any>): Promise<boolean> {
+    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
+
+    try {
+      // Ensure directory exists
+      if (!fs.existsSync(platformContentDir)) {
+        fs.mkdirSync(platformContentDir, { recursive: true })
+      }
+
+      // Save each platform's content
+      for (const [platform, content] of Object.entries(platformContent)) {
+        if (content) {
+          const contentPath = path.join(platformContentDir, `${platform}.json`)
+          fs.writeFileSync(contentPath, JSON.stringify(content, null, 2))
+        }
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error saving event platform content:', error)
+      return false
+    }
   }
 }

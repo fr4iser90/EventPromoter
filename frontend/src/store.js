@@ -3,6 +3,41 @@ import { validatePlatforms, validateEventData, validateUrl } from './utils/valid
 import axios from 'axios'
 import config from './config'
 
+// Debounce utility function
+const debounce = (func, wait) => {
+  let timeout
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
+// Workflow States - defines the current step in the event creation process
+export const WORKFLOW_STATES = {
+  INITIAL: 'initial',              // No files uploaded, only file upload available
+  FILES_UPLOADED: 'files_uploaded', // Files uploaded, event creation possible
+  EVENT_READY: 'event_ready',      // Event created, platform selection available
+  PLATFORMS_SELECTED: 'platforms_selected', // Platforms selected, content editing available
+  CONTENT_READY: 'content_ready',  // Content created, ready to publish
+  PUBLISHING: 'publishing',        // Currently publishing
+  PUBLISHED: 'published'          // Successfully published
+}
+
+// Helper function to determine workflow state based on current data
+const determineWorkflowState = (state) => {
+  if (state.publishing) return WORKFLOW_STATES.PUBLISHING
+  if (state.published) return WORKFLOW_STATES.PUBLISHED
+  if (state.selectedPlatforms?.length > 0 && Object.keys(state.platformContent || {}).length > 0) return WORKFLOW_STATES.CONTENT_READY
+  if (state.selectedPlatforms?.length > 0) return WORKFLOW_STATES.PLATFORMS_SELECTED
+  if (state.currentEvent?.id) return WORKFLOW_STATES.EVENT_READY
+  if (state.uploadedFileRefs?.length > 0) return WORKFLOW_STATES.FILES_UPLOADED
+  return WORKFLOW_STATES.INITIAL
+}
+
 const useStore = create((set, get) => ({
 
   // Load event workspace from backend on init
@@ -18,12 +53,19 @@ const useStore = create((set, get) => ({
 
     // Also load app config for n8nWebhookUrl
     await get().loadAppConfig()
+
+    // Load user preferences
+    await get().loadUserPreferences()
+
+    // Load last selected platforms if no platforms are currently selected
+    get().loadLastSelectedPlatforms()
   },
 
   // Save workspace to backend whenever state changes
   saveEventWorkspace: async () => {
     const state = get()
     try {
+      set({ autoSaving: true })
       const eventWorkspaceData = {
         currentEvent: {
           id: state.currentEvent?.id || `event-${Date.now()}`,
@@ -32,7 +74,6 @@ const useStore = create((set, get) => ({
           uploadedFileRefs: state.uploadedFileRefs, // File references are serializable
           selectedHashtags: state.selectedHashtags,
           selectedPlatforms: state.selectedPlatforms,
-          platformContent: state.platformContent,
           emailRecipients: state.emailRecipients || [],
           contentTemplates: state.contentTemplates
         }
@@ -42,6 +83,99 @@ const useStore = create((set, get) => ({
       console.log('Store: Event workspace saved to backend successfully')
     } catch (error) {
       console.warn('Store: Failed to save event workspace to backend:', error)
+    } finally {
+      set({ autoSaving: false })
+    }
+  },
+
+  // Debounced autosave - saves after 2 seconds of inactivity
+  debouncedSave: debounce(() => {
+    const state = get()
+    // Only autosave if we have meaningful data and are not in initial state
+    if (state.workflowState !== WORKFLOW_STATES.INITIAL &&
+        (state.uploadedFileRefs.length > 0 || state.selectedPlatforms.length > 0 || Object.keys(state.platformContent).length > 0)) {
+      console.log('🔄 Autosaving workspace...')
+      get().saveEventWorkspace()
+    }
+  }, 2000),
+
+  // User preferences
+  loadUserPreferences: async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/platforms/preferences')
+      const preferences = response.data.preferences
+      set({
+        userPreferences: preferences,
+        emailRecipients: preferences.emailRecipients || []
+      })
+      console.log('User preferences loaded:', preferences)
+      return preferences
+    } catch (error) {
+      console.warn('Failed to load user preferences:', error)
+      return null
+    }
+  },
+
+  saveUserPreferences: async (preferences) => {
+    try {
+      await axios.post('http://localhost:4000/api/platforms/preferences', { preferences })
+      set({ userPreferences: preferences })
+      console.log('User preferences saved')
+    } catch (error) {
+      console.warn('Failed to save user preferences:', error)
+    }
+  },
+
+  updateUserPreferences: async (updates) => {
+    try {
+      await axios.patch('http://localhost:4000/api/platforms/preferences', updates)
+      set(state => ({
+        userPreferences: { ...state.userPreferences, ...updates }
+      }))
+      console.log('User preferences updated')
+    } catch (error) {
+      console.warn('Failed to update user preferences:', error)
+    }
+  },
+
+  // Complete event restore
+  restoreEvent: async (eventId) => {
+    try {
+      console.log(`🔄 Starting complete restore of event ${eventId}...`)
+
+      // Load complete event data from backend
+      const response = await axios.get(`http://localhost:4000/api/event/${eventId}/restore`)
+      const restoreData = response.data.event
+
+      // Reset current state first
+      get().newEvent()
+
+      // Restore all data
+      set({
+        currentEvent: restoreData.event,
+        uploadedFileRefs: restoreData.files,
+        selectedPlatforms: restoreData.platforms,
+        platformContent: restoreData.content,
+        selectedHashtags: restoreData.hashtags,
+        emailRecipients: restoreData.emailRecipients
+      })
+
+      // Update workflow state to reflect restored data
+      get().updateWorkflowState()
+
+      // Save the restored state
+      get().saveEventWorkspace()
+
+      console.log(`✅ Event ${eventId} completely restored:`, {
+        files: restoreData.files.length,
+        platforms: restoreData.platforms.length,
+        contentKeys: Object.keys(restoreData.content).length
+      })
+
+      return restoreData
+    } catch (error) {
+      console.error(`❌ Failed to restore event ${eventId}:`, error)
+      throw error
     }
   },
 
@@ -90,10 +224,15 @@ const useStore = create((set, get) => ({
         uploadedFileRefs: validatedFileRefs, // Only load existing files
         selectedHashtags: event.selectedHashtags || [],
         selectedPlatforms: event.selectedPlatforms || [],
-        platformContent: event.platformContent || {},
-        emailRecipients: event.emailRecipients || [],
+        emailRecipients: event.emailRecipients || state.userPreferences?.emailRecipients || [],
         contentTemplates: event.contentTemplates || []
       })
+
+      // Update workflow state after loading
+      get().updateWorkflowState()
+
+      // Load platform content for this event
+      get().loadEventPlatformContent(event.id)
 
       console.log(`Event workspace loaded from backend (${validatedFileRefs.length} valid files)`)
       return event
@@ -110,10 +249,24 @@ const useStore = create((set, get) => ({
       selectedHashtags: [],
       selectedPlatforms: [],
       platformContent: {},
-      contentTemplates: []
+      contentTemplates: [],
+      workflowState: WORKFLOW_STATES.INITIAL,
+      publishing: false,
+      published: false,
+      currentEvent: null
     })
     get().saveEventWorkspace()
     console.log('New Event created')
+  },
+
+  // Update workflow state based on current data
+  updateWorkflowState: () => {
+    const state = get()
+    const newWorkflowState = determineWorkflowState(state)
+    if (state.workflowState !== newWorkflowState) {
+      set({ workflowState: newWorkflowState })
+      console.log(`Workflow state changed to: ${newWorkflowState}`)
+    }
   },
 
   // Legacy removed - everything uses workspace now
@@ -122,10 +275,37 @@ const useStore = create((set, get) => ({
   currentEvent: null,
   duplicateFound: null, // For duplicate event detection
 
+  // Workflow state
+  workflowState: WORKFLOW_STATES.INITIAL,
+  publishing: false,
+  published: false,
+  autoSaving: false,
+
+  // User preferences
+  userPreferences: {
+    lastSelectedPlatforms: [],
+    defaultHashtags: [],
+    emailRecipients: [],
+    smtpConfig: null,
+    uiPreferences: {
+      darkMode: false
+    }
+  },
+
   // File upload state - now stores references to uploaded files on server
   uploadedFileRefs: [],
+
+  // Email recipients (synced with user preferences)
+  emailRecipients: [],
   setUploadedFileRefs: (fileRefs) => {
     set({ uploadedFileRefs: Array.isArray(fileRefs) ? fileRefs : [] })
+    get().saveEventWorkspace()
+  },
+
+  setEmailRecipients: (recipients) => {
+    const newRecipients = Array.isArray(recipients) ? recipients : []
+    set({ emailRecipients: newRecipients })
+    get().updateUserPreferences({ emailRecipients: newRecipients })
     get().saveEventWorkspace()
   },
 
@@ -160,6 +340,8 @@ const useStore = create((set, get) => ({
           parsingStatus: 'idle' // Reset parsing status for new files
         })
         get().saveEventWorkspace()
+        get().updateWorkflowState()
+        get().debouncedSave()
 
         console.log('Files uploaded successfully:', response.data.files.length)
         return response.data.files
@@ -327,8 +509,25 @@ const useStore = create((set, get) => ({
   // Platform state
   selectedPlatforms: [],
   setSelectedPlatforms: (platforms) => {
-    set({ selectedPlatforms: Array.isArray(platforms) ? platforms : [] })
+    const newPlatforms = Array.isArray(platforms) ? platforms : []
+    set({ selectedPlatforms: newPlatforms })
     get().saveEventWorkspace()
+    get().updateWorkflowState()
+    get().debouncedSave()
+
+    // Save last selected platforms to user preferences
+    if (newPlatforms.length > 0) {
+      get().updateUserPreferences({ lastSelectedPlatforms: newPlatforms })
+    }
+  },
+
+  // Load last selected platforms from user preferences
+  loadLastSelectedPlatforms: () => {
+    const state = get()
+    if (state.selectedPlatforms.length === 0 && state.userPreferences?.lastSelectedPlatforms?.length > 0) {
+      console.log('Loading last selected platforms from preferences:', state.userPreferences.lastSelectedPlatforms)
+      get().setSelectedPlatforms(state.userPreferences.lastSelectedPlatforms)
+    }
   },
   platformSettings: {},
   setPlatformSettings: (settings) => {
@@ -384,7 +583,14 @@ const useStore = create((set, get) => ({
     set(state => ({
       platformContent: { ...state.platformContent, [platform]: content }
     }))
-    get().saveEventWorkspace()
+    // Auto-save to current event
+    const state = get()
+    const eventId = state.currentEvent?.id
+    if (eventId) {
+      get().saveEventPlatformContent(eventId, { ...state.platformContent, [platform]: content })
+    }
+    get().updateWorkflowState()
+    get().debouncedSave()
   },
 
   // Save platform content changes to backend (for auto-save)
@@ -414,6 +620,29 @@ const useStore = create((set, get) => ({
   resetPlatformContent: () => {
     set({ platformContent: {} })
     get().saveEventWorkspace()
+  },
+
+  // Load platform content for specific event
+  loadEventPlatformContent: async (eventId) => {
+    try {
+      const response = await axios.get(`http://localhost:4000/api/event/${eventId}/platform-content`)
+      const { platformContent } = response.data
+      set({ platformContent: platformContent || {} })
+      console.log(`Platform content loaded for event ${eventId}`)
+    } catch (error) {
+      console.warn('Failed to load platform content for event:', error)
+      set({ platformContent: {} })
+    }
+  },
+
+  // Save platform content for specific event
+  saveEventPlatformContent: async (eventId, platformContent) => {
+    try {
+      await axios.put(`http://localhost:4000/api/event/${eventId}/platform-content`, platformContent)
+      console.log(`Platform content saved for event ${eventId}`)
+    } catch (error) {
+      console.warn('Failed to save platform content for event:', error)
+    }
   },
 
   // Template system
@@ -458,7 +687,10 @@ const useStore = create((set, get) => ({
     platformSettings: {},
     isProcessing: false,
     error: null,
-    successMessage: null
+    successMessage: null,
+    publishing: false,
+    published: false,
+    workflowState: WORKFLOW_STATES.INITIAL
   }),
 
   // Convert files to base64 for n8n
@@ -538,7 +770,13 @@ const useStore = create((set, get) => ({
   // Submit action via backend proxy
   submit: async () => {
     const state = get()
-    set({ isProcessing: true, error: null, successMessage: null })
+    set({
+      isProcessing: true,
+      error: null,
+      successMessage: null,
+      publishing: true,
+      workflowState: WORKFLOW_STATES.PUBLISHING
+    })
 
     try {
       // Basic frontend validation (detailed validation happens in backend)
@@ -632,7 +870,10 @@ const useStore = create((set, get) => ({
 
       set({
         isProcessing: false,
-        successMessage: `Content successfully submitted to ${state.selectedPlatforms.length} platform(s)!`
+        successMessage: `Content successfully submitted to ${state.selectedPlatforms.length} platform(s)!`,
+        publishing: false,
+        published: true,
+        workflowState: WORKFLOW_STATES.PUBLISHED
       })
 
       // Return session ID for results tracking

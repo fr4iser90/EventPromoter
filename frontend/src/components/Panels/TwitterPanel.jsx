@@ -21,38 +21,8 @@ function TwitterPanel() {
   const [includeThread, setIncludeThread] = useState(false)
   const [autoTruncate, setAutoTruncate] = useState(true)
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('twitterPanelData')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setPostingMode(data.postingMode || 'single')
-      setIncludeThread(data.includeThread || false)
-      setAutoTruncate(data.autoTruncate !== undefined ? data.autoTruncate : true)
-    }
-  }, [])
-
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    const data = {
-      postingMode,
-      includeThread,
-      autoTruncate
-    }
-    localStorage.setItem('twitterPanelData', JSON.stringify(data))
-
-    // Update platform settings
-    const currentSettings = platformSettings.twitter || {}
-    setPlatformSettings({
-      ...platformSettings,
-      twitter: {
-        ...currentSettings,
-        postingMode,
-        includeThread,
-        autoTruncate
-      }
-    })
-  }, [postingMode, includeThread, autoTruncate])
+  // Panel settings are now managed by backend
+  // No localStorage persistence needed
 
   return (
     <Paper elevation={3} sx={{

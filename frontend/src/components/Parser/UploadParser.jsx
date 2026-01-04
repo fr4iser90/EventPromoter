@@ -117,27 +117,8 @@ function UploadParser() {
     }
   }, [editedData, selectedPlatforms, platformContent, setPlatformContent])
 
-  // Auto-save platform content to localStorage
-  useEffect(() => {
-    if (Object.keys(platformContent).length > 0) {
-      localStorage.setItem('eventpromoter_platformContent', JSON.stringify(platformContent))
-    }
-  }, [platformContent])
-
-  // Load auto-saved content on component mount
-  useEffect(() => {
-    const saved = localStorage.getItem('eventpromoter_platformContent')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        Object.entries(parsed).forEach(([platform, content]) => {
-          setPlatformContent(platform, content)
-        })
-      } catch (error) {
-        console.warn('Failed to load auto-saved content:', error)
-      }
-    }
-  }, [setPlatformContent])
+  // Platform content is now managed by backend only
+  // No localStorage persistence needed
 
   // Load parsed data when component mounts, files change, or parsing completes
   React.useEffect(() => {

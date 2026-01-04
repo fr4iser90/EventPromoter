@@ -1,125 +1,111 @@
 # 📁 Configuration Files
 
-Diese Dateien enthalten alle Einstellungen für dein EventPromoter-System. **Bearbeite sie direkt in deinem Code-Editor!**
+Diese Dateien enthalten alle **öffentlichen** Einstellungen für dein EventPromoter-System.
 
-## 📧 `emails.json` - Email-Konfiguration
+## 🔐 Sicherheitshinweis
+
+**Sensible Daten (API-Keys, Passwörter, Tokens) sind in `.env` ausgelagert!**
+
+- ✅ **Config-Dateien:** Öffentliche Einstellungen (E-Mail-Listen, Hashtags, etc.)
+- 🔴 **`.env`-Datei:** Secrets (API-Keys, SMTP-Passwörter)
+- 🚫 **Niemals `.env` ins Git committen!**
+
+## 📄 Einheitliches Config-Schema
+
+**Alle Listen-Configs folgen diesem Schema:**
+
 ```json
 {
-  "recipients": ["email1@example.com", "email2@example.com"],
-  "groups": {
-    "DJs": ["dj@example.com"],
-    "Venues": ["venue@example.com"]
+  "available": [...],        // Alle verfügbaren Optionen
+  "selected": [...],         // Aktuell ausgewählte (leer = alle/keine)
+  "groups": {                // Kategorisierung (optional)
+    "group1": [...],
+    "group2": [...]
+  },
+  "content": {               // Unterschiedlicher Content (optional)
+    "option1": "template1",
+    "option2": "template2"
   }
 }
 ```
 
-## 🔴 `reddit.json` - Reddit-Subreddits
+## 📄 Config-Dateien Übersicht
+
+### 📧 `emails.json` - E-Mail-Konfiguration
 ```json
 {
-  "availableSubreddits": ["DJs", "Techno", "berlin"],
-  "selectedSubreddit": "",
-  "defaultSubreddits": ["DJs", "Techno"]
+  "available": ["dj-events@club.com", "events@venue.de"],
+  "selected": [],
+  "groups": {
+    "DJs & Promoter": ["dj-events@club.com"],
+    "Venue Manager": ["events@venue.de"]
+  }
 }
 ```
 
-## ⚙️ `app.json` - App-Einstellungen
+### 🏷️ `hashtags.json` - Globale Hashtags
 ```json
 {
-  "darkMode": false,
-  "version": "1.0.0",
-  "lastUpdated": "2025-12-30T12:00:00.000Z"
+  "available": ["#event", "#party", "#techno"],
+  "selected": [],
+  "groups": {
+    "General": ["#event", "#party"],
+    "Music": ["#techno"]
+  }
 }
 ```
 
-## 🐦 `twitter.json` - Twitter/X API
+### 📱 `reddit.json` - Reddit-Subreddits
 ```json
 {
-  "enabled": false,
-  "apiKey": "",
-  "apiSecret": "",
-  "accessToken": "",
-  "accessTokenSecret": "",
-  "bearerToken": "",
-  "webhookUrl": "",
-  "autoPost": true,
-  "hashtags": ["#event", "#party"]
+  "available": ["DJs", "Techno", "berlin"],
+  "selected": [],
+  "groups": {
+    "Music": ["DJs", "Techno"],
+    "Location": ["berlin"]
+  }
 }
 ```
 
-## 📸 `instagram.json` - Instagram API
+### ⚙️ `app.json` - App-Einstellungen
 ```json
 {
-  "enabled": false,
-  "username": "",
-  "password": "",
-  "appId": "",
-  "appSecret": "",
-  "accessToken": "",
-  "webhookUrl": "",
-  "autoPost": true,
-  "hashtags": ["#event", "#party", "#instagram"]
+  "n8nWebhookUrl": "http://localhost:5678/webhook/...",
+  "darkMode": false
 }
 ```
 
-## 📘 `facebook.json` - Facebook API
+### 🐦 `twitter.json` - Twitter/X Settings
 ```json
 {
-  "enabled": false,
-  "appId": "",
-  "appSecret": "",
-  "pageId": "",
-  "pageAccessToken": "",
-  "webhookUrl": "",
-  "autoPost": true,
-  "hashtags": ["#event", "#party", "#facebook"]
+  "enabled": false
 }
 ```
 
-## 💼 `linkedin.json` - LinkedIn API
+### 📸 `instagram.json` - Instagram Settings
 ```json
 {
-  "enabled": false,
-  "clientId": "",
-  "clientSecret": "",
-  "accessToken": "",
-  "refreshToken": "",
-  "organizationId": "",
-  "webhookUrl": "",
-  "autoPost": true,
-  "hashtags": ["#event", "#party", "#linkedin", "#networking"]
+  "enabled": false
 }
 ```
 
-## 🚀 Wie benutzt du es:
-
-1. **Bearbeite die JSON-Dateien** in deinem Editor
-2. **Speichere sie** (Ctrl+S)
-3. **Refresh deine Browser-Tab** - die Änderungen sind sofort aktiv!
-
-## 🔄 Automatische Synchronisation:
-
-- **Frontend → Dateien**: Änderungen im UI werden automatisch gespeichert
-- **Dateien → Frontend**: Beim nächsten Laden werden die Dateien gelesen
-
-## 📂 Alle Dateien:
-
-```
-EventPromoter/config/
-├── emails.json      ← Email-Listen & Gruppen
-├── reddit.json      ← Reddit-Subreddits
-├── app.json         ← App-Einstellungen (Dark Mode, etc.)
-├── twitter.json     ← Twitter API Credentials
-├── instagram.json   ← Instagram API Credentials
-├── facebook.json    ← Facebook API Credentials
-├── linkedin.json    ← LinkedIn API Credentials
-└── README.md        ← Diese Anleitung
+### 📘 `facebook.json` - Facebook Settings
+```json
+{
+  "enabled": false
+}
 ```
 
-## 💡 Tipps:
+### 💼 `linkedin.json` - LinkedIn Settings
+```json
+{
+  "enabled": false
+}
+```
 
-- **API Credentials**: Trage deine echten API Keys ein
-- **enabled**: Auf `true` setzen um Platform zu aktivieren
-- **hashtags**: Platform-spezifische Hashtags definieren
-- **Versionierung**: Committen für Backup & Versionierung
+## 🚀 Verwendung
 
-**Perfekt für Versionierung und Backups!** 🎉
+**Frontend** lädt Configs über API: `/api/config/{filename}`  
+**Backend** lädt Secrets aus `.env` mit `process.env.VARIABLE_NAME`
+
+**Perfekt einheitlich strukturiert!** ✅

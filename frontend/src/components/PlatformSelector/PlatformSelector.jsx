@@ -51,7 +51,7 @@ const COLOR_MAP = {
   email: '#EA4335'
 }
 
-function PlatformSelector() {
+function PlatformSelector({ disabled = false }) {
   const { selectedPlatforms, setSelectedPlatforms, platformSettings, setPlatformSettings } = useStore()
   const [settingsDialog, setSettingsDialog] = useState({ open: false, platform: null })
   const [platforms, setPlatforms] = useState([])
@@ -239,6 +239,7 @@ function PlatformSelector() {
                         <Checkbox
                           checked={isSelected}
                           onChange={() => handlePlatformToggle(platform.id)}
+                          disabled={disabled}
                           sx={{
                             color: platform.color,
                             '&.Mui-checked': {

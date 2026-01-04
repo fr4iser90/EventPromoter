@@ -1,8 +1,12 @@
+import dotenv from 'dotenv'
 import express from 'express'
 import helmet from 'helmet'
 import { corsMiddleware } from './middleware/cors.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import routes from './routes/index.js'
+
+// Load environment variables
+dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 4000

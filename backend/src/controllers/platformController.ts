@@ -1,6 +1,69 @@
 // Platform Controller - Handles platform metadata and configuration
 import { Request, Response } from 'express'
 import { getPlatformPlugin, getAllPlatformNames, getPlatformsWithCapability } from '../platforms/index.js'
+import { ConfigService } from '../services/configService.js'
+
+// User Preferences Controller
+export class UserPreferencesController {
+  static async getPreferences(req: Request, res: Response) {
+    try {
+      const preferences = await ConfigService.getUserPreferences() || {
+        lastSelectedPlatforms: [],
+        defaultHashtags: [],
+        emailRecipients: [],
+        smtpConfig: null,
+        uiPreferences: {
+          darkMode: false
+        }
+      }
+      res.json({ success: true, preferences })
+    } catch (error: any) {
+      console.error('Get user preferences error:', error)
+      res.status(500).json({
+        error: 'Failed to get user preferences',
+        details: error.message
+      })
+    }
+  }
+
+  static async savePreferences(req: Request, res: Response) {
+    try {
+      const { preferences } = req.body
+      const success = await ConfigService.saveUserPreferences(preferences)
+
+      if (success) {
+        res.json({ success: true, message: 'Preferences saved successfully' })
+      } else {
+        res.status(500).json({ error: 'Failed to save preferences' })
+      }
+    } catch (error: any) {
+      console.error('Save user preferences error:', error)
+      res.status(500).json({
+        error: 'Failed to save user preferences',
+        details: error.message
+      })
+    }
+  }
+
+  static async updatePreferences(req: Request, res: Response) {
+    try {
+      const updates = req.body
+      const success = await ConfigService.updateUserPreferences(updates)
+
+      if (success) {
+        res.json({ success: true, message: 'Preferences updated successfully' })
+      } else {
+        res.status(500).json({ error: 'Failed to update preferences' })
+      }
+    } catch (error: any) {
+      console.error('Update user preferences error:', error)
+      res.status(500).json({
+        error: 'Failed to update user preferences',
+        details: error.message
+      })
+    }
+  }
+}
 
 export class PlatformController {
   // Get all available platforms with metadata
@@ -193,5 +256,75 @@ export class PlatformController {
     }
 
     return fields
+  }
+
+  // Get platform settings configuration
+  static async getPlatformSettings(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params
+      const plugin = getPlatformPlugin(platformId)
+
+      if (!plugin) {
+        return res.status(404).json({
+          error: 'Platform not found',
+          availablePlatforms: getAllPlatformNames()
+        })
+      }
+
+      // Get settings from platform module (UI configuration)
+      const settingsConfig = plugin.uiConfig?.settings
+
+      // Get actual values from environment variables (but don't expose secrets)
+      const envSettings = ConfigService.getPlatformSettings(platformId)
+      const hasCredentials = Object.keys(envSettings).length > 0
+
+      res.json({
+        success: true,
+        platform: platformId,
+        settings: {
+          config: settingsConfig,
+          hasCredentials,
+          // Don't expose actual secret values, just indicate if they're set
+          configured: hasCredentials
+        }
+      })
+    } catch (error: any) {
+      console.error('Get platform settings error:', error)
+      res.status(500).json({
+        error: 'Failed to get platform settings',
+        details: error.message
+      })
+    }
+  }
+
+  // Update platform settings (validate and store)
+  static async updatePlatformSettings(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params
+      const { settings } = req.body
+
+      const plugin = getPlatformPlugin(platformId)
+      if (!plugin) {
+        return res.status(404).json({
+          error: 'Platform not found'
+        })
+      }
+
+      // Here you would typically validate and save settings
+      // For now, just return success (settings are stored in .env manually)
+      console.log(`Platform ${platformId} settings update requested:`, Object.keys(settings || {}))
+
+      res.json({
+        success: true,
+        message: `Settings for ${platformId} updated successfully`,
+        platform: platformId
+      })
+    } catch (error: any) {
+      console.error('Update platform settings error:', error)
+      res.status(500).json({
+        error: 'Failed to update platform settings',
+        details: error.message
+      })
+    }
   }
 }

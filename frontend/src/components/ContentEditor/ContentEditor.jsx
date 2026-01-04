@@ -21,7 +21,7 @@ import EmailEditor from '../PlatformEditor/EmailEditor'
 import TwitterPreview from '../PlatformPreview/TwitterPreview'
 import EmailPreview from '../PlatformPreview/EmailPreview'
 
-function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentChange }) {
+function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentChange, disabled = false }) {
   const [activeTab, setActiveTab] = useState(0)
 
   // Get available platforms (only selected ones)
@@ -47,17 +47,17 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
 
     switch (platform) {
       case 'twitter':
-        return <TwitterEditor content={content} onChange={onChange} />
+        return <TwitterEditor content={content} onChange={onChange} disabled={disabled} />
       case 'instagram':
-        return <InstagramEditor content={content} onChange={onChange} />
+        return <InstagramEditor content={content} onChange={onChange} disabled={disabled} />
       case 'facebook':
-        return <FacebookEditor content={content} onChange={onChange} />
+        return <FacebookEditor content={content} onChange={onChange} disabled={disabled} />
       case 'linkedin':
-        return <LinkedEditor content={content} onChange={onChange} />
+        return <LinkedEditor content={content} onChange={onChange} disabled={disabled} />
       case 'reddit':
-        return <RedditEditor content={content} onChange={onChange} />
+        return <RedditEditor content={content} onChange={onChange} disabled={disabled} />
       case 'email':
-        return <EmailEditor content={content} onChange={onChange} />
+        return <EmailEditor content={content} onChange={onChange} disabled={disabled} />
       default:
         return (
           <Alert severity="warning">

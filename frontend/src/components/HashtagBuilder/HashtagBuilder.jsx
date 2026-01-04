@@ -23,7 +23,7 @@ const PREDEFINED_HASHTAGS = {
   general: ['#germany', '#europe', '#weekend', '#fun', '#dance']
 }
 
-function HashtagBuilder() {
+function HashtagBuilder({ disabled = false }) {
   const { selectedHashtags, setSelectedHashtags } = useStore()
   const [customHashtags, setCustomHashtags] = useState('')
 

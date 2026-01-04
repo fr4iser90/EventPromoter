@@ -138,16 +138,19 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
           startIcon={<AddIcon />}
           onClick={handleLoadFiles}
           disabled={!event.files || event.files.length === 0}
+          variant="outlined"
         >
-          Load Files
+          Load Files Only
         </Button>
 
         <Button
           size="small"
           startIcon={<DownloadIcon />}
           onClick={handleLoadEvent}
+          variant="contained"
+          color="primary"
         >
-          Load Event
+          Restore Event
         </Button>
       </CardActions>
     </Card>
