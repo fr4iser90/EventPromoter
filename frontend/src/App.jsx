@@ -16,7 +16,7 @@ import IconButton from '@mui/material/IconButton'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import EventHistory from './components/EventHistory/EventHistory'
 import FileUpload from './components/FileUpload/FileUpload'
-import UploadParser from './components/Parser/UploadParser'
+import ContentEditor from './components/ContentEditor/ContentEditor'
 import Preview from './components/Preview/Preview'
 import HashtagBuilder from './components/HashtagBuilder/HashtagBuilder'
 import PlatformSelector from './components/PlatformSelector/PlatformSelector'
@@ -61,6 +61,8 @@ function App() {
     uploadedFileRefs,
     selectedHashtags,
     selectedPlatforms,
+    platformContent,
+    setPlatformContent,
     isProcessing,
     error,
     successMessage,
@@ -288,7 +290,11 @@ function App() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <UploadParser />
+              <ContentEditor
+                selectedPlatforms={safeSelectedPlatforms}
+                platformContent={platformContent}
+                onPlatformContentChange={setPlatformContent}
+              />
             </Box>
 
             <Box sx={{ mb: 4 }}>
