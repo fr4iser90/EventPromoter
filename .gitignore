@@ -171,4 +171,4 @@ test-data/
 
 # event files
 backend/events/*
-
+config/app.json
