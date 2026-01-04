@@ -56,7 +56,9 @@ export interface PlatformPlugin {
 }
 
 export interface UIConfig {
-  panel?: PanelConfig
+  panel?: PanelConfig     // Platform content/features
+  editor?: PanelConfig    // Content editing sections
+  settings?: PanelConfig  // Platform settings (credentials, config)
 }
 
 export interface PanelConfig {

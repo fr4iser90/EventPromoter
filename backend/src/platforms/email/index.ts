@@ -4,6 +4,9 @@ import { EmailParser } from './parser.js'
 import { EmailService } from './service.js'
 import { EMAIL_TEMPLATES } from './templates.js'
 import { EmailValidator } from './validator.js'
+import { emailPanelConfig } from './panel.js'
+import { emailEditorConfig } from './editor.js'
+import { emailSettingsConfig } from './settings.js'
 
 const EmailCapabilities: PlatformCapability[] = [
   { type: 'text', required: true },
@@ -43,83 +46,9 @@ const EmailPlugin: PlatformPlugin = {
 
   // UI Configuration for dynamic panel generation
   uiConfig: {
-    panel: {
-      title: 'Email Configuration',
-      sections: [
-        {
-          id: 'recipients',
-          title: 'Email Recipients',
-          component: 'recipient-selector',
-          props: {
-            source: 'email-list',
-            multiple: true,
-            allowCustom: true,
-            required: true
-          }
-        },
-        {
-          id: 'content',
-          title: 'Email Content',
-          component: 'email-content-editor',
-          props: {
-            showSubject: true,
-            showHtml: true,
-            showPreview: true,
-            maxLength: 50000
-          }
-        },
-        {
-          id: 'smtp',
-          title: 'SMTP Settings',
-          component: 'settings-form',
-          props: {
-            fields: [
-              {
-                name: 'host',
-                type: 'text',
-                label: 'SMTP Host',
-                placeholder: 'smtp.gmail.com',
-                required: true,
-                validation: 'hostname'
-              },
-              {
-                name: 'port',
-                type: 'number',
-                label: 'Port',
-                placeholder: '587',
-                default: 587,
-                required: true,
-                validation: 'port'
-              },
-              {
-                name: 'username',
-                type: 'text',
-                label: 'Username',
-                required: true
-              },
-              {
-                name: 'password',
-                type: 'password',
-                label: 'Password',
-                required: true
-              },
-              {
-                name: 'fromEmail',
-                type: 'email',
-                label: 'From Email',
-                required: true
-              },
-              {
-                name: 'fromName',
-                type: 'text',
-                label: 'From Name',
-                placeholder: 'Your Name'
-              }
-            ]
-          }
-        }
-      ]
-    }
+    panel: emailPanelConfig,     // Recipients management
+    editor: emailEditorConfig,   // Content editing
+    settings: emailSettingsConfig // SMTP credentials
   }
 }
 
