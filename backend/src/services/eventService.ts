@@ -5,6 +5,7 @@ import { readConfig, writeConfig } from '../utils/fileUtils.js'
 import fs from 'fs'
 import path from 'path'
 
+
 const EVENT_FILE = 'event.json'
 
 export class EventService {
@@ -126,6 +127,109 @@ export class EventService {
     }
 
     return files
+  }
+
+  // Extract title from TXT files in event directory
+  static extractTitleFromTxtFiles(eventDir: string): string | null {
+    try {
+      const filesDir = path.join(eventDir, 'files')
+      if (!fs.existsSync(filesDir)) return null
+
+      const files = fs.readdirSync(filesDir)
+      const txtFiles = files.filter(file => file.toLowerCase().endsWith('.txt'))
+
+      for (const txtFile of txtFiles) {
+        const filePath = path.join(filesDir, txtFile)
+        const content = fs.readFileSync(filePath, 'utf8')
+
+        // Look for TITLE: in first few lines
+        const lines = content.split('\n').slice(0, 5)
+        for (const line of lines) {
+          const titleMatch = line.match(/^TITLE:\s*(.+)$/i)
+          if (titleMatch) {
+            return titleMatch[1].trim()
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to extract title from TXT files:', error)
+    }
+
+    return null
+  }
+
+  // Generate readable event ID from title and date
+  static generateReadableEventId(title: string, date: Date = new Date()): string {
+    // Create a safe filename from title
+    const safeTitle = (title || 'untitled-event')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .trim()
+      .substring(0, 30) // Limit length
+
+    // Format date as YYYY-MM-DD
+    const dateStr = date.toISOString().split('T')[0]
+
+    // Combine: title-date-timestamp
+    const timestamp = Date.now()
+    return `${safeTitle}-${dateStr}-${timestamp}`
+  }
+
+  // Migrate event folder from temp to final location
+  static async migrateEventFolder(oldEventId: string, newEventId: string): Promise<void> {
+    const oldEventDir = path.join(process.cwd(), 'events', oldEventId)
+    const newEventDir = path.join(process.cwd(), 'events', newEventId)
+
+    if (!fs.existsSync(oldEventDir)) {
+      throw new Error(`Source event directory does not exist: ${oldEventDir}`)
+    }
+
+    if (fs.existsSync(newEventDir)) {
+      throw new Error(`Target event directory already exists: ${newEventDir}`)
+    }
+
+    // Create target directory
+    fs.mkdirSync(newEventDir, { recursive: true })
+
+    // Move all contents
+    const items = fs.readdirSync(oldEventDir)
+    for (const item of items) {
+      const oldPath = path.join(oldEventDir, item)
+      const newPath = path.join(newEventDir, item)
+      fs.renameSync(oldPath, newPath)
+    }
+
+    // Remove old directory
+    fs.rmdirSync(oldEventDir)
+
+    console.log(`Migrated event folder: ${oldEventId} → ${newEventId}`)
+  }
+
+  // Create event from uploaded files with extracted title
+  static async createEventFromFiles(eventId: string, title: string, files: UploadedFile[]): Promise<any> {
+    const eventData = {
+      id: eventId,
+      name: title,
+      created: new Date().toISOString(),
+      uploadedFileRefs: files,
+      selectedHashtags: [],
+      selectedPlatforms: [],
+      selectedEmails: [],
+      platformContent: {},
+      contentTemplates: []
+    }
+
+    // Create event workspace
+    const eventWorkspace = {
+      currentEvent: eventData
+    }
+
+    // Save to file
+    await writeConfig(EVENT_FILE, eventWorkspace)
+
+    return eventData
   }
 
   static async loadEventData(eventId: string): Promise<any> {

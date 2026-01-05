@@ -8,6 +8,8 @@ import routes from './routes/index.js'
 // Load environment variables
 dotenv.config()
 
+console.log('🚀 Starting EventPromoter Backend...')
+
 const app = express()
 const PORT = process.env.PORT || 4000
 
@@ -31,5 +33,6 @@ app.use(errorHandler)
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 EventPromoter Backend running on http://localhost:${PORT}`)
-  console.log(`📁 Config directory: ${process.cwd()}/config`)
+  console.log(`📁 Config directory: ${process.cwd()}/../config`)
+  console.log('🔍 Debug mode: Config access will be logged')
 })

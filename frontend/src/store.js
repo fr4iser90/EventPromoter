@@ -33,7 +33,7 @@ const determineWorkflowState = (state) => {
   if (state.published) return WORKFLOW_STATES.PUBLISHED
   if (state.selectedPlatforms?.length > 0 && Object.keys(state.platformContent || {}).length > 0) return WORKFLOW_STATES.CONTENT_READY
   if (state.selectedPlatforms?.length > 0) return WORKFLOW_STATES.PLATFORMS_SELECTED
-  if (state.currentEvent?.id) return WORKFLOW_STATES.EVENT_READY
+  if (state.currentEvent?.id && state.uploadedFileRefs?.length > 0) return WORKFLOW_STATES.EVENT_READY
   if (state.uploadedFileRefs?.length > 0) return WORKFLOW_STATES.FILES_UPLOADED
   return WORKFLOW_STATES.INITIAL
 }
@@ -140,6 +140,7 @@ const useStore = create((set, get) => ({
       console.warn('Failed to update user preferences:', error)
     }
   },
+
 
   // Load global configurations (separate from user preferences)
   loadGlobalConfigs: async () => {
@@ -348,7 +349,8 @@ const useStore = create((set, get) => ({
       set({ isProcessing: true, error: null })
 
       const formData = new FormData()
-      const eventId = get().currentEvent?.id || 'default'
+      // Use temp ID if no current event, otherwise use existing event ID
+      const eventId = get().currentEvent?.id || `temp-${Date.now()}`
       formData.append('eventId', eventId)
 
       // Add all files to FormData
@@ -372,6 +374,13 @@ const useStore = create((set, get) => ({
           duplicateFound: null, // Reset duplicate state
           parsingStatus: 'idle' // Reset parsing status for new files
         })
+
+        // If backend created an event automatically, use it
+        if (response.data.createdEvent) {
+          set({ currentEvent: response.data.createdEvent })
+          console.log(`Backend created event: ${response.data.createdEvent.id}`)
+        }
+
         get().saveEventWorkspace()
         get().updateWorkflowState()
         get().debouncedSave()

@@ -181,7 +181,8 @@ export interface UploadedFile {
 }
 
 export interface EmailConfig {
-  recipients: string[]
+  available: string[]
+  selected: string[]
   groups: Record<string, string[]>
 }
 

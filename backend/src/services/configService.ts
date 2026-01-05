@@ -6,13 +6,15 @@ import { readConfig, writeConfig } from '../utils/fileUtils.js'
 export class ConfigService {
   // Email configuration
   static async getEmailConfig(): Promise<EmailConfig | null> {
-    return await readConfig('emails.json')
+    const config = await readConfig('emails.json')
+    console.log(`📧 Loading emails config:`, config)
+    return config
   }
 
   static async saveEmailConfig(config: EmailConfig): Promise<boolean> {
     return await writeConfig('emails.json', config)
   }
-
+  
   // App configuration
   static async getAppConfig(): Promise<AppConfig | null> {
     return await readConfig('app.json')

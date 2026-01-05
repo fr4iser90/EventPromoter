@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import {
   Box,
@@ -22,7 +22,7 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
-import useStore from '../../store'
+import useStore, { WORKFLOW_STATES } from '../../store'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ACCEPTED_TYPES = {
@@ -36,9 +36,9 @@ const ACCEPTED_TYPES = {
 }
 
 function FileUpload() {
-  const { uploadedFileRefs, uploadFiles, removeUploadedFile, parseUploadedFiles, error, setError, isProcessing } = useStore()
+  const { uploadedFileRefs, uploadFiles, removeUploadedFile, parseUploadedFiles, error, setError, isProcessing, workflowState } = useStore()
   const folderInputRef = useRef(null)
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(workflowState === WORKFLOW_STATES.INITIAL)
 
   const onDrop = useCallback(async (acceptedFiles, rejectedFiles) => {
     setError('')
@@ -76,6 +76,13 @@ function FileUpload() {
       setError('Failed to upload files')
     }
   }, [uploadFiles, setError])
+
+  // Auto-expand when in initial state
+  useEffect(() => {
+    if (workflowState === WORKFLOW_STATES.INITIAL) {
+      setIsExpanded(true)
+    }
+  }, [workflowState])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

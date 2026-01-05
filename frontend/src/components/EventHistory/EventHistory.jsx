@@ -12,10 +12,11 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import EventHistoryCard from '../EventHistoryCard/EventHistoryCard'
-import useStore from '../../store'
+import useStore, { WORKFLOW_STATES } from '../../store'
 
 function EventHistory() {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const { workflowState } = useStore()
+  const [isExpanded, setIsExpanded] = useState(workflowState === WORKFLOW_STATES.INITIAL)
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -44,6 +45,13 @@ function EventHistory() {
 
     loadEvents()
   }, [])
+
+  // Auto-expand when in initial state
+  useEffect(() => {
+    if (workflowState === WORKFLOW_STATES.INITIAL) {
+      setIsExpanded(true)
+    }
+  }, [workflowState])
 
   const handleLoadEventFiles = async (event, fileIds) => {
     try {

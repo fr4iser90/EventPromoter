@@ -65,10 +65,10 @@ function EmailPanel() {
         const config = response.data
         console.log('EmailPanel: Loaded config:', config)
 
-        setRecipients(config.recipients || [])
+        setRecipients(config.available || [])
         setEmailGroups(config.groups || {})
         setHasLoaded(true)
-        console.log('EmailPanel: Recipients set:', config.recipients)
+        console.log('EmailPanel: Recipients set:', config.available)
       } catch (error) {
         console.warn('EmailPanel: Failed to load email config from API:', error)
         // Fallback to defaults
@@ -80,38 +80,20 @@ function EmailPanel() {
     loadConfig()
   }, [])
 
-  // Save to API whenever data changes
-  useEffect(() => {
-    const saveConfig = async () => {
-      try {
-        const config = {
-          recipients,
-          groups: emailGroups
-          // selectedRecipients now saved in session, not here
-        }
-        await axios.post('http://localhost:4000/api/config/emails', config)
-      } catch (error) {
-        console.warn('Failed to save email config:', error)
+  // Manual save function (only save when user explicitly saves)
+  const saveEmailConfig = async () => {
+    try {
+      const config = {
+        available: recipients,
+        selected: [],
+        groups: emailGroups
       }
+      await axios.post('http://localhost:4000/api/config/emails', config)
+      console.log('EmailPanel: Config saved successfully')
+    } catch (error) {
+      console.warn('EmailPanel: Failed to save email config:', error)
     }
-
-    // Only save if we have loaded data (avoid saving during initial load)
-    if (hasLoaded) {
-      saveConfig()
-    }
-
-    // Update platform settings
-    if (selectedRecipients.length > 0) {
-      const currentSettings = platformSettings.email || {}
-      setPlatformSettings({
-        ...platformSettings,
-        email: {
-          ...currentSettings,
-          recipients: selectedRecipients
-        }
-      })
-    }
-  }, [recipients, emailGroups])
+  }
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -263,11 +245,22 @@ function EmailPanel() {
       maxHeight: '80vh',
       overflow: 'auto'
     }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <EmailIcon sx={{ mr: 1, color: '#EA4335' }} />
-        <Typography variant="h6">
-          Email Settings
-        </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <EmailIcon sx={{ mr: 1, color: '#EA4335' }} />
+          <Typography variant="h6">
+            Email Settings
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={saveEmailConfig}
+          startIcon={<SaveIcon />}
+          color="primary"
+        >
+          Speichern
+        </Button>
       </Box>
 
       <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 2 }}>

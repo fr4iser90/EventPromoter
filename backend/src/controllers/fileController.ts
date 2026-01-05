@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { getFilePath } from '../middleware/upload.js'
+import { EventService } from '../services/eventService.js'
 
 export class FileController {
   // Upload single file
@@ -49,8 +50,21 @@ export class FileController {
         return res.status(400).json({ error: 'No files uploaded' })
       }
 
-      const eventId = req.body.eventId || 'default'
+      let eventId = req.body.eventId || 'default'
       const files = req.files as Express.Multer.File[]
+
+      // Check if this is a temp upload (starts with 'temp-')
+      const isTempUpload = eventId.startsWith('temp-')
+
+      // Create event directory
+      const eventDir = path.join(process.cwd(), 'events', eventId)
+      if (!fs.existsSync(eventDir)) {
+        fs.mkdirSync(eventDir, { recursive: true })
+      }
+      const filesDir = path.join(eventDir, 'files')
+      if (!fs.existsSync(filesDir)) {
+        fs.mkdirSync(filesDir, { recursive: true })
+      }
 
       // Return file info for all uploaded files
       const fileInfos = files.map(file => ({
@@ -61,14 +75,47 @@ export class FileController {
         path: file.path,
         size: file.size,
         type: file.mimetype,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        isImage: file.mimetype.startsWith('image/')
       }))
+
 
       console.log('Files uploaded:', fileInfos.length)
 
+      // Auto-create event if this is a temp upload with TXT files containing title
+      let createdEvent = null
+      if (isTempUpload) {
+        try {
+          const eventTitle = EventService.extractTitleFromTxtFiles(path.join(eventDir, 'files'))
+          if (eventTitle) {
+            const finalEventId = EventService.generateReadableEventId(eventTitle, new Date())
+
+            // Migrate folder from temp to final location
+            await EventService.migrateEventFolder(eventId, finalEventId)
+
+            // Create the actual event
+            createdEvent = await EventService.createEventFromFiles(finalEventId, eventTitle, fileInfos)
+
+            // Update file URLs to use final event ID
+            fileInfos.forEach(file => {
+              file.url = file.url.replace(eventId, finalEventId)
+              file.path = file.path.replace(eventId, finalEventId)
+            })
+
+            console.log(`Temp upload ${eventId} → Final event ${finalEventId} (${eventTitle})`)
+          } else {
+            console.log(`No title found in temp upload ${eventId}, keeping temp folder`)
+          }
+        } catch (error) {
+          console.warn('Failed to process temp upload:', error)
+          // Continue with temp folder if processing fails
+        }
+      }
+
       res.json({
         success: true,
-        files: fileInfos
+        files: fileInfos,
+        createdEvent: createdEvent
       })
 
     } catch (error: any) {

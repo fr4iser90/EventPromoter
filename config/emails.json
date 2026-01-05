@@ -1,8 +1,15 @@
 {
-  "recipients": [],
+  "available": [
+    "dj-events@club.com",
+    "pa.boe90@gmail.com",
+    "events@venue.de",
+    "events@agency.com"
+  ],
+  "selected": [],
   "groups": {
     "DJs & Promoter": [
-      "dj-events@club.com"
+      "dj-events@club.com",
+      "pa.boe90@gmail.com"
     ],
     "Venue Manager": [
       "events@venue.de"

@@ -7,11 +7,14 @@ export class ConfigController {
   static async getConfig(req: Request, res: Response) {
     try {
       const { name } = req.params
+      console.log(`🌐 API Request: GET /api/config/${name}`)
       const config = await ConfigService.getConfig(name)
 
       if (config) {
+        console.log(`✅ Sending ${name} config:`, JSON.stringify(config).substring(0, 100) + '...')
         res.json(config)
       } else {
+        console.log(`❌ Config ${name} not found`)
         res.status(404).json({ error: 'Configuration not found' })
       }
     } catch (error) {
@@ -24,11 +27,14 @@ export class ConfigController {
     try {
       const { name } = req.params
       const config = req.body
+      console.log(`💾 API Request: POST /api/config/${name}`, JSON.stringify(config).substring(0, 100) + '...')
       const success = await ConfigService.saveConfig(name, config)
 
       if (success) {
+        console.log(`✅ Config ${name} saved successfully`)
         res.json({ success: true })
       } else {
+        console.log(`❌ Failed to save config ${name}`)
         res.status(500).json({ error: 'Failed to save configuration' })
       }
     } catch (error) {
