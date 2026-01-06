@@ -8,18 +8,32 @@ import {
   CardMedia,
   CardContent,
   Divider,
-  CircularProgress
+  CircularProgress,
+  Modal,
+  IconButton,
+  Fade,
+  Backdrop
 } from '@mui/material'
 import ImageIcon from '@mui/icons-material/Image'
 import DescriptionIcon from '@mui/icons-material/Description'
+import CloseIcon from '@mui/icons-material/Close'
 import useStore from '../../store'
 import axios from 'axios'
 
 function Preview() {
   const { uploadedFileRefs, parsedData } = useStore()
+  const [selectedImage, setSelectedImage] = useState(null)
 
   const imageFiles = uploadedFileRefs.filter(file => file.type.startsWith('image/'))
   const textFiles = uploadedFileRefs.filter(file => !file.type.startsWith('image/'))
+
+  const handleImageClick = (fileData) => {
+    setSelectedImage(fileData)
+  }
+
+  const handleCloseModal = () => {
+    setSelectedImage(null)
+  }
 
   // Generate dynamic template placeholders based on available data
   const getAvailablePlaceholders = () => {
@@ -39,6 +53,7 @@ function Preview() {
 
     return placeholders
   }
+
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
@@ -61,11 +76,11 @@ function Preview() {
               <Grid container spacing={2}>
                 {imageFiles.map((fileData) => (
                   <Grid item xs={12} sm={6} md={4} key={fileData.id}>
-                    <Card>
+                    <Card sx={{ cursor: 'pointer' }} onClick={() => handleImageClick(fileData)}>
                       <CardMedia
                         component="img"
                         height="200"
-                        image={fileData.url}
+                        image={`http://localhost:4000${fileData.url}`}
                         alt={fileData.name}
                         sx={{ objectFit: 'cover' }}
                       />
@@ -243,6 +258,79 @@ function Preview() {
           )}
         </Box>
       )}
+
+      {/* Image Modal */}
+      <Modal
+        open={!!selectedImage}
+        onClose={handleCloseModal}
+        closeAfterTransition
+        slots={{ backdrop: Backdrop }}
+        slotProps={{
+          backdrop: {
+            timeout: 500,
+          },
+        }}
+      >
+        <Fade in={!!selectedImage}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              boxShadow: 24,
+              p: 1,
+              outline: 'none',
+            }}
+          >
+            <IconButton
+              onClick={handleCloseModal}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                bgcolor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                },
+                zIndex: 1,
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            {selectedImage && (
+              <Box>
+                <img
+                  src={`http://localhost:4000${selectedImage.url}`}
+                  alt={selectedImage.name}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '85vh',
+                    objectFit: 'contain',
+                    borderRadius: '4px',
+                  }}
+                />
+                <Typography
+                  variant="body1"
+                  sx={{
+                    mt: 1,
+                    textAlign: 'center',
+                    color: 'text.secondary',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {selectedImage.name}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Fade>
+      </Modal>
     </Paper>
   )
 }

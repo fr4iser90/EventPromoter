@@ -249,7 +249,7 @@ const useStore = create((set, get) => ({
         uploadedFileRefs: validatedFileRefs, // Only load existing files
         selectedHashtags: event.selectedHashtags || [],
         selectedPlatforms: event.selectedPlatforms || [],
-        emailRecipients: state.platformContent?.email?.recipients || [],
+        emailRecipients: event.platformContent?.email?.recipients || [],
         parsedData: null, // Will be loaded separately
         parsingStatus: 'idle'
       })

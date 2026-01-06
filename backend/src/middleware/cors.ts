@@ -10,7 +10,8 @@ export const corsConfig = {
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Cross-Origin-Resource-Policy']
 }
 
 export const corsMiddleware = cors(corsConfig)

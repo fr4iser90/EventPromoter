@@ -159,6 +159,11 @@ export class FileController {
       const contentType = mimeTypes[ext] || 'application/octet-stream'
       res.setHeader('Content-Type', contentType)
 
+      // Set CORP header for images to allow cross-origin access
+      if (contentType.startsWith('image/')) {
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+      }
+
       // Stream the file
       const fileStream = fs.createReadStream(filePath)
       fileStream.pipe(res)
