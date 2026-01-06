@@ -1031,8 +1031,24 @@ const useStore = create((set, get) => ({
   },
 
   // UI functions
-  setDarkMode: (darkMode) => {
+  setDarkMode: async (darkMode) => {
+    // Update local state
     set({ darkMode })
+
+    // Save to backend
+    try {
+      const response = await fetch('http://localhost:4000/api/config/app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ darkMode })
+      })
+
+      if (!response.ok) {
+        console.warn('Failed to save dark mode to backend')
+      }
+    } catch (error) {
+      console.warn('Error saving dark mode:', error)
+    }
   }
 }))
 
