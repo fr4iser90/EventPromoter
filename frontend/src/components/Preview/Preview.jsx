@@ -21,8 +21,11 @@ import useStore from '../../store'
 import axios from 'axios'
 
 function Preview() {
-  const { uploadedFileRefs, parsedData } = useStore()
+  const { uploadedFileRefs, parsedData, currentEvent } = useStore()
   const [selectedImage, setSelectedImage] = useState(null)
+  const [selectedTextFile, setSelectedTextFile] = useState(null)
+  const [textContent, setTextContent] = useState('')
+  const [loadingText, setLoadingText] = useState(false)
 
   const imageFiles = uploadedFileRefs.filter(file => file.type.startsWith('image/'))
   const textFiles = uploadedFileRefs.filter(file => !file.type.startsWith('image/'))
@@ -31,8 +34,41 @@ function Preview() {
     setSelectedImage(fileData)
   }
 
+  const handleTextFileClick = async (fileData) => {
+    const fileExtension = fileData.filename.split('.').pop()?.toLowerCase()
+    const textExtensions = ['txt', 'md', 'csv', 'json']
+
+    if (textExtensions.includes(fileExtension)) {
+      // Load text content for preview
+      setSelectedTextFile(fileData)
+      setLoadingText(true)
+      setTextContent('')
+
+      try {
+        const response = await fetch(`http://localhost:4000/api/files/content/${currentEvent?.id}/${fileData.filename}`)
+        if (response.ok) {
+          const content = await response.text()
+          setTextContent(content)
+        } else {
+          setTextContent('Failed to load file content')
+        }
+      } catch (error) {
+        console.error('Error loading text file:', error)
+        setTextContent('Error loading file content')
+      } finally {
+        setLoadingText(false)
+      }
+    } else {
+      // For non-text files (PDF, etc.), open in new tab
+      const fileUrl = `http://localhost:4000/api/files/${currentEvent?.id}/${fileData.filename}`
+      window.open(fileUrl, '_blank')
+    }
+  }
+
   const handleCloseModal = () => {
     setSelectedImage(null)
+    setSelectedTextFile(null)
+    setTextContent('')
   }
 
   // Generate dynamic template placeholders based on available data
@@ -238,7 +274,11 @@ function Preview() {
               <Grid container spacing={1}>
                 {textFiles.map((fileData) => (
                   <Grid item xs={12} sm={6} md={4} key={fileData.id}>
-                    <Card variant="outlined" sx={{ p: 1 }}>
+                    <Card
+                      variant="outlined"
+                      sx={{ p: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                      onClick={() => handleTextFileClick(fileData)}
+                    >
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <DescriptionIcon sx={{ mr: 1, color: 'text.secondary', fontSize: '1rem' }} />
                         <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -259,9 +299,9 @@ function Preview() {
         </Box>
       )}
 
-      {/* Image Modal */}
+      {/* File Modal (Image or Text) */}
       <Modal
-        open={!!selectedImage}
+        open={!!selectedImage || !!selectedTextFile}
         onClose={handleCloseModal}
         closeAfterTransition
         slots={{ backdrop: Backdrop }}
@@ -271,7 +311,7 @@ function Preview() {
           },
         }}
       >
-        <Fade in={!!selectedImage}>
+        <Fade in={!!selectedImage || !!selectedTextFile}>
           <Box
             sx={{
               position: 'absolute',
@@ -303,6 +343,8 @@ function Preview() {
             >
               <CloseIcon />
             </IconButton>
+
+            {/* Image Display */}
             {selectedImage && (
               <Box>
                 <img
@@ -326,6 +368,43 @@ function Preview() {
                 >
                   {selectedImage.name}
                 </Typography>
+              </Box>
+            )}
+
+            {/* Text File Display */}
+            {selectedTextFile && (
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    color: 'text.secondary',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  📄 {selectedTextFile.name}
+                </Typography>
+                <Box
+                  sx={{
+                    maxHeight: '75vh',
+                    overflow: 'auto',
+                    bgcolor: 'grey.50',
+                    p: 2,
+                    borderRadius: 1,
+                    fontFamily: 'monospace',
+                    fontSize: '0.875rem',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {loadingText ? (
+                    <Typography color="text.secondary">Loading...</Typography>
+                  ) : (
+                    <Typography component="pre" sx={{ m: 0 }}>
+                      {textContent}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             )}
           </Box>

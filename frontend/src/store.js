@@ -67,13 +67,20 @@ const useStore = create((set, get) => ({
   // Save workspace to backend whenever state changes
   saveEventWorkspace: async () => {
     const state = get()
+
+    // Only save if we actually have a current event!
+    if (!state.currentEvent) {
+      console.log('Store: No current event to save - skipping workspace save')
+      return
+    }
+
     try {
       set({ autoSaving: true })
       const eventWorkspaceData = {
         currentEvent: {
-          id: state.currentEvent?.id || `event-${Date.now()}`,
-          name: state.currentEvent?.name || 'Current Event',
-          created: state.currentEvent?.created || new Date().toISOString(),
+          id: state.currentEvent.id,
+          name: state.currentEvent.name,
+          created: state.currentEvent.created,
           uploadedFileRefs: state.uploadedFileRefs, // File references are serializable
           selectedHashtags: state.selectedHashtags,
           selectedPlatforms: state.selectedPlatforms
@@ -187,6 +194,10 @@ const useStore = create((set, get) => ({
       // Update workflow state to reflect restored data
       get().updateWorkflowState()
 
+      // Load parsed data and platform content separately (like in loadEventWorkspace)
+      get().loadEventParsedData(eventId)
+      get().loadEventPlatformContent(eventId)
+
       // Save the restored state
       get().saveEventWorkspace()
 
@@ -298,8 +309,8 @@ const useStore = create((set, get) => ({
       published: false,
       currentEvent: null
     })
-    get().saveEventWorkspace()
-    console.log('New Event created')
+    // Don't save workspace when resetting to null event
+    console.log('Workspace reset - no event')
   },
 
   // Update workflow state based on current data
