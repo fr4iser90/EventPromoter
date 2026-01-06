@@ -170,6 +170,11 @@ function MainPage() {
   const hasRightPanels = rightPanels.length > 0
   const hasAnyPanels = hasLeftPanels || hasRightPanels
 
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+  }
+
   return (
     <>
       {/* Fixed Header */}
@@ -205,7 +210,7 @@ function MainPage() {
             <SettingsIcon />
           </IconButton>
           <IconButton
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleDarkMode}
             color="inherit"
             aria-label="toggle dark mode"
           >
@@ -499,7 +504,7 @@ function MainPage() {
 
 // Main App Component with Router
 function App() {
-  const [darkMode, setDarkMode] = useState(false)
+  const { darkMode, setDarkMode } = useStore()
 
   // Initialize dark mode from API (only on mount)
   useEffect(() => {
@@ -516,7 +521,7 @@ function App() {
     }
 
     loadAppConfig()
-  }, [])
+  }, [setDarkMode])
 
   // Create theme based on dark mode state
   const theme = createAppTheme(darkMode)

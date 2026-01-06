@@ -37,6 +37,10 @@ function TemplatePage() {
   const [selectedPlatform, setSelectedPlatform] = useState('twitter')
   const { darkMode, setDarkMode } = useStore()
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+  }
+
   // Load session data
   useEffect(() => {
     useStore.getState().initialize()
@@ -50,13 +54,9 @@ function TemplatePage() {
     navigate('/')
   }
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-  }
-
   return (
     <>
-      {/* Fixed Header - Same as MainPage */}
+      {/* Fixed Header */}
       <Box sx={{
         position: 'fixed',
         top: 0,
@@ -71,7 +71,7 @@ function TemplatePage() {
       }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%' }}>
           <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
-            Multi-Platform Social Media Publisher
+            📝 Template Manager
           </Typography>
           <Button
             variant="outlined"
@@ -82,13 +82,6 @@ function TemplatePage() {
             ← Back to Main
           </Button>
           <IconButton
-            onClick={() => {/* Settings would go here */}}
-            color="inherit"
-            aria-label="open settings"
-          >
-            <SettingsIcon />
-          </IconButton>
-          <IconButton
             onClick={toggleDarkMode}
             color="inherit"
             aria-label="toggle dark mode"
@@ -98,7 +91,7 @@ function TemplatePage() {
         </Box>
       </Box>
 
-      {/* Layout Container - Same 3-column structure as MainPage */}
+      {/* Content Container */}
       <Box sx={{
         display: 'flex',
         minHeight: '100vh',

@@ -295,8 +295,6 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // Legacy removed - everything uses workspace now
-
   // Event state
   currentEvent: null,
   duplicateFound: null, // For duplicate event detection
@@ -333,6 +331,9 @@ const useStore = create((set, get) => ({
   // Template management state
   templates: {},             // Templates per platform: { platform: [templates] }
   templateCategories: [],    // Available template categories
+
+  // UI state
+  darkMode: false,           // Dark mode toggle
   setUploadedFileRefs: (fileRefs) => {
     set({ uploadedFileRefs: Array.isArray(fileRefs) ? fileRefs : [] })
     get().saveEventWorkspace()
@@ -1027,6 +1028,11 @@ const useStore = create((set, get) => ({
       console.warn('Failed to delete template:', error)
       return { success: false, error: error.response?.data?.error }
     }
+  },
+
+  // UI functions
+  setDarkMode: (darkMode) => {
+    set({ darkMode })
   }
 }))
 
