@@ -322,11 +322,7 @@ function EventParser() {
     selectedPlatforms,
     platformContent,
     setPlatformContent,
-    resetPlatformContent,
-    contentTemplates,
-    saveTemplate,
-    loadTemplate,
-    deleteTemplate
+    resetPlatformContent
   } = useStore()
 
   const [activeTab, setActiveTab] = useState(0)
@@ -336,11 +332,7 @@ function EventParser() {
   const [editedData, setEditedData] = useState(null)
   const [activePlatform, setActivePlatform] = useState('twitter')
 
-  // Template state
-  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
-  const [templateName, setTemplateName] = useState('')
   const { emailRecipients } = useStore()
-  const [templateAnchorEl, setTemplateAnchorEl] = useState(null)
 
 
   // Handle data editing
@@ -499,32 +491,6 @@ function EventParser() {
     }
   }
 
-  // Template handlers
-  const handleSaveTemplate = () => {
-    if (templateName.trim() && Object.keys(platformContent).length > 0) {
-      saveTemplate(templateName.trim(), platformContent)
-      setTemplateName('')
-      setTemplateDialogOpen(false)
-    }
-  }
-
-  const handleLoadTemplate = (templateId) => {
-    loadTemplate(templateId)
-    setTemplateAnchorEl(null)
-  }
-
-  const handleDeleteTemplate = (templateId) => {
-    deleteTemplate(templateId)
-    setTemplateAnchorEl(null)
-  }
-
-  const handleTemplateMenuClick = (event) => {
-    setTemplateAnchorEl(event.currentTarget)
-  }
-
-  const handleTemplateMenuClose = () => {
-    setTemplateAnchorEl(null)
-  }
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
@@ -682,42 +648,9 @@ function EventParser() {
                     <Button variant="outlined" startIcon={<SaveIcon />} onClick={() => setTemplateDialogOpen(true)}>
                       Save Template
                     </Button>
-                    <Button variant="outlined" onClick={handleTemplateMenuClick}>
-                      Load Template ▼
-                    </Button>
                   </Box>
 
-                  {/* Template Menu */}
-                  <Menu
-                    anchorEl={templateAnchorEl}
-                    open={Boolean(templateAnchorEl)}
-                    onClose={handleTemplateMenuClose}
-                  >
-                    {contentTemplates.length === 0 ? (
-                      <MenuItem disabled>No templates saved</MenuItem>
-                    ) : (
-                      contentTemplates.map(template => (
-                        <MenuItem key={template.id} onClick={() => handleLoadTemplate(template.id)}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                            <Typography variant="body2">{template.name}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {new Date(template.createdAt).toLocaleDateString()}
-                            </Typography>
-                          </Box>
-                        </MenuItem>
-                      ))
-                    )}
-                  </Menu>
 
-                  {/* Template Controls */}
-                  <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-                    <Button variant="outlined" size="small">
-                      Save Template
-                    </Button>
-                    <Button variant="outlined" size="small">
-                      Load Template
-                    </Button>
-                  </Box>
                 </Box>
 
                 {/* PREVIEW PANEL - Right Side */}
@@ -857,28 +790,6 @@ function EventParser() {
         </Alert>
       )}
 
-      {/* Template Save Dialog */}
-      <Dialog open={templateDialogOpen} onClose={() => setTemplateDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Save Content Template</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Template Name"
-            fullWidth
-            variant="outlined"
-            value={templateName}
-            onChange={(e) => setTemplateName(e.target.value)}
-            placeholder="e.g., Club Techno Event"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setTemplateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleSaveTemplate} disabled={!templateName.trim()}>
-            Save Template
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Paper>
   )
 }

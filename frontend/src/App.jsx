@@ -1,4 +1,5 @@
 import React from 'react'
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import Container from '@mui/material/Container'
@@ -33,6 +34,7 @@ import InstagramPanel from './components/Panels/InstagramPanel'
 import LinkedInPanel from './components/Panels/LinkedInPanel'
 import SettingsModal from './components/SettingsModal/SettingsModal'
 import DuplicateDialog from './components/DuplicateDialog/DuplicateDialog'
+import TemplatePage from './pages/TemplatePage'
 import useStore, { WORKFLOW_STATES } from './store'
 import { useEffect, useState } from 'react'
 
@@ -61,7 +63,9 @@ const staticTheme = createTheme({
   },
 })
 
-function App() {
+// Main Application Page Component
+function MainPage() {
+  const navigate = useNavigate()
   const {
     uploadedFileRefs,
     selectedHashtags,
@@ -83,70 +87,13 @@ function App() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  // Initialize dark mode from API (only on mount)
+  // Load session data
   useEffect(() => {
-    const loadAppConfig = async () => {
-      try {
-        const response = await fetch('http://localhost:4000/api/config/app')
-        const config = await response.json()
-        if (config.darkMode !== undefined && config.darkMode !== darkMode) {
-          setDarkMode(config.darkMode)
-        }
-        if (config.n8nWebhookUrl && config.n8nWebhookUrl !== n8nWebhookUrl) {
-          setN8nWebhookUrl(config.n8nWebhookUrl)
-        }
-      } catch (error) {
-        console.warn('Failed to load app config:', error)
-      }
-    }
-
-    loadAppConfig()
-
-    // Load session data
     useStore.getState().initialize()
-  }, []) // Empty dependency array - only run on mount
-
-  // Save configuration changes to API
-  useEffect(() => {
-    const saveAppConfig = async () => {
-      try {
-        const response = await fetch('http://localhost:4000/api/config/app')
-        const currentConfig = await response.json()
-        const updatedConfig = {
-          ...currentConfig,
-          darkMode,
-          n8nWebhookUrl,
-          lastUpdated: new Date().toISOString()
-        }
-
-        await fetch('http://localhost:4000/api/config/app', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedConfig)
-        })
-      } catch (error) {
-        console.warn('Failed to save app config:', error)
-      }
-    }
-
-    saveAppConfig()
-  }, [darkMode, n8nWebhookUrl])
+  }, [])
 
   // Responsive breakpoints
   const isMobile = useMediaQuery(staticTheme.breakpoints.down('md'))
-
-  // Ensure arrays are always arrays
-  const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
-  const safeSelectedHashtags = Array.isArray(selectedHashtags) ? selectedHashtags : []
-  const safeUploadedFileRefs = Array.isArray(uploadedFileRefs) ? uploadedFileRefs : []
-
-  const handleSubmit = async () => {
-    await submit()
-  }
-
-  const handleReset = () => {
-    reset()
-  }
 
   // Determine what UI elements should be enabled based on workflow state
   const canUploadFiles = workflowState === WORKFLOW_STATES.INITIAL
@@ -185,12 +132,17 @@ function App() {
 
   const workflowStep = getWorkflowStepInfo()
 
-  // Create theme based on dark mode state
-  const theme = createAppTheme(darkMode)
+  // Ensure arrays are always arrays
+  const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
+  const safeSelectedHashtags = Array.isArray(selectedHashtags) ? selectedHashtags : []
+  const safeUploadedFileRefs = Array.isArray(uploadedFileRefs) ? uploadedFileRefs : []
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
+  const handleSubmit = async () => {
+    await submit()
+  }
+
+  const handleReset = () => {
+    reset()
   }
 
   // Check which panels should be visible
@@ -218,10 +170,8 @@ function App() {
   const hasRightPanels = rightPanels.length > 0
   const hasAnyPanels = hasLeftPanels || hasRightPanels
 
-
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <>
       {/* Fixed Header */}
       <Box sx={{
         position: 'fixed',
@@ -239,6 +189,14 @@ function App() {
           <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
             Multi-Platform Social Media Publisher
           </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => navigate('/templates')}
+            sx={{ mr: 1 }}
+          >
+            📝 Templates
+          </Button>
           <IconButton
             onClick={() => setSettingsOpen(true)}
             color="inherit"
@@ -247,7 +205,7 @@ function App() {
             <SettingsIcon />
           </IconButton>
           <IconButton
-            onClick={toggleDarkMode}
+            onClick={() => setDarkMode(!darkMode)}
             color="inherit"
             aria-label="toggle dark mode"
           >
@@ -535,7 +493,43 @@ function App() {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
+    </>
+  )
+}
 
+// Main App Component with Router
+function App() {
+  const [darkMode, setDarkMode] = useState(false)
+
+  // Initialize dark mode from API (only on mount)
+  useEffect(() => {
+    const loadAppConfig = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/config/app')
+        const config = await response.json()
+        if (config.darkMode !== undefined) {
+          setDarkMode(config.darkMode)
+        }
+      } catch (error) {
+        console.warn('Failed to load app config:', error)
+      }
+    }
+
+    loadAppConfig()
+  }, [])
+
+  // Create theme based on dark mode state
+  const theme = createAppTheme(darkMode)
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/templates" element={<TemplatePage />} />
+        </Routes>
+      </Router>
     </ThemeProvider>
   )
 }

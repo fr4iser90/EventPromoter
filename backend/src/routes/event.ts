@@ -29,6 +29,9 @@ router.get('/:eventId/load-data', EventController.loadEventData)
 // GET /api/event/:eventId/restore - Complete event restore with all data
 router.get('/:eventId/restore', EventController.restoreEvent)
 
+// GET /api/event/:eventId/parsed-data - Get parsed data for event
+router.get('/:eventId/parsed-data', EventController.getEventParsedData)
+
 // GET /api/event/:eventId/platform-content - Get platform content for event
 router.get('/:eventId/platform-content', EventController.getEventPlatformContent)
 

@@ -32,7 +32,10 @@ app.use(errorHandler)
 
 // Start server
 app.listen(PORT, () => {
+  console.log(`🚀 Starting EventPromoter Backend...`)
   console.log(`🚀 EventPromoter Backend running on http://localhost:${PORT}`)
-  console.log(`📁 Config directory: ${process.cwd()}/../config`)
-  console.log('🔍 Debug mode: Config access will be logged')
+  console.log(`📁 Config directory: ${process.cwd()}/config`)
+  if (process.env.DEBUG_CONFIG_ACCESS === 'true') {
+    console.log('🔍 Debug mode: Config access will be logged')
+  }
 })

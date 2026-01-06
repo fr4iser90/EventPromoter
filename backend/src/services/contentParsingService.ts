@@ -17,6 +17,27 @@ export interface DuplicateCheckResult {
 export class ContentExtractionService {
   private static ocrWorker: Tesseract.Worker | null = null
 
+  // Parse uploaded files and extract event data
+  static async parseUploadedFiles(files: Express.Multer.File[]): Promise<ParsedEventData | null> {
+    // Find and parse text files
+    for (const file of files) {
+      if (file.mimetype === 'text/plain' || file.mimetype === 'text/markdown') {
+        try {
+          const content = fs.readFileSync(file.path, 'utf8')
+          const structuredData = this.parseStructuredData(content)
+
+          if (structuredData && structuredData.title) {
+            return structuredData // Return as soon as we find structured data with title
+          }
+        } catch (error) {
+          console.warn(`Failed to parse ${file.originalname}:`, error)
+        }
+      }
+    }
+
+    return null // No structured data with title found
+  }
+
   // Initialize OCR worker
   static async initOCR(): Promise<void> {
     if (!this.ocrWorker) {
@@ -126,6 +147,7 @@ export class ContentExtractionService {
       // Try Key-Value format (TXT)
       const lines = content.split('\n').map(line => line.trim())
       const parsed: ParsedEventData = {
+        title: '', // Will be filled below
         rawText: content,
         confidence: 1.0,
         parsedAt: new Date().toISOString(),
@@ -208,6 +230,7 @@ export class ContentExtractionService {
     const lines = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 0)
 
     const parsed: ParsedEventData = {
+      title: '', // Will be filled below
       rawText,
       confidence,
       parsedAt: new Date().toISOString(),

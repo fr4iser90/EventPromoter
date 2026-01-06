@@ -29,4 +29,11 @@ router.post('/app', ConfigController.saveAppConfig)
 // PATCH /api/config/app - Update app config
 router.patch('/app', ConfigController.updateAppConfig)
 
+// Event ID pattern routes
+// GET /api/config/event-id-patterns - Get available patterns
+router.get('/event-id-patterns', ConfigController.getEventIdPatterns)
+
+// POST /api/config/event-id-pattern - Set current pattern
+router.post('/event-id-pattern', ConfigController.setEventIdPattern)
+
 export default router

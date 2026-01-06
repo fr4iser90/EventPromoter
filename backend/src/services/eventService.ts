@@ -1,42 +1,244 @@
-// Event service for managing current event data
+// Event service for managing event data per event
 
 import { EventWorkspace, Event, UploadedFile } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
 import fs from 'fs'
 import path from 'path'
 
+// Current event ID is stored in app.json
 
-const EVENT_FILE = 'event.json'
+// Event ID generation patterns
+export const EVENT_ID_PATTERNS = {
+  TITLE_FIRST: 'title-first',
+  DATE_FIRST: 'date-first',
+  GENRE_LOCATION: 'genre-location',
+  VENUE_TITLE: 'venue-title',
+  COMPACT: 'compact'
+}
+
+export const EVENT_PATTERN = 'title-first' // ← DIESE ZEILE ÄNDERN!
 
 export class EventService {
-  static async getEventWorkspace(): Promise<EventWorkspace> {
-    const data = await readConfig(EVENT_FILE)
-    if (!data) {
-      // Return default event workspace
-      return {
-        currentEvent: {
-          id: `event-${Date.now()}`,
-          name: 'New Event',
-          created: new Date().toISOString(),
-          uploadedFileRefs: [], // References to uploaded files
-          selectedHashtags: [],
-        selectedPlatforms: [],
-        selectedEmails: [],        // Event-specific email selections
-        platformContent: {},
-        contentTemplates: []
-        }
-      }
-    }
-    return data
+  // Get current event ID from app config
+  static async getCurrentEventId(): Promise<string | null> {
+    const appConfig = await readConfig('app.json')
+    return appConfig?.currentEventId || null
   }
 
-  static async saveEventWorkspace(eventWorkspace: EventWorkspace): Promise<boolean> {
-    return await writeConfig(EVENT_FILE, eventWorkspace)
+  // Set current event ID in app config
+  static async setCurrentEventId(eventId: string): Promise<boolean> {
+    const appConfig = await readConfig('app.json') || {}
+    appConfig.currentEventId = eventId
+    appConfig.lastUpdated = new Date().toISOString()
+    return await writeConfig('app.json', appConfig)
   }
+
+  // Get current event ID pattern from app config
+  static async getCurrentPattern(): Promise<string> {
+    const appConfig = await readConfig('app.json')
+    return appConfig?.eventIdPattern || EVENT_ID_PATTERNS.TITLE_FIRST
+  }
+
+  // Set current event ID pattern in app config
+  static async setCurrentPattern(pattern: string): Promise<boolean> {
+    if (!Object.values(EVENT_ID_PATTERNS).includes(pattern)) {
+      throw new Error(`Invalid pattern: ${pattern}`)
+    }
+
+    const appConfig = await readConfig('app.json') || {}
+    appConfig.eventIdPattern = pattern
+    appConfig.lastUpdated = new Date().toISOString()
+
+    return await writeConfig('app.json', appConfig)
+  }
+
+  // Get event data from specific event directory
+  static async getEventData(eventId: string): Promise<Event | null> {
+    const eventFilePath = path.join(process.cwd(), 'events', eventId, 'event.json')
+    try {
+      const data = fs.readFileSync(eventFilePath, 'utf8')
+      return JSON.parse(data)
+    } catch (error) {
+      console.log(`Event data not found for ${eventId}`)
+      return null
+    }
+  }
+
+  // Save event data to specific event directory
+  static async saveEventData(eventId: string, eventData: Event): Promise<boolean> {
+    const eventDir = path.join(process.cwd(), 'events', eventId)
+    const eventFilePath = path.join(eventDir, 'event.json')
+
+    // Ensure event directory exists
+    if (!fs.existsSync(eventDir)) {
+      fs.mkdirSync(eventDir, { recursive: true })
+    }
+
+    try {
+      fs.writeFileSync(eventFilePath, JSON.stringify(eventData, null, 2), 'utf8')
+      return true
+    } catch (error) {
+      console.error(`Failed to save event data for ${eventId}:`, error)
+      return false
+    }
+  }
+
+  // Get complete event workspace (current event + its data)
+  static async getEventWorkspace(): Promise<EventWorkspace> {
+    const currentEventId = await this.getCurrentEventId()
+
+    if (!currentEventId) {
+      // No current event, return default
+      const defaultEvent: Event = {
+        id: `event-${Date.now()}`,
+        name: 'New Event',
+        created: new Date().toISOString(),
+        uploadedFileRefs: [],
+        selectedHashtags: [],
+        selectedPlatforms: []
+      }
+      return { currentEvent: defaultEvent }
+    }
+
+    // Load event data from event directory
+    const eventData = await this.getEventData(currentEventId)
+    if (!eventData) {
+      // Event exists but data is missing, create default
+      const defaultEvent: Event = {
+        id: currentEventId,
+        name: 'New Event',
+        created: new Date().toISOString(),
+        uploadedFileRefs: [],
+        selectedHashtags: [],
+        selectedPlatforms: []
+      }
+      return { currentEvent: defaultEvent }
+    }
+
+    // Return only event metadata - parsedData and platformContent are loaded separately
+    return { currentEvent: eventData }
+  }
+
+  // Save event workspace (save event data and update current session)
+  static async saveEventWorkspace(eventWorkspace: EventWorkspace): Promise<boolean> {
+    const eventData = eventWorkspace.currentEvent
+    const eventId = eventData.id
+
+    // Save current event ID to global session
+    const sessionSaved = await this.setCurrentEventId(eventId)
+    if (!sessionSaved) {
+      console.error('Failed to save current session')
+      return false
+    }
+
+    // Save event data to event directory
+    return await this.saveEventData(eventId, eventData)
+  }
+
 
   static async getCurrentEvent(): Promise<Event> {
     const eventWorkspace = await this.getEventWorkspace()
     return eventWorkspace.currentEvent
+  }
+
+  // Parsed Data Management
+  static async saveParsedData(eventId: string, parsedData: any): Promise<boolean> {
+    const eventDir = path.join(process.cwd(), 'events', eventId)
+    const parsedDataFilePath = path.join(eventDir, 'parsed-data.json')
+
+    // Ensure event directory exists
+    if (!fs.existsSync(eventDir)) {
+      fs.mkdirSync(eventDir, { recursive: true })
+    }
+
+    try {
+      fs.writeFileSync(parsedDataFilePath, JSON.stringify(parsedData, null, 2), 'utf8')
+      return true
+    } catch (error) {
+      console.error(`Failed to save parsed data for ${eventId}:`, error)
+      return false
+    }
+  }
+
+  static async getParsedData(eventId: string): Promise<any | null> {
+    const parsedDataFilePath = path.join(process.cwd(), 'events', eventId, 'parsed-data.json')
+    try {
+      const data = fs.readFileSync(parsedDataFilePath, 'utf8')
+      return JSON.parse(data)
+    } catch (error) {
+      // Parsed data doesn't exist yet
+      return null
+    }
+  }
+
+  // Platform Content Management
+  static async savePlatformContent(eventId: string, platform: string, content: any): Promise<boolean> {
+    const platformsDir = path.join(process.cwd(), 'events', eventId, 'platforms')
+    const platformFilePath = path.join(platformsDir, `${platform}.json`)
+
+    // Ensure platforms directory exists
+    if (!fs.existsSync(platformsDir)) {
+      fs.mkdirSync(platformsDir, { recursive: true })
+    }
+
+    try {
+      fs.writeFileSync(platformFilePath, JSON.stringify(content, null, 2), 'utf8')
+      return true
+    } catch (error) {
+      console.error(`Failed to save platform content for ${eventId}/${platform}:`, error)
+      return false
+    }
+  }
+
+  static async getPlatformContent(eventId: string, platform: string): Promise<any | null> {
+    const platformFilePath = path.join(process.cwd(), 'events', eventId, 'platforms', `${platform}.json`)
+    try {
+      const data = fs.readFileSync(platformFilePath, 'utf8')
+      return JSON.parse(data)
+    } catch (error) {
+      // Platform content doesn't exist yet
+      return null
+    }
+  }
+
+  static async getAllPlatformContent(eventId: string): Promise<Record<string, any>> {
+    const platformsDir = path.join(process.cwd(), 'events', eventId, 'platforms')
+    const platformContent: Record<string, any> = {}
+
+    try {
+      if (fs.existsSync(platformsDir)) {
+        const files = fs.readdirSync(platformsDir)
+        for (const file of files) {
+          if (file.endsWith('.json')) {
+            const platform = file.replace('.json', '')
+            const content = await this.getPlatformContent(eventId, platform)
+            if (content) {
+              platformContent[platform] = content
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to load platform content for ${eventId}:`, error)
+    }
+
+    return platformContent
+  }
+
+  // Legacy compatibility methods for platform content
+  static async getEventPlatformContent(eventId: string): Promise<Record<string, any>> {
+    return await this.getAllPlatformContent(eventId)
+  }
+
+  static async saveEventPlatformContent(eventId: string, platformContent: Record<string, any>): Promise<boolean> {
+    let allSuccess = true
+    for (const [platform, content] of Object.entries(platformContent)) {
+      const success = await this.savePlatformContent(eventId, platform, content)
+      if (!success) {
+        allSuccess = false
+      }
+    }
+    return allSuccess
   }
 
   static async updateCurrentEvent(event: Partial<Event>): Promise<boolean> {
@@ -46,20 +248,11 @@ export class EventService {
   }
 
   static async resetEventWorkspace(): Promise<boolean> {
-    const defaultEventWorkspace: EventWorkspace = {
-      currentEvent: {
-        id: `event-${Date.now()}`,
-        name: 'New Event',
-        created: new Date().toISOString(),
-        uploadedFileRefs: [],
-        selectedHashtags: [],
-        selectedPlatforms: [],
-        selectedEmails: [],        // Event-specific email selections
-        platformContent: {},
-        contentTemplates: []
-      }
-    }
-    return await this.saveEventWorkspace(defaultEventWorkspace)
+    // Clear current event ID from app config
+    const appConfig = await readConfig('app.json') || {}
+    delete appConfig.currentEventId
+    appConfig.lastUpdated = new Date().toISOString()
+    return await writeConfig('app.json', appConfig)
   }
 
   static async loadEventFiles(eventId: string, fileIds: string[]): Promise<UploadedFile[]> {
@@ -129,7 +322,31 @@ export class EventService {
     return files
   }
 
-  // Extract title from TXT files in event directory
+  // Extract title from fileInfos (preferred method)
+  static extractTitleFromFileInfos(fileInfos: any[]): string | null {
+    try {
+      // Find first text file with content
+      const txtFile = fileInfos.find(file =>
+        file.type === 'text/plain' && file.content
+      )
+
+      if (txtFile && txtFile.content) {
+        // Look for TITLE: in first few lines
+        const lines = txtFile.content.split('\n').slice(0, 5)
+        for (const line of lines) {
+          const titleMatch = line.match(/^TITLE:\s*(.+)$/i)
+          if (titleMatch) {
+            return titleMatch[1].trim()
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to extract title from fileInfos:', error)
+    }
+    return null
+  }
+
+  // Extract title from TXT files in event directory (legacy)
   static extractTitleFromTxtFiles(eventDir: string): string | null {
     try {
       const filesDir = path.join(eventDir, 'files')
@@ -158,23 +375,88 @@ export class EventService {
     return null
   }
 
-  // Generate readable event ID from title and date
-  static generateReadableEventId(title: string, date: Date = new Date()): string {
-    // Create a safe filename from title
-    const safeTitle = (title || 'untitled-event')
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single
-      .trim()
-      .substring(0, 30) // Limit length
-
-    // Format date as YYYY-MM-DD
-    const dateStr = date.toISOString().split('T')[0]
-
-    // Combine: title-date-timestamp
+  // Generate readable event ID from title and date with different patterns
+  static generateReadableEventId(title: string, date: Date = new Date(), pattern?: string, parsedData?: any): string {
+    const currentPattern = pattern || EVENT_PATTERN
     const timestamp = Date.now()
-    return `${safeTitle}-${dateStr}-${timestamp}`
+    const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
+
+    // Helper function to create safe title
+    const createSafeTitle = (input: string, maxLength: number = 30) => {
+      return (input || 'untitled-event')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Replace multiple hyphens with single
+        .trim()
+        .substring(0, maxLength)
+    }
+
+    // Helper function to extract first N words
+    const getFirstWords = (input: string, count: number) => {
+      return input.split(' ').slice(0, count).join(' ')
+    }
+
+    // Helper function to create abbreviation
+    const createAbbreviation = (input: string) => {
+      return input.split(' ')
+        .map(word => word.length > 2 ? word.substring(0, 3) : word)
+        .join('')
+        .toLowerCase()
+        .substring(0, 10)
+    }
+
+    // Check if we need timestamp for uniqueness (multiple events same day)
+    const needsTimestamp = false // For now, assume date is unique enough
+
+    const addTimestamp = (baseId: string) => {
+      return needsTimestamp ? `${baseId}-${timestamp}` : baseId
+    }
+
+    switch (currentPattern) {
+      case EVENT_ID_PATTERNS.TITLE_FIRST:
+        // "depeche-mode-party-2026-01-05"
+        const titleWords = getFirstWords(title, 4)
+        const safeTitle = createSafeTitle(titleWords, 25)
+        return addTimestamp(`${safeTitle}-${dateStr}`)
+
+      case EVENT_ID_PATTERNS.DATE_FIRST:
+        // "2026-01-05-depeche-mode-party"
+        const shortTitle = createSafeTitle(getFirstWords(title, 3), 20)
+        return addTimestamp(`${dateStr}-${shortTitle}`)
+
+      case EVENT_ID_PATTERNS.GENRE_LOCATION:
+        // Try to use genre and city from parsed data
+        if (parsedData?.genre && parsedData?.city) {
+          const genrePart = createSafeTitle(parsedData.genre.split(',')[0], 8) // First genre
+          const cityPart = createSafeTitle(parsedData.city, 8)
+          return addTimestamp(`${genrePart}-${cityPart}-${dateStr}`)
+        }
+        // Fallback to abbreviated title
+        const abbrTitle = createAbbreviation(title)
+        return addTimestamp(`${abbrTitle}-${dateStr}`)
+
+      case EVENT_ID_PATTERNS.VENUE_TITLE:
+        // Try to use venue from parsed data
+        if (parsedData?.venue) {
+          const venuePart = createSafeTitle(parsedData.venue, 8)
+          const titleAbbr = createAbbreviation(title)
+          return addTimestamp(`${venuePart}-${titleAbbr}-${dateStr}`)
+        }
+        // Fallback to abbreviated title
+        const venueTitle = createSafeTitle(getFirstWords(title, 3), 20)
+        return addTimestamp(`${venueTitle}-${dateStr}`)
+
+      case EVENT_ID_PATTERNS.COMPACT:
+        // "dmp-2026-01-05" (very abbreviated)
+        const compact = createAbbreviation(title)
+        return addTimestamp(`${compact}-${dateStr}`)
+
+      default:
+        // Fallback to title-first
+        const fallbackTitle = createSafeTitle(getFirstWords(title, 4), 25)
+        return addTimestamp(`${fallbackTitle}-${dateStr}`)
+    }
   }
 
   // Migrate event folder from temp to final location
@@ -209,35 +491,33 @@ export class EventService {
 
   // Create event from uploaded files with extracted title
   static async createEventFromFiles(eventId: string, title: string, files: UploadedFile[]): Promise<any> {
-    const eventData = {
+    const eventData: Event = {
       id: eventId,
       name: title,
       created: new Date().toISOString(),
       uploadedFileRefs: files,
       selectedHashtags: [],
       selectedPlatforms: [],
-      selectedEmails: [],
-      platformContent: {},
-      contentTemplates: []
+      platformContent: {}
     }
 
-    // Create event workspace
-    const eventWorkspace = {
-      currentEvent: eventData
-    }
+    // Save event data to event directory
+    await this.saveEventData(eventId, eventData)
 
-    // Save to file
-    await writeConfig(EVENT_FILE, eventWorkspace)
+    // Set as current event
+    await this.setCurrentEventId(eventId)
 
     return eventData
   }
 
   static async loadEventData(eventId: string): Promise<any> {
-    const eventDir = path.join(process.cwd(), 'events', eventId)
-
-    if (!fs.existsSync(eventDir)) {
+    // First load event data from event.json
+    const eventData = await this.getEventData(eventId)
+    if (!eventData) {
       return null
     }
+
+    const eventDir = path.join(process.cwd(), 'events', eventId)
 
     // Load parsed data
     const parsedDataPath = path.join(eventDir, 'parsed-data.json')
@@ -268,28 +548,8 @@ export class EventService {
       }
     }
 
-    // Load file references
-    const filesDir = path.join(eventDir, 'files')
-    let uploadedFileRefs: UploadedFile[] = []
-    if (fs.existsSync(filesDir)) {
-      const fileNames = fs.readdirSync(filesDir)
-      uploadedFileRefs = fileNames.map(fileName => {
-        const filePath = path.join(filesDir, fileName)
-        const stats = fs.statSync(filePath)
-
-        return {
-          id: fileName,
-          name: fileName,
-          filename: fileName,
-          url: `/api/files/${eventId}/${fileName}`,
-          path: path.join('events', eventId, 'files', fileName),
-          size: stats.size,
-          type: this.getMimeType(fileName),
-          uploadedAt: stats.mtime.toISOString(),
-          isImage: this.getMimeType(fileName).startsWith('image/')
-        }
-      })
-    }
+    // Use file references from event data
+    const uploadedFileRefs = eventData.uploadedFileRefs || []
 
     return {
       id: eventId,
@@ -315,54 +575,4 @@ export class EventService {
     return mimeTypes[ext || ''] || 'application/octet-stream'
   }
 
-  static async getEventPlatformContent(eventId: string): Promise<Record<string, any>> {
-    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
-
-    if (!fs.existsSync(platformContentDir)) {
-      return {}
-    }
-
-    const platformContent: Record<string, any> = {}
-    const platformFiles = fs.readdirSync(platformContentDir)
-
-    for (const platformFile of platformFiles) {
-      if (platformFile.endsWith('.json')) {
-        const platform = platformFile.replace('.json', '')
-        const contentPath = path.join(platformContentDir, platformFile)
-
-        try {
-          const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'))
-          platformContent[platform] = content
-        } catch (error) {
-          console.warn(`Failed to load platform content for ${platform}:`, error)
-        }
-      }
-    }
-
-    return platformContent
-  }
-
-  static async saveEventPlatformContent(eventId: string, platformContent: Record<string, any>): Promise<boolean> {
-    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
-
-    try {
-      // Ensure directory exists
-      if (!fs.existsSync(platformContentDir)) {
-        fs.mkdirSync(platformContentDir, { recursive: true })
-      }
-
-      // Save each platform's content
-      for (const [platform, content] of Object.entries(platformContent)) {
-        if (content) {
-          const contentPath = path.join(platformContentDir, `${platform}.json`)
-          fs.writeFileSync(contentPath, JSON.stringify(content, null, 2))
-        }
-      }
-
-      return true
-    } catch (error) {
-      console.error('Error saving event platform content:', error)
-      return false
-    }
-  }
 }

@@ -28,7 +28,7 @@ export class HistoryService {
     const eventFolders = fs.readdirSync(eventsDir)
       .filter(item => {
         const itemPath = path.join(eventsDir, item)
-        return fs.statSync(itemPath).isDirectory()
+        return fs.statSync(itemPath).isDirectory() && item !== 'templates'
       })
       .sort((a, b) => {
         // Sort by creation time (newest first)

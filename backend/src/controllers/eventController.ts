@@ -152,6 +152,17 @@ export class EventController {
     }
   }
 
+  static async getEventParsedData(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+      const parsedData = await EventService.getParsedData(eventId)
+      res.json({ parsedData })
+    } catch (error) {
+      console.error('Error getting event parsed data:', error)
+      res.status(500).json({ error: 'Failed to get parsed data' })
+    }
+  }
+
   static async getEventPlatformContent(req: Request, res: Response) {
     try {
       const { eventId } = req.params

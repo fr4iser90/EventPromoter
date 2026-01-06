@@ -2,6 +2,7 @@
 
 import { Request, Response } from 'express'
 import { ConfigService } from '../services/configService.js'
+import { EventService, EVENT_ID_PATTERNS } from '../services/eventService.js'
 
 export class ConfigController {
   static async getConfig(req: Request, res: Response) {
@@ -118,6 +119,54 @@ export class ConfigController {
     } catch (error) {
       console.error('Error updating app config:', error)
       res.status(500).json({ error: 'Failed to update app configuration' })
+    }
+  }
+
+  // Get available event ID patterns
+  static async getEventIdPatterns(req: Request, res: Response) {
+    try {
+      console.log('🌐 API Request: GET /api/config/event-id-patterns')
+
+      const currentPattern = await EventService.getCurrentPattern()
+      const patterns = Object.values(EVENT_ID_PATTERNS)
+
+      // Generate descriptions from pattern names
+      const descriptions: Record<string, { description: string; category: string }> = {}
+      for (const pattern of patterns) {
+        descriptions[pattern] = {
+          description: pattern.split('-').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' '),
+          category: pattern === 'title-first' || pattern === 'date-first' ? 'Standard' :
+                   pattern === 'compact' ? 'Kompakt' : 'Erweitert'
+        }
+      }
+
+      res.json({
+        success: true,
+        currentPattern,
+        availablePatterns: patterns,
+        descriptions
+      })
+    } catch (error) {
+      console.error('Error getting event ID patterns:', error)
+      res.status(500).json({ error: 'Failed to get event ID patterns' })
+    }
+  }
+
+  // Set current event ID pattern
+  static async setEventIdPattern(req: Request, res: Response) {
+    try {
+      const { pattern } = req.body
+      console.log(`💾 API Request: POST /api/config/event-id-pattern`, { pattern })
+
+      await EventService.setCurrentPattern(pattern)
+
+      console.log('✅ Event ID pattern updated successfully')
+      res.json({ success: true, pattern })
+    } catch (error: any) {
+      console.error('Error setting event ID pattern:', error)
+      res.status(400).json({ error: error.message || 'Failed to set event ID pattern' })
     }
   }
 }

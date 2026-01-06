@@ -36,7 +36,7 @@ const ACCEPTED_TYPES = {
 }
 
 function FileUpload() {
-  const { uploadedFileRefs, uploadFiles, removeUploadedFile, parseUploadedFiles, error, setError, isProcessing, workflowState } = useStore()
+  const { uploadedFileRefs, uploadFiles, removeUploadedFile, error, setError, isProcessing, workflowState } = useStore()
   const folderInputRef = useRef(null)
   const [isExpanded, setIsExpanded] = useState(workflowState === WORKFLOW_STATES.INITIAL)
 
@@ -67,10 +67,7 @@ function FileUpload() {
       await uploadFiles(acceptedFiles)
       setError(null)
 
-      // Automatically start parsing after upload
-      setTimeout(() => {
-        parseUploadedFiles()
-      }, 1000) // Small delay to ensure upload is complete
+          // Parsing happens automatically in upload now
 
     } catch (error) {
       setError('Failed to upload files')

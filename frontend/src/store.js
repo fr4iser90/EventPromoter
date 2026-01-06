@@ -76,9 +76,7 @@ const useStore = create((set, get) => ({
           created: state.currentEvent?.created || new Date().toISOString(),
           uploadedFileRefs: state.uploadedFileRefs, // File references are serializable
           selectedHashtags: state.selectedHashtags,
-          selectedPlatforms: state.selectedPlatforms,
-          emailRecipients: state.emailRecipients || [],
-          contentTemplates: state.contentTemplates
+          selectedPlatforms: state.selectedPlatforms
         }
       }
 
@@ -146,8 +144,8 @@ const useStore = create((set, get) => ({
   loadGlobalConfigs: async () => {
     try {
       const [emailConfig, hashtagConfig] = await Promise.all([
-        axios.get('http://localhost:4000/api/config/emails.json'),
-        axios.get('http://localhost:4000/api/config/hashtags.json')
+        axios.get('http://localhost:4000/api/config/emails'),
+        axios.get('http://localhost:4000/api/config/hashtags')
       ])
 
       set({
@@ -182,7 +180,7 @@ const useStore = create((set, get) => ({
         uploadedFileRefs: restoreData.files,
         selectedPlatforms: restoreData.platforms || [],
         selectedHashtags: restoreData.hashtags || [],
-        selectedEmails: restoreData.selectedEmails || restoreData.emailRecipients || [], // Handle old format
+        // Email settings are now managed in platformContent.email
         platformContent: restoreData.content || {}
       })
 
@@ -195,7 +193,7 @@ const useStore = create((set, get) => ({
       console.log(`✅ Event ${eventId} completely restored:`, {
         files: restoreData.files?.length || 0,
         platforms: restoreData.platforms?.length || 0,
-        emails: restoreData.selectedEmails?.length || restoreData.emailRecipients?.length || 0,
+        emails: (restoreData.platformContent?.email?.recipients?.length || 0),
         contentKeys: Object.keys(restoreData.content || {}).length
       })
 
@@ -251,14 +249,16 @@ const useStore = create((set, get) => ({
         uploadedFileRefs: validatedFileRefs, // Only load existing files
         selectedHashtags: event.selectedHashtags || [],
         selectedPlatforms: event.selectedPlatforms || [],
-        emailRecipients: event.emailRecipients || state.userPreferences?.emailRecipients || [],
-        contentTemplates: event.contentTemplates || []
+        emailRecipients: state.platformContent?.email?.recipients || [],
+        parsedData: null, // Will be loaded separately
+        parsingStatus: 'idle'
       })
 
       // Update workflow state after loading
       get().updateWorkflowState()
 
-      // Load platform content for this event
+      // Load parsed data and platform content separately
+      get().loadEventParsedData(event.id)
       get().loadEventPlatformContent(event.id)
 
       console.log(`Event workspace loaded from backend (${validatedFileRefs.length} valid files)`)
@@ -276,7 +276,6 @@ const useStore = create((set, get) => ({
       selectedHashtags: [],
       selectedPlatforms: [],
       platformContent: {},
-      contentTemplates: [],
       workflowState: WORKFLOW_STATES.INITIAL,
       publishing: false,
       published: false,
@@ -323,13 +322,17 @@ const useStore = create((set, get) => ({
   uploadedFileRefs: [],
 
   // Event-specific selections (separate from global configs)
-  selectedEmails: [],        // Selected emails for current event (NOT global config)
+  // Email settings are managed in platformContent.email
   selectedHashtags: [],      // Selected hashtags for current event
   selectedPlatforms: [],     // Selected platforms for current event
 
   // Global configs loaded from backend
   globalEmailConfig: null,   // Global email configuration from /config/emails.json
   globalHashtagConfig: null, // Global hashtag configuration from /config/hashtags.json
+
+  // Template management state
+  templates: {},             // Templates per platform: { platform: [templates] }
+  templateCategories: [],    // Available template categories
   setUploadedFileRefs: (fileRefs) => {
     set({ uploadedFileRefs: Array.isArray(fileRefs) ? fileRefs : [] })
     get().saveEventWorkspace()
@@ -337,10 +340,17 @@ const useStore = create((set, get) => ({
 
   setSelectedEmails: (emails) => {
     const newEmails = Array.isArray(emails) ? emails : []
-    set({ selectedEmails: newEmails })
-    get().saveEventWorkspace()
+    const currentPlatformContent = get().platformContent
+    const updatedPlatformContent = {
+      ...currentPlatformContent,
+      email: {
+        ...currentPlatformContent.email,
+        recipients: newEmails
+      }
+    }
+    set({ platformContent: updatedPlatformContent })
+    get().saveEventPlatformContent(get().currentEvent?.id, updatedPlatformContent)
     get().updateWorkflowState()
-    get().debouncedSave()
   },
 
   // Upload files to server
@@ -349,9 +359,7 @@ const useStore = create((set, get) => ({
       set({ isProcessing: true, error: null })
 
       const formData = new FormData()
-      // Use temp ID if no current event, otherwise use existing event ID
-      const eventId = get().currentEvent?.id || `temp-${Date.now()}`
-      formData.append('eventId', eventId)
+      // Backend entscheidet selbst über die eventId basierend auf geparsten Daten
 
       // Add all files to FormData
       files.forEach(file => {
@@ -370,15 +378,20 @@ const useStore = create((set, get) => ({
         const newRefs = [...currentRefs, ...response.data.files]
         set({
           uploadedFileRefs: newRefs,
-          parsedData: null, // Reset parsed data when new files are uploaded
+          parsedData: response.data.parsedData || null, // Use parsed data from backend
           duplicateFound: null, // Reset duplicate state
-          parsingStatus: 'idle' // Reset parsing status for new files
+          parsingStatus: response.data.parsedData ? 'completed' : 'idle' // Set completed if parsed
         })
 
         // If backend created an event automatically, use it
         if (response.data.createdEvent) {
           set({ currentEvent: response.data.createdEvent })
           console.log(`Backend created event: ${response.data.createdEvent.id}`)
+        }
+
+        // If we have parsed data, generate platform content automatically
+        if (response.data.parsedData) {
+          get().generatePlatformContentFromParsedData(response.data.parsedData)
         }
 
         get().saveEventWorkspace()
@@ -421,80 +434,96 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // Parse uploaded files automatically
-  parseUploadedFiles: async () => {
-    const uploadedFiles = get().uploadedFileRefs
-    if (uploadedFiles.length === 0) return
+
+  // Apply parsed content to platform content
+  // Generate platform content from parsed data
+  generatePlatformContentFromParsedData: async (parsedData) => {
+    if (!parsedData) return
+
+    const selectedPlatforms = get().selectedPlatforms
+    if (selectedPlatforms.length === 0) return
 
     try {
-      set({ isProcessing: true, error: null, parsingStatus: 'parsing' })
+      const platformContent = {}
 
-      const eventId = get().currentEvent?.id || 'default'
-      const selectedPlatforms = get().selectedPlatforms
-
-      // Parse the most recent file using backend
-      const latestFile = uploadedFiles[uploadedFiles.length - 1]
-
-      console.log('Starting backend parsing for file:', latestFile.name)
-
-      // First parse the file
-      const parseResponse = await axios.post(`http://localhost:4000/api/parsing/file/${latestFile.id}`, {
-        eventId: eventId,
-        filename: latestFile.filename,
-        name: latestFile.name,
-        type: latestFile.type
-      })
-
-      if (!parseResponse.data.success) {
-        set({ parsingStatus: 'error' })
-        throw new Error(parseResponse.data.error || 'File parsing failed')
-      }
-
-      const { parsedData, duplicateCheck } = parseResponse.data
-
-      // Now apply platform-specific parsing
-      const platformResponse = await axios.post('http://localhost:4000/api/parsing/platforms', {
-        parsedData: parsedData,
-        eventId: eventId,
-        platforms: selectedPlatforms
-      })
-
-      if (platformResponse.data.success) {
-        const { platformContent } = platformResponse.data
-
-        // Check for duplicates
-        if (duplicateCheck.isDuplicate) {
-          // Ask user what to do with duplicate
-          set({
-            duplicateFound: {
-              existingEventId: duplicateCheck.existingEventId,
-              existingEvent: duplicateCheck.existingEvent,
-              newParsedData: parsedData,
-              newPlatformContent: platformContent
-            },
-            parsingStatus: 'completed'
-          })
-        } else {
-          // No duplicate, use the parsed content
-          get().applyParsedContent(parsedData, platformContent)
-          set({ parsingStatus: 'completed' })
+      // Generate content for each selected platform
+      for (const platform of selectedPlatforms) {
+        try {
+          // Simple content generation based on parsed data
+          const content = get().generateContentForPlatform(platform, parsedData)
+          if (content) {
+            platformContent[platform] = content
+          }
+        } catch (error) {
+          console.warn(`Failed to generate content for ${platform}:`, error)
         }
-
-        console.log('Backend parsing completed successfully')
-      } else {
-        set({ parsingStatus: 'error' })
-        throw new Error('Platform parsing failed')
       }
 
+      // Apply the generated content
+      get().applyParsedContent(parsedData, platformContent)
+
+      console.log('Generated platform content from parsed data:', Object.keys(platformContent))
     } catch (error) {
-      console.error('Backend parsing error:', error)
-      set({ error: 'Failed to parse uploaded files: ' + error.message, parsingStatus: 'error' })
-    } finally {
-      set({ isProcessing: false })
+      console.error('Failed to generate platform content:', error)
     }
   },
 
-  // Apply parsed content to platform content
+  // Generate content for a specific platform
+  generateContentForPlatform: (platform, parsedData) => {
+    const baseContent = {
+      eventTitle: parsedData.title || '',
+      eventDate: parsedData.date || '',
+      eventTime: parsedData.time || '',
+      venue: parsedData.venue || '',
+      city: parsedData.city || '',
+      description: parsedData.description || ''
+    }
+
+    switch (platform) {
+      case 'twitter':
+        return {
+          ...baseContent,
+          text: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
+        }
+
+      case 'facebook':
+        return {
+          ...baseContent,
+          text: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
+        }
+
+      case 'instagram':
+        return {
+          ...baseContent,
+          caption: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
+        }
+
+      case 'linkedin':
+        return {
+          ...baseContent,
+          text: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
+        }
+
+      case 'reddit':
+        return {
+          ...baseContent,
+          title: parsedData.title || 'Event',
+          body: `📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim(),
+          subreddit: 'r/events' // Default
+        }
+
+      case 'email':
+        return {
+          ...baseContent,
+          subject: parsedData.title || 'Event Invitation',
+          body: `Liebe Community,\n\nwir laden euch herzlich ein zu:\n\n${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}\n\nWir freuen uns auf euch!`
+        }
+
+      default:
+        return baseContent
+    }
+  },
+
   applyParsedContent: (parsedData, platformContent) => {
     const updatedPlatformContent = { ...get().platformContent }
 
@@ -664,6 +693,21 @@ const useStore = create((set, get) => ({
   },
 
   // Load platform content for specific event
+  loadEventParsedData: async (eventId) => {
+    try {
+      const response = await axios.get(`http://localhost:4000/api/event/${eventId}/parsed-data`)
+      const { parsedData } = response.data
+      set({
+        parsedData: parsedData || null,
+        parsingStatus: parsedData ? 'completed' : 'idle'
+      })
+      console.log(`Parsed data loaded for event ${eventId}`)
+    } catch (error) {
+      console.warn('Failed to load parsed data for event:', error)
+      set({ parsedData: null, parsingStatus: 'idle' })
+    }
+  },
+
   loadEventPlatformContent: async (eventId) => {
     try {
       const response = await axios.get(`http://localhost:4000/api/event/${eventId}/platform-content`)
@@ -686,38 +730,7 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // Template system
-  contentTemplates: [],
-  saveTemplate: (name, content) => {
-    set(state => {
-      const template = {
-        id: Date.now(),
-        name,
-        content: { ...content },
-        createdAt: new Date().toISOString()
-      }
-      return {
-        contentTemplates: [...state.contentTemplates, template]
-      }
-    })
-    get().saveEventWorkspace()
-  },
-  loadTemplate: (templateId) => {
-    set(state => {
-      const template = state.contentTemplates.find(t => t.id === templateId)
-      if (template) {
-        return { platformContent: { ...template.content } }
-      }
-      return state
-    })
-    get().saveEventWorkspace()
-  },
-  deleteTemplate: (templateId) => {
-    set(state => ({
-      contentTemplates: state.contentTemplates.filter(t => t.id !== templateId)
-    }))
-    get().saveEventWorkspace()
-  },
+  // Templates are now loaded from backend platform-specific templates
 
 
   // Actions
@@ -939,6 +952,80 @@ const useStore = create((set, get) => ({
         error: errorMessage,
         isProcessing: false
       })
+    }
+  },
+
+  // Template Management
+  loadTemplates: async (platform) => {
+    try {
+      const response = await axios.get(`http://localhost:4000/api/templates/${platform}`)
+      if (response.data.success) {
+        set(state => ({
+          templates: {
+            ...state.templates,
+            [platform]: response.data.templates
+          }
+        }))
+        return response.data.templates
+      }
+    } catch (error) {
+      console.warn('Failed to load templates:', error)
+    }
+    return []
+  },
+
+  loadTemplateCategories: async () => {
+    try {
+      const response = await axios.get('http://localhost:4000/api/templates/categories')
+      if (response.data.success) {
+        set({ templateCategories: response.data.categories })
+        return response.data.categories
+      }
+    } catch (error) {
+      console.warn('Failed to load template categories:', error)
+    }
+    return []
+  },
+
+  createTemplate: async (platform, templateData) => {
+    try {
+      const response = await axios.post(`http://localhost:4000/api/templates/${platform}`, templateData)
+      if (response.data.success) {
+        // Reload templates for this platform
+        get().loadTemplates(platform)
+        return { success: true, template: response.data.template }
+      }
+    } catch (error) {
+      console.warn('Failed to create template:', error)
+      return { success: false, error: error.response?.data?.error }
+    }
+  },
+
+  updateTemplate: async (platform, templateId, updates) => {
+    try {
+      const response = await axios.put(`http://localhost:4000/api/templates/${platform}/${templateId}`, updates)
+      if (response.data.success) {
+        // Reload templates for this platform
+        get().loadTemplates(platform)
+        return { success: true, template: response.data.template }
+      }
+    } catch (error) {
+      console.warn('Failed to update template:', error)
+      return { success: false, error: error.response?.data?.error }
+    }
+  },
+
+  deleteTemplate: async (platform, templateId) => {
+    try {
+      const response = await axios.delete(`http://localhost:4000/api/templates/${platform}/${templateId}`)
+      if (response.data.success) {
+        // Reload templates for this platform
+        get().loadTemplates(platform)
+        return { success: true }
+      }
+    } catch (error) {
+      console.warn('Failed to delete template:', error)
+      return { success: false, error: error.response?.data?.error }
     }
   }
 }))

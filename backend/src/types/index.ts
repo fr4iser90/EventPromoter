@@ -7,9 +7,9 @@ export interface Event {
   uploadedFileRefs: UploadedFile[] // References to uploaded files on server
   selectedHashtags: string[]      // Event-specific hashtag selections
   selectedPlatforms: string[]     // Event-specific platform selections
-  selectedEmails: string[]        // Event-specific email selections
-  platformContent: Record<string, any>
-  contentTemplates: any[]
+  // These are loaded separately and attached for compatibility
+  parsedData?: any
+  platformContent?: Record<string, any>
 }
 
 export interface EventWorkspace {
@@ -20,6 +20,7 @@ export interface PlatformContent {
   text: string
   media?: string[]
   metadata?: Record<string, any>
+  templates?: any[] // Platform-specific custom templates
 }
 
 export interface ParsedEventData {
@@ -178,6 +179,7 @@ export interface UploadedFile {
   type: string
   uploadedAt: string
   isImage: boolean
+  content?: string | null // Content for text files, null for binary files
 }
 
 export interface EmailConfig {

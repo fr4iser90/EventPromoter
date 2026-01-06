@@ -3,20 +3,19 @@ import path from 'path'
 import fs from 'fs'
 import { Request } from 'express'
 
-// Create workspace directory structure
-const createWorkspaceDir = (eventId: string): string => {
-  const workspaceDir = path.join(process.cwd(), 'events', eventId, 'files')
-  if (!fs.existsSync(workspaceDir)) {
-    fs.mkdirSync(workspaceDir, { recursive: true })
+// Create temp upload directory
+const createTempUploadDir = (): string => {
+  const tempDir = path.join(process.cwd(), 'temp')
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true })
   }
-  return workspaceDir
+  return tempDir
 }
 
-// Configure multer storage
+// Configure multer storage for temp upload
 const storage = multer.diskStorage({
   destination: (req: Request, file, cb) => {
-    const eventId = req.body.eventId || 'default'
-    const uploadDir = createWorkspaceDir(eventId)
+    const uploadDir = createTempUploadDir()
     cb(null, uploadDir)
   },
   filename: (req: Request, file, cb) => {

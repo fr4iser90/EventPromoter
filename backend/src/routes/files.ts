@@ -19,4 +19,7 @@ router.delete('/:eventId/:filename', FileController.deleteFile)
 // List files for Event
 router.get('/list/:eventId', FileController.listFiles)
 
+// Get file content (for text files)
+router.get('/content/:eventId/:filename', FileController.getFileContent)
+
 export default router
