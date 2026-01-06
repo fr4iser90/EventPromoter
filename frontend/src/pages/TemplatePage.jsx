@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Container,
@@ -8,13 +8,20 @@ import {
   Tab,
   Paper,
   Button,
-  IconButton
+  IconButton,
+  LinearProgress,
+  Chip,
+  useMediaQuery
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Brightness4 as Brightness4Icon,
+  Brightness7 as Brightness7Icon
 } from '@mui/icons-material'
+import { useTheme, createTheme } from '@mui/material/styles'
 import TemplateList from '../components/TemplateEditor/TemplateList'
+import useStore from '../store'
 
 const PLATFORMS = [
   { id: 'twitter', name: 'Twitter', icon: '🐦' },
@@ -28,6 +35,12 @@ const PLATFORMS = [
 function TemplatePage() {
   const navigate = useNavigate()
   const [selectedPlatform, setSelectedPlatform] = useState('twitter')
+  const { darkMode, setDarkMode } = useStore()
+
+  // Load session data
+  useEffect(() => {
+    useStore.getState().initialize()
+  }, [])
 
   const handlePlatformChange = (event, newValue) => {
     setSelectedPlatform(newValue)
@@ -37,81 +50,180 @@ function TemplatePage() {
     navigate('/')
   }
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+  }
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2 }}>
-        <IconButton
-          onClick={handleBackToMain}
-          sx={{ mr: 1 }}
-          aria-label="back to main"
-        >
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
-          📝 Template Manager
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Manage reusable content templates for each platform
-        </Typography>
+    <>
+      {/* Fixed Header - Same as MainPage */}
+      <Box sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1100,
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider',
+        px: 2,
+        py: 1
+      }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%' }}>
+          <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
+            Multi-Platform Social Media Publisher
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => navigate('/')}
+            sx={{ mr: 1 }}
+          >
+            ← Back to Main
+          </Button>
+          <IconButton
+            onClick={() => {/* Settings would go here */}}
+            color="inherit"
+            aria-label="open settings"
+          >
+            <SettingsIcon />
+          </IconButton>
+          <IconButton
+            onClick={toggleDarkMode}
+            color="inherit"
+            aria-label="toggle dark mode"
+          >
+            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
+        </Box>
       </Box>
 
-      {/* Platform Tabs */}
-      <Paper sx={{ mb: 4 }}>
-        <Tabs
-          value={selectedPlatform}
-          onChange={handlePlatformChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            borderBottom: 1,
-            borderColor: 'divider',
-            '& .MuiTab-root': {
-              minHeight: 64,
-              textTransform: 'none'
-            }
-          }}
-        >
-          {PLATFORMS.map((platform) => (
-            <Tab
-              key={platform.id}
-              value={platform.id}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <span>{platform.icon}</span>
-                  <span>{platform.name}</span>
-                </Box>
-              }
+      {/* Layout Container - Same 3-column structure as MainPage */}
+      <Box sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        pt: 8 // Account for fixed header
+      }}>
+        {/* Linke Sidebar - Empty for templates */}
+        <Box sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          borderRight: 1,
+          borderColor: 'divider',
+          overflow: 'auto'
+        }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: 'text.secondary'
+          }}>
+            <Typography variant="body2">
+              Template Management
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Main Content - Template Management */}
+        <Box sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          px: 2,
+          py: 2,
+          borderRight: 1,
+          borderColor: 'divider'
+        }}>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography variant="h6" component="h2" color="text.secondary">
+              📝 Template Management System
+            </Typography>
+          </Box>
+
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            {/* Platform Tabs */}
+            <Paper sx={{ mb: 4 }}>
+              <Tabs
+                value={selectedPlatform}
+                onChange={handlePlatformChange}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  '& .MuiTab-root': {
+                    minHeight: 64,
+                    textTransform: 'none'
+                  }
+                }}
+              >
+                {PLATFORMS.map((platform) => (
+                  <Tab
+                    key={platform.id}
+                    value={platform.id}
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <span>{platform.icon}</span>
+                        <span>{platform.name}</span>
+                      </Box>
+                    }
+                  />
+                ))}
+              </Tabs>
+            </Paper>
+
+            {/* Template Management */}
+            <TemplateList
+              platform={selectedPlatform}
+              onSelectTemplate={(template) => {
+                // For now, just show selected template
+                console.log('Selected template:', template)
+              }}
             />
-          ))}
-        </Tabs>
-      </Paper>
 
-      {/* Template Management */}
-      <TemplateList
-        platform={selectedPlatform}
-        onSelectTemplate={(template) => {
-          // For now, just show selected template
-          console.log('Selected template:', template)
-        }}
-      />
+            {/* Footer Info */}
+            <Paper sx={{ mt: 4, p: 3, bgcolor: 'background.default' }}>
+              <Typography variant="h6" gutterBottom>
+                💡 Template Usage
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Templates help you create consistent content across platforms. Create platform-specific templates
+                with placeholders like <code>{'{eventTitle}'}</code>, <code>{'{venue}'}</code>, and <code>{'{description}'}</code>
+                that will be automatically filled with your event data.
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Default templates</strong> cannot be modified but serve as examples.
+                <strong>Custom templates</strong> can be fully edited and deleted.
+              </Typography>
+            </Paper>
+          </Box>
+        </Box>
 
-      {/* Footer Info */}
-      <Paper sx={{ mt: 4, p: 3, bgcolor: 'background.default' }}>
-        <Typography variant="h6" gutterBottom>
-          💡 Template Usage
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-          Templates help you create consistent content across platforms. Create platform-specific templates
-          with placeholders like <code>{'{eventTitle}'}</code>, <code>{'{venue}'}</code>, and <code>{'{description}'}</code>
-          that will be automatically filled with your event data.
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Default templates</strong> cannot be modified but serve as examples.
-          <strong>Custom templates</strong> can be fully edited and deleted.
-        </Typography>
-      </Paper>
-    </Container>
+        {/* Rechte Sidebar - Empty for templates */}
+        <Box sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          overflow: 'auto'
+        }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: 'text.secondary'
+          }}>
+            <Typography variant="body2">
+              Template Preview
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </>
   )
 }
 
