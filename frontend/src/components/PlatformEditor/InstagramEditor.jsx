@@ -6,6 +6,7 @@ import {
   Alert
 } from '@mui/material'
 import HashtagSelector from '../HashtagSelector/HashtagSelector'
+import TemplateSelector from '../TemplateEditor/TemplateSelector'
 
 function InstagramEditor({ content, onChange }) {
   const textLength = (content?.caption || '').length
@@ -16,6 +17,16 @@ function InstagramEditor({ content, onChange }) {
       <Typography variant="h6" sx={{ color: '#E4405F', fontWeight: 'bold' }}>
         📸 Instagram Post
       </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        <TemplateSelector
+          platform="instagram"
+          onSelectTemplate={(template, filledContent) => {
+            onChange({ ...content, caption: filledContent })
+          }}
+          currentContent={content?.caption || ''}
+        />
+      </Box>
 
       <TextField
         fullWidth

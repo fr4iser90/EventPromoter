@@ -60,6 +60,13 @@ export class TemplateService {
   // Load default templates from platform modules
   static async loadDefaultTemplates(platform: string): Promise<Template[]> {
     try {
+      // Check if platform is valid (not 'categories' or other non-platform names)
+      const validPlatforms = ['twitter', 'facebook', 'instagram', 'linkedin', 'reddit', 'email']
+      if (!validPlatforms.includes(platform)) {
+        console.warn(`Invalid platform requested: ${platform}`)
+        return []
+      }
+
       // Import platform templates dynamically
       const platformModule = await import(`../platforms/${platform}/templates.js`)
       const defaultTemplates = platformModule[`${platform.toUpperCase()}_TEMPLATES`] || []
@@ -74,8 +81,8 @@ export class TemplateService {
         template: template.template,
         variables: template.variables || [],
         isDefault: true,
-        createdAt: '2024-01-01T00:00:00Z', // Fixed date for defaults
-        updatedAt: '2024-01-01T00:00:00Z'
+        createdAt: '2026-01-01T00:00:00Z', // Fixed date for defaults
+        updatedAt: '2026-01-01T00:00:00Z'
       }))
     } catch (error) {
       console.warn(`Failed to load default templates for ${platform}:`, error)

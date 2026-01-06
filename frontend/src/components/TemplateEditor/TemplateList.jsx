@@ -286,11 +286,15 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
               sx={{ mb: 2 }}
               required
             >
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
-                </MenuItem>
-              ))}
+              {categories && categories.length > 0 ? (
+                categories.map((category) => (
+                  <MenuItem key={category.id} value={category.id}>
+                    {category.name}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>Loading categories...</MenuItem>
+              )}
             </TextField>
 
             {/* Platform-specific template editor */}

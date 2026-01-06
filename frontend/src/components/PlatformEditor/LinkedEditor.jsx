@@ -5,6 +5,7 @@ import {
   Typography,
   Alert
 } from '@mui/material'
+import TemplateSelector from '../TemplateEditor/TemplateSelector'
 import HashtagSelector from '../HashtagSelector/HashtagSelector'
 
 function LinkedInEditor({ content, onChange }) {
@@ -16,6 +17,16 @@ function LinkedInEditor({ content, onChange }) {
       <Typography variant="h6" sx={{ color: '#0A66C2', fontWeight: 'bold' }}>
         💼 LinkedIn Post
       </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        <TemplateSelector
+          platform="linkedin"
+          onSelectTemplate={(template, filledContent) => {
+            onChange({ ...content, text: filledContent })
+          }}
+          currentContent={content?.text || ''}
+        />
+      </Box>
 
       <TextField
         fullWidth

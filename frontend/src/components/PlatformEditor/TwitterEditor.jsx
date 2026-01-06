@@ -10,6 +10,7 @@ import {
   Alert
 } from '@mui/material'
 import HashtagSelector from '../HashtagSelector/HashtagSelector'
+import TemplateSelector from '../TemplateEditor/TemplateSelector'
 
 function TwitterEditor({ content, onChange, platformSettings }) {
   const [postingMode, setPostingMode] = useState(content?.postingMode || 'single')
@@ -34,6 +35,16 @@ function TwitterEditor({ content, onChange, platformSettings }) {
       <Typography variant="h6" sx={{ color: '#1DA1F2', fontWeight: 'bold' }}>
         🐦 Twitter Post
       </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        <TemplateSelector
+          platform="twitter"
+          onSelectTemplate={(template, filledContent) => {
+            onChange({ ...content, text: filledContent })
+          }}
+          currentContent={content?.text || ''}
+        />
+      </Box>
 
       <FormControl fullWidth>
         <InputLabel>Posting Mode</InputLabel>

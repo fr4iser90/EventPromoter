@@ -10,6 +10,7 @@ import {
   MenuItem,
   Chip
 } from '@mui/material'
+import TemplateSelector from '../TemplateEditor/TemplateSelector'
 
 function EmailEditor({ content, onChange }) {
   const [recipients, setRecipients] = useState([])
@@ -50,6 +51,26 @@ function EmailEditor({ content, onChange }) {
       <Typography variant="h6" sx={{ color: '#EA4335', fontWeight: 'bold' }}>
         📧 Email Content
       </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        <TemplateSelector
+          platform="email"
+          onSelectTemplate={(template, filledContent) => {
+            // For email, we need to handle both subject and html
+            const emailContent = filledContent.match(/^(.+)\n\n([\s\S]*)$/)
+            if (emailContent) {
+              onChange({
+                ...content,
+                subject: emailContent[1],
+                html: emailContent[2]
+              })
+            } else {
+              onChange({ ...content, html: filledContent })
+            }
+          }}
+          currentContent={`${content?.subject || ''}\n\n${content?.html || ''}`}
+        />
+      </Box>
 
       {/* Recipients Selection */}
       <Box>

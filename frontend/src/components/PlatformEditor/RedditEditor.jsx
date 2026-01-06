@@ -5,6 +5,7 @@ import {
   Typography,
   Alert
 } from '@mui/material'
+import TemplateSelector from '../TemplateEditor/TemplateSelector'
 import HashtagSelector from '../HashtagSelector/HashtagSelector'
 
 function RedditEditor({ content, onChange }) {
@@ -18,6 +19,22 @@ function RedditEditor({ content, onChange }) {
       <Typography variant="h6" sx={{ color: '#FF4500', fontWeight: 'bold' }}>
         🟠 Reddit Post
       </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        <TemplateSelector
+          platform="reddit"
+          onSelectTemplate={(template, filledContent) => {
+            // For Reddit, handle title and body separately
+            const parts = filledContent.split('\n\n')
+            onChange({
+              ...content,
+              title: parts[0] || '',
+              body: parts.slice(1).join('\n\n') || ''
+            })
+          }}
+          currentContent={`${content?.title || ''}\n\n${content?.body || ''}`}
+        />
+      </Box>
 
       <TextField
         fullWidth

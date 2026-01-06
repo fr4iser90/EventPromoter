@@ -6,6 +6,7 @@ import {
   Alert
 } from '@mui/material'
 import HashtagSelector from '../HashtagSelector/HashtagSelector'
+import TemplateSelector from '../TemplateEditor/TemplateSelector'
 
 function FacebookEditor({ content, onChange }) {
   const textLength = (content?.text || '').length
@@ -16,6 +17,16 @@ function FacebookEditor({ content, onChange }) {
       <Typography variant="h6" sx={{ color: '#1877F2', fontWeight: 'bold' }}>
         👥 Facebook Post
       </Typography>
+
+      <Box sx={{ mb: 2 }}>
+        <TemplateSelector
+          platform="facebook"
+          onSelectTemplate={(template, filledContent) => {
+            onChange({ ...content, text: filledContent })
+          }}
+          currentContent={content?.text || ''}
+        />
+      </Box>
 
       <TextField
         fullWidth
