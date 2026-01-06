@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Container,
   Typography,
@@ -33,6 +34,7 @@ const PLATFORMS = [
 ]
 
 function TemplatePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [selectedPlatform, setSelectedPlatform] = useState('twitter')
   const { darkMode, setDarkMode } = useStore()
@@ -79,7 +81,7 @@ function TemplatePage() {
             onClick={() => navigate('/')}
             sx={{ mr: 1 }}
           >
-            ← Back to Main
+            ← {t('navigation.home')}
           </Button>
           <IconButton
             onClick={toggleDarkMode}

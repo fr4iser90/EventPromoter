@@ -1,247 +1,125 @@
-## 📋 **IMPLEMENTIERUNGSPLAN: Template-Management-System**
+## 🏢 **Wie Profis Internationalisierung (i18n) angehen:**
 
-## 🏗️ **ARCHITEKTUR-ÜBERSICHT:**
-
-```
-Frontend (React)                    Backend (Node.js/Express)
-├── TemplateEditor/               ├── controllers/
-│   ├── TemplateList.jsx          │   └── templateController.ts
-│   ├── TemplateEditor.jsx        ├── services/
-│   └── TemplateSelector.jsx      │   └── templateService.ts
-├── API Integration               ├── routes/
-└── Store Integration             │   └── templates.ts
-                                  ├── types/
-                                  │   └── templateTypes.ts
-                                  └── events/templates/
-                                         ├── email.json
-                                         ├── twitter.json
-                                         └── ...
-```
-
----
-
-## 🔧 **BACKEND: Was erstellen?**
-
-### **1. Neue Dateien:**
-
-**`backend/src/types/templateTypes.ts`**
+### **1. Daten-Separierung (Data Layer)**
 ```typescript
-// Template Types (erweitern bestehende)
-export interface Template {
-  id: string
-  name: string  
-  description?: string
-  platform: string
-  category: string
-  template: Record<string, any> // Platform-specific structure
-  variables: string[]
-  isDefault: boolean // true for hardcoded, false for custom
-  createdAt: string
-  updatedAt: string
-  createdBy?: string
+interface ParsedEventData {
+  // Standardisiert gespeichert (für APIs, Templates, DB)
+  dateISO: string        // "2026-05-16" - immer ISO
+  timeISO: string        // "22:00" - immer 24h
+  
+  // Original-Formate für Fallback
+  originalDate?: string  // "16.05.2026" 
+  originalTime?: string  // "22:00"
+  
+  // Metadaten
+  detectedLocale?: string // "de-DE", "en-US", etc.
 }
 ```
 
-**`backend/src/controllers/templateController.ts`**
-```typescript
-// CRUD Controller für Templates
-export class TemplateController {
-  // GET /api/templates/:platform
-  static async getTemplates(req, res)
+### **2. UI-Layer mit i18n Framework**
+```javascript
+// Mit react-i18next oder ähnlich
+import { useTranslation } from 'react-i18next'
+
+function EventPreview({ parsedData }) {
+  const { t, i18n } = useTranslation()
   
-  // GET /api/templates/:platform/:id
-  static async getTemplate(req, res)
+  const formatDate = (isoDate) => {
+    return new Intl.DateTimeFormat(i18n.language, {
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit'
+    }).format(new Date(isoDate))
+  }
   
-  // POST /api/templates/:platform
-  static async createTemplate(req, res)
-  
-  // PUT /api/templates/:platform/:id  
-  static async updateTemplate(req, res)
-  
-  // DELETE /api/templates/:platform/:id
-  static async deleteTemplate(req, res)
-  
-  // GET /api/templates/categories
-  static async getCategories(req, res)
+  return (
+    <div>
+      📅 {t('date')}: {formatDate(parsedData.dateISO)}
+    </div>
+  )
 }
 ```
 
-**`backend/src/services/templateService.ts`**
-```typescript
-// Template Storage & Management Service
-export class TemplateService {
-  // JSON-Dateien verwalten
-  static async loadTemplates(platform: string): Promise<Template[]>
-  static async saveTemplate(platform: string, template: Template): Promise<boolean>
-  static async deleteTemplate(platform: string, id: string): Promise<boolean>
-  
-  // Default Templates mergen
-  static mergeWithDefaults(platform: string): Template[]
-  
-  // Validation
-  static validateTemplate(template: Template): ValidationResult
-}
-```
-
-**`backend/src/routes/templates.ts`**
-```typescript
-// Template API Routes
-router.get('/:platform', TemplateController.getTemplates)
-router.get('/:platform/:id', TemplateController.getTemplate) 
-router.post('/:platform', TemplateController.createTemplate)
-router.put('/:platform/:id', TemplateController.updateTemplate)
-router.delete('/:platform/:id', TemplateController.deleteTemplate)
-router.get('/categories', TemplateController.getCategories)
-```
-
-### **2. Storage-Struktur:**
-
-**`/backend/events/templates/`**
-```
-├── email.json     // Custom Email Templates
-├── twitter.json   // Custom Twitter Templates
-├── facebook.json  // Custom Facebook Templates
-├── instagram.json // Custom Instagram Templates
-├── linkedin.json  // Custom LinkedIn Templates
-└── reddit.json    // Custom Reddit Templates
-```
-
-**Beispiel `email.json`:**
+### **3. User-Einstellungen**
 ```json
 {
-  "templates": [
-    {
-      "id": "custom-welcome",
-      "name": "Custom Welcome Email",
-      "platform": "email", 
-      "category": "welcome",
-      "template": {
-        "subject": "Welcome {userName}!",
-        "html": "<h1>Welcome!</h1><p>Hi {userName}...</p>"
-      },
-      "variables": ["userName", "companyName"],
-      "isDefault": false,
-      "createdAt": "2025-01-06T10:00:00Z",
-      "updatedAt": "2025-01-06T10:00:00Z"
-    }
-  ]
+  "userPreferences": {
+    "locale": "de-DE",
+    "dateFormat": "DD.MM.YYYY", // oder "MM/DD/YYYY"
+    "timeFormat": "24h", // oder "12h"
+    "timezone": "Europe/Berlin"
+  }
 }
 ```
 
-### **3. Bestehende Dateien erweitern:**
-
-**`backend/src/routes/index.ts`** → Template-Routen einbinden
-**`backend/src/platforms/*/templates.ts`** → `isDefault: true` hinzufügen
-
----
-
-## 🎨 **FRONTEND: Was erstellen?**
-
-### **1. Neue Komponenten:**
-
-**`frontend/src/components/TemplateEditor/`**
+### **4. Template-System**
+Templates verwenden **immer** standardisierte Platzhalter:
 ```
-├── TemplateList.jsx          // Template-Übersicht + CRUD
-├── TemplateEditor.jsx        // Template erstellen/bearbeiten
-├── TemplateSelector.jsx      // Template auswählen (für Content-Editor)
-├── TemplatePreview.jsx       // Live-Preview beim Editieren
-└── TemplateCategories.jsx    // Kategorie-Filter
+{{date}} → "2026-05-16" (ISO)
+{{time}} → "22:00" (24h)
 ```
 
-**`frontend/src/hooks/useTemplates.js`**
+UI zeigt lokalisiert:
 ```javascript
-// Template-Management Hook
-export const useTemplates = (platform) => {
-  // CRUD-Operationen
-  const { templates, loading, error } = useTemplates(platform)
-  const createTemplate = useCreateTemplate(platform)
-  const updateTemplate = useUpdateTemplate(platform) 
-  const deleteTemplate = useDeleteTemplate(platform)
-  
-  return { templates, loading, error, createTemplate, updateTemplate, deleteTemplate }
+// Template-Rendering mit Lokalisierung
+renderTemplate(template, data, locale) {
+  return template
+    .replace('{{date}}', formatDate(data.dateISO, locale))
+    .replace('{{time}}', formatTime(data.timeISO, locale))
 }
 ```
 
-### **2. Bestehende Komponenten erweitern:**
+### **5. Professionelle Architektur**
+```
+📁 src/
+├── i18n/
+│   ├── locales/
+│   │   ├── de.json
+│   │   ├── en.json  
+│   │   └── es.json
+│   └── index.ts
+├── utils/
+│   ├── dateUtils.ts    // Locale-aware Formatierung
+│   └── numberUtils.ts  // Währungen, etc.
+└── components/
+    └── DateDisplay.tsx // Intelligente Datumskomponente
+```
 
-**`frontend/src/components/PlatformSelector/PlatformSelector.jsx`**
-- Template-Count anzeigen
-- Link zu Template-Editor
+### **6. Parser-Intelligenz**
+```typescript
+class SmartParser {
+  detectLocale(text: string): string {
+    // Erkennt automatisch Sprache/Formate
+    if (text.includes('Januar')) return 'de-DE'
+    if (text.includes('January')) return 'en-US' 
+    return 'en-US' // fallback
+  }
+  
+  parseDate(dateStr: string, detectedLocale: string) {
+    // Verwendet Intl.DateTimeFormat für Parsing
+    return {
+      iso: parseToISO(dateStr, detectedLocale),
+      original: dateStr,
+      locale: detectedLocale
+    }
+  }
+}
+```
 
-**`frontend/src/components/GenericPlatformEditor/GenericPlatformEditor.jsx`**  
-- Template-Selector integrieren
-- Template-Applier für Content
+## 🎯 **Langfristige Empfehlung:**
 
-**`frontend/src/store.js`**
-- Template-State hinzufügen
-- Template-API-Actions integrieren
+1. **i18n Framework** (react-i18next) einführen
+2. **Locale-Detection** im Parser integrieren  
+3. **User-Einstellungen** für Datumsformate
+4. **Standardisierte Speicherung** (ISO) + lokalisierte Anzeige
+5. **Template-System** weiterhin ISO-basiert halten
 
-### **3. UI-Integration:**
+**Dann kannst du automatisch:**
+- Deutsche Promoter sehen deutsche Formate
+- US-Promoter sehen US-Formate  
+- Templates funktionieren immer (ISO-Input)
+- Vollständige Mehrsprachigkeit
 
-**Template-Editor Modal/Dialog:**
-- Platform auswählen
-- Template-Name eingeben  
-- Template-Content bearbeiten (WYSIWYG/HTML-Editor)
-- Variables definieren
-- Category zuweisen
-- Live-Preview
-- Save/Cancel
+**Das wäre die professionelle, skalierbare Lösung!** 🚀
 
-**Template-Selector in Content-Editor:**
-- Dropdown/Liste mit Templates
-- Filter nach Category  
-- Apply-Button zum Übernehmen
-
----
-
-## 🔄 **INTEGRATIONSPUNKTE:**
-
-### **Backend:**
-1. **Platform-Controller erweitern** → Templates in Response einbeziehen
-2. **Template-Service** → Default + Custom Templates mergen
-3. **Validation** → Template-Struktur prüfen
-
-### **Frontend:**  
-1. **Store erweitern** → Template-State + Actions
-2. **Content-Editor** → Template-Applier integrieren
-3. **Platform-Selector** → Template-Management-Links
-
----
-
-## 📊 **IMPLEMENTIERUNGSREIHENFOLGE:**
-
-### **Phase 1: Backend-Grundlagen** 
-1. `templateTypes.ts` erstellen
-2. `templateService.ts` erstellen (JSON-Storage)
-3. `templateController.ts` erstellen (CRUD)
-4. `templates.ts` Routes erstellen
-5. In Haupt-Router einbinden
-
-### **Phase 2: Frontend-Grundlagen**
-1. `useTemplates` Hook erstellen
-2. `TemplateList` Komponente erstellen
-3. Store erweitern mit Template-State
-
-### **Phase 3: Template-Editor**
-1. `TemplateEditor` Komponente erstellen
-2. `TemplatePreview` integrieren
-3. CRUD-UI implementieren
-
-### **Phase 4: Integration**
-1. Content-Editor erweitern
-2. Platform-Selector erweitern  
-3. Testing & Validation
-
----
-
-## 🎯 **ERFOLGSKRITERIEN:**
-
-✅ **Backend:** Templates können über API verwaltet werden  
-✅ **Frontend:** Templates können erstellt/bearbeitet/gelöscht werden  
-✅ **Storage:** Custom Templates werden in JSON-Dateien gespeichert  
-✅ **Integration:** Templates können in Content-Editor verwendet werden  
-✅ **Fallback:** Default Templates bleiben verfügbar  
-
-**Plan bereit zum Implementieren!** 🚀
-
-(Warte auf dein "JA, implementieren" oder weitere Fragen) 🤔
+*(Du bist im ASK MODE - für die Implementierung musst du zu AGENT MODE wechseln)*

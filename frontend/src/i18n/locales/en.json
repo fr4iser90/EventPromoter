@@ -1,0 +1,68 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "navigation": {
+    "home": "Home",
+    "templates": "Templates"
+  },
+  "fileUpload": {
+    "title": "Upload Files",
+    "dropzone": "Drop files here or click to select",
+    "uploading": "Uploading...",
+    "success": "Files uploaded successfully",
+    "filesUploaded": "{{count}} file uploaded"
+  },
+  "preview": {
+    "title": "Preview",
+    "noFiles": "No files uploaded yet. Upload files to see the preview.",
+    "parsedData": "Parsed Event Data",
+    "images": "Images",
+    "sourceFiles": "Source Files"
+  },
+  "event": {
+    "date": "Date",
+    "time": "Time",
+    "venue": "Venue",
+    "city": "City",
+    "description": "Description",
+    "organizer": "Organizer",
+    "website": "Website",
+    "lineup": "Lineup",
+    "genre": "Genre"
+  },
+  "template": {
+    "placeholders": "Template Placeholders Available",
+    "create": "Create Template",
+    "edit": "Edit Template",
+    "delete": "Delete Template",
+    "name": "Name",
+    "description": "Description",
+    "platform": "Platform"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "dateFormat": "Date Format",
+    "timeFormat": "Time Format",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "dateFormats": {
+    "german": "DD.MM.YYYY",
+    "us": "MM/DD/YYYY",
+    "iso": "YYYY-MM-DD"
+  },
+  "timeFormats": {
+    "24h": "24-Hour",
+    "12h": "12-Hour"
+  }
+}

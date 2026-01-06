@@ -1,0 +1,68 @@
+{
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg"
+  },
+  "navigation": {
+    "home": "Start",
+    "templates": "Vorlagen"
+  },
+  "fileUpload": {
+    "title": "Dateien hochladen",
+    "dropzone": "Dateien hier ablegen oder klicken zum Auswählen",
+    "uploading": "Hochladen...",
+    "success": "Dateien erfolgreich hochgeladen",
+    "filesUploaded": "{{count}} Datei hochgeladen"
+  },
+  "preview": {
+    "title": "Vorschau",
+    "noFiles": "Noch keine Dateien hochgeladen. Lade Dateien hoch, um die Vorschau zu sehen.",
+    "parsedData": "Geparste Event-Daten",
+    "images": "Bilder",
+    "sourceFiles": "Quelldateien"
+  },
+  "event": {
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "venue": "Veranstaltungsort",
+    "city": "Stadt",
+    "description": "Beschreibung",
+    "organizer": "Veranstalter",
+    "website": "Website",
+    "lineup": "Lineup",
+    "genre": "Genre"
+  },
+  "template": {
+    "placeholders": "Vorlagen-Platzhalter verfügbar",
+    "create": "Vorlage erstellen",
+    "edit": "Vorlage bearbeiten",
+    "delete": "Vorlage löschen",
+    "name": "Name",
+    "description": "Beschreibung",
+    "platform": "Plattform"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "dateFormat": "Datumsformat",
+    "timeFormat": "Zeitformat",
+    "theme": "Design",
+    "light": "Hell",
+    "dark": "Dunkel"
+  },
+  "dateFormats": {
+    "german": "DD.MM.YYYY",
+    "us": "MM/DD/YYYY",
+    "iso": "YYYY-MM-DD"
+  },
+  "timeFormats": {
+    "24h": "24-Stunden",
+    "12h": "12-Stunden"
+  }
+}

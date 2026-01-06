@@ -124,9 +124,12 @@ export class ContentExtractionService {
         if (frontmatterMatch) {
           const yamlData = yaml.load(frontmatterMatch[1]) as any
 
+          const dateResult = this.normalizeStructuredDate(yamlData.date)
+
           return {
             title: yamlData.title,
-            date: this.normalizeStructuredDate(yamlData.date),
+            date: dateResult?.normalized,
+            originalDate: dateResult?.original,
             time: yamlData.time,
             venue: yamlData.venue,
             city: yamlData.city,
@@ -178,7 +181,9 @@ export class ContentExtractionService {
               parsed.title = value
               break
             case 'DATE':
-              parsed.date = this.normalizeStructuredDate(value)
+              const dateResult = this.normalizeStructuredDate(value)
+              parsed.date = dateResult?.normalized
+              parsed.originalDate = dateResult?.original
               break
             case 'TIME':
               parsed.time = value
@@ -248,7 +253,9 @@ export class ContentExtractionService {
       if (!parsed.date) {
         const dateMatch = line.match(/(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/)
         if (dateMatch) {
-          parsed.date = this.normalizeDate(dateMatch[1])
+          const dateResult = this.normalizeDate(dateMatch[1])
+          parsed.date = dateResult.normalized
+          parsed.originalDate = dateResult.original
         }
       }
 
@@ -348,16 +355,39 @@ export class ContentExtractionService {
     return null
   }
 
+  // Detect locale from text content
+  private static detectLocale(text: string): string {
+    const lowerText = text.toLowerCase()
+
+    // German indicators
+    if (lowerText.includes('januar') || lowerText.includes('februar') || lowerText.includes('märz') ||
+        lowerText.includes('mai') || lowerText.includes('juni') || lowerText.includes('juli') ||
+        lowerText.includes('oktober') || lowerText.includes('dezember') ||
+        /\d{1,2}\.\d{1,2}\.\d{2,4}/.test(text)) {
+      return 'de-DE'
+    }
+
+    // English indicators
+    if (lowerText.includes('january') || lowerText.includes('february') || lowerText.includes('march') ||
+        lowerText.includes('october') || lowerText.includes('december') ||
+        /\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text)) {
+      return 'en-US'
+    }
+
+    // Default to German for European context
+    return 'de-DE'
+  }
+
   // Normalize date to YYYY-MM-DD format (supports German and ISO formats)
-  private static normalizeDate(dateStr: string): string {
-    if (!dateStr) return dateStr
+  private static normalizeDate(dateStr: string): { normalized: string, original: string } {
+    if (!dateStr) return { normalized: dateStr, original: dateStr }
 
     // Clean the string
     const cleanDate = dateStr.trim()
 
     // If already ISO format (YYYY-MM-DD), return as-is
     if (/^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) {
-      return cleanDate
+      return { normalized: cleanDate, original: dateStr }
     }
 
     // Handle German formats: DD.MM.YYYY, DD.MM.YY, DD/MM/YYYY, DD-MM-YYYY
@@ -387,7 +417,8 @@ export class ContentExtractionService {
       if (dayNum >= 1 && dayNum <= 31 &&
           monthNum >= 1 && monthNum <= 12 &&
           yearNum >= 1900 && yearNum <= 2100) {
-        return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+        const normalized = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+        return { normalized, original: dateStr }
       }
     }
 
@@ -399,11 +430,11 @@ export class ContentExtractionService {
 
     // If no pattern matches, return original string
     console.warn(`Could not parse date: ${dateStr}`)
-    return dateStr
+    return { normalized: dateStr, original: dateStr }
   }
 
   // Normalize date from structured data (YAML/TXT)
-  private static normalizeStructuredDate(dateValue: any): string | undefined {
+  private static normalizeStructuredDate(dateValue: any): { normalized: string, original: string } | undefined {
     if (!dateValue) return undefined
 
     if (typeof dateValue === 'string') {
@@ -411,7 +442,8 @@ export class ContentExtractionService {
     }
 
     // Handle Date objects or other formats
-    return dateValue.toString()
+    const str = dateValue.toString()
+    return { normalized: str, original: str }
   }
 
   // Check for duplicates in existing events
@@ -633,6 +665,9 @@ export class ContentExtractionService {
         // Use OCR-based parsing for PDFs/images
         parsedData = this.parseEventData(text, confidence)
       }
+
+      // Add internationalization support
+      parsedData.detectedLocale = this.detectLocale(text)
 
       // Check for duplicates
       const duplicateCheck = await this.checkForDuplicates(parsedData.hash, file.id.split('-')[1])

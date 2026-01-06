@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import './i18n' // Initialize i18n
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
@@ -20,6 +21,9 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
 import IconButton from '@mui/material/IconButton'
 import useMediaQuery from '@mui/material/useMediaQuery'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import FormControl from '@mui/material/FormControl'
 import EventHistory from './components/EventHistory/EventHistory'
 import FileUpload from './components/FileUpload/FileUpload'
 import ContentEditor from './components/ContentEditor/ContentEditor'
@@ -37,6 +41,7 @@ import DuplicateDialog from './components/DuplicateDialog/DuplicateDialog'
 import TemplatePage from './pages/TemplatePage'
 import useStore, { WORKFLOW_STATES } from './store'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const createAppTheme = (darkMode) => createTheme({
   palette: {
@@ -65,6 +70,7 @@ const staticTheme = createTheme({
 
 // Main Application Page Component
 function MainPage() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const {
     uploadedFileRefs,
@@ -200,8 +206,20 @@ function MainPage() {
             onClick={() => navigate('/templates')}
             sx={{ mr: 1 }}
           >
-            📝 Templates
+            📝 {t('navigation.templates')}
           </Button>
+          <FormControl size="small" sx={{ mr: 1, minWidth: 80 }}>
+            <Select
+              value={i18n.language}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              displayEmpty
+              sx={{ color: 'text.primary', '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
+            >
+              <MenuItem value="en">🇺🇸 EN</MenuItem>
+              <MenuItem value="de">🇩🇪 DE</MenuItem>
+              <MenuItem value="es">🇪🇸 ES</MenuItem>
+            </Select>
+          </FormControl>
           <IconButton
             onClick={() => setSettingsOpen(true)}
             color="inherit"

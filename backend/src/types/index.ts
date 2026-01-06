@@ -25,8 +25,8 @@ export interface PlatformContent {
 
 export interface ParsedEventData {
   title?: string
-  date?: string
-  time?: string
+  date?: string          // ISO format (YYYY-MM-DD) for standardized storage
+  time?: string          // 24h format (HH:MM) for standardized storage
   venue?: string
   city?: string
   description?: string
@@ -36,6 +36,13 @@ export interface ParsedEventData {
   lineup?: string[] // Array of artists/DJs/bands
   genre?: string // Music genre or event type
   platformContent?: Record<string, any> // Platform-specific content
+
+  // Internationalization support
+  originalDate?: string  // Original date format from source
+  originalTime?: string  // Original time format from source
+  detectedLocale?: string // Detected locale (e.g., "de-DE", "en-US")
+
+  // Metadata
   rawText: string
   confidence: number
   parsedAt: string

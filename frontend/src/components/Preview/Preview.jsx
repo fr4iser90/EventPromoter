@@ -17,10 +17,14 @@ import {
 import ImageIcon from '@mui/icons-material/Image'
 import DescriptionIcon from '@mui/icons-material/Description'
 import CloseIcon from '@mui/icons-material/Close'
+import { useTranslation } from 'react-i18next'
 import useStore from '../../store'
+import DateDisplay from '../DateDisplay'
 import axios from 'axios'
 
+
 function Preview() {
+  const { t } = useTranslation()
   const { uploadedFileRefs, parsedData, currentEvent } = useStore()
   const [selectedImage, setSelectedImage] = useState(null)
   const [selectedTextFile, setSelectedTextFile] = useState(null)
@@ -94,12 +98,12 @@ function Preview() {
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        👁️ Preview
+        👁️ {t('preview.title')}
       </Typography>
 
       {uploadedFileRefs.length === 0 ? (
         <Typography variant="body1" color="text.secondary">
-          No files uploaded yet. Upload some files to see the preview.
+          {t('preview.noFiles')}
         </Typography>
       ) : (
         <Box>
@@ -107,7 +111,7 @@ function Preview() {
           {imageFiles.length > 0 && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                📸 Images ({imageFiles.length})
+                📸 {t('preview.images')} ({imageFiles.length})
               </Typography>
               <Grid container spacing={2}>
                 {imageFiles.map((fileData) => (
@@ -139,7 +143,7 @@ function Preview() {
           {parsedData && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                🎯 Parsed Event Data
+                🎯 {t('preview.parsedData')}
               </Typography>
               <Card>
                 <CardContent>
@@ -151,18 +155,16 @@ function Preview() {
                     {parsedData.date && (
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="body2" color="text.secondary">
-                          📅 Date
+                          📅 {t('event.date')}
                         </Typography>
-                        <Typography variant="body1">
-                          {parsedData.date}
-                        </Typography>
+                        <DateDisplay parsedData={parsedData} showTime={false} />
                       </Grid>
                     )}
 
                     {parsedData.time && (
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="body2" color="text.secondary">
-                          🕒 Time
+                          🕒 {t('event.time')}
                         </Typography>
                         <Typography variant="body1">
                           {parsedData.time}
@@ -173,7 +175,7 @@ function Preview() {
                     {(parsedData.venue || parsedData.city) && (
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="body2" color="text.secondary">
-                          📍 Venue
+                          📍 {t('event.venue')}
                         </Typography>
                         <Typography variant="body1">
                           {parsedData.venue || 'TBA'}
@@ -185,7 +187,7 @@ function Preview() {
                     {parsedData.genre && (
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="body2" color="text.secondary">
-                          🎵 Genre
+                          🎵 {t('event.genre')}
                         </Typography>
                         <Typography variant="body1">
                           {parsedData.genre}
@@ -229,7 +231,7 @@ function Preview() {
                     {parsedData.lineup && parsedData.lineup.length > 0 && (
                       <Grid item xs={12}>
                         <Typography variant="body2" color="text.secondary">
-                          🎤 Lineup
+                          🎤 {t('event.lineup')}
                         </Typography>
                         <Typography variant="body1">
                           {Array.isArray(parsedData.lineup) ? parsedData.lineup.join(', ') : parsedData.lineup}
@@ -240,7 +242,7 @@ function Preview() {
                     {parsedData.description && (
                       <Grid item xs={12}>
                         <Typography variant="body2" color="text.secondary">
-                          📝 Description
+                          📝 {t('event.description')}
                         </Typography>
                         <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                           {parsedData.description}
@@ -249,9 +251,9 @@ function Preview() {
                     )}
                   </Grid>
 
-                  <Box sx={{ mt: 2, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Box sx={{ mt: 2, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
                     <Typography variant="body2" color="text.secondary">
-                      💡 Template Placeholders Available:
+                      💡 {t('template.placeholders')}:
                     </Typography>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', mt: 0.5 }}>
                       {getAvailablePlaceholders().length > 0
@@ -269,7 +271,7 @@ function Preview() {
           {textFiles.length > 0 && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                📄 Source Files ({textFiles.length})
+                📄 {t('preview.sourceFiles')} ({textFiles.length})
               </Typography>
               <Grid container spacing={1}>
                 {textFiles.map((fileData) => (
@@ -388,7 +390,7 @@ function Preview() {
                   sx={{
                     maxHeight: '75vh',
                     overflow: 'auto',
-                    bgcolor: 'grey.50',
+                    bgcolor: 'background.paper',
                     p: 2,
                     borderRadius: 1,
                     fontFamily: 'monospace',

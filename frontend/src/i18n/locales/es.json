@@ -1,0 +1,68 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "templates": "Plantillas"
+  },
+  "fileUpload": {
+    "title": "Subir Archivos",
+    "dropzone": "Arrastra archivos aquí o haz clic para seleccionar",
+    "uploading": "Subiendo...",
+    "success": "Archivos subidos exitosamente",
+    "filesUploaded": "{{count}} archivo subido"
+  },
+  "preview": {
+    "title": "Vista Previa",
+    "noFiles": "Aún no se han subido archivos. Sube archivos para ver la vista previa.",
+    "parsedData": "Datos del Evento Analizados",
+    "images": "Imágenes",
+    "sourceFiles": "Archivos Fuente"
+  },
+  "event": {
+    "date": "Fecha",
+    "time": "Hora",
+    "venue": "Lugar",
+    "city": "Ciudad",
+    "description": "Descripción",
+    "organizer": "Organizador",
+    "website": "Sitio Web",
+    "lineup": "Lineup",
+    "genre": "Género"
+  },
+  "template": {
+    "placeholders": "Marcadores de Posición de Plantilla Disponibles",
+    "create": "Crear Plantilla",
+    "edit": "Editar Plantilla",
+    "delete": "Eliminar Plantilla",
+    "name": "Nombre",
+    "description": "Descripción",
+    "platform": "Plataforma"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "dateFormat": "Formato de Fecha",
+    "timeFormat": "Formato de Hora",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "dateFormats": {
+    "german": "DD.MM.YYYY",
+    "us": "MM/DD/YYYY",
+    "iso": "YYYY-MM-DD"
+  },
+  "timeFormats": {
+    "24h": "24 Horas",
+    "12h": "12 Horas"
+  }
+}
