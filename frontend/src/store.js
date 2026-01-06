@@ -229,40 +229,57 @@ const useStore = create((set, get) => ({
     try {
       const response = await axios.get('http://localhost:4000/api/event')
       const eventWorkspaceData = response.data
-      const event = eventWorkspaceData.currentEvent || {}
+      const event = eventWorkspaceData.currentEvent
 
-      // Validate uploaded file references
-      const validatedFileRefs = []
-      if (event.uploadedFileRefs && Array.isArray(event.uploadedFileRefs)) {
-        for (const fileRef of event.uploadedFileRefs) {
-          const fileExists = await get().checkFileExists(fileRef.url)
-          if (fileExists) {
-            validatedFileRefs.push(fileRef)
-          } else {
-            console.warn(`File not found on server, removing from refs: ${fileRef.name}`)
+      if (event) {
+        // Validate uploaded file references
+        const validatedFileRefs = []
+        if (event.uploadedFileRefs && Array.isArray(event.uploadedFileRefs)) {
+          for (const fileRef of event.uploadedFileRefs) {
+            const fileExists = await get().checkFileExists(fileRef.url)
+            if (fileExists) {
+              validatedFileRefs.push(fileRef)
+            } else {
+              console.warn(`File not found on server, removing from refs: ${fileRef.name}`)
+            }
           }
         }
+
+        set({
+          currentEvent: event,
+          uploadedFileRefs: validatedFileRefs, // Only load existing files
+          selectedHashtags: event.selectedHashtags || [],
+          selectedPlatforms: event.selectedPlatforms || [],
+          emailRecipients: event.platformContent?.email?.recipients || [],
+          parsedData: null, // Will be loaded separately
+          parsingStatus: 'idle'
+        })
+
+        // Update workflow state after loading
+        get().updateWorkflowState()
+
+        // Load parsed data and platform content separately
+        get().loadEventParsedData(event.id)
+        get().loadEventPlatformContent(event.id)
+
+        console.log(`Event workspace loaded from backend (${validatedFileRefs.length} valid files)`)
+        return event
+      } else {
+        // No current event - reset to empty state
+        set({
+          currentEvent: null,
+          uploadedFileRefs: [],
+          selectedHashtags: [],
+          selectedPlatforms: [],
+          emailRecipients: [],
+          parsedData: null,
+          parsingStatus: 'idle'
+        })
+
+        get().updateWorkflowState()
+        console.log('No current event - workspace initialized empty')
+        return null
       }
-
-      set({
-        currentEvent: event,
-        uploadedFileRefs: validatedFileRefs, // Only load existing files
-        selectedHashtags: event.selectedHashtags || [],
-        selectedPlatforms: event.selectedPlatforms || [],
-        emailRecipients: event.platformContent?.email?.recipients || [],
-        parsedData: null, // Will be loaded separately
-        parsingStatus: 'idle'
-      })
-
-      // Update workflow state after loading
-      get().updateWorkflowState()
-
-      // Load parsed data and platform content separately
-      get().loadEventParsedData(event.id)
-      get().loadEventPlatformContent(event.id)
-
-      console.log(`Event workspace loaded from backend (${validatedFileRefs.length} valid files)`)
-      return event
     } catch (error) {
       console.warn('Failed to load workspace:', error)
       return null
@@ -291,9 +308,25 @@ const useStore = create((set, get) => ({
     const newWorkflowState = determineWorkflowState(state)
     if (state.workflowState !== newWorkflowState) {
       set({ workflowState: newWorkflowState })
+
+      // Auto-collapse accordions when workflow progresses
+      if (newWorkflowState !== WORKFLOW_STATES.INITIAL) {
+        set({ fileUploadExpanded: false, eventHistoryExpanded: false })
+      } else {
+        set({ fileUploadExpanded: true, eventHistoryExpanded: true })
+      }
+
       console.log(`Workflow state changed to: ${newWorkflowState}`)
     }
   },
+
+  // Manually control accordion expansion
+  setFileUploadExpanded: (expanded) => set({ fileUploadExpanded: expanded }),
+  setEventHistoryExpanded: (expanded) => set({ eventHistoryExpanded: expanded }),
+
+  // UI state for accordions
+  fileUploadExpanded: true,
+  eventHistoryExpanded: true,
 
   // Event state
   currentEvent: null,

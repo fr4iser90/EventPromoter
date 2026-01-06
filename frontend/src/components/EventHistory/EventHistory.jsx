@@ -15,8 +15,7 @@ import EventHistoryCard from '../EventHistoryCard/EventHistoryCard'
 import useStore, { WORKFLOW_STATES } from '../../store'
 
 function EventHistory() {
-  const { workflowState } = useStore()
-  const [isExpanded, setIsExpanded] = useState(workflowState === WORKFLOW_STATES.INITIAL)
+  const { workflowState, eventHistoryExpanded, setEventHistoryExpanded } = useStore()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -49,7 +48,7 @@ function EventHistory() {
   // Auto-expand when in initial state
   useEffect(() => {
     if (workflowState === WORKFLOW_STATES.INITIAL) {
-      setIsExpanded(true)
+      setEventHistoryExpanded(true)
     }
   }, [workflowState])
 
@@ -96,9 +95,9 @@ function EventHistory() {
           alignItems: 'center',
           justifyContent: 'space-between',
           cursor: 'pointer',
-          mb: isExpanded ? 2 : 0
+          mb: eventHistoryExpanded ? 2 : 0
         }}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => setEventHistoryExpanded(!eventHistoryExpanded)}
       >
         <Typography variant="h6">
           📂 Event History
@@ -111,13 +110,13 @@ function EventHistory() {
             </Typography>
           )}
           <Button size="small">
-            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            {eventHistoryExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </Button>
         </Box>
       </Box>
 
-      <Collapse in={isExpanded}>
-        <Box sx={{ pt: isExpanded ? 1 : 0 }}>
+      <Collapse in={eventHistoryExpanded}>
+        <Box sx={{ pt: eventHistoryExpanded ? 1 : 0 }}>
           {loading && (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
               <CircularProgress size={24} />

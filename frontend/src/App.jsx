@@ -330,6 +330,10 @@ function MainPage() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
+              <Preview files={safeUploadedFileRefs} />
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
               <PlatformSelector disabled={!canSelectPlatforms} />
             </Box>
 
@@ -340,10 +344,6 @@ function MainPage() {
                 onPlatformContentChange={setPlatformContent}
                 disabled={!canEditContent}
               />
-            </Box>
-
-            <Box sx={{ mb: 4 }}>
-              <Preview files={safeUploadedFileRefs} />
             </Box>
 
             <Box sx={{ mb: 4 }}>

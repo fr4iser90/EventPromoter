@@ -36,9 +36,8 @@ const ACCEPTED_TYPES = {
 }
 
 function FileUpload() {
-  const { uploadedFileRefs, uploadFiles, removeUploadedFile, error, setError, isProcessing, workflowState } = useStore()
+  const { uploadedFileRefs, uploadFiles, removeUploadedFile, error, setError, isProcessing, workflowState, fileUploadExpanded, setFileUploadExpanded } = useStore()
   const folderInputRef = useRef(null)
-  const [isExpanded, setIsExpanded] = useState(workflowState === WORKFLOW_STATES.INITIAL)
 
   const onDrop = useCallback(async (acceptedFiles, rejectedFiles) => {
     setError('')
@@ -77,7 +76,7 @@ function FileUpload() {
   // Auto-expand when in initial state
   useEffect(() => {
     if (workflowState === WORKFLOW_STATES.INITIAL) {
-      setIsExpanded(true)
+      setFileUploadExpanded(true)
     }
   }, [workflowState])
 
@@ -154,28 +153,28 @@ function FileUpload() {
           alignItems: 'center',
           justifyContent: 'space-between',
           cursor: 'pointer',
-          mb: isExpanded ? 2 : 0
+          mb: fileUploadExpanded ? 2 : 0
         }}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => setFileUploadExpanded(!fileUploadExpanded)}
       >
         <Typography variant="h6">
           📁 File Upload
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {!isExpanded && uploadedFileRefs.length > 0 && (
+          {!fileUploadExpanded && uploadedFileRefs.length > 0 && (
             <Typography variant="body2" color="text.secondary">
               {uploadedFileRefs.length} file{uploadedFileRefs.length !== 1 ? 's' : ''} uploaded
             </Typography>
           )}
           <IconButton size="small">
-            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            {fileUploadExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
         </Box>
       </Box>
 
-      <Collapse in={isExpanded}>
-        <Box sx={{ pt: isExpanded ? 1 : 0 }}>
+      <Collapse in={fileUploadExpanded}>
+        <Box sx={{ pt: fileUploadExpanded ? 1 : 0 }}>
 
       <Box
         {...getRootProps()}

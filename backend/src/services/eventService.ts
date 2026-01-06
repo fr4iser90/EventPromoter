@@ -88,16 +88,8 @@ export class EventService {
     const currentEventId = await this.getCurrentEventId()
 
     if (!currentEventId) {
-      // No current event, return default
-      const defaultEvent: Event = {
-        id: `event-${Date.now()}`,
-        name: 'New Event',
-        created: new Date().toISOString(),
-        uploadedFileRefs: [],
-        selectedHashtags: [],
-        selectedPlatforms: []
-      }
-      return { currentEvent: defaultEvent }
+      // No current event, return empty workspace (don't create a new event)
+      return { currentEvent: null }
     }
 
     // Load event data from event directory
