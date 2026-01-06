@@ -47,8 +47,8 @@ function Preview() {
       try {
         const response = await fetch(`http://localhost:4000/api/files/content/${currentEvent?.id}/${fileData.filename}`)
         if (response.ok) {
-          const content = await response.text()
-          setTextContent(content)
+          const data = await response.json()
+          setTextContent(data.content || 'No content available')
         } else {
           setTextContent('Failed to load file content')
         }
