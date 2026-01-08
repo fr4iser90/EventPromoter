@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   TextField,
@@ -9,13 +10,14 @@ import HashtagSelector from '../HashtagSelector/HashtagSelector'
 import TemplateSelector from '../TemplateEditor/TemplateSelector'
 
 function InstagramEditor({ content, onChange }) {
+  const { t } = useTranslation()
   const textLength = (content?.caption || '').length
   const maxLength = 2200
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Typography variant="h6" sx={{ color: '#E4405F', fontWeight: 'bold' }}>
-        📸 Instagram Post
+        📸 {t('platforms.instagram.title')}
       </Typography>
 
       <Box sx={{ mb: 2 }}>
@@ -32,12 +34,12 @@ function InstagramEditor({ content, onChange }) {
         fullWidth
         multiline
         rows={6}
-        label="Caption"
+        label={t('platforms.instagram.contentLabel')}
         value={content?.caption || ''}
         onChange={(e) => onChange({ ...content, caption: e.target.value })}
-        placeholder="Write a caption for your post..."
+        placeholder={t('platforms.instagram.placeholder')}
         inputProps={{ maxLength }}
-        helperText={`${textLength}/${maxLength} characters`}
+        helperText={`${textLength}/${maxLength} ${t('common.characters')}`}
         error={textLength > maxLength}
       />
 
@@ -48,14 +50,16 @@ function InstagramEditor({ content, onChange }) {
       />
 
       <Alert severity="info">
-        <strong>Best practices:</strong><br />
-        • Use 1-3 relevant hashtags<br />
-        • Ask questions to boost engagement<br />
-        • Use emojis strategically
+        <strong>{t('platforms.instagram.bestPractices.title')}</strong><br />
+        {t('platforms.instagram.bestPractices.points', { returnObjects: true }).map((point, index) => (
+          <React.Fragment key={index}>
+            • {point}<br />
+          </React.Fragment>
+        ))}
       </Alert>
 
       <Typography variant="body2" color="text.secondary">
-        Note: Image upload will be handled separately in the publishing step.
+        {t('platforms.instagram.footer')}
       </Typography>
     </Box>
   )

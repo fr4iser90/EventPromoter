@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   TextField,
@@ -13,6 +14,7 @@ import {
 import TemplateSelector from '../TemplateEditor/TemplateSelector'
 
 function EmailEditor({ content, onChange }) {
+  const { t } = useTranslation()
   const [recipients, setRecipients] = useState([])
   const [availableRecipients, setAvailableRecipients] = useState([])
 
@@ -78,7 +80,7 @@ function EmailEditor({ content, onChange }) {
           Recipients
         </Typography>
         <FormControl fullWidth>
-          <InputLabel>Select Recipients</InputLabel>
+          <InputLabel>{t('form.labels.selectRecipients')}</InputLabel>
           <Select
             multiple
             value={recipients}

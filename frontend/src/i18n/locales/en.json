@@ -1,4 +1,81 @@
 {
+  "app": {
+    "title": "Multi-Platform Social Media Publisher"
+  },
+  "language": {
+    "english": "🇺🇸 EN",
+    "german": "🇩🇪 DE",
+    "spanish": "🇪🇸 ES"
+  },
+  "workflow": {
+    "startHere": "Start here:",
+    "next": "Next:",
+    "publishContent": "🚀 Publish Content",
+    "saving": "💾 Saving...",
+    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+  },
+  "status": {
+    "ready": "Ready",
+    "draft": "Draft",
+    "parsingDocument": "Parsing document...",
+    "loadingPlatformConfig": "Loading {{platform}} configuration...",
+    "fileType": {
+      "image": "Image",
+      "text": "Text"
+    }
+  },
+  "tabs": {
+    "rawData": "📄 Raw Data",
+    "contentCreation": "🎨 Content Creation",
+    "platformPreview": "👁️ Platform Preview"
+  },
+  "search": {
+    "events": "Search events..."
+  },
+  "templates": {
+    "title": "📝 Template Manager",
+    "management": "Template Management",
+    "managementSystem": "📝 Template Management System",
+    "preview": "Template Preview",
+    "usage": "💡 Template Usage",
+    "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{eventTitle}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
+    "defaultTemplates": "Default templates",
+    "customTemplates": "Custom templates",
+    "defaultTemplatesNote": "cannot be modified but serve as examples.",
+    "customTemplatesNote": "can be fully edited and deleted."
+  },
+  "event": {
+    "untitled": "Untitled Event",
+    "title": "Title",
+    "date": "Date",
+    "time": "Time",
+    "venue": "Venue",
+    "city": "City",
+    "description": "Description",
+    "organizer": "Organizer",
+    "website": "Website",
+    "lineup": "Lineup",
+    "genre": "Genre"
+  },
+  "form": {
+    "labels": {
+      "tweetText": "Tweet Text",
+      "instagramCaption": "Instagram Caption",
+      "facebookPost": "Facebook Post",
+      "linkedinPost": "LinkedIn Post",
+      "redditTitle": "Reddit Title",
+      "redditBody": "Reddit Body",
+    "subreddit": "Subreddit",
+    "selectRecipients": "Select Recipients",
+    "emailSubject": "Email Subject",
+    "emailHtmlContent": "Email HTML Content",
+    "subredditExample": "e.g., r/berlin"
+    }
+  },
+  "navigation": {
+    "home": "Home",
+    "templates": "Templates"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -7,15 +84,20 @@
     "close": "Close",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
-  },
-  "navigation": {
-    "home": "Home",
-    "templates": "Templates"
+    "success": "Success",
+    "dropActive": "Drop files here...",
+    "dropInactive": "Drag & drop files here",
+    "hashtagsPlaceholder": "Enter hashtags separated by commas (e.g., party, music, berlin)",
+    "characters": "characters",
+    "unknown": "Unknown"
   },
   "fileUpload": {
     "title": "Upload Files",
     "dropzone": "Drop files here or click to select",
+    "dropActive": "Drop files here...",
+    "dropInactive": "Drag & drop files here",
+    "hashtagsPlaceholder": "Enter hashtags separated by commas (e.g., party, music, berlin)",
+    "customHashtagPlaceholder": "Add custom hashtag...",
     "uploading": "Uploading...",
     "success": "Files uploaded successfully",
     "filesUploaded": "{{count}} file uploaded"
@@ -27,17 +109,6 @@
     "images": "Images",
     "sourceFiles": "Source Files"
   },
-  "event": {
-    "date": "Date",
-    "time": "Time",
-    "venue": "Venue",
-    "city": "City",
-    "description": "Description",
-    "organizer": "Organizer",
-    "website": "Website",
-    "lineup": "Lineup",
-    "genre": "Genre"
-  },
   "template": {
     "placeholders": "Template Placeholders Available",
     "create": "Create Template",
@@ -46,6 +117,54 @@
     "name": "Name",
     "description": "Description",
     "platform": "Platform"
+  },
+  "platforms": {
+    "twitter": {
+      "title": "Twitter/X Post"
+    },
+    "linkedin": {
+      "title": "LinkedIn Post",
+      "contentLabel": "Professional Content",
+      "placeholder": "Share professional insights...",
+      "bestPractices": {
+        "title": "LinkedIn best practices:",
+        "points": [
+          "Focus on value and insights",
+          "Use professional language",
+          "Include relevant hashtags",
+          "Ask thought-provoking questions"
+        ]
+      },
+      "footer": "Your post will be published to your LinkedIn profile or company page."
+    },
+    "facebook": {
+      "title": "Facebook Post",
+      "contentLabel": "Post Content",
+      "placeholder": "Share your thoughts...",
+      "bestPractices": {
+        "title": "Facebook tips:",
+        "points": [
+          "Posts with questions get 100% more engagement",
+          "Use 1-2 relevant hashtags",
+          "Keep it conversational and authentic"
+        ]
+      },
+      "footer": "Your post will be published to your Facebook page or personal profile."
+    },
+    "instagram": {
+      "title": "Instagram Post",
+      "contentLabel": "Caption",
+      "placeholder": "Write a caption for your post...",
+      "bestPractices": {
+        "title": "Best practices:",
+        "points": [
+          "Use 1-3 relevant hashtags",
+          "Ask questions to boost engagement",
+          "Use emojis strategically"
+        ]
+      },
+      "footer": "Note: Image upload will be handled separately in the publishing step."
+    }
   },
   "settings": {
     "title": "Settings",
@@ -64,5 +183,163 @@
   "timeFormats": {
     "24h": "24-Hour",
     "12h": "12-Hour"
+  },
+  "duplicate": {
+    "title": "Similar Event Found!",
+    "description": "We found a similar event in the database. Would you like to reuse the existing data or use the newly parsed data?",
+    "existingEvent": "Existing Event",
+    "newParsedEvent": "Newly Parsed Event",
+    "similarity": "Similarity",
+    "useExisting": "Use Existing Data",
+    "useNew": "Use New Data"
+  },
+  "panels": {
+    "instagram": {
+      "title": "Instagram Settings",
+      "accountType": {
+        "label": "Account Type",
+        "personal": "Personal Account",
+        "business": "Business Account",
+        "creator": "Creator Account"
+      },
+      "postingMode": {
+        "label": "Posting Mode",
+        "post": "Feed Post",
+        "reel": "Reel",
+        "story": "Story",
+        "carousel": "Carousel Post"
+      },
+      "hashtagStrategy": {
+        "title": "Hashtag Strategy",
+        "minimal": {
+          "label": "Minimal",
+          "description": "5-10 Hashtags (less is more)"
+        },
+        "moderate": {
+          "label": "Moderate",
+          "description": "15-25 Hashtags (balanced)"
+        },
+        "maximal": {
+          "label": "Maximal",
+          "description": "25-35 Hashtags (for reach)"
+        }
+      },
+      "maxHashtags": "Maximum Hashtags",
+      "options": {
+        "title": "Options",
+        "requireImage": "Require Image"
+      },
+      "info": {
+        "playwright": "Instagram uses Playwright for reliable posting."
+      },
+      "warnings": {
+        "reel": "Reels require video content.",
+        "story": "Stories disappear after 24h."
+      }
+    },
+    "linkedin": {
+      "title": "LinkedIn Settings",
+      "postType": {
+        "label": "Post Type",
+        "text": "Text Post",
+        "article": "Article",
+        "poll": "Poll",
+        "document": "Document"
+      },
+      "postAs": {
+        "label": "Post As"
+      },
+      "companies": {
+        "company1": "My Company GmbH",
+        "company2": "Tech Startup AG",
+        "personal": "Personal Profile"
+      },
+      "followers": "followers",
+      "targetAudience": {
+        "title": "Target Audience",
+        "connections": "Connections Only",
+        "anyone": "Anyone",
+        "custom": "Custom Audience"
+      },
+      "options": {
+        "title": "Options",
+        "includeArticle": "Add Article Link",
+        "professionalTone": "Professional Tone"
+      },
+      "info": {
+        "api": "LinkedIn API is very reliable for professional content."
+      },
+      "warnings": {
+        "article": "Article posts are published as LinkedIn Articles.",
+        "anyone": "\"Anyone\" can lead to less engagement."
+      }
+    },
+    "twitter": {
+      "title": "Twitter Settings",
+      "postingMode": {
+        "label": "Posting Mode",
+        "single": "Single Tweet",
+        "thread": "Thread",
+        "auto": "Auto (Thread if needed)"
+      },
+      "options": {
+        "title": "Options",
+        "threadSupport": "Thread Support",
+        "autoTruncate": "Auto-truncate (280 characters)"
+      },
+      "info": {
+        "api": "Twitter API is very reliable and fast. No additional credentials needed."
+      }
+    }
+  },
+  "preview": {
+    "preview": "Preview",
+    "email": "Email",
+    "twitter": "🐦 Twitter/X Preview",
+    "instagram": "📸 Instagram Preview",
+    "emailPreview": "📧 Email Preview",
+    "noContent": "No content yet...",
+    "noFiles": "No files",
+    "images": "Images",
+    "parsedData": "Parsed Data",
+    "sourceFiles": "Source Files",
+    "eventImage": "Event Image",
+    "noCaption": "No caption yet...",
+    "noLinkedInContent": "No LinkedIn content yet...",
+    "title": "Title",
+    "noTitle": "No title...",
+    "noBodyContent": "No body content...",
+    "subreddit": "Subreddit",
+    "subject": "Subject",
+    "noSubject": "No subject...",
+    "htmlEmailContent": "HTML Email Content..."
+  },
+  "help": {
+    "instagramCaption": "Caption for Instagram post",
+    "facebookPost": "Post text for Facebook",
+    "linkedinPost": "Professional post content for LinkedIn",
+    "redditTitle": "Post title for Reddit",
+    "redditBody": "Post body content for Reddit",
+    "emailContent": "HTML content for email"
+  },
+  "email": {
+    "to": "To",
+    "noRecipientsSelected": "No recipients selected",
+    "content": "Content",
+    "footer": "This email will be sent through your configured SMTP server."
+  },
+  "hashtags": {
+    "title": "Hashtags"
+  },
+  "registry": {
+    "noPanelConfiguration": "No panel configuration provided",
+    "unknownComponent": "Unknown component"
+  },
+  "errors": {
+    "failedToLoadEventFiles": "Failed to load event files",
+    "invalidJsonFormat": "Invalid JSON format",
+    "failedToLoadFileContent": "Failed to load file content",
+    "errorLoadingFileContent": "Error loading file content"
   }
-}
+  }
+

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -14,6 +15,7 @@ import {
 } from '@mui/material'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect }) {
+  const { t } = useTranslation()
   const [platformConfig, setPlatformConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -215,7 +217,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     return (
       <Paper sx={{ p: 2, textAlign: 'center' }}>
         <CircularProgress size={24} sx={{ mb: 1 }} />
-        <Typography variant="body2">Loading {platform} configuration...</Typography>
+        <Typography variant="body2">{t('status.loadingPlatformConfig', { platform })}</Typography>
       </Paper>
     )
   }
@@ -266,7 +268,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         <Chip
           size="small"
           color={isValid ? "success" : "warning"}
-          label={isValid ? "Ready" : "Draft"}
+          label={isValid ? t('status.ready') : t('status.draft')}
         />
       </Box>
     </Paper>

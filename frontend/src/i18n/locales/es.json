@@ -1,4 +1,81 @@
 {
+  "app": {
+    "title": "Multi-Platform Social Media Publisher"
+  },
+  "language": {
+    "english": "🇺🇸 EN",
+    "german": "🇩🇪 DE",
+    "spanish": "🇪🇸 ES"
+  },
+  "workflow": {
+    "startHere": "Start here:",
+    "next": "Next:",
+    "publishContent": "🚀 Publish Content",
+    "saving": "💾 Saving...",
+    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+  },
+  "status": {
+    "ready": "Listo",
+    "draft": "Borrador",
+    "parsingDocument": "Analizando documento...",
+    "loadingPlatformConfig": "Cargando configuración de {{platform}}...",
+    "fileType": {
+      "image": "Imagen",
+      "text": "Texto"
+    }
+  },
+  "tabs": {
+    "rawData": "📄 Datos Crudos",
+    "contentCreation": "🎨 Creación de Contenido",
+    "platformPreview": "👁️ Vista Previa de Plataforma"
+  },
+  "search": {
+    "events": "Search events..."
+  },
+  "templates": {
+    "title": "📝 Template Manager",
+    "management": "Template Management",
+    "managementSystem": "📝 Template Management System",
+    "preview": "Template Preview",
+    "usage": "💡 Template Usage",
+    "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{eventTitle}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
+    "defaultTemplates": "Default templates",
+    "customTemplates": "Custom templates",
+    "defaultTemplatesNote": "cannot be modified but serve as examples.",
+    "customTemplatesNote": "can be fully edited and deleted."
+  },
+  "event": {
+    "untitled": "Evento sin título",
+    "title": "Título",
+    "date": "Fecha",
+    "time": "Hora",
+    "venue": "Lugar",
+    "city": "Ciudad",
+    "description": "Descripción",
+    "organizer": "Organizador",
+    "website": "Sitio Web",
+    "lineup": "Lineup",
+    "genre": "Género"
+  },
+  "form": {
+    "labels": {
+      "tweetText": "Tweet Text",
+      "instagramCaption": "Instagram Caption",
+      "facebookPost": "Facebook Post",
+      "linkedinPost": "LinkedIn Post",
+      "redditTitle": "Reddit Title",
+      "redditBody": "Reddit Body",
+      "subreddit": "Subreddit",
+      "selectRecipients": "Seleccionar Destinatarios",
+      "emailSubject": "Asunto del Correo",
+      "emailHtmlContent": "Contenido HTML del Correo",
+      "subredditExample": "ej. r/berlin"
+    }
+  },
+  "navigation": {
+    "home": "Inicio",
+    "templates": "Plantillas"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -7,15 +84,20 @@
     "close": "Cerrar",
     "loading": "Cargando...",
     "error": "Error",
-    "success": "Éxito"
-  },
-  "navigation": {
-    "home": "Inicio",
-    "templates": "Plantillas"
+    "success": "Éxito",
+    "dropActive": "Suelta los archivos aquí...",
+    "dropInactive": "Arrastra y suelta los archivos aquí",
+    "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
+    "characters": "caracteres",
+    "unknown": "Desconocido"
   },
   "fileUpload": {
     "title": "Subir Archivos",
     "dropzone": "Arrastra archivos aquí o haz clic para seleccionar",
+    "dropActive": "Suelta los archivos aquí...",
+    "dropInactive": "Arrastra y suelta los archivos aquí",
+    "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
+    "customHashtagPlaceholder": "Agregar hashtag personalizado...",
     "uploading": "Subiendo...",
     "success": "Archivos subidos exitosamente",
     "filesUploaded": "{{count}} archivo subido"
@@ -27,17 +109,6 @@
     "images": "Imágenes",
     "sourceFiles": "Archivos Fuente"
   },
-  "event": {
-    "date": "Fecha",
-    "time": "Hora",
-    "venue": "Lugar",
-    "city": "Ciudad",
-    "description": "Descripción",
-    "organizer": "Organizador",
-    "website": "Sitio Web",
-    "lineup": "Lineup",
-    "genre": "Género"
-  },
   "template": {
     "placeholders": "Marcadores de Posición de Plantilla Disponibles",
     "create": "Crear Plantilla",
@@ -46,6 +117,54 @@
     "name": "Nombre",
     "description": "Descripción",
     "platform": "Plataforma"
+  },
+  "platforms": {
+    "twitter": {
+      "title": "Publicación de Twitter/X"
+    },
+    "linkedin": {
+      "title": "Publicación de LinkedIn",
+      "contentLabel": "Contenido Profesional",
+      "placeholder": "Comparte ideas profesionales...",
+      "bestPractices": {
+        "title": "Mejores prácticas de LinkedIn:",
+        "points": [
+          "Enfócate en el valor y las ideas",
+          "Usa lenguaje profesional",
+          "Incluye hashtags relevantes",
+          "Haz preguntas provocativas"
+        ]
+      },
+      "footer": "Tu publicación se publicará en tu perfil de LinkedIn o página de empresa."
+    },
+    "facebook": {
+      "title": "Publicación de Facebook",
+      "contentLabel": "Contenido de la Publicación",
+      "placeholder": "Comparte tus pensamientos...",
+      "bestPractices": {
+        "title": "Consejos de Facebook:",
+        "points": [
+          "Las publicaciones con preguntas obtienen 100% más interacción",
+          "Usa 1-2 hashtags relevantes",
+          "Manténlo conversacional y auténtico"
+        ]
+      },
+      "footer": "Tu publicación se publicará en tu página de Facebook o perfil personal."
+    },
+    "instagram": {
+      "title": "Publicación de Instagram",
+      "contentLabel": "Pie de Foto",
+      "placeholder": "Escribe un pie de foto para tu publicación...",
+      "bestPractices": {
+        "title": "Mejores prácticas:",
+        "points": [
+          "Usa 1-3 hashtags relevantes",
+          "Haz preguntas para aumentar la interacción",
+          "Usa emojis estratégicamente"
+        ]
+      },
+      "footer": "Nota: La carga de imágenes se manejará por separado en el paso de publicación."
+    }
   },
   "settings": {
     "title": "Configuración",
@@ -64,5 +183,163 @@
   "timeFormats": {
     "24h": "24 Horas",
     "12h": "12 Horas"
+  },
+  "duplicate": {
+    "title": "¡Evento Similar Encontrado!",
+    "description": "Encontramos un evento similar en la base de datos. ¿Te gustaría reutilizar los datos existentes o usar los datos recién analizados?",
+    "existingEvent": "Evento Existente",
+    "newParsedEvent": "Evento Recién Analizado",
+    "similarity": "Similitud",
+    "useExisting": "Usar Datos Existentes",
+    "useNew": "Usar Datos Nuevos"
+  },
+  "panels": {
+    "instagram": {
+      "title": "Configuración de Instagram",
+      "accountType": {
+        "label": "Tipo de Cuenta",
+        "personal": "Cuenta Personal",
+        "business": "Cuenta Empresarial",
+        "creator": "Cuenta de Creador"
+      },
+      "postingMode": {
+        "label": "Modo de Publicación",
+        "post": "Publicación en Feed",
+        "reel": "Reel",
+        "story": "Historia",
+        "carousel": "Publicación de Carrusel"
+      },
+      "hashtagStrategy": {
+        "title": "Estrategia de Hashtags",
+        "minimal": {
+          "label": "Mínima",
+          "description": "5-10 Hashtags (menos es más)"
+        },
+        "moderate": {
+          "label": "Moderada",
+          "description": "15-25 Hashtags (equilibrada)"
+        },
+        "maximal": {
+          "label": "Máxima",
+          "description": "25-35 Hashtags (para alcance)"
+        }
+      },
+      "maxHashtags": "Hashtags Máximos",
+      "options": {
+        "title": "Opciones",
+        "requireImage": "Requiere Imagen"
+      },
+      "info": {
+        "playwright": "Instagram usa Playwright para publicaciones confiables."
+      },
+      "warnings": {
+        "reel": "Los Reels requieren contenido de video.",
+        "story": "Las historias desaparecen después de 24h."
+      }
+    },
+    "linkedin": {
+      "title": "Configuración de LinkedIn",
+      "postType": {
+        "label": "Tipo de Publicación",
+        "text": "Publicación de Texto",
+        "article": "Artículo",
+        "poll": "Encuesta",
+        "document": "Documento"
+      },
+      "postAs": {
+        "label": "Publicar Como"
+      },
+      "companies": {
+        "company1": "Mi Empresa GmbH",
+        "company2": "Startup Tecnológica AG",
+        "personal": "Perfil Personal"
+      },
+      "followers": "seguidores",
+      "targetAudience": {
+        "title": "Audiencia Objetivo",
+        "connections": "Solo Conexiones",
+        "anyone": "Cualquiera",
+        "custom": "Audiencia Personalizada"
+      },
+      "options": {
+        "title": "Opciones",
+        "includeArticle": "Agregar Enlace de Artículo",
+        "professionalTone": "Tono Profesional"
+      },
+      "info": {
+        "api": "La API de LinkedIn es muy confiable para contenido profesional."
+      },
+      "warnings": {
+        "article": "Las publicaciones de artículos se publican como Artículos de LinkedIn.",
+        "anyone": "\"Cualquiera\" puede llevar a menos interacción."
+      }
+    },
+    "twitter": {
+      "title": "Configuración de Twitter",
+      "postingMode": {
+        "label": "Modo de Publicación",
+        "single": "Tweet Individual",
+        "thread": "Hilo",
+        "auto": "Auto (Hilo si es necesario)"
+      },
+      "options": {
+        "title": "Opciones",
+        "threadSupport": "Soporte de Hilo",
+        "autoTruncate": "Truncar automáticamente (280 caracteres)"
+      },
+      "info": {
+        "api": "La API de Twitter es muy confiable y rápida. No se necesitan credenciales adicionales."
+      }
+    }
+  },
+  "preview": {
+    "preview": "Vista Previa",
+    "email": "Correo Electrónico",
+    "twitter": "🐦 Vista Previa de Twitter/X",
+    "instagram": "📸 Vista Previa de Instagram",
+    "emailPreview": "📧 Vista Previa del Correo",
+    "noContent": "Aún no hay contenido...",
+    "noFiles": "Sin archivos",
+    "images": "Imágenes",
+    "parsedData": "Datos Analizados",
+    "sourceFiles": "Archivos Fuente",
+    "eventImage": "Imagen del Evento",
+    "noCaption": "Aún no hay pie de foto...",
+    "noLinkedInContent": "Aún no hay contenido de LinkedIn...",
+    "title": "Título",
+    "noTitle": "Sin título...",
+    "noBodyContent": "Sin contenido principal...",
+    "subreddit": "Subreddit",
+    "subject": "Asunto",
+    "noSubject": "Sin asunto...",
+    "htmlEmailContent": "Contenido de Correo HTML..."
+  },
+  "help": {
+    "instagramCaption": "Subtítulo para publicación de Instagram",
+    "facebookPost": "Texto de publicación para Facebook",
+    "linkedinPost": "Contenido profesional para publicación de LinkedIn",
+    "redditTitle": "Título de publicación para Reddit",
+    "redditBody": "Contenido de publicación para Reddit",
+    "emailContent": "Contenido HTML para correo electrónico"
+  },
+  "email": {
+    "to": "Para",
+    "noRecipientsSelected": "No se seleccionaron destinatarios",
+    "content": "Contenido",
+    "footer": "Este correo electrónico se enviará a través de su servidor SMTP configurado."
+  },
+  "hashtags": {
+    "title": "Hashtags"
+  },
+  "registry": {
+    "noPanelConfiguration": "No se proporcionó configuración de panel",
+    "unknownComponent": "Componente desconocido"
+  },
+  "errors": {
+    "failedToLoadEventFiles": "Error al cargar archivos de eventos",
+    "invalidJsonFormat": "Formato JSON inválido",
+    "failedToLoadFileContent": "Error al cargar contenido del archivo",
+    "errorLoadingFileContent": "Error al cargar contenido del archivo"
   }
-}
+  }
+

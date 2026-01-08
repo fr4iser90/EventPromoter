@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -14,6 +15,7 @@ import {
 import useStore from '../../store'
 
 function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect }) {
+  const { t } = useTranslation()
   const [availableRecipients, setAvailableRecipients] = useState([])
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState(null)
@@ -112,7 +114,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           fullWidth
           multiline
           rows={4}
-          label="Tweet Text"
+          label={t('form.labels.tweetText')}
           value={content.text || ''}
           onChange={(e) => onChange('text', e.target.value)}
           helperText={`Tweet text for Twitter`}
@@ -126,10 +128,10 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           fullWidth
           multiline
           rows={6}
-          label="Instagram Caption"
+          label={t('form.labels.instagramCaption')}
           value={content.caption || ''}
           onChange={(e) => onChange('caption', e.target.value)}
-          helperText="Caption for Instagram post"
+          helperText={t('help.instagramCaption')}
           variant="outlined"
           sx={{ mb: 2 }}
         />
@@ -140,10 +142,10 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           fullWidth
           multiline
           rows={4}
-          label="Facebook Post"
+          label={t('form.labels.facebookPost')}
           value={content.text || ''}
           onChange={(e) => onChange('text', e.target.value)}
-          helperText="Post text for Facebook"
+          helperText={t('help.facebookPost')}
           variant="outlined"
           sx={{ mb: 2 }}
         />
@@ -157,7 +159,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           label="LinkedIn Post"
           value={content.text || ''}
           onChange={(e) => onChange('text', e.target.value)}
-          helperText="Professional post content for LinkedIn"
+          helperText={t('help.linkedinPost')}
           variant="outlined"
           sx={{ mb: 2 }}
         />
@@ -167,7 +169,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
         <>
           <TextField
             fullWidth
-            label="Reddit Title"
+            label={t('form.labels.redditTitle')}
             value={content.title || ''}
             onChange={(e) => onChange('title', e.target.value)}
             helperText="Post title for Reddit"
@@ -178,7 +180,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
             fullWidth
             multiline
             rows={4}
-            label="Reddit Body"
+            label={t('form.labels.redditBody')}
             value={content.body || ''}
             onChange={(e) => onChange('body', e.target.value)}
             helperText="Post body content for Reddit"
@@ -210,7 +212,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
               📧 Email Recipients
             </Typography>
             <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
-              <InputLabel>Select Recipients</InputLabel>
+              <InputLabel>{t('form.labels.selectRecipients')}</InputLabel>
               <Select
                 multiple
                 value={Array.isArray(content.recipients) ? content.recipients : []}
@@ -282,7 +284,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
         <Chip
           size="small"
           color={isValid ? "success" : "warning"}
-          label={isValid ? "Ready" : "Draft"}
+          label={isValid ? t('status.ready') : t('status.draft')}
         />
       </Box>
     </Paper>

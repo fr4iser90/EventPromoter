@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Box,
@@ -8,6 +9,7 @@ import {
 } from '@mui/material'
 
 function EmailPreview({ content }) {
+  const { t } = useTranslation()
   const subject = content?.subject || ''
   const html = content?.html || ''
   const recipients = content?.recipients || []
@@ -26,21 +28,21 @@ function EmailPreview({ content }) {
       {/* Email Header */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
-          📧 Email Preview
+          📧 {t('preview.email')} {t('preview.preview')}
         </Typography>
 
         <Box sx={{ mb: 1 }}>
           <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-            Subject:
+            {t('preview.subject')}:
           </Typography>
           <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-            {subject || '(No subject)'}
+            {subject || `(${t('preview.noSubject')})`}
           </Typography>
         </Box>
 
         <Box sx={{ mb: 1 }}>
           <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-            To:
+            {t('email.to')}:
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
             {recipients.length > 0 ? (
@@ -54,7 +56,7 @@ function EmailPreview({ content }) {
               ))
             ) : (
               <Typography variant="body2" color="text.secondary">
-                (No recipients selected)
+                ({t('email.noRecipientsSelected')})
               </Typography>
             )}
           </Box>
@@ -66,7 +68,7 @@ function EmailPreview({ content }) {
       {/* Email Content */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-          Content:
+          {t('email.content')}:
         </Typography>
 
         {html ? (
@@ -92,14 +94,14 @@ function EmailPreview({ content }) {
               fontStyle: 'italic'
             }}
           >
-            (No content)
+            ({t('preview.noContent')})
           </Box>
         )}
 
         {hashtags.length > 0 && (
           <Box sx={{ mt: 1 }}>
             <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-              Hashtags:
+              {t('hashtags.title')}:
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
               {hashtags.map((hashtag) => (
@@ -119,7 +121,7 @@ function EmailPreview({ content }) {
       {/* Footer */}
       <Box sx={{ pt: 1, borderTop: '1px solid #e0e0e0' }}>
         <Typography variant="caption" color="text.secondary">
-          This email will be sent through your configured SMTP server.
+          {t('email.footer')}
         </Typography>
       </Box>
     </Paper>

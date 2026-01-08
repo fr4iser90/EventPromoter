@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -24,6 +25,7 @@ const PREDEFINED_HASHTAGS = {
 }
 
 function HashtagBuilder({ disabled = false }) {
+  const { t } = useTranslation()
   const { selectedHashtags, setSelectedHashtags } = useStore()
   const [customHashtags, setCustomHashtags] = useState('')
 
@@ -78,7 +80,7 @@ function HashtagBuilder({ disabled = false }) {
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Enter hashtags separated by commas (e.g., party, music, berlin)"
+            placeholder={t('common.hashtagsPlaceholder')}
             value={customHashtags}
             onChange={(e) => setCustomHashtags(e.target.value)}
             onKeyPress={handleKeyPress}

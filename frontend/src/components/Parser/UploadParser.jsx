@@ -1,5 +1,6 @@
 // Upload Parser - Handles automatic parsing on file upload
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -43,6 +44,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert'
 import useStore from '../../store'
 
 function UploadParser() {
+  const { t } = useTranslation()
   const {
     uploadedFileRefs,
     currentEvent,
@@ -259,7 +261,7 @@ function UploadParser() {
       {isParsing && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
           <CircularProgress size={24} />
-          <Typography>Parsing document...</Typography>
+          <Typography>{t('status.parsingDocument')}</Typography>
         </Box>
       )}
 
@@ -277,9 +279,9 @@ function UploadParser() {
             onChange={(e, newValue) => setActiveTab(newValue)}
             sx={{ mb: 3 }}
           >
-            <Tab label="📄 Raw Data" />
-            <Tab label="🎨 Content Creation" />
-            <Tab label="👁️ Platform Preview" />
+            <Tab label={t('tabs.rawData')} />
+            <Tab label={t('tabs.contentCreation')} />
+            <Tab label={t('tabs.platformPreview')} />
           </Tabs>
 
           {/* Tab 1: Raw Data */}
@@ -420,7 +422,7 @@ function UploadParser() {
 
               <Accordion defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>🐦 Twitter/X Preview</Typography>
+                  <Typography>{t('preview.twitter')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>
@@ -448,7 +450,7 @@ function UploadParser() {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>📸 Instagram Preview</Typography>
+                  <Typography>{t('preview.instagram')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>
@@ -470,7 +472,7 @@ function UploadParser() {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>📧 Email Preview</Typography>
+                  <Typography>{t('preview.emailPreview')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   TextField,
@@ -9,13 +10,14 @@ import TemplateSelector from '../TemplateEditor/TemplateSelector'
 import HashtagSelector from '../HashtagSelector/HashtagSelector'
 
 function LinkedInEditor({ content, onChange }) {
+  const { t } = useTranslation()
   const textLength = (content?.text || '').length
   const maxLength = 3000
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Typography variant="h6" sx={{ color: '#0A66C2', fontWeight: 'bold' }}>
-        💼 LinkedIn Post
+        💼 {t('platforms.linkedin.title')}
       </Typography>
 
       <Box sx={{ mb: 2 }}>
@@ -32,12 +34,12 @@ function LinkedInEditor({ content, onChange }) {
         fullWidth
         multiline
         rows={6}
-        label="Professional Content"
+        label={t('platforms.linkedin.contentLabel')}
         value={content?.text || ''}
         onChange={(e) => onChange({ ...content, text: e.target.value })}
-        placeholder="Share professional insights..."
+        placeholder={t('platforms.linkedin.placeholder')}
         inputProps={{ maxLength }}
-        helperText={`${textLength}/${maxLength} characters`}
+        helperText={`${textLength}/${maxLength} ${t('common.characters')}`}
         error={textLength > maxLength}
       />
 
@@ -48,15 +50,16 @@ function LinkedInEditor({ content, onChange }) {
       />
 
       <Alert severity="info">
-        <strong>LinkedIn best practices:</strong><br />
-        • Focus on value and insights<br />
-        • Use professional language<br />
-        • Include relevant hashtags<br />
-        • Ask thought-provoking questions
+        <strong>{t('platforms.linkedin.bestPractices.title')}</strong><br />
+        {t('platforms.linkedin.bestPractices.points', { returnObjects: true }).map((point, index) => (
+          <React.Fragment key={index}>
+            • {point}<br />
+          </React.Fragment>
+        ))}
       </Alert>
 
       <Typography variant="body2" color="text.secondary">
-        Your post will be published to your LinkedIn profile or company page.
+        {t('platforms.linkedin.footer')}
       </Typography>
     </Box>
   )

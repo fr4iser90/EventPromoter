@@ -73,7 +73,7 @@ function TemplatePage() {
       }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%' }}>
           <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
-            📝 Template Manager
+{t('templates.title')}
           </Typography>
           <Button
             variant="outlined"
@@ -117,7 +117,7 @@ function TemplatePage() {
             color: 'text.secondary'
           }}>
             <Typography variant="body2">
-              Template Management
+{t('templates.management')}
             </Typography>
           </Box>
         </Box>
@@ -134,7 +134,7 @@ function TemplatePage() {
         }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h6" component="h2" color="text.secondary">
-              📝 Template Management System
+{t('templates.managementSystem')}
             </Typography>
           </Box>
 
@@ -182,16 +182,14 @@ function TemplatePage() {
             {/* Footer Info */}
             <Paper sx={{ mt: 4, p: 3, bgcolor: 'background.default' }}>
               <Typography variant="h6" gutterBottom>
-                💡 Template Usage
+{t('templates.usage')}
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                Templates help you create consistent content across platforms. Create platform-specific templates
-                with placeholders like <code>{'{eventTitle}'}</code>, <code>{'{venue}'}</code>, and <code>{'{description}'}</code>
-                that will be automatically filled with your event data.
+{t('templates.description')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <strong>Default templates</strong> cannot be modified but serve as examples.
-                <strong>Custom templates</strong> can be fully edited and deleted.
+                <strong>{t('templates.defaultTemplates')}</strong> {t('templates.defaultTemplatesNote')}
+                <strong>{t('templates.customTemplates')}</strong> {t('templates.customTemplatesNote')}
               </Typography>
             </Paper>
           </Box>
@@ -213,7 +211,7 @@ function TemplatePage() {
             color: 'text.secondary'
           }}>
             <Typography variant="body2">
-              Template Preview
+{t('templates.preview')}
             </Typography>
           </Box>
         </Box>

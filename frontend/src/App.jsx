@@ -198,7 +198,7 @@ function MainPage() {
       }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%' }}>
           <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
-            Multi-Platform Social Media Publisher
+            {t('app.title')}
           </Typography>
           <Button
             variant="outlined"
@@ -215,9 +215,9 @@ function MainPage() {
               displayEmpty
               sx={{ color: 'text.primary', '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
             >
-              <MenuItem value="en">🇺🇸 EN</MenuItem>
-              <MenuItem value="de">🇩🇪 DE</MenuItem>
-              <MenuItem value="es">🇪🇸 ES</MenuItem>
+              <MenuItem value="en">{t('language.english')}</MenuItem>
+              <MenuItem value="de">{t('language.german')}</MenuItem>
+              <MenuItem value="es">{t('language.spanish')}</MenuItem>
             </Select>
           </FormControl>
           <IconButton
@@ -371,19 +371,19 @@ function MainPage() {
             {/* Next Step Guidance */}
             {workflowState === WORKFLOW_STATES.INITIAL && safeUploadedFileRefs.length === 0 && (
               <Alert severity="info" sx={{ mb: 4 }} icon={<span>👆</span>}>
-                <strong>Start here:</strong> Upload your event files (PDF, images, documents) to begin creating content.
+                <strong>{t('workflow.startHere')}</strong> Upload your event files (PDF, images, documents) to begin creating content.
               </Alert>
             )}
 
             {workflowState === WORKFLOW_STATES.FILES_UPLOADED && safeSelectedPlatforms.length === 0 && (
               <Alert severity="info" sx={{ mb: 4 }} icon={<span>🎯</span>}>
-                <strong>Next:</strong> Select the platforms where you want to publish your content.
+                <strong>{t('workflow.next')}</strong> Select the platforms where you want to publish your content.
               </Alert>
             )}
 
             {workflowState === WORKFLOW_STATES.PLATFORMS_SELECTED && (
               <Alert severity="info" sx={{ mb: 4 }} icon={<span>✏️</span>}>
-                <strong>Next:</strong> Create platform-specific content in the editors above, then publish when ready.
+                <strong>{t('workflow.next')}</strong> Create platform-specific content in the editors above, then publish when ready.
               </Alert>
             )}
 
@@ -418,7 +418,10 @@ function MainPage() {
                   })
                 }}
               >
-                {isProcessing ? `Publishing to ${safeSelectedPlatforms.length} platform${safeSelectedPlatforms.length !== 1 ? 's' : ''}...` : '🚀 Publish Content'}
+                {isProcessing ? t('workflow.publishingToPlatforms', {
+                  count: safeSelectedPlatforms.length,
+                  plural: safeSelectedPlatforms.length !== 1 ? 's' : ''
+                }) : t('workflow.publishContent')}
               </Button>
 
               <Button
@@ -459,7 +462,7 @@ function MainPage() {
                 />
                 {autoSaving && (
                   <Chip
-                    label="💾 Saving..."
+                    label={t('workflow.saving')}
                     size="small"
                     color="primary"
                     variant="filled"

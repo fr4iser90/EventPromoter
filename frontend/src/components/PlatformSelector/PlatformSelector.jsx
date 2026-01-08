@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -52,6 +53,7 @@ const COLOR_MAP = {
 }
 
 function PlatformSelector({ disabled = false }) {
+  const { t } = useTranslation()
   const { selectedPlatforms, setSelectedPlatforms, platformSettings, setPlatformSettings } = useStore()
   const [settingsDialog, setSettingsDialog] = useState({ open: false, platform: null })
   const [platforms, setPlatforms] = useState([])
@@ -348,7 +350,7 @@ function PlatformSelector({ disabled = false }) {
               </Box>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleSettingsClose}>Cancel</Button>
+              <Button onClick={handleSettingsClose}>{t('common.cancel')}</Button>
               <Button onClick={saveSettings} variant="contained">
                 Save Settings
               </Button>

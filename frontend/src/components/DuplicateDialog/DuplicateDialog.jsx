@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogTitle,
@@ -12,6 +13,7 @@ import {
 import useStore from '../../store'
 
 const DuplicateDialog = () => {
+  const { t, i18n } = useTranslation()
   const { duplicateFound, resolveDuplicate } = useStore()
 
   if (!duplicateFound) return null
@@ -25,48 +27,48 @@ const DuplicateDialog = () => {
   }
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Unbekannt'
-    return new Date(dateString).toLocaleDateString('de-DE')
+    if (!dateString) return t('common.unknown')
+    return new Date(dateString).toLocaleDateString(i18n.language === 'de' ? 'de-DE' : i18n.language === 'es' ? 'es-ES' : 'en-US')
   }
 
   return (
     <Dialog open={!!duplicateFound} maxWidth="md" fullWidth>
       <DialogTitle>
-        Ähnliches Event gefunden! 🎯
+        {t('duplicate.title')} 🎯
       </DialogTitle>
 
       <DialogContent>
         <Typography variant="body1" gutterBottom>
-          Wir haben ein ähnliches Event in der Datenbank gefunden. Möchtest du die vorhandenen Daten wiederverwenden oder die neuen geparsten Daten verwenden?
+          {t('duplicate.description')}
         </Typography>
 
         <Box sx={{ mt: 3, mb: 2 }}>
           <Typography variant="h6" color="primary">
-            Vorhandenes Event:
+            {t('duplicate.existingEvent')}:
           </Typography>
           <Box sx={{ ml: 2, mt: 1 }}>
-            <Typography><strong>Titel:</strong> {duplicateFound.existingEvent?.title || 'Unbekannt'}</Typography>
-            <Typography><strong>Datum:</strong> {formatDate(duplicateFound.existingEvent?.date)}</Typography>
-            <Typography><strong>Venue:</strong> {duplicateFound.existingEvent?.venue || 'Unbekannt'}</Typography>
-            <Typography><strong>Stadt:</strong> {duplicateFound.existingEvent?.city || 'Unbekannt'}</Typography>
+            <Typography><strong>{t('event.title')}:</strong> {duplicateFound.existingEvent?.title || t('common.unknown')}</Typography>
+            <Typography><strong>{t('event.date')}:</strong> {formatDate(duplicateFound.existingEvent?.date)}</Typography>
+            <Typography><strong>{t('event.venue')}:</strong> {duplicateFound.existingEvent?.venue || t('common.unknown')}</Typography>
+            <Typography><strong>{t('event.city')}:</strong> {duplicateFound.existingEvent?.city || t('common.unknown')}</Typography>
           </Box>
         </Box>
 
         <Box sx={{ mt: 3, mb: 2 }}>
           <Typography variant="h6" color="secondary">
-            Neu geparstes Event:
+            {t('duplicate.newParsedEvent')}:
           </Typography>
           <Box sx={{ ml: 2, mt: 1 }}>
-            <Typography><strong>Titel:</strong> {duplicateFound.newParsedData?.title || 'Unbekannt'}</Typography>
-            <Typography><strong>Datum:</strong> {formatDate(duplicateFound.newParsedData?.date)}</Typography>
-            <Typography><strong>Venue:</strong> {duplicateFound.newParsedData?.venue || 'Unbekannt'}</Typography>
-            <Typography><strong>Stadt:</strong> {duplicateFound.newParsedData?.city || 'Unbekannt'}</Typography>
+            <Typography><strong>{t('event.title')}:</strong> {duplicateFound.newParsedData?.title || t('common.unknown')}</Typography>
+            <Typography><strong>{t('event.date')}:</strong> {formatDate(duplicateFound.newParsedData?.date)}</Typography>
+            <Typography><strong>{t('event.venue')}:</strong> {duplicateFound.newParsedData?.venue || t('common.unknown')}</Typography>
+            <Typography><strong>{t('event.city')}:</strong> {duplicateFound.newParsedData?.city || t('common.unknown')}</Typography>
           </Box>
         </Box>
 
         <Box sx={{ mt: 2 }}>
           <Chip
-            label={`Ähnlichkeit: ${(duplicateFound.similarity * 100).toFixed(0)}%`}
+            label={`${t('duplicate.similarity')}: ${(duplicateFound.similarity * 100).toFixed(0)}%`}
             color={duplicateFound.similarity > 0.8 ? 'error' : duplicateFound.similarity > 0.5 ? 'warning' : 'info'}
             size="small"
           />
@@ -75,10 +77,10 @@ const DuplicateDialog = () => {
 
       <DialogActions>
         <Button onClick={handleUseExisting} variant="outlined" color="primary">
-          Vorhandene Daten verwenden
+          {t('duplicate.useExisting')}
         </Button>
         <Button onClick={handleUseNew} variant="contained" color="secondary">
-          Neue Daten verwenden
+          {t('duplicate.useNew')}
         </Button>
       </DialogActions>
     </Dialog>

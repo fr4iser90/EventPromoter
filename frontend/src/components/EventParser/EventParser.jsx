@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -68,7 +69,7 @@ function PlatformPreview({ platform, content, isActive }) {
       <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e0e0e0' }}>
         {platform === 'twitter' && (
           <Typography variant="body2">
-            {content.text || 'No content yet...'}
+            {content.text || t('preview.noContent')}
           </Typography>
         )}
 
@@ -78,30 +79,30 @@ function PlatformPreview({ platform, content, isActive }) {
               📸 Event Image
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {content.caption || 'No caption yet...'}
+              {content.caption || t('preview.noCaption')}
             </Typography>
           </>
         )}
 
         {platform === 'facebook' && (
           <Typography variant="body2">
-            {content.text || 'No content yet...'}
+            {content.text || t('preview.noContent')}
           </Typography>
         )}
 
         {platform === 'linkedin' && (
           <Typography variant="body2">
-            {content.text || 'No LinkedIn content yet...'}
+            {content.text || t('preview.noLinkedInContent')}
           </Typography>
         )}
 
         {platform === 'reddit' && (
           <>
             <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-              Title: {content.title || 'No title...'}
+              Title: {content.title || t('preview.noTitle')}
             </Typography>
             <Typography variant="body2" sx={{ fontSize: '0.875rem', mb: 1 }}>
-              {content.body || 'No body content...'}
+              {content.body || t('preview.noBodyContent')}
             </Typography>
             <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
               Subreddit: {content.subreddit || 'r/events'}
@@ -112,10 +113,10 @@ function PlatformPreview({ platform, content, isActive }) {
         {platform === 'email' && (
           <>
             <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-              Subject: {content.subject || 'No subject...'}
+              Subject: {content.subject || t('preview.noSubject')}
             </Typography>
             <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
-              {content.html ? 'HTML Email Content...' : 'No content yet...'}
+              {content.html ? t('preview.htmlEmailContent') : t('preview.noContent')}
             </Typography>
           </>
         )}
@@ -160,7 +161,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           fullWidth
           multiline
           rows={4}
-          label="Tweet Text"
+          label={t('form.labels.tweetText')}
           value={content.text || ''}
           onChange={(e) => onChange('text', e.target.value)}
           helperText={`Tweet text for Twitter`}
@@ -174,10 +175,10 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           fullWidth
           multiline
           rows={6}
-          label="Instagram Caption"
+          label={t('form.labels.instagramCaption')}
           value={content.caption || ''}
           onChange={(e) => onChange('caption', e.target.value)}
-          helperText="Caption for Instagram post"
+          helperText={t('help.instagramCaption')}
           variant="outlined"
           sx={{ mb: 2 }}
         />
@@ -188,10 +189,10 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           fullWidth
           multiline
           rows={4}
-          label="Facebook Post"
+          label={t('form.labels.facebookPost')}
           value={content.text || ''}
           onChange={(e) => onChange('text', e.target.value)}
-          helperText="Post text for Facebook"
+          helperText={t('help.facebookPost')}
           variant="outlined"
           sx={{ mb: 2 }}
         />
@@ -202,10 +203,10 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
           fullWidth
           multiline
           rows={6}
-          label="LinkedIn Post"
+          label={t('form.labels.linkedinPost')}
           value={content.text || ''}
           onChange={(e) => onChange('text', e.target.value)}
-          helperText="Professional post content for LinkedIn"
+          helperText={t('help.linkedinPost')}
           variant="outlined"
           sx={{ mb: 2 }}
         />
@@ -215,10 +216,10 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
         <>
           <TextField
             fullWidth
-            label="Reddit Title"
+            label={t('form.labels.redditTitle')}
             value={content.title || ''}
             onChange={(e) => onChange('title', e.target.value)}
-            helperText="Post title for Reddit"
+            helperText={t('help.redditTitle')}
             variant="outlined"
             sx={{ mb: 2 }}
           />
@@ -226,19 +227,19 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
             fullWidth
             multiline
             rows={4}
-            label="Reddit Body"
+            label={t('form.labels.redditBody')}
             value={content.body || ''}
             onChange={(e) => onChange('body', e.target.value)}
-            helperText="Post body content for Reddit"
+            helperText={t('help.redditBody')}
             variant="outlined"
             sx={{ mb: 2 }}
           />
           <TextField
             fullWidth
-            label="Subreddit"
+            label={t('form.labels.subreddit')}
             value={content.subreddit || ''}
             onChange={(e) => onChange('subreddit', e.target.value)}
-            placeholder="e.g., r/berlin"
+            placeholder={t('form.labels.subredditExample')}
             variant="outlined"
             sx={{ mb: 2 }}
           />
@@ -253,7 +254,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
               📧 Email Recipients
             </Typography>
             <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
-              <InputLabel>Select Recipients</InputLabel>
+              <InputLabel>{t('form.labels.selectRecipients')}</InputLabel>
               <Select
                 multiple
                 value={content.recipients || []}
@@ -280,7 +281,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
 
           <TextField
             fullWidth
-            label="Email Subject"
+            label={t('form.labels.emailSubject')}
             value={content.subject || ''}
             onChange={(e) => onChange('subject', e.target.value)}
             variant="outlined"
@@ -290,10 +291,10 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
             fullWidth
             multiline
             rows={6}
-            label="Email HTML Content"
+            label={t('form.labels.emailHtmlContent')}
             value={content.html || ''}
             onChange={(e) => onChange('html', e.target.value)}
-            helperText="HTML content for email"
+            helperText={t('help.emailContent')}
             variant="outlined"
             sx={{ mb: 2 }}
           />
@@ -309,7 +310,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
         <Chip
           size="small"
           color={isValid ? "success" : "warning"}
-          label={isValid ? "Ready" : "Draft"}
+          label={isValid ? t('status.ready') : t('status.draft')}
         />
       </Box>
     </Paper>
@@ -317,6 +318,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
 }
 
 function EventParser() {
+  const { t } = useTranslation()
   const {
     uploadedFileRefs,
     selectedPlatforms,
@@ -537,7 +539,7 @@ function EventParser() {
       {isParsing && (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
           <CircularProgress size={24} />
-          <Typography>Parsing document...</Typography>
+          <Typography>{t('status.parsingDocument')}</Typography>
         </Box>
       )}
 
@@ -555,9 +557,9 @@ function EventParser() {
             onChange={(e, newValue) => setActiveTab(newValue)}
             sx={{ mb: 3 }}
           >
-            <Tab label="📄 Raw Data" />
-            <Tab label="🎨 Content Creation" />
-            <Tab label="👁️ Platform Preview" />
+            <Tab label={t('tabs.rawData')} />
+            <Tab label={t('tabs.contentCreation')} />
+            <Tab label={t('tabs.platformPreview')} />
           </Tabs>
 
           {/* Tab 1: Raw Data */}
@@ -703,7 +705,7 @@ function EventParser() {
 
               <Accordion defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>🐦 Twitter/X Preview</Typography>
+                  <Typography>{t('preview.twitter')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>
@@ -731,7 +733,7 @@ function EventParser() {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>📸 Instagram Preview</Typography>
+                  <Typography>{t('preview.instagram')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>
@@ -753,7 +755,7 @@ function EventParser() {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>📧 Email Preview</Typography>
+                  <Typography>{t('preview.emailPreview')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>

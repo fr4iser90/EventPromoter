@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -16,6 +17,7 @@ import TwitterIcon from '@mui/icons-material/Twitter'
 import useStore from '../../store'
 
 function TwitterPanel() {
+  const { t } = useTranslation()
   const { platformSettings, setPlatformSettings } = useStore()
   const [postingMode, setPostingMode] = useState('single')
   const [includeThread, setIncludeThread] = useState(false)
@@ -35,21 +37,21 @@ function TwitterPanel() {
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <TwitterIcon sx={{ mr: 1, color: '#1DA1F2' }} />
         <Typography variant="h6">
-          Twitter Settings
+          {t('panels.twitter.title')}
         </Typography>
       </Box>
 
       {/* Posting Mode */}
       <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel>Posting Mode</InputLabel>
+        <InputLabel>{t('panels.twitter.postingMode.label')}</InputLabel>
         <Select
           value={postingMode}
           onChange={(e) => setPostingMode(e.target.value)}
-          label="Posting Mode"
+          label={t('panels.twitter.postingMode.label')}
         >
-          <MenuItem value="single">Single Tweet</MenuItem>
-          <MenuItem value="thread">Thread</MenuItem>
-          <MenuItem value="auto">Auto (Thread if needed)</MenuItem>
+          <MenuItem value="single">{t('panels.twitter.postingMode.single')}</MenuItem>
+          <MenuItem value="thread">{t('panels.twitter.postingMode.thread')}</MenuItem>
+          <MenuItem value="auto">{t('panels.twitter.postingMode.auto')}</MenuItem>
         </Select>
       </FormControl>
 
@@ -57,7 +59,7 @@ function TwitterPanel() {
 
       {/* Options */}
       <Typography variant="subtitle2" gutterBottom>
-        Options
+        {t('panels.twitter.options.title')}
       </Typography>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <FormControlLabel
@@ -68,7 +70,7 @@ function TwitterPanel() {
               size="small"
             />
           }
-          label="Thread-Unterstützung"
+          label={t('panels.twitter.options.threadSupport')}
         />
         <FormControlLabel
           control={
@@ -78,7 +80,7 @@ function TwitterPanel() {
               size="small"
             />
           }
-          label="Automatisch kürzen (280 Zeichen)"
+          label={t('panels.twitter.options.autoTruncate')}
         />
       </Box>
 
@@ -86,7 +88,7 @@ function TwitterPanel() {
 
       {/* Info */}
       <Alert severity="info" size="small">
-        Twitter API ist sehr zuverlässig und schnell. Keine zusätzlichen Credentials nötig.
+        {t('panels.twitter.info.api')}
       </Alert>
     </Paper>
   )

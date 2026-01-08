@@ -1,0 +1,64 @@
+{
+  "panels": {
+    "linkedin": {
+      "title": "LinkedIn Einstellungen",
+      "postType": {
+        "label": "Post-Typ",
+        "text": "Text-Post",
+        "article": "Artikel",
+        "poll": "Umfrage",
+        "document": "Dokument"
+      },
+      "postAs": {
+        "label": "Post als"
+      },
+      "companies": {
+        "company1": "Meine Firma GmbH",
+        "company2": "Tech Startup AG",
+        "personal": "Persönliches Profil"
+      },
+      "followers": "Follower",
+      "targetAudience": {
+        "title": "Zielgruppe",
+        "connections": "Nur Connections",
+        "anyone": "Jeder (Anyone)",
+        "custom": "Benutzerdefinierte Zielgruppe"
+      },
+      "options": {
+        "title": "Optionen",
+        "includeArticle": "Artikel-Link hinzufügen",
+        "professionalTone": "Professioneller Ton"
+      },
+      "info": {
+        "api": "LinkedIn API ist sehr zuverlässig für professionelle Inhalte."
+      },
+      "warnings": {
+        "article": "Artikel-Posts werden als LinkedIn-Artikel veröffentlicht.",
+        "anyone": "\"Anyone\" kann zu weniger Interaktion führen."
+      }
+    }
+  },
+  "platforms": {
+    "linkedin": {
+      "title": "LinkedIn Post",
+      "contentLabel": "Professioneller Inhalt",
+      "placeholder": "Teile professionelle Einblicke...",
+      "bestPractices": {
+        "title": "LinkedIn Best Practices:",
+        "points": [
+          "Fokussiere dich auf Wert und Einblicke",
+          "Verwende professionelle Sprache",
+          "Nutze relevante Hashtags",
+          "Stelle provokante Fragen"
+        ]
+      },
+      "footer": "Dein Beitrag wird auf deinem LinkedIn-Profil oder Unternehmensseite veröffentlicht."
+    }
+  },
+  "preview": {
+    "noLinkedInContent": "Noch kein LinkedIn-Inhalt..."
+  },
+  "help": {
+    "linkedinPost": "Professioneller Post-Inhalt für LinkedIn"
+  }
+}

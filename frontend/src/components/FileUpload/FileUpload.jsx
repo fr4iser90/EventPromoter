@@ -1,4 +1,5 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDropzone } from 'react-dropzone'
 import {
   Box,
@@ -36,6 +37,7 @@ const ACCEPTED_TYPES = {
 }
 
 function FileUpload() {
+  const { t } = useTranslation()
   const { uploadedFileRefs, uploadFiles, removeUploadedFile, error, setError, isProcessing, workflowState, fileUploadExpanded, setFileUploadExpanded } = useStore()
   const folderInputRef = useRef(null)
 
@@ -196,7 +198,7 @@ function FileUpload() {
         <input {...getInputProps()} />
         <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
         <Typography variant="h6" gutterBottom>
-          {isDragActive ? 'Drop files here...' : 'Drag & drop files here'}
+          {isDragActive ? t('common.dropActive') : t('common.dropInactive')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           or click to browse files
@@ -252,7 +254,7 @@ function FileUpload() {
                   <Chip
                     label={
                       fileData.type === 'application/pdf' ? 'PDF' :
-                      fileData.type.startsWith('image/') ? 'Image' : 'Text'
+                      fileData.type.startsWith('image/') ? t('status.fileType.image') : t('status.fileType.text')
                     }
                     size="small"
                     color={

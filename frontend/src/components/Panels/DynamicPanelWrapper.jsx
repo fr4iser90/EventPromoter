@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -10,6 +11,7 @@ import { DynamicPanel } from '../registry/ComponentRegistry'
 import useStore from '../../store'
 
 function DynamicPanelWrapper({ platform }) {
+  const { t } = useTranslation()
   const [uiConfig, setUiConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -55,7 +57,7 @@ function DynamicPanelWrapper({ platform }) {
     return (
       <Paper sx={{ p: 3, textAlign: 'center' }}>
         <CircularProgress sx={{ mb: 2 }} />
-        <Typography>Loading {platform} configuration...</Typography>
+        <Typography>{t('status.loadingPlatformConfig', { platform })}</Typography>
       </Paper>
     )
   }

@@ -1,5 +1,6 @@
 // Publish Parser - Handles manual finalization before submission
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -19,6 +20,7 @@ import useStore from '../../store'
 import PublishResults from '../PublishResults/PublishResults'
 
 function PublishParser() {
+  const { t } = useTranslation()
   const {
     selectedPlatforms,
     platformContent,
@@ -270,7 +272,7 @@ function PublishParser() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowConfirmDialog(false)}>Cancel</Button>
+          <Button onClick={() => setShowConfirmDialog(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleConfirmPublish} variant="contained" color="primary">
             Confirm Publish
           </Button>

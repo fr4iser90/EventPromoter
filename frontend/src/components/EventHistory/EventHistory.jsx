@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -15,6 +16,7 @@ import EventHistoryCard from '../EventHistoryCard/EventHistoryCard'
 import useStore, { WORKFLOW_STATES } from '../../store'
 
 function EventHistory() {
+  const { t } = useTranslation()
   const { workflowState, eventHistoryExpanded, setEventHistoryExpanded } = useStore()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -68,7 +70,7 @@ function EventHistory() {
       }
     } catch (error) {
       console.error('Failed to load event files:', error)
-      alert('Failed to load event files')
+      alert(t('errors.failedToLoadEventFiles'))
     }
   }
 
@@ -142,7 +144,7 @@ function EventHistory() {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Search events..."
+                placeholder={t('search.events')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 sx={{ mb: 2 }}

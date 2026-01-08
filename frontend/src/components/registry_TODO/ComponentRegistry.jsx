@@ -2,6 +2,7 @@
 // Maps component names from backend to React components
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   TextField,
   Select,
@@ -38,6 +39,7 @@ import useStore from '../../store'
 
 // Dynamic Section Renderer
 export function DynamicSection({ section, values = {}, onChange }) {
+  const { t } = useTranslation()
   const Component = COMPONENT_REGISTRY[section.component] || COMPONENT_REGISTRY.unknown
 
   return (
@@ -50,6 +52,7 @@ export function DynamicSection({ section, values = {}, onChange }) {
         value={values[section.id]}
         values={values}
         onChange={(field, value) => onChange(section.id, { ...values[section.id], [field]: value })}
+        t={t}
       />
     </Box>
   )
@@ -57,8 +60,9 @@ export function DynamicSection({ section, values = {}, onChange }) {
 
 // Dynamic Panel Renderer
 export function DynamicPanel({ config, values = {}, onChange }) {
+  const { t } = useTranslation()
   if (!config?.sections) {
-    return <Alert severity="error">No panel configuration provided</Alert>
+    return <Alert severity="error">{t('registry.noPanelConfiguration')}</Alert>
   }
 
   return (
@@ -91,9 +95,9 @@ export const COMPONENT_REGISTRY = {
   'settings-form': SettingsForm,
 
   // Unknown component handler
-  'unknown': ({ component }) => (
+  'unknown': ({ component, t }) => (
     <Alert severity="warning">
-      Unknown component: {component}
+      {t ? t('registry.unknownComponent') : 'Unknown component'}: {component}
     </Alert>
   )
 }

@@ -113,6 +113,10 @@ export class EventService {
 
   // Save event workspace (save event data and update current session)
   static async saveEventWorkspace(eventWorkspace: EventWorkspace): Promise<boolean> {
+    if (!eventWorkspace.currentEvent) {
+      throw new Error('No current event to save')
+    }
+
     const eventData = eventWorkspace.currentEvent
     const eventId = eventData.id
 
@@ -130,6 +134,9 @@ export class EventService {
 
   static async getCurrentEvent(): Promise<Event> {
     const eventWorkspace = await this.getEventWorkspace()
+    if (!eventWorkspace.currentEvent) {
+      throw new Error('No current event available')
+    }
     return eventWorkspace.currentEvent
   }
 
@@ -235,6 +242,9 @@ export class EventService {
 
   static async updateCurrentEvent(event: Partial<Event>): Promise<boolean> {
     const eventWorkspace = await this.getEventWorkspace()
+    if (!eventWorkspace.currentEvent) {
+      throw new Error('No current event to update')
+    }
     eventWorkspace.currentEvent = { ...eventWorkspace.currentEvent, ...event }
     return await this.saveEventWorkspace(eventWorkspace)
   }

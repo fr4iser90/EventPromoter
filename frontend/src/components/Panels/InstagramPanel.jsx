@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -18,6 +19,7 @@ import InstagramIcon from '@mui/icons-material/Instagram'
 import useStore from '../../store'
 
 function InstagramPanel() {
+  const { t } = useTranslation()
   const { platformSettings, setPlatformSettings } = useStore()
   const [accountType, setAccountType] = useState('business')
   const [postingMode, setPostingMode] = useState('post')
@@ -30,9 +32,9 @@ function InstagramPanel() {
 
   const getHashtagStrategyDescription = (strategy) => {
     switch (strategy) {
-      case 'minimal': return '5-10 Hashtags (weniger ist mehr)'
-      case 'moderate': return '15-25 Hashtags (ausgewogen)'
-      case 'maximal': return '25-35 Hashtags (für Reichweite)'
+      case 'minimal': return t('panels.instagram.hashtagStrategy.minimal.description')
+      case 'moderate': return t('panels.instagram.hashtagStrategy.moderate.description')
+      case 'maximal': return t('panels.instagram.hashtagStrategy.maximal.description')
       default: return ''
     }
   }
@@ -48,36 +50,36 @@ function InstagramPanel() {
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <InstagramIcon sx={{ mr: 1, color: '#E4405F' }} />
         <Typography variant="h6">
-          Instagram Settings
+          {t('panels.instagram.title')}
         </Typography>
       </Box>
 
       {/* Account Type */}
       <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel>Account Type</InputLabel>
+        <InputLabel>{t('panels.instagram.accountType.label')}</InputLabel>
         <Select
           value={accountType}
           onChange={(e) => setAccountType(e.target.value)}
-          label="Account Type"
+          label={t('panels.instagram.accountType.label')}
         >
-          <MenuItem value="personal">Personal Account</MenuItem>
-          <MenuItem value="business">Business Account</MenuItem>
-          <MenuItem value="creator">Creator Account</MenuItem>
+          <MenuItem value="personal">{t('panels.instagram.accountType.personal')}</MenuItem>
+          <MenuItem value="business">{t('panels.instagram.accountType.business')}</MenuItem>
+          <MenuItem value="creator">{t('panels.instagram.accountType.creator')}</MenuItem>
         </Select>
       </FormControl>
 
       {/* Posting Mode */}
       <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel>Posting Mode</InputLabel>
+        <InputLabel>{t('panels.instagram.postingMode.label')}</InputLabel>
         <Select
           value={postingMode}
           onChange={(e) => setPostingMode(e.target.value)}
-          label="Posting Mode"
+          label={t('panels.instagram.postingMode.label')}
         >
-          <MenuItem value="post">Feed Post</MenuItem>
-          <MenuItem value="reel">Reel</MenuItem>
-          <MenuItem value="story">Story</MenuItem>
-          <MenuItem value="carousel">Carousel Post</MenuItem>
+          <MenuItem value="post">{t('panels.instagram.postingMode.post')}</MenuItem>
+          <MenuItem value="reel">{t('panels.instagram.postingMode.reel')}</MenuItem>
+          <MenuItem value="story">{t('panels.instagram.postingMode.story')}</MenuItem>
+          <MenuItem value="carousel">{t('panels.instagram.postingMode.carousel')}</MenuItem>
         </Select>
       </FormControl>
 
@@ -85,7 +87,7 @@ function InstagramPanel() {
 
       {/* Hashtag Strategy */}
       <Typography variant="subtitle2" gutterBottom>
-        Hashtag-Strategie
+        {t('panels.instagram.hashtagStrategy.title')}
       </Typography>
       <FormControl fullWidth sx={{ mb: 2 }}>
         <Select
@@ -93,9 +95,9 @@ function InstagramPanel() {
           onChange={(e) => setHashtagStrategy(e.target.value)}
           size="small"
         >
-          <MenuItem value="minimal">Minimal</MenuItem>
-          <MenuItem value="moderate">Moderat</MenuItem>
-          <MenuItem value="maximal">Maximal</MenuItem>
+          <MenuItem value="minimal">{t('panels.instagram.hashtagStrategy.minimal.label')}</MenuItem>
+          <MenuItem value="moderate">{t('panels.instagram.hashtagStrategy.moderate.label')}</MenuItem>
+          <MenuItem value="maximal">{t('panels.instagram.hashtagStrategy.maximal.label')}</MenuItem>
         </Select>
       </FormControl>
 
@@ -105,7 +107,7 @@ function InstagramPanel() {
 
       {/* Max Hashtags Slider */}
       <Typography variant="subtitle2" gutterBottom>
-        Maximale Hashtags: {maxHashtags}
+        {t('panels.instagram.maxHashtags')}: {maxHashtags}
       </Typography>
       <Slider
         value={maxHashtags}
@@ -122,7 +124,7 @@ function InstagramPanel() {
 
       {/* Options */}
       <Typography variant="subtitle2" gutterBottom>
-        Optionen
+        {t('panels.instagram.options.title')}
       </Typography>
       <FormControlLabel
         control={
@@ -132,25 +134,25 @@ function InstagramPanel() {
             size="small"
           />
         }
-        label="Bild erforderlich"
+        label={t('panels.instagram.options.requireImage')}
       />
 
       <Divider sx={{ my: 2 }} />
 
       {/* Warnings/Info */}
       <Alert severity="info" size="small" sx={{ mb: 1 }}>
-        Instagram verwendet Playwright für zuverlässiges Posting.
+        {t('panels.instagram.info.playwright')}
       </Alert>
 
       {postingMode === 'reel' && (
         <Alert severity="warning" size="small">
-          Reels benötigen Video-Inhalte.
+          {t('panels.instagram.warnings.reel')}
         </Alert>
       )}
 
       {postingMode === 'story' && (
         <Alert severity="info" size="small">
-          Stories verschwinden nach 24h.
+          {t('panels.instagram.warnings.story')}
         </Alert>
       )}
     </Paper>

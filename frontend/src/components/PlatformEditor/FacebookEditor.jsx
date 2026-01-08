@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   TextField,
@@ -9,13 +10,14 @@ import HashtagSelector from '../HashtagSelector/HashtagSelector'
 import TemplateSelector from '../TemplateEditor/TemplateSelector'
 
 function FacebookEditor({ content, onChange }) {
+  const { t } = useTranslation()
   const textLength = (content?.text || '').length
   const maxLength = 63206
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Typography variant="h6" sx={{ color: '#1877F2', fontWeight: 'bold' }}>
-        👥 Facebook Post
+        👥 {t('platforms.facebook.title')}
       </Typography>
 
       <Box sx={{ mb: 2 }}>
@@ -32,12 +34,12 @@ function FacebookEditor({ content, onChange }) {
         fullWidth
         multiline
         rows={4}
-        label="Post Content"
+        label={t('platforms.facebook.contentLabel')}
         value={content?.text || ''}
         onChange={(e) => onChange({ ...content, text: e.target.value })}
-        placeholder="Share your thoughts..."
+        placeholder={t('platforms.facebook.placeholder')}
         inputProps={{ maxLength }}
-        helperText={`${textLength}/${maxLength} characters`}
+        helperText={`${textLength}/${maxLength} ${t('common.characters')}`}
         error={textLength > maxLength}
       />
 
@@ -48,14 +50,16 @@ function FacebookEditor({ content, onChange }) {
       />
 
       <Alert severity="info">
-        <strong>Facebook tips:</strong><br />
-        • Posts with questions get 100% more engagement<br />
-        • Use 1-2 relevant hashtags<br />
-        • Keep it conversational and authentic
+        <strong>{t('platforms.facebook.bestPractices.title')}</strong><br />
+        {t('platforms.facebook.bestPractices.points', { returnObjects: true }).map((point, index) => (
+          <React.Fragment key={index}>
+            • {point}<br />
+          </React.Fragment>
+        ))}
       </Alert>
 
       <Typography variant="body2" color="text.secondary">
-        Your post will be published to your Facebook page or personal profile.
+        {t('platforms.facebook.footer')}
       </Typography>
     </Box>
   )

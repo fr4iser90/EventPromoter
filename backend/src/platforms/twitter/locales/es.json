@@ -1,0 +1,29 @@
+{
+  "panels": {
+    "twitter": {
+      "title": "Configuración de Twitter",
+      "postingMode": {
+        "label": "Modo de Publicación",
+        "single": "Tweet Individual",
+        "thread": "Hilo",
+        "auto": "Auto (Hilo si es necesario)"
+      },
+      "options": {
+        "title": "Opciones",
+        "threadSupport": "Soporte de Hilo",
+        "autoTruncate": "Truncar automáticamente (280 caracteres)"
+      },
+      "info": {
+        "api": "La API de Twitter es muy confiable y rápida. No se necesitan credenciales adicionales."
+      }
+    }
+  },
+  "platforms": {
+    "twitter": {
+      "title": "Publicación de Twitter/X"
+    }
+  },
+  "preview": {
+    "twitter": "🐦 Vista Previa de Twitter/X"
+  }
+}

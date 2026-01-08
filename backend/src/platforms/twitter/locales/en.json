@@ -1,0 +1,29 @@
+{
+  "panels": {
+    "twitter": {
+      "title": "Twitter Settings",
+      "postingMode": {
+        "label": "Posting Mode",
+        "single": "Single Tweet",
+        "thread": "Thread",
+        "auto": "Auto (Thread if needed)"
+      },
+      "options": {
+        "title": "Options",
+        "threadSupport": "Thread Support",
+        "autoTruncate": "Auto-truncate (280 characters)"
+      },
+      "info": {
+        "api": "Twitter API is very reliable and fast. No additional credentials needed."
+      }
+    }
+  },
+  "platforms": {
+    "twitter": {
+      "title": "Twitter/X Post"
+    }
+  },
+  "preview": {
+    "twitter": "🐦 Twitter/X Preview"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "panels": {
+    "instagram": {
+      "title": "Configuración de Instagram",
+      "accountType": {
+        "label": "Tipo de Cuenta",
+        "personal": "Cuenta Personal",
+        "business": "Cuenta Empresarial",
+        "creator": "Cuenta de Creador"
+      },
+      "postingMode": {
+        "label": "Modo de Publicación",
+        "post": "Publicación en Feed",
+        "reel": "Reel",
+        "story": "Historia",
+        "carousel": "Publicación de Carrusel"
+      },
+      "hashtagStrategy": {
+        "title": "Estrategia de Hashtags",
+        "minimal": {
+          "label": "Mínima",
+          "description": "5-10 Hashtags (menos es más)"
+        },
+        "moderate": {
+          "label": "Moderada",
+          "description": "15-25 Hashtags (equilibrada)"
+        },
+        "maximal": {
+          "label": "Máxima",
+          "description": "25-35 Hashtags (para alcance)"
+        }
+      },
+      "maxHashtags": "Hashtags Máximos",
+      "options": {
+        "title": "Opciones",
+        "requireImage": "Requiere Imagen"
+      },
+      "info": {
+        "playwright": "Instagram usa Playwright para publicaciones confiables."
+      },
+      "warnings": {
+        "reel": "Los Reels requieren contenido de video.",
+        "story": "Las historias desaparecen después de 24h."
+      }
+    }
+  },
+  "platforms": {
+    "instagram": {
+      "title": "Publicación de Instagram",
+      "contentLabel": "Pie de Foto",
+      "placeholder": "Escribe un pie de foto para tu publicación...",
+      "bestPractices": {
+        "title": "Mejores prácticas:",
+        "points": [
+          "Usa 1-3 hashtags relevantes",
+          "Haz preguntas para aumentar la interacción",
+          "Usa emojis estratégicamente"
+        ]
+      },
+      "footer": "Nota: La carga de imágenes se manejará por separado en el paso de publicación."
+    }
+  },
+  "preview": {
+    "instagram": "📸 Vista Previa de Instagram",
+    "noCaption": "Aún no hay pie de foto..."
+  },
+  "help": {
+    "instagramCaption": "Subtítulo para publicación de Instagram"
+  }
+}

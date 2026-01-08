@@ -62,7 +62,7 @@ function TwitterEditor({ content, onChange, platformSettings }) {
         fullWidth
         multiline
         rows={4}
-        label="Tweet Text"
+        label={t('form.labels.tweetText')}
         value={content?.text || ''}
         onChange={(e) => onChange({ ...content, text: e.target.value })}
         placeholder="What's happening?"

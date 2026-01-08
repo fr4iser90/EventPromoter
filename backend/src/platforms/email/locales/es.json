@@ -1,0 +1,162 @@
+{
+  "app": {
+    "title": "Multi-Platform Social Media Publisher"
+  },
+  "language": {
+    "english": "🇺🇸 EN",
+    "german": "🇩🇪 DE",
+    "spanish": "🇪🇸 ES"
+  },
+  "workflow": {
+    "startHere": "Start here:",
+    "next": "Next:",
+    "publishContent": "🚀 Publish Content",
+    "saving": "💾 Saving...",
+    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+  },
+  "status": {
+    "ready": "Listo",
+    "draft": "Borrador",
+    "parsingDocument": "Analizando documento...",
+    "loadingPlatformConfig": "Cargando configuración de {{platform}}...",
+    "fileType": {
+      "image": "Imagen",
+      "text": "Texto"
+    }
+  },
+  "tabs": {
+    "rawData": "📄 Datos Crudos",
+    "contentCreation": "🎨 Creación de Contenido",
+    "platformPreview": "👁️ Vista Previa de Plataforma"
+  },
+  "search": {
+    "events": "Search events..."
+  },
+  "templates": {
+    "title": "📝 Template Manager",
+    "management": "Template Management",
+    "managementSystem": "📝 Template Management System",
+    "preview": "Template Preview",
+    "usage": "💡 Template Usage",
+    "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{eventTitle}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
+    "defaultTemplates": "Default templates",
+    "customTemplates": "Custom templates",
+    "defaultTemplatesNote": "cannot be modified but serve as examples.",
+    "customTemplatesNote": "can be fully edited and deleted."
+  },
+  "event": {
+    "untitled": "Evento sin título",
+    "title": "Título",
+    "date": "Fecha",
+    "time": "Hora",
+    "venue": "Lugar",
+    "city": "Ciudad",
+    "description": "Descripción",
+    "organizer": "Organizador",
+    "website": "Sitio Web",
+    "lineup": "Lineup",
+    "genre": "Género"
+  },
+  "form": {
+    "labels": {
+      "tweetText": "Tweet Text",
+      "instagramCaption": "Instagram Caption",
+      "facebookPost": "Facebook Post",
+      "linkedinPost": "LinkedIn Post",
+      "redditTitle": "Reddit Title",
+      "redditBody": "Reddit Body",
+      "subreddit": "Subreddit",
+      "selectRecipients": "Seleccionar Destinatarios",
+      "emailSubject": "Asunto del Correo",
+      "emailHtmlContent": "Contenido HTML del Correo",
+      "subredditExample": "ej. r/berlin"
+    }
+  },
+  "navigation": {
+    "home": "Inicio",
+    "templates": "Plantillas"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "dropActive": "Suelta los archivos aquí...",
+    "dropInactive": "Arrastra y suelta los archivos aquí",
+    "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
+    "characters": "caracteres",
+    "unknown": "Desconocido"
+  },
+  "fileUpload": {
+    "title": "Subir Archivos",
+    "dropzone": "Arrastra archivos aquí o haz clic para seleccionar",
+    "dropActive": "Suelta los archivos aquí...",
+    "dropInactive": "Arrastra y suelta los archivos aquí",
+    "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
+    "customHashtagPlaceholder": "Agregar hashtag personalizado...",
+    "uploading": "Subiendo...",
+    "success": "Archivos subidos exitosamente",
+    "filesUploaded": "{{count}} archivo subido"
+  },
+  "preview": {
+    "title": "Vista Previa",
+    "noFiles": "Aún no se han subido archivos. Sube archivos para ver la vista previa.",
+    "parsedData": "Datos del Evento Analizados",
+    "images": "Imágenes",
+    "sourceFiles": "Archivos Fuente",
+    "eventImage": "Imagen del Evento"
+  },
+  "template": {
+    "placeholders": "Marcadores de Posición de Plantilla Disponibles",
+    "create": "Crear Plantilla",
+    "edit": "Editar Plantilla",
+    "delete": "Eliminar Plantilla",
+    "name": "Nombre",
+    "description": "Descripción",
+    "platform": "Plataforma"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "dateFormat": "Formato de Fecha",
+    "timeFormat": "Formato de Hora",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "dateFormats": {
+    "german": "DD.MM.YYYY",
+    "us": "MM/DD/YYYY",
+    "iso": "YYYY-MM-DD"
+  },
+  "timeFormats": {
+    "24h": "24 Horas",
+    "12h": "12 Horas"
+  },
+  "duplicate": {
+    "title": "¡Evento Similar Encontrado!",
+    "description": "Encontramos un evento similar en la base de datos. ¿Te gustaría reutilizar los datos existentes o usar los datos recién analizados?",
+    "existingEvent": "Evento Existente",
+    "newParsedEvent": "Evento Recién Analizado",
+    "similarity": "Similitud",
+    "useExisting": "Usar Datos Existentes",
+    "useNew": "Usar Datos Nuevos"
+  },
+  "hashtags": {
+    "title": "Hashtags"
+  },
+  "registry": {
+    "noPanelConfiguration": "No se proporcionó configuración de panel",
+    "unknownComponent": "Componente desconocido"
+  },
+  "errors": {
+    "failedToLoadEventFiles": "Error al cargar archivos de eventos",
+    "invalidJsonFormat": "Formato JSON inválido",
+    "failedToLoadFileContent": "Error al cargar contenido del archivo",
+    "errorLoadingFileContent": "Error al cargar contenido del archivo"
+  }
+}

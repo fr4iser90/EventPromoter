@@ -13,7 +13,7 @@ export interface Event {
 }
 
 export interface EventWorkspace {
-  currentEvent: Event
+  currentEvent: Event | null
 }
 
 export interface PlatformContent {

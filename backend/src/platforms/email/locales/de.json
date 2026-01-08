@@ -1,0 +1,162 @@
+{
+  "app": {
+    "title": "Multi-Platform Social Media Publisher"
+  },
+  "language": {
+    "english": "🇺🇸 EN",
+    "german": "🇩🇪 DE",
+    "spanish": "🇪🇸 ES"
+  },
+  "workflow": {
+    "startHere": "Start here:",
+    "next": "Next:",
+    "publishContent": "🚀 Publish Content",
+    "saving": "💾 Saving...",
+    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+  },
+  "status": {
+    "ready": "Bereit",
+    "draft": "Entwurf",
+    "parsingDocument": "Dokument wird analysiert...",
+    "loadingPlatformConfig": "{{platform}} Konfiguration wird geladen...",
+    "fileType": {
+      "image": "Bild",
+      "text": "Text"
+    }
+  },
+  "tabs": {
+    "rawData": "📄 Rohdaten",
+    "contentCreation": "🎨 Inhaltserstellung",
+    "platformPreview": "👁️ Plattformvorschau"
+  },
+  "search": {
+    "events": "Search events..."
+  },
+  "templates": {
+    "title": "📝 Template Manager",
+    "management": "Template Management",
+    "managementSystem": "📝 Template Management System",
+    "preview": "Template Preview",
+    "usage": "💡 Template Usage",
+    "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{eventTitle}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
+    "defaultTemplates": "Default templates",
+    "customTemplates": "Custom templates",
+    "defaultTemplatesNote": "cannot be modified but serve as examples.",
+    "customTemplatesNote": "can be fully edited and deleted."
+  },
+  "event": {
+    "untitled": "Unbenanntes Event",
+    "title": "Titel",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "venue": "Veranstaltungsort",
+    "city": "Stadt",
+    "description": "Beschreibung",
+    "organizer": "Veranstalter",
+    "website": "Website",
+    "lineup": "Lineup",
+    "genre": "Genre"
+  },
+  "form": {
+    "labels": {
+      "tweetText": "Tweet Text",
+      "instagramCaption": "Instagram Caption",
+      "facebookPost": "Facebook Post",
+      "linkedinPost": "LinkedIn Post",
+      "redditTitle": "Reddit Title",
+      "redditBody": "Reddit Body",
+      "subreddit": "Subreddit",
+      "selectRecipients": "Empfänger auswählen",
+      "emailSubject": "E-Mail-Betreff",
+      "emailHtmlContent": "HTML E-Mail-Inhalt",
+      "subredditExample": "z.B. r/berlin"
+    }
+  },
+  "navigation": {
+    "home": "Start",
+    "templates": "Vorlagen"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "dropActive": "Dateien hier ablegen...",
+    "dropInactive": "Dateien hier ziehen und ablegen",
+    "hashtagsPlaceholder": "Hashtags durch Kommas getrennt eingeben (z.B., party, music, berlin)",
+    "characters": "Zeichen",
+    "unknown": "Unbekannt"
+  },
+  "fileUpload": {
+    "title": "Dateien hochladen",
+    "dropzone": "Dateien hier ablegen oder klicken zum Auswählen",
+    "dropActive": "Dateien hier ablegen...",
+    "dropInactive": "Dateien hier ziehen und ablegen",
+    "hashtagsPlaceholder": "Hashtags durch Kommas getrennt eingeben (z.B., party, music, berlin)",
+    "customHashtagPlaceholder": "Eigenes Hashtag hinzufügen...",
+    "uploading": "Hochladen...",
+    "success": "Dateien erfolgreich hochgeladen",
+    "filesUploaded": "{{count}} Datei hochgeladen"
+  },
+  "preview": {
+    "title": "Vorschau",
+    "noFiles": "Noch keine Dateien hochgeladen. Lade Dateien hoch, um die Vorschau zu sehen.",
+    "parsedData": "Geparste Event-Daten",
+    "images": "Bilder",
+    "sourceFiles": "Quelldateien",
+    "eventImage": "Event-Bild"
+  },
+  "template": {
+    "placeholders": "Vorlagen-Platzhalter verfügbar",
+    "create": "Vorlage erstellen",
+    "edit": "Vorlage bearbeiten",
+    "delete": "Vorlage löschen",
+    "name": "Name",
+    "description": "Beschreibung",
+    "platform": "Plattform"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "dateFormat": "Datumsformat",
+    "timeFormat": "Zeitformat",
+    "theme": "Design",
+    "light": "Hell",
+    "dark": "Dunkel"
+  },
+  "dateFormats": {
+    "german": "DD.MM.YYYY",
+    "us": "MM/DD/YYYY",
+    "iso": "YYYY-MM-DD"
+  },
+  "timeFormats": {
+    "24h": "24-Stunden",
+    "12h": "12-Stunden"
+  },
+  "duplicate": {
+    "title": "Ähnliches Event gefunden!",
+    "description": "Wir haben ein ähnliches Event in der Datenbank gefunden. Möchtest du die vorhandenen Daten wiederverwenden oder die neuen geparsten Daten verwenden?",
+    "existingEvent": "Vorhandenes Event",
+    "newParsedEvent": "Neu geparstes Event",
+    "similarity": "Ähnlichkeit",
+    "useExisting": "Vorhandene Daten verwenden",
+    "useNew": "Neue Daten verwenden"
+  },
+  "hashtags": {
+    "title": "Hashtags"
+  },
+  "registry": {
+    "noPanelConfiguration": "Keine Panel-Konfiguration bereitgestellt",
+    "unknownComponent": "Unbekannte Komponente"
+  },
+  "errors": {
+    "failedToLoadEventFiles": "Event-Dateien konnten nicht geladen werden",
+    "invalidJsonFormat": "Ungültiges JSON-Format",
+    "failedToLoadFileContent": "Dateiinhalt konnte nicht geladen werden",
+    "errorLoadingFileContent": "Fehler beim Laden des Dateiinhalts"
+  }
+}

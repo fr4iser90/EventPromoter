@@ -1,0 +1,70 @@
+{
+  "panels": {
+    "instagram": {
+      "title": "Instagram Einstellungen",
+      "accountType": {
+        "label": "Account-Typ",
+        "personal": "Persönliches Konto",
+        "business": "Business-Konto",
+        "creator": "Creator-Konto"
+      },
+      "postingMode": {
+        "label": "Posting-Modus",
+        "post": "Feed-Beitrag",
+        "reel": "Reel",
+        "story": "Story",
+        "carousel": "Karussell-Beitrag"
+      },
+      "hashtagStrategy": {
+        "title": "Hashtag-Strategie",
+        "minimal": {
+          "label": "Minimal",
+          "description": "5-10 Hashtags (weniger ist mehr)"
+        },
+        "moderate": {
+          "label": "Moderat",
+          "description": "15-25 Hashtags (ausgewogen)"
+        },
+        "maximal": {
+          "label": "Maximal",
+          "description": "25-35 Hashtags (für Reichweite)"
+        }
+      },
+      "maxHashtags": "Maximale Hashtags",
+      "options": {
+        "title": "Optionen",
+        "requireImage": "Bild erforderlich"
+      },
+      "info": {
+        "playwright": "Instagram verwendet Playwright für zuverlässiges Posting."
+      },
+      "warnings": {
+        "reel": "Reels benötigen Video-Inhalte.",
+        "story": "Stories verschwinden nach 24h."
+      }
+    }
+  },
+  "platforms": {
+    "instagram": {
+      "title": "Instagram Post",
+      "contentLabel": "Bildunterschrift",
+      "placeholder": "Schreibe eine Bildunterschrift für deinen Beitrag...",
+      "bestPractices": {
+        "title": "Bewährte Praktiken:",
+        "points": [
+          "Verwende 1-3 relevante Hashtags",
+          "Stelle Fragen, um die Interaktion zu steigern",
+          "Nutze Emojis strategisch"
+        ]
+      },
+      "footer": "Hinweis: Der Bild-Upload wird separat im Veröffentlichungsschritt behandelt."
+    }
+  },
+  "preview": {
+    "instagram": "📸 Instagram Vorschau",
+    "noCaption": "Noch keine Bildunterschrift..."
+  },
+  "help": {
+    "instagramCaption": "Bildunterschrift für Instagram-Post"
+  }
+}

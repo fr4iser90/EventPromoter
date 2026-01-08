@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   TextField,
@@ -9,6 +10,7 @@ import TemplateSelector from '../TemplateEditor/TemplateSelector'
 import HashtagSelector from '../HashtagSelector/HashtagSelector'
 
 function RedditEditor({ content, onChange }) {
+  const { t } = useTranslation()
   const titleLength = (content?.title || '').length
   const bodyLength = (content?.body || '').length
   const maxTitleLength = 300
@@ -49,7 +51,7 @@ function RedditEditor({ content, onChange }) {
 
       <TextField
         fullWidth
-        label="Subreddit"
+        label={t('form.labels.subreddit')}
         value={content?.subreddit || ''}
         onChange={(e) => onChange({ ...content, subreddit: e.target.value })}
         placeholder="r/subreddit"

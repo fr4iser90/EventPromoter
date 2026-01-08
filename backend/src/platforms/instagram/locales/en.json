@@ -1,0 +1,70 @@
+{
+  "panels": {
+    "instagram": {
+      "title": "Instagram Settings",
+      "accountType": {
+        "label": "Account Type",
+        "personal": "Personal Account",
+        "business": "Business Account",
+        "creator": "Creator Account"
+      },
+      "postingMode": {
+        "label": "Posting Mode",
+        "post": "Feed Post",
+        "reel": "Reel",
+        "story": "Story",
+        "carousel": "Carousel Post"
+      },
+      "hashtagStrategy": {
+        "title": "Hashtag Strategy",
+        "minimal": {
+          "label": "Minimal",
+          "description": "5-10 Hashtags (less is more)"
+        },
+        "moderate": {
+          "label": "Moderate",
+          "description": "15-25 Hashtags (balanced)"
+        },
+        "maximal": {
+          "label": "Maximal",
+          "description": "25-35 Hashtags (for reach)"
+        }
+      },
+      "maxHashtags": "Maximum Hashtags",
+      "options": {
+        "title": "Options",
+        "requireImage": "Require Image"
+      },
+      "info": {
+        "playwright": "Instagram uses Playwright for reliable posting."
+      },
+      "warnings": {
+        "reel": "Reels require video content.",
+        "story": "Stories disappear after 24h."
+      }
+    }
+  },
+  "platforms": {
+    "instagram": {
+      "title": "Instagram Post",
+      "contentLabel": "Caption",
+      "placeholder": "Write a caption for your post...",
+      "bestPractices": {
+        "title": "Best practices:",
+        "points": [
+          "Use 1-3 relevant hashtags",
+          "Ask questions to boost engagement",
+          "Use emojis strategically"
+        ]
+      },
+      "footer": "Note: Image upload will be handled separately in the publishing step."
+    }
+  },
+  "preview": {
+    "instagram": "📸 Instagram Preview",
+    "noCaption": "No caption yet..."
+  },
+  "help": {
+    "instagramCaption": "Caption for Instagram post"
+  }
+}

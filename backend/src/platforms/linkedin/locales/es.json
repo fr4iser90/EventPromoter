@@ -1,0 +1,64 @@
+{
+  "panels": {
+    "linkedin": {
+      "title": "Configuración de LinkedIn",
+      "postType": {
+        "label": "Tipo de Publicación",
+        "text": "Publicación de Texto",
+        "article": "Artículo",
+        "poll": "Encuesta",
+        "document": "Documento"
+      },
+      "postAs": {
+        "label": "Publicar Como"
+      },
+      "companies": {
+        "company1": "Mi Empresa GmbH",
+        "company2": "Startup Tecnológica AG",
+        "personal": "Perfil Personal"
+      },
+      "followers": "seguidores",
+      "targetAudience": {
+        "title": "Audiencia Objetivo",
+        "connections": "Solo Conexiones",
+        "anyone": "Cualquiera",
+        "custom": "Audiencia Personalizada"
+      },
+      "options": {
+        "title": "Opciones",
+        "includeArticle": "Agregar Enlace de Artículo",
+        "professionalTone": "Tono Profesional"
+      },
+      "info": {
+        "api": "La API de LinkedIn es muy confiable para contenido profesional."
+      },
+      "warnings": {
+        "article": "Las publicaciones de artículos se publican como Artículos de LinkedIn.",
+        "anyone": "\"Cualquiera\" puede llevar a menos interacción."
+      }
+    }
+  },
+  "platforms": {
+    "linkedin": {
+      "title": "Publicación de LinkedIn",
+      "contentLabel": "Contenido Profesional",
+      "placeholder": "Comparte ideas profesionales...",
+      "bestPractices": {
+        "title": "Mejores prácticas de LinkedIn:",
+        "points": [
+          "Enfócate en el valor y las ideas",
+          "Usa lenguaje profesional",
+          "Incluye hashtags relevantes",
+          "Haz preguntas provocativas"
+        ]
+      },
+      "footer": "Tu publicación se publicará en tu perfil de LinkedIn o página de empresa."
+    }
+  },
+  "preview": {
+    "noLinkedInContent": "Aún no hay contenido de LinkedIn..."
+  },
+  "help": {
+    "linkedinPost": "Contenido profesional para publicación de LinkedIn"
+  }
+}

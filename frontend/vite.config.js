@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { i18nCheckPlugin } from './scripts/vite-plugin-i18n-check.js'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), i18nCheckPlugin()],
   server: {
     port: 3000,
     host: true

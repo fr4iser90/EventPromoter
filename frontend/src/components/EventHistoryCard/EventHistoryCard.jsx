@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Card,
   CardContent,
@@ -19,6 +20,7 @@ import DownloadIcon from '@mui/icons-material/Download'
 import useStore from '../../store'
 
 function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
+  const { t } = useTranslation()
   const { setError } = useStore()
 
   const formatDate = (dateString) => {
@@ -56,7 +58,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
       await onLoadFiles(event, fileIds)
     } catch (error) {
       console.error('Failed to load files:', error)
-      setError('Failed to load event files')
+      setError(t('errors.failedToLoadEventFiles'))
     }
   }
 
@@ -76,7 +78,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
     <Card sx={{ mb: 1, transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-2px)' } }}>
       <CardContent sx={{ pb: 1 }}>
         <Typography variant="h6" sx={{ fontSize: '1rem', mb: 1 }}>
-          {event.name || event.title || 'Untitled Event'}
+          {event.name || event.title || t('event.untitled')}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

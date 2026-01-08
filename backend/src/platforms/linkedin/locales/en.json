@@ -1,0 +1,64 @@
+{
+  "panels": {
+    "linkedin": {
+      "title": "LinkedIn Settings",
+      "postType": {
+        "label": "Post Type",
+        "text": "Text Post",
+        "article": "Article",
+        "poll": "Poll",
+        "document": "Document"
+      },
+      "postAs": {
+        "label": "Post As"
+      },
+      "companies": {
+        "company1": "My Company GmbH",
+        "company2": "Tech Startup AG",
+        "personal": "Personal Profile"
+      },
+      "followers": "followers",
+      "targetAudience": {
+        "title": "Target Audience",
+        "connections": "Connections Only",
+        "anyone": "Anyone",
+        "custom": "Custom Audience"
+      },
+      "options": {
+        "title": "Options",
+        "includeArticle": "Add Article Link",
+        "professionalTone": "Professional Tone"
+      },
+      "info": {
+        "api": "LinkedIn API is very reliable for professional content."
+      },
+      "warnings": {
+        "article": "Article posts are published as LinkedIn Articles.",
+        "anyone": "\"Anyone\" can lead to less engagement."
+      }
+    }
+  },
+  "platforms": {
+    "linkedin": {
+      "title": "LinkedIn Post",
+      "contentLabel": "Professional Content",
+      "placeholder": "Share professional insights...",
+      "bestPractices": {
+        "title": "LinkedIn best practices:",
+        "points": [
+          "Focus on value and insights",
+          "Use professional language",
+          "Include relevant hashtags",
+          "Ask thought-provoking questions"
+        ]
+      },
+      "footer": "Your post will be published to your LinkedIn profile or company page."
+    }
+  },
+  "preview": {
+    "noLinkedInContent": "No LinkedIn content yet..."
+  },
+  "help": {
+    "linkedinPost": "Professional post content for LinkedIn"
+  }
+}
