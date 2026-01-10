@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import config from '../config'
+import useStore from '../store'
 
 /**
  * Hook to load platform schema
@@ -19,6 +20,9 @@ export function usePlatformSchema(platformId) {
   const [schema, setSchema] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  
+  // Get darkMode from store
+  const darkMode = useStore((state) => state.darkMode)
 
   useEffect(() => {
     if (!platformId) {
@@ -31,8 +35,12 @@ export function usePlatformSchema(platformId) {
         setLoading(true)
         setError(null)
 
+        // Build URL with darkMode parameter
+        const mode = darkMode ? 'dark' : 'light'
+        const url = `${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}/schema?mode=${mode}`
+        
         // Try to load schema from dedicated endpoint
-        const response = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}/schema`)
+        const response = await fetch(url)
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.schema) {
@@ -43,7 +51,8 @@ export function usePlatformSchema(platformId) {
         }
 
         // Fallback: try to load from platform endpoint
-        const platformResponse = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}`)
+        const platformUrl = `${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}?mode=${mode}`
+        const platformResponse = await fetch(platformUrl)
         if (platformResponse.ok) {
           const platformData = await platformResponse.json()
           if (platformData.success && platformData.platform?.schema) {
@@ -66,7 +75,7 @@ export function usePlatformSchema(platformId) {
     }
 
     loadSchema()
-  }, [platformId])
+  }, [platformId, darkMode])  // Reload when darkMode changes
 
   return { schema, loading, error }
 }

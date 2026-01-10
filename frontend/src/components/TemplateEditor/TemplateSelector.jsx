@@ -19,9 +19,13 @@ import {
   Check as CheckIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../../hooks/useTemplates'
+import useStore from '../../store'
+import { getTemplateVariables, replaceTemplateVariables } from '../../utils/templateUtils'
 
 const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx = {} }) => {
-  const { templates, loading, error } = useTemplates(platform)
+  // Use mode='preview' to get templates without <style> tags (backend removes them)
+  const { templates, loading, error } = useTemplates(platform, 'preview')
+  const { parsedData, uploadedFileRefs } = useStore()
   const [anchorEl, setAnchorEl] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -39,62 +43,23 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
     setSelectedTemplate(template)
     handleClose()
 
-    // Generate preview content
-    const filledContent = fillTemplateVariables(template, getEventDataFromContent(currentContent))
+    // Generate preview content using parsedData and uploadedFileRefs
+    const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
+    const templateContent = template.template || {}
+    const previewText = templateContent.html || templateContent.text || ''
+    const filledContent = replaceTemplateVariables(previewText, templateVariables)
+    
     setPreviewContent(filledContent)
     setPreviewOpen(true)
   }
 
   const handleApplyTemplate = () => {
     if (selectedTemplate && onSelectTemplate) {
-      const filledContent = fillTemplateVariables(selectedTemplate, getEventDataFromContent(currentContent))
-      onSelectTemplate(selectedTemplate, filledContent)
+      // Pass template and variables to parent - parent will handle replacement
+      onSelectTemplate(selectedTemplate, null)
     }
     setPreviewOpen(false)
     setSelectedTemplate(null)
-  }
-
-  // Extract event data from current content (simple parsing)
-  const getEventDataFromContent = (content) => {
-    const data = {}
-
-    // Try to extract common patterns
-    const titleMatch = content.match(/^(.*?)(?:\n|$)/)
-    if (titleMatch) data.title = titleMatch[1].trim()
-
-    const dateMatch = content.match(/📅\s*([^\n]+)/)
-    if (dateMatch) data.date = dateMatch[1].trim()
-
-    const timeMatch = content.match(/🕐\s*([^\n]+)/)
-    if (timeMatch) data.time = timeMatch[1].trim()
-
-    const venueMatch = content.match(/📍\s*([^\n]+)/)
-    if (venueMatch) data.venue = venueMatch[1].trim()
-
-    // Description is everything after venue
-    const lines = content.split('\n')
-    const venueIndex = lines.findIndex(line => line.includes('📍'))
-    if (venueIndex >= 0 && lines.length > venueIndex + 1) {
-      data.description = lines.slice(venueIndex + 1).join('\n').trim()
-    }
-
-    return data
-  }
-
-  // Fill template variables with event data
-  const fillTemplateVariables = (template, eventData) => {
-    // Get content from template - use html if available, otherwise text
-    const templateContent = template.template || {}
-    let content = templateContent.html || templateContent.text || ''
-
-    // Replace variables
-    template.variables.forEach(variable => {
-      const value = eventData[variable] || `{${variable}}`
-      const regex = new RegExp(`\\{${variable}\\}`, 'g')
-      content = content.replace(regex, value)
-    })
-
-    return content
   }
 
   // Group templates by category
@@ -214,15 +179,34 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
               borderRadius: 1,
               p: 2,
               bgcolor: 'background.paper',
-              maxHeight: 300,
+              color: 'text.primary',
+              maxHeight: 400,
               overflow: 'auto',
-              fontFamily: 'monospace',
-              fontSize: '0.875rem',
-              whiteSpace: 'pre-wrap'
+              '& img': {
+                maxWidth: '100%',
+                height: 'auto',
+                display: 'block',
+                marginBottom: 1
+              },
+              '& a': {
+                color: 'primary.main'
+              },
+              // Generic override: ALL elements inherit colors (no platform-specific classes!)
+              '& *': {
+                color: 'inherit !important'
+              },
+              // Generic override: ALL backgrounds transparent (no platform-specific classes!)
+              '& *[style*="background"]': {
+                backgroundColor: 'transparent !important',
+                background: 'transparent !important'
+              },
+              // Override ALL style tags inside the HTML (generic - no platform knowledge!)
+              '& style': {
+                display: 'none !important'
+              }
             }}
-          >
-            {previewContent}
-          </Box>
+            dangerouslySetInnerHTML={{ __html: previewContent }}
+          />
 
           {selectedTemplate && (
             <Box sx={{ mt: 2 }}>

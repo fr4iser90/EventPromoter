@@ -516,8 +516,15 @@ export class EventService {
     // First load event data from event.json
     const eventData = await this.getEventData(eventId)
     if (!eventData) {
+      console.warn(`Event data not found for ${eventId}`)
       return null
     }
+
+    console.log(`Loading event data for ${eventId}:`, {
+      hasSelectedPlatforms: !!eventData.selectedPlatforms,
+      platformsCount: eventData.selectedPlatforms?.length || 0,
+      platforms: eventData.selectedPlatforms || []
+    })
 
     const eventDir = path.join(process.cwd(), 'events', eventId)
 
@@ -555,9 +562,13 @@ export class EventService {
 
     return {
       id: eventId,
+      name: eventData.name,
+      created: eventData.created,
       parsedData,
       platformContent,
       uploadedFileRefs,
+      selectedPlatforms: eventData.selectedPlatforms || [],
+      selectedHashtags: eventData.selectedHashtags || [],
       loadedAt: new Date().toISOString()
     }
   }

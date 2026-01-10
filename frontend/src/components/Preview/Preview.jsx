@@ -12,11 +12,19 @@ import {
   Modal,
   IconButton,
   Fade,
-  Backdrop
+  Backdrop,
+  TextField,
+  Chip,
+  Tooltip,
+  Button,
+  Alert
 } from '@mui/material'
 import ImageIcon from '@mui/icons-material/Image'
 import DescriptionIcon from '@mui/icons-material/Description'
 import CloseIcon from '@mui/icons-material/Close'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import ErrorIcon from '@mui/icons-material/Error'
+import SaveIcon from '@mui/icons-material/Save'
 import { useTranslation } from 'react-i18next'
 import useStore from '../../store'
 import DateDisplay from '../DateDisplay'
@@ -25,11 +33,40 @@ import axios from 'axios'
 
 function Preview() {
   const { t } = useTranslation()
-  const { uploadedFileRefs, parsedData, currentEvent } = useStore()
+  const { 
+    uploadedFileRefs, 
+    parsedData: storeParsedData, 
+    currentEvent,
+    updateParsedData,
+    debouncedSaveParsedData,
+    savingParsedData,
+    parsedDataSaveError,
+    lastParsedDataSave
+  } = useStore()
   const [selectedImage, setSelectedImage] = useState(null)
   const [selectedTextFile, setSelectedTextFile] = useState(null)
   const [textContent, setTextContent] = useState('')
   const [loadingText, setLoadingText] = useState(false)
+  const [editedData, setEditedData] = useState(storeParsedData || {})
+  const descriptionRef = React.useRef(null)
+
+  // Sync with store when it changes externally
+  useEffect(() => {
+    if (storeParsedData) {
+      setEditedData(storeParsedData)
+    }
+  }, [storeParsedData])
+
+  // Auto-resize description field
+  useEffect(() => {
+    if (descriptionRef.current) {
+      const textarea = descriptionRef.current.querySelector('textarea')
+      if (textarea) {
+        textarea.style.height = 'auto'
+        textarea.style.height = `${textarea.scrollHeight}px`
+      }
+    }
+  }, [editedData.description])
 
   const imageFiles = uploadedFileRefs.filter(file => file.type.startsWith('image/'))
   const textFiles = uploadedFileRefs.filter(file => !file.type.startsWith('image/'))
@@ -75,21 +112,50 @@ function Preview() {
     setTextContent('')
   }
 
+  // Handle field change with autosave
+  const handleFieldChange = (field, value) => {
+    const updated = { ...editedData, [field]: value }
+    setEditedData(updated)
+    
+    // Autosave with debounce
+    debouncedSaveParsedData(updated)
+  }
+
+  // Manual save button handler
+  const handleManualSave = async () => {
+    const success = await updateParsedData(editedData)
+    return success
+  }
+
+  // Handle lineup change (convert string to array)
+  const handleLineupChange = (value) => {
+    const lineupArray = value.split(',').map(item => item.trim()).filter(item => item)
+    handleFieldChange('lineup', lineupArray)
+  }
+
   // Generate dynamic template placeholders based on available data
   const getAvailablePlaceholders = () => {
     const placeholders = []
 
-    if (parsedData.title) placeholders.push('titel')
-    if (parsedData.date) placeholders.push('datum')
-    if (parsedData.time) placeholders.push('zeit')
-    if (parsedData.venue) placeholders.push('venue')
-    if (parsedData.city) placeholders.push('stadt')
-    if (parsedData.genre) placeholders.push('genre')
-    if (parsedData.price) placeholders.push('preis')
-    if (parsedData.organizer) placeholders.push('organizer')
-    if (parsedData.website) placeholders.push('website')
-    if (parsedData.lineup && parsedData.lineup.length > 0) placeholders.push('lineup')
-    if (parsedData.description) placeholders.push('beschreibung')
+    if (editedData.title) placeholders.push('titel')
+    if (editedData.date) placeholders.push('datum')
+    if (editedData.time) placeholders.push('zeit')
+    if (editedData.venue) placeholders.push('venue')
+    if (editedData.city) placeholders.push('stadt')
+    if (editedData.genre) placeholders.push('genre')
+    if (editedData.price) placeholders.push('preis')
+    if (editedData.organizer) placeholders.push('organizer')
+    if (editedData.website) placeholders.push('website')
+    if (editedData.lineup && editedData.lineup.length > 0) placeholders.push('lineup')
+    if (editedData.description) placeholders.push('beschreibung')
+
+    // Add image placeholders based on uploaded images
+    const imageFiles = uploadedFileRefs.filter(file => file.type.startsWith('image/'))
+    if (imageFiles.length > 0) {
+      imageFiles.forEach((_, index) => {
+        placeholders.push(`img${index + 1}`)
+      })
+    }
 
     return placeholders
   }
@@ -97,9 +163,34 @@ function Preview() {
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        👁️ {t('preview.title')}
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" gutterBottom>
+          👁️ {t('preview.title')}
+        </Typography>
+        
+        {/* Save Status Indicator - More Visible */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {savingParsedData && (
+            <Alert severity="info" icon={<CircularProgress size={20} />} sx={{ py: 0.5 }}>
+              Speichere...
+            </Alert>
+          )}
+          {!savingParsedData && lastParsedDataSave && !parsedDataSaveError && (
+            <Alert 
+              severity="success" 
+              icon={<CheckCircleIcon />}
+              sx={{ py: 0.5 }}
+            >
+              Gespeichert {new Date(lastParsedDataSave).toLocaleTimeString()}
+            </Alert>
+          )}
+          {parsedDataSaveError && (
+            <Alert severity="error" icon={<ErrorIcon />} sx={{ py: 0.5 }}>
+              {parsedDataSaveError}
+            </Alert>
+          )}
+        </Box>
+      </Box>
 
       {uploadedFileRefs.length === 0 ? (
         <Typography variant="body1" color="text.secondary">
@@ -139,114 +230,289 @@ function Preview() {
             </Box>
           )}
 
-          {/* Parsed Event Data Preview */}
-          {parsedData && (
+          {/* Parsed Event Data Preview - Always Editable */}
+          {editedData && (
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
                 🎯 {t('preview.parsedData')}
               </Typography>
               <Card>
                 <CardContent>
-                  <Typography variant="h6" color="primary" gutterBottom>
-                    {parsedData.title || 'Event Title'}
-                  </Typography>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                      📝 Titel
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      value={editedData.title || ''}
+                      onChange={(e) => handleFieldChange('title', e.target.value)}
+                      placeholder="Event Titel"
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: 'primary.main',
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
 
                   <Grid container spacing={2}>
-                    {parsedData.date && (
+                    {editedData.date && (
                       <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           📅 {t('event.date')}
                         </Typography>
-                        <DateDisplay parsedData={parsedData} showTime={false} />
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedData.date || ''}
+                          onChange={(e) => handleFieldChange('date', e.target.value)}
+                          placeholder="DD.MM.YYYY"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: 'primary.main',
+                              },
+                            },
+                          }}
+                        />
                       </Grid>
                     )}
 
-                    {parsedData.time && (
+                    {editedData.time && (
                       <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           🕒 {t('event.time')}
                         </Typography>
-                        <Typography variant="body1">
-                          {parsedData.time}
-                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedData.time || ''}
+                          onChange={(e) => handleFieldChange('time', e.target.value)}
+                          placeholder="HH:MM"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: 'primary.main',
+                              },
+                            },
+                          }}
+                        />
                       </Grid>
                     )}
 
-                    {(parsedData.venue || parsedData.city) && (
-                      <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="body2" color="text.secondary">
-                          📍 {t('event.venue')}
-                        </Typography>
-                        <Typography variant="body1">
-                          {parsedData.venue || 'TBA'}
-                          {parsedData.city && `, ${parsedData.city}`}
-                        </Typography>
-                      </Grid>
+                    {(editedData.venue || editedData.city) && (
+                      <>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            📍 {t('event.venue')}
+                          </Typography>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            value={editedData.venue || ''}
+                            onChange={(e) => handleFieldChange('venue', e.target.value)}
+                            placeholder="Veranstaltungsort"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                  borderColor: 'primary.main',
+                                },
+                              },
+                            }}
+                          />
+                        </Grid>
+                        {editedData.city && (
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                              🏙️ Stadt
+                            </Typography>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              value={editedData.city || ''}
+                              onChange={(e) => handleFieldChange('city', e.target.value)}
+                              placeholder="Stadt"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  '&:hover fieldset': {
+                                    borderColor: 'primary.main',
+                                  },
+                                },
+                              }}
+                            />
+                          </Grid>
+                        )}
+                      </>
                     )}
 
-                    {parsedData.genre && (
+                    {editedData.genre && (
                       <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           🎵 {t('event.genre')}
                         </Typography>
-                        <Typography variant="body1">
-                          {parsedData.genre}
-                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedData.genre || ''}
+                          onChange={(e) => handleFieldChange('genre', e.target.value)}
+                          placeholder="Genre"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: 'primary.main',
+                              },
+                            },
+                          }}
+                        />
                       </Grid>
                     )}
 
-                    {parsedData.price && (
+                    {editedData.price && (
                       <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="body2" color="text.secondary">
-                          💰 Price
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                          💰 Preis
                         </Typography>
-                        <Typography variant="body1">
-                          {parsedData.price}
-                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedData.price || ''}
+                          onChange={(e) => handleFieldChange('price', e.target.value)}
+                          placeholder="Preis"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: 'primary.main',
+                              },
+                            },
+                          }}
+                        />
                       </Grid>
                     )}
 
-                    {parsedData.organizer && (
+                    {editedData.organizer && (
                       <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           👤 Organizer
                         </Typography>
-                        <Typography variant="body1">
-                          {parsedData.organizer}
-                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedData.organizer || ''}
+                          onChange={(e) => handleFieldChange('organizer', e.target.value)}
+                          placeholder="Organizer"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: 'primary.main',
+                              },
+                            },
+                          }}
+                        />
                       </Grid>
                     )}
 
-                    {parsedData.website && (
+                    {editedData.website && (
                       <Grid item xs={12} sm={6} md={3}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           🌐 Website
                         </Typography>
-                        <Typography variant="body1">
-                          {parsedData.website}
-                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editedData.website || ''}
+                          onChange={(e) => handleFieldChange('website', e.target.value)}
+                          placeholder="https://..."
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: 'primary.main',
+                              },
+                            },
+                          }}
+                        />
                       </Grid>
                     )}
 
-                    {parsedData.lineup && parsedData.lineup.length > 0 && (
+                    {editedData.lineup && (
                       <Grid item xs={12}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           🎤 {t('event.lineup')}
                         </Typography>
-                        <Typography variant="body1">
-                          {Array.isArray(parsedData.lineup) ? parsedData.lineup.join(', ') : parsedData.lineup}
-                        </Typography>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={Array.isArray(editedData.lineup) ? editedData.lineup.join(', ') : (editedData.lineup || '')}
+                          onChange={(e) => handleLineupChange(e.target.value)}
+                          placeholder="Künstler 1, Künstler 2, ..."
+                          helperText="Komma-getrennt eingeben"
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: 'primary.main',
+                              },
+                            },
+                          }}
+                        />
                       </Grid>
                     )}
 
-                    {parsedData.description && (
+                    {editedData.description && (
                       <Grid item xs={12}>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           📝 {t('event.description')}
                         </Typography>
-                        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                          {parsedData.description}
-                        </Typography>
+                        <Box ref={descriptionRef}>
+                          <TextField
+                            fullWidth
+                            multiline
+                            minRows={3}
+                            value={editedData.description || ''}
+                            onChange={(e) => {
+                              handleFieldChange('description', e.target.value)
+                              // Trigger auto-resize
+                              setTimeout(() => {
+                                const textarea = e.target
+                                if (textarea) {
+                                  textarea.style.height = 'auto'
+                                  textarea.style.height = `${textarea.scrollHeight}px`
+                                }
+                              }, 0)
+                            }}
+                            placeholder="Beschreibung"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                '&:hover fieldset': {
+                                  borderColor: 'primary.main',
+                                },
+                              },
+                              '& .MuiInputBase-input': {
+                                overflow: 'hidden !important',
+                                resize: 'none',
+                              },
+                            }}
+                            inputProps={{
+                              style: {
+                                overflow: 'hidden',
+                                resize: 'none',
+                              }
+                            }}
+                          />
+                        </Box>
+                        {/* Save Button below description */}
+                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                          <Button
+                            variant="contained"
+                            startIcon={<SaveIcon />}
+                            onClick={handleManualSave}
+                            disabled={savingParsedData}
+                            size="medium"
+                          >
+                            {savingParsedData ? 'Speichere...' : 'Speichern'}
+                          </Button>
+                        </Box>
                       </Grid>
                     )}
                   </Grid>

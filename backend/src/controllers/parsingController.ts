@@ -131,6 +131,38 @@ export class ParsingController {
     }
   }
 
+  // Update parsed data for an event
+  static async updateParsedData(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+      const { parsedData } = req.body
+
+      if (!eventId) {
+        return res.status(400).json({ error: 'Event ID required' })
+      }
+
+      if (!parsedData) {
+        return res.status(400).json({ error: 'Parsed data required' })
+      }
+
+      // Save updated parsed data
+      await ContentExtractionService.saveParsedData(eventId, parsedData)
+
+      res.json({
+        success: true,
+        message: 'Parsed data updated successfully',
+        parsedData
+      })
+
+    } catch (error: any) {
+      console.error('Update parsed data error:', error)
+      res.status(500).json({
+        error: 'Failed to update parsed data',
+        message: error.message
+      })
+    }
+  }
+
   // Save platform content changes
   static async savePlatformContent(req: Request, res: Response) {
     try {

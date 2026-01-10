@@ -64,9 +64,9 @@ export const emailPreviewSchema: PreviewSchema = {
     interactive: false
   },
   styling: {
-    backgroundColor: '#ffffff',
-    textColor: '#000000',
-    fontFamily: 'Arial, sans-serif'
+    backgroundColor: 'email.surface.primary',  // Token - resolved by backend
+    textColor: 'email.text.primary',            // Token - resolved by backend
+    fontFamily: 'Arial, sans-serif'             // Concrete value - not resolved
   }
 }
 

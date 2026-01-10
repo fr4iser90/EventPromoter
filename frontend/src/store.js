@@ -178,10 +178,11 @@ const useStore = create((set, get) => ({
       get().newEvent()
 
       // Restore ONLY event-specific data (not global configs)
+      const restoredPlatforms = restoreData.platforms || []
       set({
         currentEvent: restoreData.event,
         uploadedFileRefs: restoreData.files,
-        selectedPlatforms: restoreData.platforms || [],
+        selectedPlatforms: restoredPlatforms, // Set directly to avoid triggering save
         selectedHashtags: restoreData.hashtags || [],
         platformContent: restoreData.content || {}
       })
@@ -193,8 +194,10 @@ const useStore = create((set, get) => ({
       get().loadEventParsedData(eventId)
       get().loadEventPlatformContent(eventId)
 
-      // Save the restored state
+      // Save the restored state (platforms are already set, so this will save them)
       get().saveEventWorkspace()
+
+      console.log(`✅ Platforms restored:`, restoredPlatforms)
 
       console.log(`✅ Event ${eventId} completely restored:`, {
         files: restoreData.files?.length || 0,
@@ -250,11 +253,14 @@ const useStore = create((set, get) => ({
           }
         }
 
+        // Load platforms from event, but don't trigger save (skipSave = true)
+        const loadedPlatforms = event.selectedPlatforms || []
+        
         set({
           currentEvent: event,
           uploadedFileRefs: validatedFileRefs, // Only load existing files
           selectedHashtags: event.selectedHashtags || [],
-          selectedPlatforms: event.selectedPlatforms || [],
+          selectedPlatforms: loadedPlatforms, // Set directly, don't use setSelectedPlatforms to avoid triggering save
           parsedData: null, // Will be loaded separately
           parsingStatus: 'idle'
         })
@@ -266,7 +272,11 @@ const useStore = create((set, get) => ({
         get().loadEventParsedData(event.id)
         get().loadEventPlatformContent(event.id)
 
-        console.log(`Event workspace loaded from backend (${validatedFileRefs.length} valid files)`)
+        console.log(`Event workspace loaded from backend:`, {
+          files: validatedFileRefs.length,
+          platforms: loadedPlatforms.length,
+          platformsList: loadedPlatforms
+        })
         return event
       } else {
         // No current event - reset to empty state
@@ -299,7 +309,10 @@ const useStore = create((set, get) => ({
       workflowState: WORKFLOW_STATES.INITIAL,
       publishing: false,
       published: false,
-      currentEvent: null
+      currentEvent: null,
+      savingParsedData: false,
+      parsedDataSaveError: null,
+      lastParsedDataSave: null
     })
     // Don't save workspace when resetting to null event
     console.log('Workspace reset - no event')
@@ -578,25 +591,35 @@ const useStore = create((set, get) => ({
   },
 
   // Platform state
-  setSelectedPlatforms: (platforms) => {
+  setSelectedPlatforms: (platforms, skipSave = false) => {
     const newPlatforms = Array.isArray(platforms) ? platforms : []
     set({ selectedPlatforms: newPlatforms })
-    get().saveEventWorkspace()
     get().updateWorkflowState()
-    get().debouncedSave()
-
-    // Save last selected platforms to user preferences
-    if (newPlatforms.length > 0) {
-      get().updateUserPreferences({ lastSelectedPlatforms: newPlatforms })
+    
+    // Save immediately when platforms change (unless skipSave is true, e.g., during load)
+    if (!skipSave) {
+      // Use debounced save to avoid too many API calls when toggling multiple platforms quickly
+      get().debouncedSave()
+      
+      // Save last selected platforms to user preferences
+      if (newPlatforms.length > 0) {
+        get().updateUserPreferences({ lastSelectedPlatforms: newPlatforms })
+      }
     }
   },
 
   // Load last selected platforms from user preferences
+  // Only loads if no platforms are currently selected AND no current event exists
   loadLastSelectedPlatforms: () => {
     const state = get()
-    if (state.selectedPlatforms.length === 0 && state.userPreferences?.lastSelectedPlatforms?.length > 0) {
+    // Only load from preferences if:
+    // 1. No platforms are currently selected
+    // 2. No current event exists (to avoid overwriting event-specific platforms)
+    if (state.selectedPlatforms.length === 0 && 
+        !state.currentEvent && 
+        state.userPreferences?.lastSelectedPlatforms?.length > 0) {
       console.log('Loading last selected platforms from preferences:', state.userPreferences.lastSelectedPlatforms)
-      get().setSelectedPlatforms(state.userPreferences.lastSelectedPlatforms)
+      get().setSelectedPlatforms(state.userPreferences.lastSelectedPlatforms, false) // Allow save for preferences
     }
   },
   platformSettings: {},
@@ -707,6 +730,45 @@ const useStore = create((set, get) => ({
       set({ parsedData: null, parsingStatus: 'idle' })
     }
   },
+
+  // Update parsed data and save to backend
+  updateParsedData: async (updatedData) => {
+    const state = get()
+    if (!state.currentEvent?.id) {
+      console.warn('No current event to update parsed data')
+      return false
+    }
+
+    try {
+      set({ savingParsedData: true, parsedDataSaveError: null })
+      
+      const response = await axios.put(
+        `http://localhost:4000/api/parsing/data/${state.currentEvent.id}`,
+        { parsedData: updatedData }
+      )
+
+      set({ 
+        parsedData: updatedData,
+        savingParsedData: false,
+        lastParsedDataSave: new Date().toISOString()
+      })
+
+      console.log('✅ Parsed data saved successfully')
+      return true
+    } catch (error) {
+      console.error('Failed to save parsed data:', error)
+      set({ 
+        savingParsedData: false,
+        parsedDataSaveError: error.response?.data?.error || 'Failed to save'
+      })
+      return false
+    }
+  },
+
+  // Debounced autosave for parsed data
+  debouncedSaveParsedData: debounce((updatedData) => {
+    get().updateParsedData(updatedData)
+  }, 1500), // 1.5 seconds delay
 
   loadEventPlatformContent: async (eventId) => {
     try {

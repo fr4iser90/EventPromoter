@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 
-export const useTemplates = (platform) => {
+export const useTemplates = (platform, mode = 'raw') => {
   const [templates, setTemplates] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [categories, setCategories] = useState([])
 
   // Load templates for platform
+  // mode: 'preview' | 'export' | 'raw' (default: 'raw')
   const loadTemplates = useCallback(async () => {
     if (!platform) return
 
@@ -17,7 +18,10 @@ export const useTemplates = (platform) => {
       setLoading(true)
       setError(null)
 
-      const response = await axios.get(`http://localhost:4000/api/templates/${platform}`)
+      // Send ?mode=preview|export|raw (backend resolves templates accordingly)
+      const url = `http://localhost:4000/api/templates/${platform}?mode=${mode}`
+      
+      const response = await axios.get(url)
       if (response.data.success) {
         setTemplates(response.data.templates)
       } else {
@@ -29,7 +33,7 @@ export const useTemplates = (platform) => {
     } finally {
       setLoading(false)
     }
-  }, [platform])
+  }, [platform, mode])
 
   // Load template categories
   const loadCategories = useCallback(async () => {

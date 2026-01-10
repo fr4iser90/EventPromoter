@@ -35,9 +35,9 @@ export const twitterPreviewSchema: PreviewSchema = {
     interactive: false
   },
   styling: {
-    backgroundColor: '#ffffff',
-    textColor: '#0f1419',
-    fontFamily: 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    backgroundColor: 'twitter.surface.primary',  // Token - resolved by backend
+    textColor: 'twitter.text.primary',           // Token - resolved by backend
+    fontFamily: 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' // Concrete value - not resolved
   },
   contentMapping: [
     {

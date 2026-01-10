@@ -118,6 +118,7 @@ export class TemplateService {
   }
 
   // Get all templates for a platform (default + custom merged)
+  // Service stays "dumb" - no processing logic here
   static async getAllTemplates(platform: string): Promise<Template[]> {
     const [defaultTemplates, customTemplates] = await Promise.all([
       this.loadDefaultTemplates(platform),

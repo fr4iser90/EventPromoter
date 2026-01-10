@@ -66,7 +66,10 @@ function DynamicPanelWrapper({ platform }) {
         }
 
         // If no panel config available, that's okay - panel just won't show much
-        console.log(`[DynamicPanelWrapper] No panel config found for ${platform}`)
+        // Only log in development mode to reduce console noise
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[DynamicPanelWrapper] No panel config found for ${platform}`)
+        }
         setPanelConfig(null)
       } catch (err) {
         console.error('Failed to load panel config:', err)

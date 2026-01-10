@@ -28,6 +28,7 @@ import {
   ListItemSecondaryAction,
   IconButton,
   Menu,
+  useTheme,
   MenuItem,
   FormControl,
   InputLabel,
@@ -45,6 +46,7 @@ import useStore from '../../store'
 
 function UploadParser() {
   const { t } = useTranslation()
+  const theme = useTheme()
   const {
     uploadedFileRefs,
     currentEvent,
@@ -302,7 +304,7 @@ function UploadParser() {
                 Confidence: {parsedData.confidence}% | Parsed: {new Date(parsedData.parsedAt).toLocaleString()}
                 {parsedData.ocrConfidence && ` | OCR: ${parsedData.ocrConfidence}%`}
               </Alert>
-              <Paper sx={{ p: 2, bgcolor: 'grey.50', fontFamily: 'monospace', maxHeight: 400, overflow: 'auto' }}>
+              <Paper sx={{ p: 2, bgcolor: 'background.default', fontFamily: 'monospace', maxHeight: 400, overflow: 'auto' }}>
                 <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem' }}>
                   {parsedData.rawText}
                 </pre>
@@ -396,7 +398,7 @@ function UploadParser() {
                   ))}
 
                   {/* Status Summary */}
-                  <Paper sx={{ p: 2, mt: 2, bgcolor: '#f8f9fa' }}>
+                  <Paper sx={{ p: 2, mt: 2, bgcolor: 'background.default' }}>
                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
                       📊 Status Summary
                     </Typography>

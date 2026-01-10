@@ -35,9 +35,9 @@ export const facebookPreviewSchema: PreviewSchema = {
     interactive: false
   },
   styling: {
-    backgroundColor: '#ffffff',
-    textColor: '#050505',
-    fontFamily: 'Helvetica, Arial, sans-serif'
+    backgroundColor: 'facebook.surface.primary',  // Token - resolved by backend
+    textColor: 'facebook.text.primary',            // Token - resolved by backend
+    fontFamily: 'Helvetica, Arial, sans-serif'     // Concrete value - not resolved
   },
   contentMapping: [
     {

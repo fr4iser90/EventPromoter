@@ -2,6 +2,7 @@
 
 import { Request, Response } from 'express'
 import { TemplateService } from '../services/templateService.js'
+import { resolveTemplates, TemplateMode } from '../utils/templateResolver.js'
 import {
   TemplateCreateRequest,
   TemplateUpdateRequest,
@@ -13,10 +14,21 @@ import {
 export class TemplateController {
 
   // GET /api/templates/:platform - Get all templates for a platform
+  // Query parameter: ?mode=preview|export|raw (default: raw)
+  // - preview: Removes <style> tags and style attributes (for preview rendering)
+  // - export: Keeps all styles (full fidelity)
+  // - raw: Returns templates unchanged
   static async getTemplates(req: Request, res: Response) {
     try {
       const { platform } = req.params
-      const templates = await TemplateService.getAllTemplates(platform)
+      const mode = (req.query.mode as TemplateMode) || 'raw'
+      
+      // Service stays "dumb" - just loads templates
+      const rawTemplates = await TemplateService.getAllTemplates(platform)
+      
+      // Resolver handles context-specific processing
+      const templates = resolveTemplates(rawTemplates, mode)
+      
       const stats = await TemplateService.getTemplateStats(platform)
 
       const response: TemplateListResponse = {

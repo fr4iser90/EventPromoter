@@ -35,9 +35,9 @@ export const linkedinPreviewSchema: PreviewSchema = {
     interactive: false
   },
   styling: {
-    backgroundColor: '#ffffff',
-    textColor: '#000000',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    backgroundColor: 'linkedin.surface.primary',  // Token - resolved by backend
+    textColor: 'linkedin.text.primary',          // Token - resolved by backend
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' // Concrete value - not resolved
   },
   contentMapping: [
     {

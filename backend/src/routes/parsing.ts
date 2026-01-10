@@ -12,6 +12,9 @@ router.post('/platforms', ParsingController.parseForPlatforms)
 // Get parsed data for event
 router.get('/data/:eventId', ParsingController.getParsedData)
 
+// Update parsed data for event
+router.put('/data/:eventId', ParsingController.updateParsedData)
+
 // Check for duplicate events
 router.post('/duplicate-check', ParsingController.checkDuplicate)
 

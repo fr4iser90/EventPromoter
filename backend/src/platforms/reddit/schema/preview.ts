@@ -35,9 +35,9 @@ export const redditPreviewSchema: PreviewSchema = {
     interactive: false
   },
   styling: {
-    backgroundColor: '#ffffff',
-    textColor: '#1a1a1b',
-    fontFamily: 'IBMPlexSans, Arial, sans-serif'
+    backgroundColor: 'reddit.surface.primary',  // Token - resolved by backend
+    textColor: 'reddit.text.primary',            // Token - resolved by backend
+    fontFamily: 'IBMPlexSans, Arial, sans-serif' // Concrete value - not resolved
   },
   contentMapping: [
     {

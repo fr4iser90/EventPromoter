@@ -35,9 +35,9 @@ export const instagramPreviewSchema: PreviewSchema = {
     interactive: false
   },
   styling: {
-    backgroundColor: '#ffffff',
-    textColor: '#262626',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    backgroundColor: 'instagram.surface.primary',  // Token - resolved by backend
+    textColor: 'instagram.text.primary',          // Token - resolved by backend
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' // Concrete value - not resolved
   },
   contentMapping: [
     {

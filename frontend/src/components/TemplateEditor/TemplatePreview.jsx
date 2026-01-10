@@ -147,8 +147,24 @@ function TemplatePreview({ template, platform }) {
             borderRadius: 1,
             p: 2,
             bgcolor: 'background.paper',
+            color: 'text.primary',
             maxHeight: 300,
-            overflow: 'auto'
+            overflow: 'auto',
+            // Ensure HTML content respects dark mode
+            '& *': {
+              color: 'inherit'
+            },
+            // Override hardcoded colors in HTML content
+            '& p, & div, & span, & h1, & h2, & h3, & h4, & h5, & h6': {
+              color: 'text.primary'
+            },
+            // Ensure backgrounds are transparent or use theme
+            '& [style*="background"]': {
+              backgroundColor: 'transparent !important'
+            },
+            '& [style*="color"]': {
+              color: 'inherit !important'
+            }
           }}
         >
           <div dangerouslySetInnerHTML={{ __html: previewContent }} />
@@ -158,6 +174,7 @@ function TemplatePreview({ template, platform }) {
           sx={{
             p: 2,
             bgcolor: 'background.paper',
+            color: 'text.primary',
             border: '1px solid',
             borderColor: 'divider',
             maxHeight: 300,

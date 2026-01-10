@@ -5,14 +5,22 @@ import {
   Typography,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme
 } from '@mui/material'
-import { usePlatformMetadata } from '../../hooks/usePlatformSchema'
+import { usePlatformSchema, usePlatformMetadata } from '../../hooks/usePlatformSchema'
 import config from '../../config'
 
 function PlatformPreview({ platform, content, isActive }) {
   const { t } = useTranslation()
-  const { platform: platformData, loading, error } = usePlatformMetadata(platform)
+  const theme = useTheme()
+  // Use usePlatformSchema to get resolved schema with darkMode (tokens already resolved!)
+  const { schema, loading: schemaLoading, error: schemaError } = usePlatformSchema(platform)
+  // Use usePlatformMetadata for platform metadata (name, icon, color)
+  const { platform: platformData, loading: metadataLoading, error: metadataError } = usePlatformMetadata(platform)
+  
+  const loading = schemaLoading || metadataLoading
+  const error = schemaError || metadataError
 
   if (loading) {
     return (
@@ -37,8 +45,8 @@ function PlatformPreview({ platform, content, isActive }) {
   const platformName = platformData?.name || platformData?.metadata?.displayName || platform
   const platformIcon = platformData?.icon || platformData?.metadata?.icon || '📝'
 
-  // Get preview schema if available
-  const previewSchema = platformData?.schema?.preview
+  // Get preview schema from resolved schema (tokens already resolved by backend!)
+  const previewSchema = schema?.preview
   const contentMapping = previewSchema?.contentMapping || []
 
   // ✅ SCHEMA-DRIVEN: Render content based on contentMapping
@@ -68,15 +76,24 @@ function PlatformPreview({ platform, content, isActive }) {
             dangerouslySetInnerHTML={{ __html: fieldValue }}
             className={className}
             sx={{ 
-              '& img': { maxWidth: '100%', height: 'auto' },
+              '& img': { maxWidth: '100%', height: 'auto', display: 'block', marginBottom: 1 },
               '& a': { color: platformColor }
             }}
           />
         )
       case 'image':
+        // Handle both single image URL and array of images
+        const imageUrls = Array.isArray(fieldValue) ? fieldValue : [fieldValue]
         return (
           <Box sx={{ mb: 1 }} className={className}>
-            <img src={fieldValue} alt={mapping.label || 'Preview'} style={{ maxWidth: '100%', height: 'auto' }} />
+            {imageUrls.map((url, idx) => (
+              <img 
+                key={idx}
+                src={url} 
+                alt={mapping.label || `Preview ${idx + 1}`} 
+                style={{ maxWidth: '100%', height: 'auto', marginBottom: idx < imageUrls.length - 1 ? 1 : 0 }} 
+              />
+            ))}
           </Box>
         )
       case 'link':
@@ -97,7 +114,7 @@ function PlatformPreview({ platform, content, isActive }) {
         )
       case 'code':
         return (
-          <Box component="pre" sx={{ bgcolor: 'grey.100', p: 1, borderRadius: 1, overflow: 'auto', mb: 1 }} className={className}>
+          <Box component="pre" sx={{ bgcolor: 'background.default', p: 1, borderRadius: 1, overflow: 'auto', mb: 1 }} className={className}>
             <Typography variant="body2" component="code">
               {fieldValue}
             </Typography>
@@ -117,8 +134,9 @@ function PlatformPreview({ platform, content, isActive }) {
     <Paper sx={{
       p: 2,
       mb: 2,
-      bgcolor: previewSchema?.styling?.backgroundColor || '#f8f9fa',
-      border: `2px solid ${isActive ? platformColor : '#e0e0e0'}`
+      // Use resolved backgroundColor from schema (backend resolved tokens)
+      bgcolor: previewSchema?.styling?.backgroundColor || 'background.paper',
+      border: `2px solid ${isActive ? platformColor : theme.palette.divider}`
     }}>
       <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: platformColor }}>
         {platformIcon} {platformName} {t('preview.preview')}
@@ -126,10 +144,12 @@ function PlatformPreview({ platform, content, isActive }) {
 
       <Box sx={{ 
         p: 2, 
-        bgcolor: previewSchema?.styling?.backgroundColor || 'white', 
+        // Use resolved backgroundColor from schema (backend resolved tokens)
+        bgcolor: previewSchema?.styling?.backgroundColor || 'background.default', 
         borderRadius: 2, 
-        border: '1px solid #e0e0e0',
-        color: previewSchema?.styling?.textColor || 'inherit',
+        border: `1px solid ${theme.palette.divider}`,
+        // Use resolved textColor from schema (backend resolved tokens)
+        color: previewSchema?.styling?.textColor || 'text.primary',
         fontFamily: previewSchema?.styling?.fontFamily || 'inherit'
       }}>
         {/* ✅ SCHEMA-DRIVEN: Render content based on contentMapping */}
@@ -174,7 +194,7 @@ function PlatformPreview({ platform, content, isActive }) {
 
         {/* Show metadata if preview schema requests it */}
         {previewSchema?.options?.showMetadata && platformData && (
-          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+          <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
             <Typography variant="caption" color="text.secondary">
               Platform: {platformName} | Version: {platformData?.version || platformData?.metadata?.version || 'N/A'}
             </Typography>

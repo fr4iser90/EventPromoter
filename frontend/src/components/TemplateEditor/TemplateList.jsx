@@ -339,7 +339,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
 
             {/* Show available variables if defined in schema */}
             {schema?.template?.variables && schema.template.variables.length > 0 && (
-              <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
                 <Typography variant="caption" color="text.secondary" gutterBottom>
                   Available variables:
                 </Typography>

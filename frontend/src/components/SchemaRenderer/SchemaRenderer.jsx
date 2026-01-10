@@ -26,7 +26,6 @@ import {
  */
 function renderField(field, value, onChange, error) {
   const commonProps = {
-    key: field.name,
     fullWidth: true,
     label: field.label,
     placeholder: field.placeholder,
@@ -41,11 +40,12 @@ function renderField(field, value, onChange, error) {
   switch (field.type) {
     case 'text':
     case 'url':
-      return <TextField {...commonProps} type={field.type} />
+      return <TextField key={field.name} {...commonProps} type={field.type} />
 
     case 'textarea':
       return (
         <TextField
+          key={field.name}
           {...commonProps}
           multiline
           rows={4}
@@ -55,6 +55,7 @@ function renderField(field, value, onChange, error) {
     case 'number':
       return (
         <TextField
+          key={field.name}
           {...commonProps}
           type="number"
           inputProps={{
@@ -65,11 +66,12 @@ function renderField(field, value, onChange, error) {
       )
 
     case 'password':
-      return <TextField {...commonProps} type="password" />
+      return <TextField key={field.name} {...commonProps} type="password" />
 
     case 'boolean':
       return (
         <FormControlLabel
+          key={field.name}
           control={
             <Checkbox
               checked={value || false}
@@ -86,6 +88,7 @@ function renderField(field, value, onChange, error) {
       if (!field.options || field.options.length === 0) {
         return (
           <TextField
+            key={field.name}
             {...commonProps}
             disabled
             helperText="No options available"
@@ -94,7 +97,7 @@ function renderField(field, value, onChange, error) {
       }
 
       return (
-        <FormControl fullWidth error={!!error} required={field.required}>
+        <FormControl key={field.name} fullWidth error={!!error} required={field.required}>
           <InputLabel>{field.label}</InputLabel>
           <Select
             value={value || field.default || (field.type === 'multiselect' ? [] : '')}
@@ -120,17 +123,18 @@ function renderField(field, value, onChange, error) {
       )
 
     case 'date':
-      return <TextField {...commonProps} type="date" InputLabelProps={{ shrink: true }} />
+      return <TextField key={field.name} {...commonProps} type="date" InputLabelProps={{ shrink: true }} />
 
     case 'time':
-      return <TextField {...commonProps} type="time" InputLabelProps={{ shrink: true }} />
+      return <TextField key={field.name} {...commonProps} type="time" InputLabelProps={{ shrink: true }} />
 
     case 'datetime':
-      return <TextField {...commonProps} type="datetime-local" InputLabelProps={{ shrink: true }} />
+      return <TextField key={field.name} {...commonProps} type="datetime-local" InputLabelProps={{ shrink: true }} />
 
     default:
       return (
         <TextField
+          key={field.name}
           {...commonProps}
           helperText={`Unsupported field type: ${field.type}`}
           disabled

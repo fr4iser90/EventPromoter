@@ -182,7 +182,7 @@ function FileUpload() {
         {...getRootProps()}
         sx={{
           border: '2px dashed',
-          borderColor: isDragActive ? 'primary.main' : 'grey.300',
+          borderColor: isDragActive ? 'primary.main' : 'divider',
           borderRadius: 2,
           p: 4,
           textAlign: 'center',

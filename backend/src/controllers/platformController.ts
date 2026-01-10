@@ -180,8 +180,8 @@ export class PlatformController {
         })
       }
 
-      const schema = registry.getPlatformSchema(platformId)
-      if (!schema) {
+      const rawSchema = registry.getPlatformSchema(platformId)
+      if (!rawSchema) {
         return res.status(404).json({
           error: 'Schema not available for this platform',
           platform: platformId,
@@ -189,10 +189,23 @@ export class PlatformController {
         })
       }
 
+      // Get dark mode from query parameter (mode=dark or darkMode=true)
+      const mode = req.query.mode as string
+      const darkModeParam = req.query.darkMode as string
+      const darkMode = mode === 'dark' || darkModeParam === 'true'
+
+      // Resolve tokens in schema if darkMode parameter is provided
+      let schema = rawSchema
+      if (darkMode !== undefined) {
+        const { resolveSchema } = await import('../utils/tokenResolver.js')
+        schema = await resolveSchema(rawSchema, platformId, darkMode)
+      }
+
       return res.json({
         success: true,
         platform: platformId,
-        schema
+        schema,
+        version: rawSchema.version || '1.0.0'  // Include version for cache key
       })
     } catch (error: any) {
       console.error('Get platform schema error:', error)

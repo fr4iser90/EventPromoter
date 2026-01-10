@@ -165,8 +165,8 @@ function MainPage() {
     }
   })
 
-  // Debug: Log panel creation
-  if (safeSelectedPlatforms.length > 0) {
+  // Debug: Log panel creation (only in development mode to reduce console noise)
+  if (process.env.NODE_ENV === 'development' && safeSelectedPlatforms.length > 0) {
     console.log('[App] Selected platforms:', safeSelectedPlatforms)
     console.log('[App] Left panels:', leftPanels.length)
     console.log('[App] Right panels:', rightPanels.length)

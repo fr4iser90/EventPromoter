@@ -6,18 +6,26 @@ import {
   Box,
   Chip,
   CircularProgress,
-  Alert
+  Alert,
+  Button,
+  useTheme
 } from '@mui/material'
+import DescriptionIcon from '@mui/icons-material/Description'
 import { usePlatformSchema } from '../../hooks/usePlatformSchema'
 import SchemaRenderer from '../SchemaRenderer/SchemaRenderer'
+import TemplateSelector from '../TemplateEditor/TemplateSelector'
+import useStore from '../../store'
+import { getTemplateVariables, replaceTemplateVariables } from '../../utils/templateUtils'
 import config from '../../config'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect }) {
   const { t } = useTranslation()
+  const theme = useTheme()
   const { schema, loading: schemaLoading, error: schemaError } = usePlatformSchema(platform)
   const [platformConfig, setPlatformConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const { parsedData, uploadedFileRefs } = useStore()
 
   // Load platform configuration from backend - NO FALLBACKS
   useEffect(() => {
@@ -103,6 +111,55 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     )
   }
 
+  // Handle template selection
+  const handleTemplateSelect = (template, filledContent) => {
+    // Get template variables from parsed data and uploaded files
+    const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
+    
+    // Get template content structure
+    const templateContent = template.template || {}
+    
+    // Apply template to content fields based on platform schema
+    const editorSchema = schema?.editor || platformConfig?.schema?.editor
+    const editorBlocks = editorSchema?.blocks || []
+    
+    const newContent = { ...content }
+    
+    // Replace variables in each field
+    editorBlocks.forEach(block => {
+      const fieldName = block.id
+      const fieldValue = templateContent[fieldName] || templateContent.html || templateContent.text || ''
+      
+      if (fieldValue) {
+        // Replace template variables with actual values
+        const replacedValue = replaceTemplateVariables(fieldValue, templateVariables)
+        newContent[fieldName] = replacedValue
+      }
+    })
+    
+    // If template has direct html/text, apply to first text field
+    if (templateContent.html || templateContent.text) {
+      const firstTextBlock = editorBlocks.find(b => 
+        b.type === 'text' || b.type === 'paragraph' || b.type === 'heading'
+      )
+      if (firstTextBlock) {
+        const templateText = templateContent.html || templateContent.text
+        newContent[firstTextBlock.id] = replaceTemplateVariables(templateText, templateVariables)
+      }
+    }
+    
+    // Update all fields at once
+    Object.keys(newContent).forEach(key => {
+      onChange(key, newContent[key])
+    })
+  }
+
+  // Get current content as string for template selector
+  const getCurrentContentString = () => {
+    if (!content) return ''
+    return Object.values(content).filter(v => typeof v === 'string').join('\n')
+  }
+
   // Use schema-driven editor if available
   const editorSchema = schema?.editor || platformConfig?.schema?.editor
   const editorBlocks = editorSchema?.blocks || []
@@ -112,14 +169,24 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       sx={{
         p: 2,
         mb: 2,
-        border: `2px solid ${isActive ? '#1976d2' : '#e0e0e0'}`,
+        border: `2px solid ${isActive ? theme.palette.primary.main : theme.palette.divider}`,
         cursor: 'pointer'
       }}
       onClick={onSelect}
     >
-      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
-        📝 {platformConfig?.name || platform} Editor
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+          📝 {platformConfig?.name || platform} Editor
+        </Typography>
+        
+        {/* Template Selector */}
+        <TemplateSelector
+          platform={platform}
+          onSelectTemplate={handleTemplateSelect}
+          currentContent={getCurrentContentString()}
+          sx={{ ml: 'auto' }}
+        />
+      </Box>
 
       {/* ✅ FULLY SCHEMA-DRIVEN: Render blocks based on schema.rendering config */}
       {editorSchema && editorBlocks.length > 0 ? (

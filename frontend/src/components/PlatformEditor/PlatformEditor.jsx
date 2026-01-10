@@ -7,7 +7,8 @@ import {
   TextField,
   Chip,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme
 } from '@mui/material'
 import { usePlatformMetadata } from '../../hooks/usePlatformSchema'
 import SchemaRenderer from '../SchemaRenderer/SchemaRenderer'
@@ -15,6 +16,7 @@ import config from '../../config'
 
 function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect }) {
   const { t } = useTranslation()
+  const theme = useTheme()
   const { platform: platformData, loading, error } = usePlatformMetadata(platform)
   const [availableRecipients, setAvailableRecipients] = useState([])
 
@@ -78,7 +80,7 @@ function PlatformEditor({ platform, content, onChange, onCopy, isActive, onSelec
       sx={{
         p: 2,
         mb: 2,
-        border: `2px solid ${isActive ? platformColor : '#e0e0e0'}`,
+        border: `2px solid ${isActive ? platformColor : theme.palette.divider}`,
         cursor: 'pointer'
       }}
       onClick={onSelect}
