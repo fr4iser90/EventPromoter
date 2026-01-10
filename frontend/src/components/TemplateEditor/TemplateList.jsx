@@ -27,9 +27,13 @@ import {
   Description as TemplateIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../../hooks/useTemplates'
+import { usePlatformSchema } from '../../hooks/usePlatformSchema'
+import SchemaRenderer from '../SchemaRenderer/SchemaRenderer'
+import config from '../../config'
 
 const TemplateList = ({ platform, onSelectTemplate }) => {
   const { templates, categories, loading, error, createTemplate, updateTemplate, deleteTemplate } = useTemplates(platform)
+  const { schema, loading: schemaLoading } = usePlatformSchema(platform)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState(null)
   const [formData, setFormData] = useState({
@@ -103,26 +107,26 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
     }
   }
 
-  // Get default template structure based on platform
+  // ✅ SCHEMA-DRIVEN: Get default template structure from schema
   const getDefaultTemplateStructure = (platform) => {
-    switch (platform) {
-      case 'email':
-        return {
-          subject: 'New Event: {eventTitle}',
-          html: '<h1>{eventTitle}</h1><p>{description}</p>'
-        }
-      default:
-        return {
-          text: '{eventTitle} - {description}'
-        }
+    const templateSchema = schema?.template
+    if (!templateSchema?.defaultStructure) {
+      // Fallback if no schema
+      return { text: '{eventTitle} - {description}' }
     }
+
+    // Build default structure from schema
+    const defaultStructure = {}
+    Object.entries(templateSchema.defaultStructure).forEach(([key, field]) => {
+      defaultStructure[key] = field.default || ''
+    })
+    return defaultStructure
   }
 
   // Extract variables from template content
   const extractVariablesFromTemplate = (template) => {
-    const content = platform === 'email' ?
-      `${template.subject || ''} ${template.html || ''}` :
-      template.text || ''
+    // Get all template fields (subject, html, text, etc.) and combine them
+    const content = Object.values(template).filter(v => typeof v === 'string').join(' ')
 
     const variableMatches = content.match(/\{([^}]+)\}/g) || []
     return [...new Set(variableMatches.map(match => match.slice(1, -1)))]
@@ -297,34 +301,28 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
               )}
             </TextField>
 
-            {/* Platform-specific template editor */}
-            {platform === 'email' ? (
-              <>
-                <TextField
-                  fullWidth
-                  label="Email Subject"
-                  value={formData.template.subject || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    template: { ...prev.template, subject: e.target.value }
-                  }))}
-                  sx={{ mb: 2 }}
-                  placeholder="Use {variable} for dynamic content"
-                />
-                <TextField
-                  fullWidth
-                  label="Email HTML Content"
-                  value={formData.template.html || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    template: { ...prev.template, html: e.target.value }
-                  }))}
-                  multiline
-                  rows={6}
-                  placeholder="Use {variable} for dynamic content"
-                />
-              </>
+            {/* ✅ SCHEMA-DRIVEN: Template fields from schema.template.defaultStructure */}
+            {schema?.template?.defaultStructure ? (
+              <SchemaRenderer
+                fields={Object.entries(schema.template.defaultStructure).map(([key, field]) => ({
+                  name: key,
+                  type: field.type === 'html' ? 'textarea' : field.type === 'rich' ? 'textarea' : field.type,
+                  label: field.label,
+                  description: field.description,
+                  placeholder: field.placeholder || `Use {variable} for dynamic content`,
+                  required: field.required,
+                  default: field.default,
+                  ui: { width: 12 }
+                }))}
+                values={formData.template}
+                onChange={(fieldName, value) => setFormData(prev => ({
+                  ...prev,
+                  template: { ...prev.template, [fieldName]: value }
+                }))}
+                errors={{}}
+              />
             ) : (
+              /* Fallback if no template schema */
               <TextField
                 fullWidth
                 label="Text Content"
@@ -337,6 +335,26 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                 rows={4}
                 placeholder="Use {variable} for dynamic content"
               />
+            )}
+
+            {/* Show available variables if defined in schema */}
+            {schema?.template?.variables && schema.template.variables.length > 0 && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Typography variant="caption" color="text.secondary" gutterBottom>
+                  Available variables:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                  {schema.template.variables.map((variable) => (
+                    <Chip
+                      key={variable.name}
+                      label={`{${variable.name}}`}
+                      size="small"
+                      variant="outlined"
+                      title={variable.description || variable.label}
+                    />
+                  ))}
+                </Box>
+              </Box>
             )}
           </Box>
         </DialogContent>

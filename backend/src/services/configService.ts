@@ -1,20 +1,11 @@
-// Config service for managing application configurations
+// ✅ GENERIC: Config service for managing application configurations
+// No hardcoded platform types - all configs are generic
 
-import { EmailConfig, AppConfig } from '../types/index.js'
+import { AppConfig } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
 
 export class ConfigService {
-  // Email configuration
-  static async getEmailConfig(): Promise<EmailConfig | null> {
-    const config = await readConfig('emails.json')
-    console.log(`📧 Loading emails config:`, config)
-    return config
-  }
-
-  static async saveEmailConfig(config: EmailConfig): Promise<boolean> {
-    return await writeConfig('emails.json', config)
-  }
-  
+ 
   // App configuration
   static async getAppConfig(): Promise<AppConfig | null> {
     return await readConfig('app.json')
@@ -45,14 +36,6 @@ export class ConfigService {
     return await this.saveAppConfig({ ...current, ...updates })
   }
 
-  static async updateEmailConfig(updates: Partial<EmailConfig>): Promise<boolean> {
-    const current = await this.getEmailConfig()
-    if (!current) {
-      return false
-    }
-    return await this.saveEmailConfig({ ...current, ...updates })
-  }
-
   // Environment variable access
   static getEnvVar(key: string, defaultValue?: string): string | undefined {
     return process.env[key] || defaultValue
@@ -66,27 +49,45 @@ export class ConfigService {
     return value
   }
 
-  // Platform settings from environment variables
+  // ✅ GENERIC: Platform settings from environment variables
+  // Settings come from platform schema, not hardcoded patterns
   static getPlatformSettings(platform: string): Record<string, any> {
     const settings: Record<string, any> = {}
     const prefix = platform.toUpperCase()
 
-    // Common patterns for different platforms
-    const patterns = {
-      email: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD', 'FROM_EMAIL', 'FROM_NAME'],
-      facebook: ['APP_ID', 'APP_SECRET', 'ACCESS_TOKEN'],
-      twitter: ['API_KEY', 'API_SECRET', 'ACCESS_TOKEN', 'ACCESS_TOKEN_SECRET'],
-      instagram: ['ACCESS_TOKEN', 'CLIENT_ID'],
-      linkedin: ['CLIENT_ID', 'CLIENT_SECRET', 'ACCESS_TOKEN'],
-      reddit: ['CLIENT_ID', 'CLIENT_SECRET', 'USERNAME', 'PASSWORD']
+    // ✅ GENERIC: Load settings from PlatformRegistry to get required env vars
+    try {
+      const { getPlatformRegistry, initializePlatformRegistry } = require('./platformRegistry.js')
+      const registry = getPlatformRegistry()
+      if (!registry.isInitialized()) {
+        // Don't await - just try to get schema if available
+        initializePlatformRegistry().catch(() => {})
+      }
+
+      const platformModule = registry.getPlatform(platform)
+      if (platformModule?.schema?.settings) {
+        // Extract env var names from schema fields
+        const schemaFields = platformModule.schema.settings.fields || []
+        schemaFields.forEach((field: any) => {
+          // Try common env var patterns
+          const envVarName = `${prefix}_${field.name.toUpperCase()}`
+          const value = this.getEnvVar(envVarName)
+          if (value) {
+            settings[field.name] = value
+          }
+        })
+      }
+    } catch (error) {
+      // If registry not available, fall back to generic pattern matching
+      console.warn(`Could not load platform schema for ${platform}, using generic env var detection`)
     }
 
-    const platformPatterns = patterns[platform as keyof typeof patterns] || []
-    platformPatterns.forEach(pattern => {
+    // Generic fallback: try common env var patterns
+    const commonPatterns = ['API_KEY', 'API_SECRET', 'ACCESS_TOKEN', 'CLIENT_ID', 'CLIENT_SECRET', 'USERNAME', 'PASSWORD']
+    commonPatterns.forEach(pattern => {
       const envKey = `${prefix}_${pattern}`
       const value = this.getEnvVar(envKey)
-      if (value) {
-        // Convert pattern to camelCase for settings
+      if (value && !settings[pattern.toLowerCase()]) {
         const settingKey = pattern.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
         settings[settingKey] = value
       }

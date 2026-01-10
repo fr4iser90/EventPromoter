@@ -1,0 +1,70 @@
+/**
+ * Facebook Platform Preview Schema
+ * 
+ * Defines how Facebook content should be previewed.
+ * 
+ * @module platforms/facebook/schema/preview
+ */
+
+import { PreviewSchema } from '../../../types/platformSchema.js'
+
+export const facebookPreviewSchema: PreviewSchema = {
+  version: '1.0.0',
+  title: 'Facebook Preview',
+  description: 'Preview how your Facebook post will look',
+  defaultMode: 'desktop',
+  modes: [
+    {
+      id: 'desktop',
+      label: 'Desktop',
+      description: 'Desktop Facebook view',
+      width: 500,
+      height: 600
+    },
+    {
+      id: 'mobile',
+      label: 'Mobile',
+      description: 'Mobile Facebook view',
+      width: 375,
+      height: 500
+    }
+  ],
+  options: {
+    showMetadata: true,
+    showTimestamp: true,
+    interactive: false
+  },
+  styling: {
+    backgroundColor: '#ffffff',
+    textColor: '#050505',
+    fontFamily: 'Helvetica, Arial, sans-serif'
+  },
+  contentMapping: [
+    {
+      field: 'text',
+      renderAs: 'paragraph',
+      label: 'Post Content',
+      order: 1
+    },
+    {
+      field: 'image',
+      renderAs: 'image',
+      label: 'Image',
+      order: 2
+    },
+    {
+      field: 'link',
+      renderAs: 'link',
+      label: 'Link',
+      order: 3
+    },
+    {
+      field: 'hashtags',
+      renderAs: 'text',
+      label: 'Hashtags',
+      order: 4,
+      show: false // Hashtags are embedded in text
+    }
+  ]
+}
+

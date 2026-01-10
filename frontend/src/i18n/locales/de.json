@@ -57,21 +57,6 @@
     "lineup": "Lineup",
     "genre": "Genre"
   },
-  "form": {
-    "labels": {
-      "tweetText": "Tweet Text",
-      "instagramCaption": "Instagram Caption",
-      "facebookPost": "Facebook Post",
-      "linkedinPost": "LinkedIn Post",
-      "redditTitle": "Reddit Title",
-      "redditBody": "Reddit Body",
-      "subreddit": "Subreddit",
-      "selectRecipients": "Empfänger auswählen",
-      "emailSubject": "E-Mail-Betreff",
-      "emailHtmlContent": "HTML E-Mail-Inhalt",
-      "subredditExample": "z.B. r/berlin"
-    }
-  },
   "navigation": {
     "home": "Start",
     "templates": "Vorlagen"
@@ -104,10 +89,14 @@
   },
   "preview": {
     "title": "Vorschau",
+    "preview": "Vorschau",
     "noFiles": "Noch keine Dateien hochgeladen. Lade Dateien hoch, um die Vorschau zu sehen.",
-    "parsedData": "Geparste Event-Daten",
+    "noContent": "Noch kein Inhalt...",
     "images": "Bilder",
-    "sourceFiles": "Quelldateien"
+    "parsedData": "Geparste Event-Daten",
+    "sourceFiles": "Quelldateien",
+    "eventImage": "Event-Bild",
+    "title": "Titel"
   },
   "template": {
     "placeholders": "Vorlagen-Platzhalter verfügbar",
@@ -117,54 +106,6 @@
     "name": "Name",
     "description": "Beschreibung",
     "platform": "Plattform"
-  },
-  "platforms": {
-    "twitter": {
-      "title": "Twitter/X Post"
-    },
-    "linkedin": {
-      "title": "LinkedIn Post",
-      "contentLabel": "Professioneller Inhalt",
-      "placeholder": "Teile professionelle Einblicke...",
-      "bestPractices": {
-        "title": "LinkedIn Best Practices:",
-        "points": [
-          "Fokussiere dich auf Wert und Einblicke",
-          "Verwende professionelle Sprache",
-          "Nutze relevante Hashtags",
-          "Stelle provokante Fragen"
-        ]
-      },
-      "footer": "Dein Beitrag wird auf deinem LinkedIn-Profil oder Unternehmensseite veröffentlicht."
-    },
-    "facebook": {
-      "title": "Facebook Post",
-      "contentLabel": "Beitragsinhalt",
-      "placeholder": "Teile deine Gedanken...",
-      "bestPractices": {
-        "title": "Facebook Tipps:",
-        "points": [
-          "Beiträge mit Fragen bekommen 100% mehr Interaktion",
-          "Verwende 1-2 relevante Hashtags",
-          "Halte es unterhaltsam und authentisch"
-        ]
-      },
-      "footer": "Dein Beitrag wird auf deiner Facebook-Seite oder deinem persönlichen Profil veröffentlicht."
-    },
-    "instagram": {
-      "title": "Instagram Post",
-      "contentLabel": "Bildunterschrift",
-      "placeholder": "Schreibe eine Bildunterschrift für deinen Beitrag...",
-      "bestPractices": {
-        "title": "Bewährte Praktiken:",
-        "points": [
-          "Verwende 1-3 relevante Hashtags",
-          "Stelle Fragen, um die Interaktion zu steigern",
-          "Nutze Emojis strategisch"
-        ]
-      },
-      "footer": "Hinweis: Der Bild-Upload wird separat im Veröffentlichungsschritt behandelt."
-    }
   },
   "settings": {
     "title": "Einstellungen",
@@ -193,141 +134,6 @@
     "useExisting": "Vorhandene Daten verwenden",
     "useNew": "Neue Daten verwenden"
   },
-  "panels": {
-    "instagram": {
-      "title": "Instagram Einstellungen",
-      "accountType": {
-        "label": "Account-Typ",
-        "personal": "Persönliches Konto",
-        "business": "Business-Konto",
-        "creator": "Creator-Konto"
-      },
-      "postingMode": {
-        "label": "Posting-Modus",
-        "post": "Feed-Beitrag",
-        "reel": "Reel",
-        "story": "Story",
-        "carousel": "Karussell-Beitrag"
-      },
-      "hashtagStrategy": {
-        "title": "Hashtag-Strategie",
-        "minimal": {
-          "label": "Minimal",
-          "description": "5-10 Hashtags (weniger ist mehr)"
-        },
-        "moderate": {
-          "label": "Moderat",
-          "description": "15-25 Hashtags (ausgewogen)"
-        },
-        "maximal": {
-          "label": "Maximal",
-          "description": "25-35 Hashtags (für Reichweite)"
-        }
-      },
-      "maxHashtags": "Maximale Hashtags",
-      "options": {
-        "title": "Optionen",
-        "requireImage": "Bild erforderlich"
-      },
-      "info": {
-        "playwright": "Instagram verwendet Playwright für zuverlässiges Posting."
-      },
-      "warnings": {
-        "reel": "Reels benötigen Video-Inhalte.",
-        "story": "Stories verschwinden nach 24h."
-      }
-    },
-    "linkedin": {
-      "title": "LinkedIn Einstellungen",
-      "postType": {
-        "label": "Post-Typ",
-        "text": "Text-Post",
-        "article": "Artikel",
-        "poll": "Umfrage",
-        "document": "Dokument"
-      },
-      "postAs": {
-        "label": "Post als"
-      },
-      "companies": {
-        "company1": "Meine Firma GmbH",
-        "company2": "Tech Startup AG",
-        "personal": "Persönliches Profil"
-      },
-      "followers": "Follower",
-      "targetAudience": {
-        "title": "Zielgruppe",
-        "connections": "Nur Connections",
-        "anyone": "Jeder (Anyone)",
-        "custom": "Benutzerdefinierte Zielgruppe"
-      },
-      "options": {
-        "title": "Optionen",
-        "includeArticle": "Artikel-Link hinzufügen",
-        "professionalTone": "Professioneller Ton"
-      },
-      "info": {
-        "api": "LinkedIn API ist sehr zuverlässig für professionelle Inhalte."
-      },
-      "warnings": {
-        "article": "Artikel-Posts werden als LinkedIn-Artikel veröffentlicht.",
-        "anyone": "\"Anyone\" kann zu weniger Interaktion führen."
-      }
-    },
-    "twitter": {
-      "title": "Twitter Einstellungen",
-      "postingMode": {
-        "label": "Posting-Modus",
-        "single": "Einzelner Tweet",
-        "thread": "Thread",
-        "auto": "Auto (Thread falls nötig)"
-      },
-      "options": {
-        "title": "Optionen",
-        "threadSupport": "Thread-Unterstützung",
-        "autoTruncate": "Automatisch kürzen (280 Zeichen)"
-      },
-      "info": {
-        "api": "Twitter API ist sehr zuverlässig und schnell. Keine zusätzlichen Credentials nötig."
-      }
-    }
-  },
-  "preview": {
-    "preview": "Vorschau",
-    "email": "E-Mail",
-    "twitter": "🐦 Twitter/X Vorschau",
-    "instagram": "📸 Instagram Vorschau",
-    "emailPreview": "📧 E-Mail Vorschau",
-    "noContent": "Noch kein Inhalt...",
-    "noFiles": "Keine Dateien",
-    "images": "Bilder",
-    "parsedData": "Parsierte Daten",
-    "sourceFiles": "Quelldateien",
-    "eventImage": "Event-Bild",
-    "noCaption": "Noch keine Bildunterschrift...",
-    "noLinkedInContent": "Noch kein LinkedIn-Inhalt...",
-    "title": "Titel",
-    "noTitle": "Kein Titel...",
-    "noBodyContent": "Kein Hauptinhalt...",
-    "subreddit": "Subreddit",
-    "subject": "Betreff",
-    "noSubject": "Kein Betreff...",
-    "htmlEmailContent": "HTML E-Mail-Inhalt..."
-  },
-  "help": {
-    "instagramCaption": "Bildunterschrift für Instagram-Post",
-    "facebookPost": "Post-Text für Facebook",
-    "linkedinPost": "Professioneller Post-Inhalt für LinkedIn",
-    "redditTitle": "Post-Titel für Reddit",
-    "redditBody": "Post-Inhalt für Reddit",
-    "emailContent": "HTML-Inhalt für E-Mail"
-  },
-  "email": {
-    "to": "An",
-    "noRecipientsSelected": "Keine Empfänger ausgewählt",
-    "content": "Inhalt",
-    "footer": "Diese E-Mail wird über Ihren konfigurierten SMTP-Server versendet."
-  },
   "hashtags": {
     "title": "Hashtags"
   },
@@ -342,4 +148,3 @@
     "errorLoadingFileContent": "Fehler beim Laden des Dateiinhalts"
   }
 }
-

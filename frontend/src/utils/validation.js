@@ -30,11 +30,6 @@ export const PLATFORM_RULES = {
     maxLength: null,
     supports: ['text', 'image']
   },
-  email: {
-    required: ['eventTitle', 'emailRecipients'],
-    maxLength: null,
-    supports: ['text', 'image', 'html']
-  }
 };
 
 /**
@@ -108,10 +103,6 @@ export function validatePlatforms(platformContent, selectedPlatforms) {
         if (!platformContent.imageUrl) {
           errors.push('Image is required for this platform');
         }
-      } else if (field === 'emailRecipients') {
-        if (!content || !content.recipients || content.recipients.length === 0) {
-          errors.push('Email recipients are required');
-        }
       } else if (field === 'redditSubreddit') {
         if (!content || !content.subreddit) {
           errors.push('Reddit subreddit is required');
@@ -124,13 +115,6 @@ export function validatePlatforms(platformContent, selectedPlatforms) {
       errors.push(`Content too long: ${content.text.length} > ${rules.maxLength} characters`);
     }
 
-    // Validate email addresses
-    if (platform === 'email' && content && content.recipients) {
-      const invalidEmails = content.recipients.filter(email => !validateEmail(email));
-      if (invalidEmails.length > 0) {
-        errors.push(`Invalid email addresses: ${invalidEmails.join(', ')}`);
-      }
-    }
 
     if (errors.length > 0) {
       validationResults.push({
@@ -175,14 +159,6 @@ export function validateUrl(url) {
       url
     };
   }
-}
-
-/**
- * Validate email address format
- */
-export function validateEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
 }
 
 /**

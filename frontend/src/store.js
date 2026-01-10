@@ -113,8 +113,7 @@ const useStore = create((set, get) => ({
       const response = await axios.get('http://localhost:4000/api/platforms/preferences')
       const preferences = response.data.preferences
       set({
-        userPreferences: preferences,
-        emailRecipients: preferences.emailRecipients || []
+        userPreferences: preferences
       })
       console.log('User preferences loaded:', preferences)
       return preferences
@@ -150,18 +149,15 @@ const useStore = create((set, get) => ({
   // Load global configurations (separate from user preferences)
   loadGlobalConfigs: async () => {
     try {
-      const [emailConfig, hashtagConfig] = await Promise.all([
-        axios.get('http://localhost:4000/api/config/emails'),
+      const [hashtagConfig] = await Promise.all([
         axios.get('http://localhost:4000/api/config/hashtags')
       ])
 
       set({
-        globalEmailConfig: emailConfig.data,
         globalHashtagConfig: hashtagConfig.data
       })
 
       console.log('Global configs loaded:', {
-        emails: emailConfig.data.available?.length || 0,
         hashtags: hashtagConfig.data.available?.length || 0
       })
     } catch (error) {
@@ -187,7 +183,6 @@ const useStore = create((set, get) => ({
         uploadedFileRefs: restoreData.files,
         selectedPlatforms: restoreData.platforms || [],
         selectedHashtags: restoreData.hashtags || [],
-        // Email settings are now managed in platformContent.email
         platformContent: restoreData.content || {}
       })
 
@@ -204,7 +199,6 @@ const useStore = create((set, get) => ({
       console.log(`✅ Event ${eventId} completely restored:`, {
         files: restoreData.files?.length || 0,
         platforms: restoreData.platforms?.length || 0,
-        emails: (restoreData.platformContent?.email?.recipients?.length || 0),
         contentKeys: Object.keys(restoreData.content || {}).length
       })
 
@@ -261,7 +255,6 @@ const useStore = create((set, get) => ({
           uploadedFileRefs: validatedFileRefs, // Only load existing files
           selectedHashtags: event.selectedHashtags || [],
           selectedPlatforms: event.selectedPlatforms || [],
-          emailRecipients: event.platformContent?.email?.recipients || [],
           parsedData: null, // Will be loaded separately
           parsingStatus: 'idle'
         })
@@ -282,7 +275,6 @@ const useStore = create((set, get) => ({
           uploadedFileRefs: [],
           selectedHashtags: [],
           selectedPlatforms: [],
-          emailRecipients: [],
           parsedData: null,
           parsingStatus: 'idle'
         })
@@ -353,8 +345,6 @@ const useStore = create((set, get) => ({
   userPreferences: {
     lastSelectedPlatforms: [],
     defaultHashtags: [],
-    emailRecipients: [],
-    smtpConfig: null,
     uiPreferences: {
       darkMode: false
     }
@@ -364,12 +354,10 @@ const useStore = create((set, get) => ({
   uploadedFileRefs: [],
 
   // Event-specific selections (separate from global configs)
-  // Email settings are managed in platformContent.email
   selectedHashtags: [],      // Selected hashtags for current event
   selectedPlatforms: [],     // Selected platforms for current event
 
   // Global configs loaded from backend
-  globalEmailConfig: null,   // Global email configuration from /config/emails.json
   globalHashtagConfig: null, // Global hashtag configuration from /config/hashtags.json
 
   // Template management state
@@ -383,20 +371,6 @@ const useStore = create((set, get) => ({
     get().saveEventWorkspace()
   },
 
-  setSelectedEmails: (emails) => {
-    const newEmails = Array.isArray(emails) ? emails : []
-    const currentPlatformContent = get().platformContent
-    const updatedPlatformContent = {
-      ...currentPlatformContent,
-      email: {
-        ...currentPlatformContent.email,
-        recipients: newEmails
-      }
-    }
-    set({ platformContent: updatedPlatformContent })
-    get().saveEventPlatformContent(get().currentEvent?.id, updatedPlatformContent)
-    get().updateWorkflowState()
-  },
 
   // Upload files to server
   uploadFiles: async (files) => {
@@ -513,7 +487,8 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // Generate content for a specific platform
+  // Generate content for a specific platform - GENERIC (no hardcoded platform logic)
+  // NOTE: This is a fallback. Ideally, content generation should come from backend platform services
   generateContentForPlatform: (platform, parsedData) => {
     const baseContent = {
       eventTitle: parsedData.title || '',
@@ -524,48 +499,28 @@ const useStore = create((set, get) => ({
       description: parsedData.description || ''
     }
 
-    switch (platform) {
-      case 'twitter':
-        return {
-          ...baseContent,
-          text: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
-        }
+    // Generic content generation - uses common fields that most platforms support
+    // Platform-specific formatting should be handled by backend services
+    const venueText = parsedData.venue ? (typeof parsedData.venue === 'string' ? parsedData.venue : parsedData.venue.name || '') : ''
+    const locationText = [venueText, parsedData.city].filter(Boolean).join(', ')
+    const dateTimeText = [parsedData.date, parsedData.time].filter(Boolean).join(' ')
 
-      case 'facebook':
-        return {
-          ...baseContent,
-          text: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
-        }
+    // Generate a generic text content that can be used by most platforms
+    const genericText = [
+      parsedData.title || 'Event',
+      dateTimeText ? `📅 ${dateTimeText}` : '',
+      locationText ? `📍 ${locationText}` : '',
+      parsedData.description || ''
+    ].filter(Boolean).join('\n\n').trim()
 
-      case 'instagram':
-        return {
-          ...baseContent,
-          caption: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
-        }
-
-      case 'linkedin':
-        return {
-          ...baseContent,
-          text: `${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim()
-        }
-
-      case 'reddit':
-        return {
-          ...baseContent,
-          title: parsedData.title || 'Event',
-          body: `📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}`.trim(),
-          subreddit: 'r/events' // Default
-        }
-
-      case 'email':
-        return {
-          ...baseContent,
-          subject: parsedData.title || 'Event Invitation',
-          body: `Liebe Community,\n\nwir laden euch herzlich ein zu:\n\n${parsedData.title || 'Event'}\n\n📅 ${parsedData.date || ''} ${parsedData.time || ''}\n📍 ${parsedData.venue || ''}, ${parsedData.city || ''}\n\n${parsedData.description || ''}\n\nWir freuen uns auf euch!`
-        }
-
-      default:
-        return baseContent
+    // Return generic structure - platform-specific fields should be handled by backend
+    return {
+      ...baseContent,
+      text: genericText, // Most platforms use 'text'
+      caption: genericText, // Instagram uses 'caption'
+      body: genericText, // Some platforms use 'body'
+      title: parsedData.title || 'Event', // Some platforms use 'title'
+      subject: parsedData.title || 'Event Invitation' // Some platforms use 'subject'
     }
   },
 
@@ -822,7 +777,6 @@ const useStore = create((set, get) => ({
 
   // Platform settings mapping - defines which workspace properties to load for each platform
   platformSettingsMap: {
-    email: [], // Recipients are managed in platformContent.email.recipients
     reddit: [], // Reddit settings are already in platformContent
     twitter: [],
     instagram: [],
@@ -839,20 +793,12 @@ const useStore = create((set, get) => ({
       const finalizedContent = { ...state.platformContent }
 
       // For each selected platform, finalize content
+      // Default values should come from platform schemas, not hardcoded here
+      // If a platform needs defaults, they should be defined in the platform's schema.default
       for (const platform of state.selectedPlatforms) {
         const platformContent = finalizedContent[platform] || {}
-
-        // Email recipients are already in platformContent.email.recipients
-        // No need to load from backend - they're managed in the content
-
-        // Set defaults for missing required fields
-        if (platform === 'reddit' && !platformContent.subreddit) {
-          finalizedContent.reddit = {
-            ...finalizedContent.reddit,
-            subreddit: 'r/events'
-          }
-          console.log(`🟠 ${platform}: Set default subreddit`)
-        }
+        // Platform-specific defaults should be handled by platform service/validator
+        // No hardcoded platform checks
       }
 
       // Update platform content with finalized data

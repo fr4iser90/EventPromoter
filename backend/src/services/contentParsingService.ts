@@ -598,18 +598,24 @@ export class ContentExtractionService {
       return null
     }
 
+    // ✅ GENERIC: Load all platform content files (scan directory, not hardcoded list)
     const platformContent: Record<string, any> = {}
-    const platforms = ['twitter', 'instagram', 'facebook', 'linkedin', 'reddit', 'email']
-
-    for (const platform of platforms) {
-      const platformFile = path.join(platformContentDir, `${platform}.json`)
-      if (fs.existsSync(platformFile)) {
+    
+    try {
+      const files = fs.readdirSync(platformContentDir)
+      const platformFiles = files.filter(file => file.endsWith('.json') && !file.startsWith('_'))
+      
+      for (const file of platformFiles) {
+        const platform = file.replace('.json', '')
+        const platformFile = path.join(platformContentDir, file)
         try {
           platformContent[platform] = JSON.parse(fs.readFileSync(platformFile, 'utf8'))
         } catch (error) {
           console.warn(`Failed to load platform content for ${platform}:`, error)
         }
       }
+    } catch (error) {
+      console.warn(`Failed to read platform content directory:`, error)
     }
 
     return Object.keys(platformContent).length > 0 ? platformContent : null

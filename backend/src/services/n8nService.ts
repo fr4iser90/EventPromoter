@@ -71,23 +71,18 @@ export class N8nService {
       }
     }
 
-    // Transform platformContent for N8N
+    // ✅ GENERIC: Transform platformContent for N8N (all platforms, not hardcoded)
     if (n8nPayload.platformContent) {
-      // Move email recipients to root level if present
-      if (n8nPayload.platformContent.email && n8nPayload.platformContent.email.recipients) {
-        n8nPayload.email = {
-          ...n8nPayload.platformContent.email,
-          recipients: n8nPayload.platformContent.email.recipients
+      // Move all platform content to root level for N8N compatibility
+      Object.entries(n8nPayload.platformContent).forEach(([platformId, content]: [string, any]) => {
+        if (content && typeof content === 'object') {
+          n8nPayload[platformId] = {
+            ...content,
+            // Normalize text field (some platforms use 'body', others use 'text')
+            text: content.body || content.text || content.html || ''
+          }
         }
-      }
-
-      // Move reddit content to root level if present
-      if (n8nPayload.platformContent.reddit) {
-        n8nPayload.reddit = {
-          ...n8nPayload.platformContent.reddit,
-          text: n8nPayload.platformContent.reddit.body || n8nPayload.platformContent.reddit.text
-        }
-      }
+      })
     }
 
     // Transform files to include full URLs for n8n

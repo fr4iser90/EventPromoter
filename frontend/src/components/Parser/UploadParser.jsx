@@ -33,7 +33,7 @@ import {
   InputLabel,
   Select
 } from '@mui/material'
-import EmailPanel from '../Panels/EmailPanel'
+import { usePlatforms } from '../../hooks/usePlatformSchema'
 import GenericPlatformEditor from '../GenericPlatformEditor/GenericPlatformEditor'
 import PlatformPreview from '../PlatformPreview/PlatformPreview'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
@@ -60,10 +60,34 @@ function UploadParser() {
   const [isParsing, setIsParsing] = useState(false)
   const [parseError, setParseError] = useState('')
   const [editedData, setEditedData] = useState(null)
-  const [activePlatform, setActivePlatform] = useState('twitter')
+  const [activePlatform, setActivePlatform] = useState(null)
   const [availableRecipients, setAvailableRecipients] = useState([])
+  const { platforms, loading: platformsLoading } = usePlatforms()
 
-  const { emailRecipients } = useStore()
+  // Set first platform as active when platforms are loaded
+  useEffect(() => {
+    if (selectedPlatforms.length > 0 && !activePlatform) {
+      setActivePlatform(selectedPlatforms[0])
+    }
+  }, [selectedPlatforms, activePlatform, platforms])
+
+  // Get platform info from backend - GENERIC
+  const getPlatformInfo = (platformId) => {
+    if (!platforms || platforms.length === 0) {
+      return { name: platformId, icon: '📝', color: '#666' }
+    }
+
+    const platform = platforms.find(p => p.id === platformId)
+    if (platform) {
+      return {
+        name: platform.name || platform.metadata?.displayName || platformId,
+        icon: platform.icon || platform.metadata?.icon || '📝',
+        color: platform.color || platform.metadata?.color || '#666'
+      }
+    }
+
+    return { name: platformId, icon: '📝', color: '#666' }
+  }
 
 
   // Handle data editing
@@ -141,47 +165,33 @@ function UploadParser() {
     }
   }, [uploadedFileRefs, parsingStatus, currentEvent?.id]) // React to file changes, parsing status, and event changes
 
-  // Generate platform-specific content
+  // Generate platform-specific content - GENERIC (no hardcoded platform logic)
+  // NOTE: This function is deprecated. Content generation should come from backend platform services.
+  // Keeping as fallback for now, but should be removed in favor of backend-generated content.
   const generatePlatformContent = (platform, data) => {
-    const baseText = `${data.title} - ${data.date} ${data.time}`
-    const venue = data.venue?.name ? ` @ ${data.venue.name}` : ''
-    const website = data.website ? ` ${data.website}` : ''
+    // Generic content generation - uses common fields
+    const venueText = data.venue?.name || (typeof data.venue === 'string' ? data.venue : '')
+    const locationText = [venueText, data.venue?.address, data.city].filter(Boolean).join(', ')
+    const dateTimeText = [data.date, data.time].filter(Boolean).join(' ')
 
-    switch (platform) {
-      case 'twitter':
-        return {
-          text: baseText + venue + website + ' #event #party',
-          media: [],
-          charCount: (baseText + venue + website + ' #event #party').length
-        }
-      case 'instagram':
-        return {
-          caption: `📸 ${data.title}\n📅 ${data.date} ${data.time}\n📍 ${data.venue?.name || ''} ${data.venue?.address || ''}\n🎧 ${data.performers?.join(', ') || ''}\n🌐 ${data.website}\n#event #techno #party`,
-          image: null
-        }
-      case 'facebook':
-        return {
-          text: `${data.title} - ${data.date} um ${data.time} Uhr\n\nVeranstaltungsort: ${data.venue?.name || ''}, ${data.venue?.address || ''}\n\n${data.description || ''}\n\nTickets: ${data.website}`,
-          media: []
-        }
-      case 'linkedin':
-        return {
-          text: `${data.title} - ${data.date} ${data.time}\n\nVeranstaltung: ${data.venue?.name || ''}\nOrt: ${data.venue?.address || ''}, ${data.venue?.city || ''}\n\n${data.description || ''}\n\nWeitere Informationen: ${data.website}`
-        }
-      case 'reddit':
-        return {
-          title: `${data.title} - ${data.date}`,
-          body: `Event: ${data.title}\nDate: ${data.date} ${data.time}\nLocation: ${data.venue?.name || ''}, ${data.venue?.address || ''}\n\n${data.description || ''}\n\nMore info: ${data.website}`,
-          subreddit: 'r/events' // Default subreddit
-        }
-      case 'email':
-        return {
-          subject: `${data.title} - ${data.date}`,
-          html: `<h2>${data.title}</h2><p>Datum: ${data.date} ${data.time}</p><p>Ort: ${data.venue?.name || ''}</p><p>Mehr Infos: ${data.website}</p>`,
-          recipients: [] // Will be set from emailRecipients state
-        }
-      default:
-        return { text: baseText + venue + website }
+    // Generate generic content structure
+    const genericText = [
+      data.title || 'Event',
+      dateTimeText ? `📅 ${dateTimeText}` : '',
+      locationText ? `📍 ${locationText}` : '',
+      data.description || ''
+    ].filter(Boolean).join('\n\n').trim()
+
+    // Return generic structure - platform-specific formatting should be handled by backend
+    return {
+      text: genericText,
+      caption: genericText,
+      body: genericText,
+      title: data.title || 'Event',
+      subject: data.title || 'Event Invitation',
+      html: `<h2>${data.title || 'Event'}</h2><p>${genericText.replace(/\n/g, '</p><p>')}</p>`,
+      media: [],
+      recipients: []
     }
   }
 
@@ -190,10 +200,8 @@ function UploadParser() {
     const currentContent = platformContent[platform] || {}
     const updatedContent = { ...currentContent, [field]: value }
 
-    // Update character count for text fields
-    if (field === 'text' && platform === 'twitter') {
-      updatedContent.charCount = value.length
-    }
+    // Character counting is handled by GenericPlatformEditor based on schema constraints
+    // No hardcoded platform checks needed
 
     setPlatformContent(platform, updatedContent)
   }
@@ -323,24 +331,23 @@ function UploadParser() {
                       Active Platforms:
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                      {selectedPlatforms.map(platform => {
-                        const configs = {
-                          twitter: { icon: '🐦', color: 'primary' },
-                          instagram: { icon: '📸', color: 'secondary' },
-                          facebook: { icon: '👥', color: 'success' },
-                          linkedin: { icon: '💼', color: 'info' },
-                          email: { icon: '📧', color: 'warning' }
-                        }
-                        const config = configs[platform] || { icon: '📝', color: 'default' }
-
+                      {selectedPlatforms.map(platformId => {
+                        const info = getPlatformInfo(platformId)
                         return (
                           <Chip
-                            key={platform}
-                            label={`${config.icon} ${platform}`}
-                            color={config.color}
-                            variant={platform === activePlatform ? "filled" : "outlined"}
-                            onClick={() => setActivePlatform(platform)}
-                            sx={{ cursor: 'pointer' }}
+                            key={platformId}
+                            label={`${info.icon} ${info.name}`}
+                            variant={platformId === activePlatform ? "filled" : "outlined"}
+                            onClick={() => setActivePlatform(platformId)}
+                            sx={{ 
+                              cursor: 'pointer',
+                              borderColor: info.color,
+                              color: platformId === activePlatform ? 'white' : info.color,
+                              bgcolor: platformId === activePlatform ? info.color : 'transparent',
+                              '&:hover': {
+                                bgcolor: platformId === activePlatform ? info.color : `${info.color}20`
+                              }
+                            }}
                           />
                         )
                       })}
@@ -422,7 +429,7 @@ function UploadParser() {
 
               <Accordion defaultExpanded>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>{t('preview.twitter')}</Typography>
+                  <Typography>{t('preview.title')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>
@@ -450,7 +457,7 @@ function UploadParser() {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>{t('preview.instagram')}</Typography>
+                  <Typography>{t('preview.title')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>
@@ -472,7 +479,7 @@ function UploadParser() {
 
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>{t('preview.emailPreview')}</Typography>
+                  <Typography>{t('preview.preview')}</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Card>

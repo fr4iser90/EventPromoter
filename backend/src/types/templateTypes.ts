@@ -6,7 +6,7 @@ export interface Template {
   description?: string
   platform: string
   category: string
-  template: Record<string, any> // Platform-specific structure (subject+html for email, text for social, etc.)
+  template: Record<string, any> // Platform-specific structure (defined by platform schema)
   variables: string[]
   isDefault: boolean // true for hardcoded templates, false for custom user templates
   createdAt: string

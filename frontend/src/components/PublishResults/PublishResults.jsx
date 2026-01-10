@@ -21,15 +21,16 @@ import {
   CheckCircle as SuccessIcon,
   Error as ErrorIcon,
   Link as LinkIcon,
-  Email as EmailIcon,
   Schedule as TimeIcon
 } from '@mui/icons-material'
 import axios from 'axios'
+import { usePlatforms } from '../../hooks/usePlatformSchema'
 
 const PublishResults = ({ open, onClose, publishSessionId }) => {
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const { platforms } = usePlatforms()
 
   useEffect(() => {
     if (open && publishSessionId) {
@@ -72,16 +73,15 @@ const PublishResults = ({ open, onClose, publishSessionId }) => {
     return `${minutes}m ${remainingSeconds}s`
   }
 
-  const getPlatformIcon = (platform) => {
-    const icons = {
-      twitter: '🐦',
-      facebook: '👥',
-      instagram: '📷',
-      linkedin: '💼',
-      reddit: '🔴',
-      email: <EmailIcon />
+  const getPlatformIcon = (platformId) => {
+    // Get icon from backend platform metadata
+    if (platforms && platforms.length > 0) {
+      const platform = platforms.find(p => p.id === platformId)
+      if (platform) {
+        return platform.icon || platform.metadata?.icon || '📱'
+      }
     }
-    return icons[platform] || '📱'
+    return '📱'
   }
 
   const renderResultItem = (result) => (
@@ -137,14 +137,6 @@ const PublishResults = ({ open, onClose, publishSessionId }) => {
                   </Typography>
                 )}
 
-                {result.data.emailRecipients && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <EmailIcon fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {result.data.emailRecipients.length} Empfänger
-                    </Typography>
-                  </Box>
-                )}
 
                 {result.data.sentAt && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

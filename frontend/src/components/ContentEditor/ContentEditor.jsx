@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Paper,
   Box,
@@ -6,96 +6,94 @@ import {
   Tab,
   Grid,
   Typography,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material'
-
-// Import all editors
-import TwitterEditor from '../PlatformEditor/TwitterEditor'
-import InstagramEditor from '../PlatformEditor/InstagramEditor'
-import FacebookEditor from '../PlatformEditor/FacebookEditor'
-import LinkedEditor from '../PlatformEditor/LinkedEditor'
-import RedditEditor from '../PlatformEditor/RedditEditor'
-import EmailEditor from '../PlatformEditor/EmailEditor'
-
-// Import all previews
-import TwitterPreview from '../PlatformPreview/TwitterPreview'
-import EmailPreview from '../PlatformPreview/EmailPreview'
+import GenericPlatformEditor from '../GenericPlatformEditor/GenericPlatformEditor'
+import PlatformPreview from '../PlatformPreview/PlatformPreview'
+import { usePlatforms } from '../../hooks/usePlatformSchema'
+import config from '../../config'
 
 function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentChange, disabled = false }) {
   const [activeTab, setActiveTab] = useState(0)
+  const { platforms, loading, error } = usePlatforms()
 
-  // Get available platforms (only selected ones)
-  const availablePlatforms = selectedPlatforms.filter(platform => {
-    // Map platform IDs to display names
-    const platformMap = {
-      twitter: 'Twitter',
-      instagram: 'Instagram',
-      facebook: 'Facebook',
-      linkedin: 'LinkedIn',
-      reddit: 'Reddit',
-      email: 'Email'
+  // Get available platforms with metadata from backend
+  const availablePlatforms = selectedPlatforms.filter(platformId => {
+    // Check if platform exists in backend data
+    if (platforms && platforms.length > 0) {
+      return platforms.some(p => p.id === platformId)
     }
-    return platformMap[platform]
+    // If platforms not loaded yet, allow all selected
+    return true
   })
 
-  // Get editor component for platform
-  const getEditorComponent = (platform) => {
-    const content = platformContent[platform] || {}
-    const onChange = (newContent) => {
-      onPlatformContentChange(platform, newContent)
+  // Get platform metadata from backend
+  const getPlatformInfo = (platformId) => {
+    if (!platforms || platforms.length === 0) {
+      return { name: platformId, icon: '📝', color: '#666' }
     }
 
-    switch (platform) {
-      case 'twitter':
-        return <TwitterEditor content={content} onChange={onChange} disabled={disabled} />
-      case 'instagram':
-        return <InstagramEditor content={content} onChange={onChange} disabled={disabled} />
-      case 'facebook':
-        return <FacebookEditor content={content} onChange={onChange} disabled={disabled} />
-      case 'linkedin':
-        return <LinkedEditor content={content} onChange={onChange} disabled={disabled} />
-      case 'reddit':
-        return <RedditEditor content={content} onChange={onChange} disabled={disabled} />
-      case 'email':
-        return <EmailEditor content={content} onChange={onChange} disabled={disabled} />
-      default:
-        return (
-          <Alert severity="warning">
-            No editor available for platform: {platform}
-          </Alert>
-        )
+    const platform = platforms.find(p => p.id === platformId)
+    if (platform) {
+      return {
+        name: platform.name || platform.metadata?.displayName || platformId,
+        icon: platform.icon || platform.metadata?.icon || '📝',
+        color: platform.color || platform.metadata?.color || '#666'
+      }
     }
+
+    return { name: platformId, icon: '📝', color: '#666' }
   }
 
-  // Get preview component for platform
-  const getPreviewComponent = (platform) => {
-    const content = platformContent[platform] || {}
-
-    switch (platform) {
-      case 'twitter':
-        return <TwitterPreview content={content} />
-      case 'email':
-        return <EmailPreview content={content} />
-      default:
-        return (
-          <Alert severity="info">
-            Preview not yet implemented for {platform}
-          </Alert>
-        )
+  // Get editor component - always use generic
+  const getEditorComponent = (platformId) => {
+    const content = platformContent[platformId] || {}
+    const onChange = (field, value) => {
+      onPlatformContentChange(platformId, { ...content, [field]: value })
     }
+
+    return (
+      <GenericPlatformEditor
+        platform={platformId}
+        content={content}
+        onChange={onChange}
+        isActive={true}
+        onSelect={() => {}}
+      />
+    )
   }
 
-  // Get platform display info
-  const getPlatformInfo = (platform) => {
-    const info = {
-      twitter: { name: 'Twitter', icon: '🐦', color: '#1DA1F2' },
-      instagram: { name: 'Instagram', icon: '📸', color: '#E4405F' },
-      facebook: { name: 'Facebook', icon: '👥', color: '#1877F2' },
-      linkedin: { name: 'LinkedIn', icon: '💼', color: '#0A66C2' },
-      reddit: { name: 'Reddit', icon: '🟠', color: '#FF4500' },
-      email: { name: 'Email', icon: '📧', color: '#EA4335' }
-    }
-    return info[platform] || { name: platform, icon: '📝', color: '#666' }
+  // Get preview component - always use generic
+  const getPreviewComponent = (platformId) => {
+    const content = platformContent[platformId] || {}
+
+    return (
+      <PlatformPreview
+        platform={platformId}
+        content={content}
+        isActive={true}
+      />
+    )
+  }
+
+  if (loading) {
+    return (
+      <Paper sx={{ p: 3, textAlign: 'center' }}>
+        <CircularProgress sx={{ mb: 2 }} />
+        <Typography>Loading platforms...</Typography>
+      </Paper>
+    )
+  }
+
+  if (error) {
+    return (
+      <Paper sx={{ p: 3 }}>
+        <Alert severity="error">
+          Failed to load platforms: {error}
+        </Alert>
+      </Paper>
+    )
   }
 
   if (availablePlatforms.length === 0) {
@@ -124,11 +122,11 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
           scrollButtons="auto"
           sx={{ px: 2, pt: 1 }}
         >
-          {availablePlatforms.map((platform, index) => {
-            const info = getPlatformInfo(platform)
+          {availablePlatforms.map((platformId, index) => {
+            const info = getPlatformInfo(platformId)
             return (
               <Tab
-                key={platform}
+                key={platformId}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <span>{info.icon}</span>
@@ -138,7 +136,8 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
                 sx={{
                   minHeight: 48,
                   textTransform: 'none',
-                  fontWeight: activeTab === index ? 'bold' : 'normal'
+                  fontWeight: activeTab === index ? 'bold' : 'normal',
+                  color: info.color
                 }}
               />
             )

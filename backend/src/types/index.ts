@@ -189,12 +189,6 @@ export interface UploadedFile {
   content?: string | null // Content for text files, null for binary files
 }
 
-export interface EmailConfig {
-  available: string[]
-  selected: string[]
-  groups: Record<string, string[]>
-}
-
 export interface AppConfig {
   n8nWebhookUrl: string
   darkMode: boolean
@@ -229,3 +223,8 @@ export interface PlatformSettingsUpdate {
   message: string
   platform: string
 }
+
+// Export new platform architecture types
+export * from './platformModule.js'
+export * from './platformSchema.js'
+export * from './validationErrors.js'

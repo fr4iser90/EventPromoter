@@ -91,7 +91,7 @@ export class TemplateController {
       }
 
       // Validate template structure
-      const validation = TemplateService.validateTemplate({
+      const validation = await TemplateService.validateTemplate({
         ...templateData,
         platform,
         isDefault: false
@@ -148,7 +148,7 @@ export class TemplateController {
       }
 
       // Validate updates
-      const validation = TemplateService.validateTemplate({
+      const validation = await TemplateService.validateTemplate({
         ...existingTemplate,
         ...updates
       })
@@ -241,7 +241,7 @@ export class TemplateController {
         { id: 'promotion', name: 'Ticket Promotion', description: 'Promote ticket sales', platform: 'all' },
         { id: 'reminder', name: 'Event Reminder', description: 'Remind about upcoming events', platform: 'all' },
         { id: 'urgent', name: 'Urgent Update', description: 'Last-minute changes or urgent info', platform: 'all' },
-        { id: 'welcome', name: 'Welcome Message', description: 'Welcome new attendees', platform: 'email' },
+        { id: 'welcome', name: 'Welcome Message', description: 'Welcome new attendees', platform: 'all' },
         { id: 'thank-you', name: 'Thank You', description: 'Post-event thank you messages', platform: 'all' },
         { id: 'music', name: 'Music Focus', description: 'DJ/Artist focused content', platform: 'all' },
         { id: 'general', name: 'General', description: 'General purpose templates', platform: 'all' }

@@ -1,14 +1,10 @@
-// Validation service for business logic validation
+// ✅ GENERIC: Validation service for business logic validation
+// Uses PlatformRegistry instead of hardcoded PlatformManager
 
 import { PlatformValidationResult, PlatformValidation } from '../types/index.js'
 import { PlatformManager } from './platformManager.js'
 
 export class ValidationService {
-  static validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
   static validateEventData(eventData: any): { isValid: boolean, errors: string[] } {
     const errors: string[] = []
 
@@ -39,46 +35,48 @@ export class ValidationService {
     }
   }
 
-  static validatePlatforms(platformContent: any, selectedPlatforms: string[]): PlatformValidationResult {
+  static async validatePlatforms(platformContent: any, selectedPlatforms: string[]): Promise<PlatformValidationResult> {
     const validationResults: PlatformValidation[] = []
     let hasErrors = false
 
     for (const platform of selectedPlatforms) {
       try {
-        // Use platform-specific validation if available
-        if (PlatformManager.isPlatformSupported(platform)) {
-          const validation = PlatformManager.validateContent(platform, platformContent[platform])
-          if (validation.isValid) {
-            validationResults.push({
-              platform,
-              valid: true,
-              supports: PlatformManager.getPlatformRequirements(platform).supports
-            })
-          } else {
-            validationResults.push({
-              platform,
-              valid: false,
-              errors: validation.errors
-            })
-            hasErrors = true
-          }
+        // Use platform-specific validation
+        const isSupported = await PlatformManager.isPlatformSupported(platform)
+        if (!isSupported) {
+          validationResults.push({
+            platform,
+            valid: false,
+            errors: [`Platform '${platform}' not found`]
+          })
+          hasErrors = true
+          continue
+        }
+
+        const validation = await PlatformManager.validateContent(platform, platformContent[platform])
+        const requirements = await PlatformManager.getPlatformRequirements(platform)
+        if (validation.isValid) {
+          validationResults.push({
+            platform,
+            valid: true,
+            supports: requirements.supports
+          })
         } else {
-          // Fallback validation for unsupported platforms
           validationResults.push({
             platform,
             valid: false,
-            errors: [`Platform '${platform}' not fully supported yet`]
+            errors: validation.errors
           })
           hasErrors = true
         }
-        } catch (error: any) {
-          validationResults.push({
-            platform,
-            valid: false,
-            errors: [`Validation error for ${platform}: ${error.message}`]
-          })
-          hasErrors = true
-        }
+      } catch (error: any) {
+        validationResults.push({
+          platform,
+          valid: false,
+          errors: [`Validation error for ${platform}: ${error.message}`]
+        })
+        hasErrors = true
+      }
     }
 
     return {
@@ -109,7 +107,7 @@ export class ValidationService {
     }
   }
 
-  static getPlatformRequirements(platform: string): any {
-    return PlatformManager.getPlatformRequirements(platform)
+  static async getPlatformRequirements(platform: string): Promise<any> {
+    return await PlatformManager.getPlatformRequirements(platform)
   }
 }

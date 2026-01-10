@@ -1,55 +1,70 @@
-// Email Platform Plugin
-import { PlatformPlugin, PlatformCapability } from '../../types/index.js'
+/**
+ * Email Platform Module
+ * 
+ * Self-discovering platform architecture with schema-driven UI.
+ * 
+ * @module platforms/email/index
+ */
+
+import { PlatformModule } from '../../types/platformModule.js'
 import { EmailParser } from './parser.js'
 import { EmailService } from './service.js'
-import { EMAIL_TEMPLATES } from './templates.js'
+import { EMAIL_TEMPLATES } from './templates/index.js'
 import { EmailValidator } from './validator.js'
-import { emailPanelConfig } from './panel.js'
-import { emailEditorConfig } from './editor.js'
-import { emailSettingsConfig } from './settings.js'
+import { emailSchema } from './schema/index.js'
 
-const EmailCapabilities: PlatformCapability[] = [
-  { type: 'text', required: true },
-  { type: 'link', required: false },
-  { type: 'image', required: false },
-  { type: 'hashtag', required: false }
-]
-
-const EmailPlugin: PlatformPlugin = {
-  name: 'email',
-  version: '1.0.0',
-  displayName: 'Email',
-  capabilities: EmailCapabilities,
-
-  parser: EmailParser,
+/**
+ * Email Platform Module
+ * 
+ * Complete platform module using the self-discovering architecture.
+ * This module will be automatically discovered by the PlatformRegistry.
+ */
+export const EmailPlatformModule: PlatformModule = {
+  metadata: {
+    id: 'email',
+    displayName: 'Email',
+    version: '1.0.0',
+    category: 'communication',
+    icon: '📧',
+    color: '#EA4335',
+    description: 'Send event announcements via email with rich HTML content',
+    author: 'EventPromoter',
+    license: 'MIT'
+  },
+  schema: emailSchema,
+  capabilities: {
+    supportsText: true,
+    supportsImages: true,
+    supportsVideo: false,
+    supportsLinks: true,
+    supportsHashtags: false,
+    supportsMentions: false,
+    supportsPolls: false,
+    supportsScheduling: false,
+    requiresAuth: false
+  },
   service: new EmailService(),
+  parser: EmailParser,
   validator: {
     validate: (content: any) => EmailValidator.validateContent(content),
     getLimits: () => ({
-      maxLength: 50000, // HTML content can be long
+      maxLength: 50000,
       maxImages: 10,
       allowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']
     })
   },
   templates: EMAIL_TEMPLATES,
-
   config: {
     apiEndpoints: {
       sendEmail: '/api/email/send'
     },
     rateLimits: {
-      requestsPerHour: 100, // Email rate limits are lower
+      requestsPerHour: 100,
       requestsPerDay: 1000
     },
     supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']
-  },
-
-  // UI Configuration for dynamic panel generation
-  uiConfig: {
-    panel: emailPanelConfig,     // Recipients management
-    editor: emailEditorConfig,   // Content editing
-    settings: emailSettingsConfig // SMTP credentials
   }
 }
 
-export default EmailPlugin
+// Export as default for discovery
+export default EmailPlatformModule

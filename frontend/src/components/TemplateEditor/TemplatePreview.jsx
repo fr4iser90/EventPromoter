@@ -37,12 +37,9 @@ function TemplatePreview({ template, platform }) {
 
     let content = ''
 
-    // Get template content based on platform
-    if (platform === 'email') {
-      content = template.template?.html || template.template?.text || ''
-    } else {
-      content = template.template?.text || ''
-    }
+    // Get template content - use html if available, otherwise text
+    const templateContent = template.template || {}
+    content = templateContent.html || templateContent.text || ''
 
     // Replace variables with sample data
     const allVariables = { ...SAMPLE_DATA, ...customVariables }
@@ -141,7 +138,8 @@ function TemplatePreview({ template, platform }) {
         📄 Preview Result:
       </Typography>
 
-      {platform === 'email' ? (
+      {/* Render HTML if content contains HTML tags, otherwise render as text */}
+      {previewContent.includes('<') && previewContent.includes('>') ? (
         <Box
           sx={{
             border: '1px solid',
@@ -172,8 +170,8 @@ function TemplatePreview({ template, platform }) {
         </Paper>
       )}
 
-      {/* Character Count for Social Media */}
-      {platform !== 'email' && (
+      {/* Character Count */}
+      {!previewContent.includes('<') && (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
           Characters: {previewContent.length}
         </Typography>

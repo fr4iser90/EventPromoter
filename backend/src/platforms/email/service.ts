@@ -2,6 +2,7 @@
 
 import { EmailContent, EmailConfig } from './types.js'
 import { EmailValidator } from './validator.js'
+import { EmailRecipientService } from './recipientService.js'
 
 export class EmailService {
   private config: EmailConfig
@@ -121,5 +122,63 @@ export class EmailService {
       subject: content.subject,
       preview: this.createPlainTextVersion(content.html).substring(0, 150) + '...'
     }
+  }
+
+  // ✅ GENERIC: Recipient Management Methods (delegate to EmailRecipientService)
+  
+  /**
+   * Get all recipients and groups
+   */
+  async getRecipients(): Promise<{ available: string[]; groups: Record<string, string[]>; selected?: string[] }> {
+    return await EmailRecipientService.getRecipients()
+  }
+
+  /**
+   * Add a new recipient
+   */
+  async addRecipient(email: string): Promise<{ success: boolean; error?: string }> {
+    return await EmailRecipientService.addRecipient(email)
+  }
+
+  /**
+   * Remove a recipient
+   */
+  async removeRecipient(email: string): Promise<{ success: boolean; error?: string }> {
+    return await EmailRecipientService.removeRecipient(email)
+  }
+
+  /**
+   * Create a recipient group
+   */
+  async createGroup(groupName: string, emails: string[]): Promise<{ success: boolean; error?: string }> {
+    return await EmailRecipientService.createGroup(groupName, emails)
+  }
+
+  /**
+   * Update a recipient group
+   */
+  async updateGroup(groupName: string, emails: string[]): Promise<{ success: boolean; error?: string }> {
+    return await EmailRecipientService.updateGroup(groupName, emails)
+  }
+
+  /**
+   * Delete a recipient group
+   */
+  async deleteGroup(groupName: string): Promise<{ success: boolean; error?: string }> {
+    return await EmailRecipientService.deleteGroup(groupName)
+  }
+
+  /**
+   * Import recipient groups
+   */
+  async importGroups(groups: Record<string, string[]>): Promise<{ success: boolean; error?: string }> {
+    return await EmailRecipientService.importGroups(groups)
+  }
+
+  /**
+   * Export recipient groups
+   */
+  async exportGroups(): Promise<{ success: boolean; groups?: Record<string, string[]>; error?: string }> {
+    return await EmailRecipientService.exportGroups()
   }
 }

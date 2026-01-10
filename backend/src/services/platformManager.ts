@@ -1,43 +1,67 @@
-// Platform Manager - Central hub for all platform services
+// ✅ GENERIC: Platform Manager - Uses PlatformRegistry instead of hardcoded imports
+// This replaces the old hardcoded platform service map
 
-import { TwitterService } from '../platforms/twitter/service.js'
-import { RedditService } from '../platforms/reddit/service.js'
-import { EmailService } from '../platforms/email/service.js'
+import { getPlatformRegistry, initializePlatformRegistry } from './platformRegistry.js'
 
 export class PlatformManager {
-  private static platforms = new Map<string, any>()
-
-  // Initialize platform services
-  static initialize() {
-    // Register platform services
-    this.platforms.set('twitter', TwitterService)
-    this.platforms.set('reddit', RedditService)
-    this.platforms.set('email', EmailService)
-    this.platforms.set('facebook', null) // TODO: implement
-    this.platforms.set('instagram', null) // TODO: implement
-    this.platforms.set('linkedin', null) // TODO: implement
-  }
-
-  // Get platform service instance
-  static getPlatformService(platform: string, config: any = {}) {
-    const ServiceClass = this.platforms.get(platform.toLowerCase())
-    if (!ServiceClass) {
-      throw new Error(`Platform '${platform}' not supported`)
+  // Initialize registry on first use
+  private static async ensureRegistry() {
+    const registry = getPlatformRegistry()
+    if (!registry.isInitialized()) {
+      await initializePlatformRegistry()
     }
-    return new ServiceClass(config)
+    return registry
   }
 
-  // Validate content for specific platform
-  static validateContent(platform: string, content: any) {
-    const service = this.getPlatformService(platform)
-    return service.validateContent(content)
+  // ✅ GENERIC: Get platform service instance from registry
+  static async getPlatformService(platform: string, config: any = {}) {
+    const registry = await PlatformManager.ensureRegistry()
+    const platformModule = registry.getPlatform(platform.toLowerCase())
+    
+    if (!platformModule) {
+      throw new Error(`Platform '${platform}' not found`)
+    }
+
+    // Return service instance (services are already instantiated in PlatformModule)
+    return platformModule.service
   }
 
-  // Get platform requirements
-  static getPlatformRequirements(platform: string) {
+  // ✅ GENERIC: Validate content for specific platform
+  static async validateContent(platform: string, content: any) {
+    const service = await PlatformManager.getPlatformService(platform)
+    if (typeof service.validateContent === 'function') {
+      return service.validateContent(content)
+    }
+    // Fallback to validator if service doesn't have validateContent
+    const registry = await PlatformManager.ensureRegistry()
+    const platformModule = registry.getPlatform(platform.toLowerCase())
+    if (platformModule?.validator) {
+      return platformModule.validator.validate(content)
+    }
+    return { isValid: false, errors: ['Validation not available'] }
+  }
+
+  // ✅ GENERIC: Get platform requirements from validator
+  static async getPlatformRequirements(platform: string) {
     try {
-      const service = this.getPlatformService(platform)
-      return service.getRequirements()
+      const registry = await PlatformManager.ensureRegistry()
+      const platformModule = registry.getPlatform(platform.toLowerCase())
+      
+      if (!platformModule) {
+        throw new Error(`Platform '${platform}' not found`)
+      }
+
+      const limits = platformModule.validator.getLimits()
+      return {
+        maxLength: limits.maxLength,
+        supports: [
+          ...(platformModule.capabilities.supportsText ? ['text'] : []),
+          ...(platformModule.capabilities.supportsImages ? ['image'] : []),
+          ...(platformModule.capabilities.supportsVideo ? ['video'] : []),
+          ...(platformModule.capabilities.supportsLinks ? ['link'] : [])
+        ],
+        required: ['text'] // Default required
+      }
     } catch {
       // Fallback for unimplemented platforms
       return {
@@ -48,26 +72,28 @@ export class PlatformManager {
     }
   }
 
-  // Get all supported platforms
-  static getSupportedPlatforms(): string[] {
-    return Array.from(this.platforms.keys())
+  // ✅ GENERIC: Get all supported platforms from registry
+  static async getSupportedPlatforms(): Promise<string[]> {
+    const registry = await PlatformManager.ensureRegistry()
+    return registry.getPlatformIds()
   }
 
-  // Check if platform is supported
-  static isPlatformSupported(platform: string): boolean {
-    return this.platforms.has(platform.toLowerCase())
+  // ✅ GENERIC: Check if platform is supported
+  static async isPlatformSupported(platform: string): Promise<boolean> {
+    const registry = await PlatformManager.ensureRegistry()
+    return registry.hasPlatform(platform.toLowerCase())
   }
 
-  // Get platform-specific optimization tips
-  static getOptimizationTips(platform: string, content: any): string[] {
+  // ✅ GENERIC: Get platform-specific optimization tips
+  static async getOptimizationTips(platform: string, content: any): Promise<string[]> {
     try {
-      const service = this.getPlatformService(platform)
-      return service.getOptimizationTips(content)
+      const service = await PlatformManager.getPlatformService(platform)
+      if (typeof service.getOptimizationTips === 'function') {
+        return service.getOptimizationTips(content)
+      }
+      return []
     } catch {
       return []
     }
   }
 }
-
-// Initialize on module load
-PlatformManager.initialize()

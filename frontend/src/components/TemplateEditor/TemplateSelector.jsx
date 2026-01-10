@@ -83,7 +83,9 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
 
   // Fill template variables with event data
   const fillTemplateVariables = (template, eventData) => {
-    let content = platform === 'email' ? template.template.html || template.template.text : template.template.text
+    // Get content from template - use html if available, otherwise text
+    const templateContent = template.template || {}
+    let content = templateContent.html || templateContent.text || ''
 
     // Replace variables
     template.variables.forEach(variable => {

@@ -4,216 +4,73 @@ import {
   Paper,
   Typography,
   Box,
-  TextField,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   CircularProgress,
   Alert
 } from '@mui/material'
+import { usePlatformSchema } from '../../hooks/usePlatformSchema'
+import SchemaRenderer from '../SchemaRenderer/SchemaRenderer'
+import config from '../../config'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect }) {
   const { t } = useTranslation()
+  const { schema, loading: schemaLoading, error: schemaError } = usePlatformSchema(platform)
   const [platformConfig, setPlatformConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Load platform configuration dynamically
+  // Load platform configuration from backend - NO FALLBACKS
   useEffect(() => {
+    if (!platform) return
+
     const loadPlatformConfig = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`http://localhost:4000/api/platforms/${platform}`)
+        setError(null)
+
+        // Load platform data from API
+        const response = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platform}`)
         if (!response.ok) {
           throw new Error(`Failed to load platform config: ${response.status}`)
         }
         const data = await response.json()
+
+        if (!data.success || !data.platform) {
+          throw new Error('Invalid platform data received')
+        }
+
         setPlatformConfig(data.platform)
         setError(null)
       } catch (err) {
         console.error(`Failed to load config for ${platform}:`, err)
         setError(err.message)
-        // Fallback to basic config
-        setPlatformConfig(getFallbackConfig(platform))
+        // NO FALLBACK - show error instead
+        setPlatformConfig(null)
       } finally {
         setLoading(false)
       }
     }
 
-    if (platform) {
-      loadPlatformConfig()
-    }
+    loadPlatformConfig()
   }, [platform])
 
-  // Fallback configuration for development
-  const getFallbackConfig = (platformId) => {
-    const configs = {
-      twitter: {
-        id: 'twitter',
-        name: 'Twitter/X',
-        limits: { maxLength: 280 },
-        fields: [
-          {
-            type: 'textarea',
-            name: 'text',
-            label: 'Tweet Text',
-            placeholder: 'What\'s happening?',
-            required: true,
-            maxLength: 280,
-            rows: 4
-          }
-        ]
-      },
-      instagram: {
-        id: 'instagram',
-        name: 'Instagram',
-        limits: { maxLength: 2200 },
-        fields: [
-          {
-            type: 'textarea',
-            name: 'caption',
-            label: 'Instagram Caption',
-            placeholder: 'Write a caption for your post...',
-            required: true,
-            maxLength: 2200,
-            rows: 6
-          }
-        ]
-      },
-      facebook: {
-        id: 'facebook',
-        name: 'Facebook',
-        limits: { maxLength: 63206 },
-        fields: [
-          {
-            type: 'textarea',
-            name: 'text',
-            label: 'Facebook Post',
-            placeholder: 'Share your thoughts...',
-            required: true,
-            maxLength: 63206,
-            rows: 4
-          }
-        ]
-      },
-      linkedin: {
-        id: 'linkedin',
-        name: 'LinkedIn',
-        limits: { maxLength: 3000 },
-        fields: [
-          {
-            type: 'textarea',
-            name: 'text',
-            label: 'LinkedIn Post',
-            placeholder: 'Share professional insights...',
-            required: true,
-            maxLength: 3000,
-            rows: 6
-          }
-        ]
-      },
-      reddit: {
-        id: 'reddit',
-        name: 'Reddit',
-        limits: { maxLength: 40000 },
-        fields: [
-          {
-            type: 'text',
-            name: 'title',
-            label: 'Post Title',
-            placeholder: 'Enter an engaging title...',
-            required: true,
-            maxLength: 300
-          },
-          {
-            type: 'textarea',
-            name: 'body',
-            label: 'Post Body',
-            placeholder: 'Write your post content...',
-            required: true,
-            maxLength: 40000,
-            rows: 6
-          },
-          {
-            type: 'text',
-            name: 'subreddit',
-            label: 'Subreddit',
-            placeholder: 'r/subreddit',
-            required: true
-          }
-        ]
-      },
-      email: {
-        id: 'email',
-        name: 'Email',
-        limits: { maxLength: 50000 },
-        fields: [
-          {
-            type: 'text',
-            name: 'subject',
-            label: 'Email Subject',
-            placeholder: 'Enter email subject...',
-            required: true,
-            maxLength: 78
-          },
-          {
-            type: 'textarea',
-            name: 'html',
-            label: 'Email Content',
-            placeholder: 'Write your email content...',
-            required: true,
-            maxLength: 50000,
-            rows: 8
-          },
-          {
-            type: 'multiselect',
-            name: 'recipients',
-            label: 'Email Recipients',
-            placeholder: 'Select recipients...',
-            required: true
-          }
-        ]
-      }
-    }
-
-    return configs[platformId] || {
-      id: platformId,
-      name: platformId,
-      limits: { maxLength: 1000 },
-      fields: [
-        {
-          type: 'textarea',
-          name: 'text',
-          label: `${platformId} Content`,
-          placeholder: `Enter your ${platformId} content...`,
-          required: true,
-          maxLength: 1000,
-          rows: 4
-        }
-      ]
-    }
-  }
-
-  // Calculate character count and validation
+  // Calculate character count from content
   const getTextLength = () => {
-    if (!platformConfig?.fields) return 0
-
-    for (const field of platformConfig.fields) {
-      if (field.type === 'textarea' && content[field.name]) {
-        return content[field.name].length
+    if (!content) return 0
+    // Sum all text field lengths
+    return Object.values(content).reduce((total, value) => {
+      if (typeof value === 'string') {
+        return total + value.length
       }
-    }
-    return 0
+      return total
+    }, 0)
   }
 
   const textLength = getTextLength()
-  const isValid = platformConfig?.limits?.maxLength
-    ? textLength <= platformConfig.limits.maxLength
-    : textLength > 0
+  const maxLength = platformConfig?.limits?.maxLength || schema?.editor?.constraints?.maxLength || 1000
+  const isValid = textLength <= maxLength && textLength > 0
 
-  if (loading) {
+  if (loading || schemaLoading) {
     return (
       <Paper sx={{ p: 2, textAlign: 'center' }}>
         <CircularProgress size={24} sx={{ mb: 1 }} />
@@ -222,15 +79,33 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     )
   }
 
-  if (error) {
+  if (error || schemaError) {
     return (
       <Paper sx={{ p: 2 }}>
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          Failed to load {platform} configuration: {error}
+        <Alert severity="error" sx={{ mb: 1 }}>
+          Failed to load {platform} configuration: {error || schemaError}
+          <br />
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Please ensure the backend server is running and the platform is properly configured.
+          </Typography>
         </Alert>
       </Paper>
     )
   }
+
+  if (!platformConfig && !schema) {
+    return (
+      <Paper sx={{ p: 2 }}>
+        <Alert severity="warning">
+          No configuration available for platform: {platform}
+        </Alert>
+      </Paper>
+    )
+  }
+
+  // Use schema-driven editor if available
+  const editorSchema = schema?.editor || platformConfig?.schema?.editor
+  const editorBlocks = editorSchema?.blocks || []
 
   return (
     <Paper
@@ -246,23 +121,93 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         📝 {platformConfig?.name || platform} Editor
       </Typography>
 
-      {platformConfig?.fields?.map((field) => (
-        <GenericField
-          key={field.name}
-          field={field}
-          value={content[field.name] || ''}
-          onChange={(value) => onChange(field.name, value)}
-          sx={{ mb: 2 }}
-        />
-      ))}
+      {/* ✅ FULLY SCHEMA-DRIVEN: Render blocks based on schema.rendering config */}
+      {editorSchema && editorBlocks.length > 0 ? (
+        <Box sx={{ mt: 2 }}>
+          {editorBlocks
+            .filter(block => block.ui?.enabled !== false)
+            .sort((a, b) => (a.ui?.order || 999) - (b.ui?.order || 999))
+            .map((block) => {
+              // ✅ Use block.rendering config if available, otherwise infer from block.type
+              const rendering = block.rendering || {}
+              const fieldType = rendering.fieldType || 
+                (block.type === 'paragraph' ? 'textarea' : 
+                 block.type === 'heading' ? 'text' : 
+                 block.type === 'text' ? 'textarea' :
+                 block.type)
+
+              // Convert block to field format for SchemaRenderer
+              const field = {
+                name: block.id,
+                type: fieldType,
+                label: block.label,
+                description: block.description || rendering.placeholder,
+                required: block.required,
+                placeholder: rendering.placeholder || block.description,
+                default: rendering.default,
+                validation: block.validation,
+                ui: block.ui,
+                constraints: block.constraints,
+                // Add rendering-specific config
+                optionsSource: rendering.optionsSource,
+                action: rendering.action
+              }
+
+              // ✅ Handle media blocks (image/video) - use file input if fieldType is 'file'
+              if ((block.type === 'image' || block.type === 'video') && fieldType === 'file') {
+                return (
+                  <Box key={block.id} sx={{ mb: 2 }}>
+                    <SchemaRenderer
+                      fields={[field]}
+                      values={content || {}}
+                      onChange={(fieldName, value) => onChange(fieldName, value)}
+                      errors={{}}
+                    />
+                  </Box>
+                )
+              }
+
+              // ✅ Handle hashtag/mention blocks - use multiselect if configured
+              if ((block.type === 'hashtag' || block.type === 'mention') && fieldType === 'multiselect') {
+                return (
+                  <Box key={block.id} sx={{ mb: 2 }}>
+                    <SchemaRenderer
+                      fields={[field]}
+                      values={content || {}}
+                      onChange={(fieldName, value) => onChange(fieldName, value)}
+                      errors={{}}
+                    />
+                  </Box>
+                )
+              }
+
+              // ✅ Render all other blocks using SchemaRenderer (fully generic)
+              return (
+                <Box key={block.id} sx={{ mb: 2 }}>
+                  <SchemaRenderer
+                    fields={[field]}
+                    values={content || {}}
+                    onChange={(fieldName, value) => onChange(fieldName, value)}
+                    errors={{}}
+                  />
+                </Box>
+              )
+            })}
+        </Box>
+      ) : (
+        // Fallback: Show message if no schema available
+        <Alert severity="info" sx={{ mt: 2 }}>
+          No editor schema available for this platform. Please configure the platform schema in the backend.
+        </Alert>
+      )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        {platformConfig?.limits?.maxLength && (
+        {maxLength && (
           <Typography
             variant="body2"
-            color={textLength > platformConfig.limits.maxLength ? "error" : "text.secondary"}
+            color={textLength > maxLength ? "error" : "text.secondary"}
           >
-            Characters: {textLength}/{platformConfig.limits.maxLength}
+            Characters: {textLength}/{maxLength}
           </Typography>
         )}
         <Chip
@@ -273,85 +218,6 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       </Box>
     </Paper>
   )
-}
-
-// Generic field component for dynamic form generation
-function GenericField({ field, value, onChange, sx }) {
-  const handleChange = (event) => {
-    onChange(event.target.value)
-  }
-
-  switch (field.type) {
-    case 'textarea':
-      return (
-        <TextField
-          fullWidth
-          multiline
-          rows={field.rows || 4}
-          label={field.label}
-          value={value}
-          onChange={handleChange}
-          placeholder={field.placeholder}
-          required={field.required}
-          inputProps={{ maxLength: field.maxLength }}
-          variant="outlined"
-          sx={sx}
-        />
-      )
-
-    case 'text':
-      return (
-        <TextField
-          fullWidth
-          type="text"
-          label={field.label}
-          value={value}
-          onChange={handleChange}
-          placeholder={field.placeholder}
-          required={field.required}
-          inputProps={{ maxLength: field.maxLength }}
-          variant="outlined"
-          sx={sx}
-        />
-      )
-
-    case 'multiselect':
-      return (
-        <FormControl fullWidth variant="outlined" sx={sx}>
-          <InputLabel>{field.label}</InputLabel>
-          <Select
-            multiple
-            value={Array.isArray(value) ? value : []}
-            onChange={(event) => onChange(event.target.value)}
-            renderValue={(selected) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {(Array.isArray(selected) ? selected : []).map((item) => (
-                  <Chip key={item} label={item} size="small" />
-                ))}
-              </Box>
-            )}
-          >
-            {/* This would be populated from backend - placeholder for now */}
-            <MenuItem value="test@example.com">test@example.com</MenuItem>
-            <MenuItem value="user@example.com">user@example.com</MenuItem>
-          </Select>
-        </FormControl>
-      )
-
-    default:
-      return (
-        <TextField
-          fullWidth
-          label={field.label || field.name}
-          value={value}
-          onChange={handleChange}
-          placeholder={field.placeholder}
-          required={field.required}
-          variant="outlined"
-          sx={sx}
-        />
-      )
-  }
 }
 
 export default GenericPlatformEditor

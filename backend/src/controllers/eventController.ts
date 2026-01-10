@@ -133,7 +133,6 @@ export class EventController {
         platforms: eventData.selectedPlatforms || [],
         content: platformContent,
         hashtags: eventData.selectedHashtags || [],
-        selectedEmails: eventData.selectedEmails || eventData.emailRecipients || [] // Handle both old and new format
       }
 
       console.log(`Event ${eventId} restore data prepared:`, {

@@ -1,5 +1,5 @@
 // Publish Parser - Handles manual finalization before submission
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Paper,
@@ -18,6 +18,7 @@ import PublishIcon from '@mui/icons-material/Publish'
 import axios from 'axios'
 import useStore from '../../store'
 import PublishResults from '../PublishResults/PublishResults'
+import { usePlatforms } from '../../hooks/usePlatformSchema'
 
 function PublishParser() {
   const { t } = useTranslation()
@@ -34,75 +35,94 @@ function PublishParser() {
   const [validationErrors, setValidationErrors] = useState([])
   const [showResults, setShowResults] = useState(false)
   const [publishSessionId, setPublishSessionId] = useState(null)
+  const { platforms } = usePlatforms()
 
-  // Validate content before publishing
-  const validateForPublish = () => {
+  // Get platform info from backend - GENERIC
+  const getPlatformInfo = (platformId) => {
+    if (!platforms || platforms.length === 0) {
+      return { name: platformId, icon: '📝', color: '#666' }
+    }
+
+    const platform = platforms.find(p => p.id === platformId)
+    if (platform) {
+      return {
+        name: platform.name || platform.metadata?.displayName || platformId,
+        icon: platform.icon || platform.metadata?.icon || '📝',
+        color: platform.color || platform.metadata?.color || '#666'
+      }
+    }
+
+    return { name: platformId, icon: '📝', color: '#666' }
+  }
+
+  // Validate content before publishing - GENERIC (schema-based)
+  const validateForPublish = async () => {
     const errors = []
 
-    selectedPlatforms.forEach(platform => {
-      const content = platformContent[platform] || {}
+    for (const platformId of selectedPlatforms) {
+      const content = platformContent[platformId] || {}
+      const platform = platforms?.find(p => p.id === platformId)
+      const schema = platform?.schema
 
-      switch (platform) {
-        case 'twitter':
-          if (!content.text || content.text.trim().length === 0) {
-            errors.push(`Twitter: Tweet text is required`)
-          } else if (content.text.length > 280) {
-            errors.push(`Twitter: Tweet exceeds 280 characters (${content.text.length})`)
+      // Try to load schema if not available
+      let editorSchema = schema?.editor
+      if (!editorSchema && platformId) {
+        try {
+          const response = await fetch(`http://localhost:4000/api/platforms/${platformId}/schema`)
+          if (response.ok) {
+            const data = await response.json()
+            editorSchema = data.schema?.editor
           }
-          break
-
-        case 'instagram':
-          if (!content.caption || content.caption.trim().length === 0) {
-            errors.push(`Instagram: Caption is required`)
-          } else if (content.caption.length > 2200) {
-            errors.push(`Instagram: Caption exceeds 2200 characters (${content.caption.length})`)
-          }
-          break
-
-        case 'facebook':
-          if (!content.text || content.text.trim().length === 0) {
-            errors.push(`Facebook: Post text is required`)
-          }
-          break
-
-        case 'linkedin':
-          if (!content.text || content.text.trim().length === 0) {
-            errors.push(`LinkedIn: Post content is required`)
-          }
-          break
-
-        case 'reddit':
-          if (!content.title || content.title.trim().length === 0) {
-            errors.push(`Reddit: Title is required`)
-          }
-          if (!content.body || content.body.trim().length === 0) {
-            errors.push(`Reddit: Body content is required`)
-          }
-          break
-
-        case 'email':
-          if (!content.subject || content.subject.trim().length === 0) {
-            errors.push(`Email: Subject is required`)
-          }
-          if (!content.html || content.html.trim().length === 0) {
-            errors.push(`Email: HTML content is required`)
-          }
-          if (!content.recipients || content.recipients.length === 0) {
-            errors.push(`Email: At least one recipient is required`)
-          }
-          break
-
-        default:
-          errors.push(`${platform}: Content validation not implemented`)
+        } catch (err) {
+          console.warn(`Failed to load schema for ${platformId}:`, err)
+        }
       }
-    })
+
+      // Generic validation based on schema
+      if (editorSchema?.blocks) {
+        for (const block of editorSchema.blocks) {
+          if (block.fields) {
+            for (const field of block.fields) {
+              const value = content[field.name]
+              
+              // Check required fields
+              if (field.required && (!value || (typeof value === 'string' && value.trim().length === 0))) {
+                const platformName = getPlatformInfo(platformId).name
+                errors.push(`${platformName}: ${field.label || field.name} is required`)
+              }
+
+              // Check max length
+              if (field.validation) {
+                for (const rule of field.validation) {
+                  if (rule.type === 'maxLength' && value && value.length > rule.value) {
+                    const platformName = getPlatformInfo(platformId).name
+                    errors.push(`${platformName}: ${field.label || field.name} exceeds ${rule.value} characters (${value.length})`)
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else {
+        // Fallback: basic validation if no schema available
+        const hasContent = Object.keys(content).some(key => {
+          const value = content[key]
+          return value && (typeof value === 'string' ? value.trim().length > 0 : Array.isArray(value) ? value.length > 0 : true)
+        })
+        
+        if (!hasContent) {
+          const platformName = getPlatformInfo(platformId).name
+          errors.push(`${platformName}: Content is required`)
+        }
+      }
+    }
 
     return errors
   }
 
   // Handle publish button click
-  const handlePublishClick = () => {
-    const errors = validateForPublish()
+  const handlePublishClick = async () => {
+    const errors = await validateForPublish()
     setValidationErrors(errors)
 
     if (errors.length === 0) {
@@ -152,20 +172,12 @@ function PublishParser() {
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           {platformStatuses.map(({ platform, status }) => {
-            const configs = {
-              twitter: { icon: '🐦', color: 'primary' },
-              instagram: { icon: '📸', color: 'secondary' },
-              facebook: { icon: '👥', color: 'success' },
-              linkedin: { icon: '💼', color: 'info' },
-              email: { icon: '📧', color: 'warning' }
-            }
-            const config = configs[platform] || { icon: '📝', color: 'default' }
-
+            const info = getPlatformInfo(platform)
             return (
               <Chip
                 key={platform}
-                icon={<span>{config.icon}</span>}
-                label={`${platform}: ${status === 'ready' ? 'Ready' : 'Draft'}`}
+                icon={<span>{info.icon}</span>}
+                label={`${info.name}: ${status === 'ready' ? 'Ready' : 'Draft'}`}
                 color={status === 'ready' ? 'success' : 'warning'}
                 variant="outlined"
               />
@@ -247,22 +259,15 @@ function PublishParser() {
             You are about to publish to the following platforms:
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
-            {selectedPlatforms.map(platform => {
-              const configs = {
-                twitter: { icon: '🐦', color: 'primary' },
-                instagram: { icon: '📸', color: 'secondary' },
-                facebook: { icon: '👥', color: 'success' },
-                linkedin: { icon: '💼', color: 'info' },
-                email: { icon: '📧', color: 'warning' }
-              }
-              const config = configs[platform] || { icon: '📝', color: 'default' }
-
+            {selectedPlatforms.map(platformId => {
+              const info = getPlatformInfo(platformId)
               return (
                 <Chip
-                  key={platform}
-                  icon={<span>{config.icon}</span>}
-                  label={platform}
-                  color={config.color}
+                  key={platformId}
+                  icon={<span>{info.icon}</span>}
+                  label={info.name}
+                  sx={{ borderColor: info.color, color: info.color }}
+                  variant="outlined"
                 />
               )
             })}

@@ -57,33 +57,60 @@ export class TemplateService {
     }
   }
 
-  // Load default templates from platform modules
+  // ✅ GENERIC: Load default templates from platform modules
   static async loadDefaultTemplates(platform: string): Promise<Template[]> {
     try {
-      // Check if platform is valid (not 'categories' or other non-platform names)
-      const validPlatforms = ['twitter', 'facebook', 'instagram', 'linkedin', 'reddit', 'email']
-      if (!validPlatforms.includes(platform)) {
-        console.warn(`Invalid platform requested: ${platform}`)
+      // ✅ GENERIC: Check if platform exists in registry instead of hardcoded list
+      const { getPlatformRegistry, initializePlatformRegistry } = await import('./platformRegistry.js')
+      const registry = getPlatformRegistry()
+      if (!registry.isInitialized()) {
+        await initializePlatformRegistry()
+      }
+
+      const platformModule = registry.getPlatform(platform.toLowerCase())
+      if (!platformModule) {
+        console.warn(`Platform '${platform}' not found in registry`)
         return []
       }
 
-      // Import platform templates dynamically
-      const platformModule = await import(`../platforms/${platform}/templates.js`)
-      const defaultTemplates = platformModule[`${platform.toUpperCase()}_TEMPLATES`] || []
+      // Try to load templates from platform module
+      try {
+        const templatesModule = await import(`../platforms/${platform}/templates.js`)
+        const templateKey = `${platform.toUpperCase()}_TEMPLATES`
+        const defaultTemplates = templatesModule[templateKey] || platformModule.templates || []
 
-      // Convert to Template interface format
-      return defaultTemplates.map((template: any) => ({
-        id: template.id,
-        name: template.name,
-        description: template.name, // Use name as description for defaults
-        platform,
-        category: template.category || 'general',
-        template: template.template,
-        variables: template.variables || [],
-        isDefault: true,
-        createdAt: '2026-01-01T00:00:00Z', // Fixed date for defaults
-        updatedAt: '2026-01-01T00:00:00Z'
-      }))
+        // Convert to Template interface format
+        return defaultTemplates.map((template: any) => ({
+          id: template.id,
+          name: template.name,
+          description: template.name, // Use name as description for defaults
+          platform,
+          category: template.category || 'general',
+          template: template.template,
+          variables: template.variables || [],
+          isDefault: true,
+          createdAt: '2026-01-01T00:00:00Z', // Fixed date for defaults
+          updatedAt: '2026-01-01T00:00:00Z'
+        }))
+      } catch (importError) {
+        // If templates file doesn't exist, check if platform has templates in module
+        if (platformModule.templates) {
+          const templates = Object.values(platformModule.templates)
+          return templates.map((template: any) => ({
+            id: template.id || template.name,
+            name: template.name,
+            description: template.description || template.name,
+            platform,
+            category: template.category || 'general',
+            template: template.template,
+            variables: template.variables || [],
+            isDefault: true,
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-01T00:00:00Z'
+          }))
+        }
+        return []
+      }
     } catch (error) {
       console.warn(`Failed to load default templates for ${platform}:`, error)
       return []
@@ -187,7 +214,7 @@ export class TemplateService {
   }
 
   // Validate template structure
-  static validateTemplate(template: Partial<Template>): TemplateValidationResult {
+  static async validateTemplate(template: Partial<Template>): Promise<TemplateValidationResult> {
     const errors: string[] = []
     const warnings: string[] = []
 
@@ -207,14 +234,40 @@ export class TemplateService {
       errors.push('Variables must be an array')
     }
 
-    // Platform-specific validation
-    if (template.platform === 'email') {
-      if (!template.template?.subject || !template.template?.html) {
-        errors.push('Email templates must have subject and html fields')
+    // ✅ GENERIC: Platform-specific validation from schema
+    try {
+      const { getPlatformRegistry, initializePlatformRegistry } = await import('./platformRegistry.js')
+      const registry = getPlatformRegistry()
+      if (!registry.isInitialized()) {
+        await initializePlatformRegistry()
       }
-    } else {
-      if (!template.template?.text) {
-        errors.push('Social media templates must have text field')
+
+      if (!template.platform) {
+        errors.push('Platform is required')
+        return { isValid: false, errors, warnings }
+      }
+
+      const platformModule = registry.getPlatform(template.platform.toLowerCase())
+      if (platformModule?.schema?.template) {
+        // Validate against platform template schema
+        const templateSchema = platformModule.schema.template
+        const requiredFields = templateSchema.validation?.requiredFields || []
+        
+        requiredFields.forEach((field: string) => {
+          if (!template.template?.[field]) {
+            errors.push(`Template must have '${field}' field (required by ${template.platform} schema)`)
+          }
+        })
+      } else {
+        // Generic fallback: check for common fields
+        if (!template.template?.text && !template.template?.subject) {
+          errors.push('Template must have at least text or subject field')
+        }
+      }
+    } catch (error) {
+      // If registry not available, use generic validation
+      if (!template.template?.text && !template.template?.subject) {
+        errors.push('Template must have at least text or subject field')
       }
     }
 

@@ -44,37 +44,6 @@ export class ConfigController {
     }
   }
 
-  static async getEmailConfig(req: Request, res: Response) {
-    try {
-      const config = await ConfigService.getEmailConfig()
-
-      if (config) {
-        res.json(config)
-      } else {
-        res.status(404).json({ error: 'Email configuration not found' })
-      }
-    } catch (error) {
-      console.error('Error getting email config:', error)
-      res.status(500).json({ error: 'Failed to load email configuration' })
-    }
-  }
-
-  static async saveEmailConfig(req: Request, res: Response) {
-    try {
-      const config = req.body
-      const success = await ConfigService.saveEmailConfig(config)
-
-      if (success) {
-        res.json({ success: true })
-      } else {
-        res.status(500).json({ error: 'Failed to save email configuration' })
-      }
-    } catch (error) {
-      console.error('Error saving email config:', error)
-      res.status(500).json({ error: 'Failed to save email configuration' })
-    }
-  }
-
   static async getAppConfig(req: Request, res: Response) {
     try {
       const config = await ConfigService.getAppConfig()

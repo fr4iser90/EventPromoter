@@ -1,0 +1,25 @@
+{
+  "form": {
+    "labels": {
+      "facebookPost": "Facebook-Beitrag"
+    }
+  },
+  "platforms": {
+    "facebook": {
+      "title": "Facebook-Beitrag",
+      "contentLabel": "Beitragsinhalt",
+      "placeholder": "Was denkst du?",
+      "bestPractices": {
+        "title": "Facebook Tipps:",
+        "points": [
+          "Beiträge mit Fragen bekommen 100% mehr Interaktion",
+          "Verwende 1-2 relevante Hashtags",
+          "Halte es unterhaltsam und authentisch"
+        ]
+      },
+      "footer": "Dein Beitrag wird auf deiner Facebook-Seite oder deinem persönlichen Profil veröffentlicht."
+    }
+  }
+}
+
+

@@ -5,19 +5,12 @@ import { ConfigController } from '../controllers/configController.js'
 
 const router = Router()
 
-// Generic config routes
+// ✅ GENERIC: Config routes (works for any config name)
 // GET /api/config/:name - Get config by name
 router.get('/:name', ConfigController.getConfig)
 
 // POST /api/config/:name - Save config by name
 router.post('/:name', ConfigController.saveConfig)
-
-// Email config routes
-// GET /api/config/emails - Get email config
-router.get('/emails', ConfigController.getEmailConfig)
-
-// POST /api/config/emails - Save email config
-router.post('/emails', ConfigController.saveEmailConfig)
 
 // App config routes
 // GET /api/config/app - Get app config

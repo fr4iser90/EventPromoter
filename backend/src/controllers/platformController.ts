@@ -1,7 +1,9 @@
 // Platform Controller - Handles platform metadata and configuration
+// ✅ FULLY GENERIC: Only uses PlatformRegistry, no legacy imports
 import { Request, Response } from 'express'
-import { getPlatformPlugin, getAllPlatformNames, getPlatformsWithCapability } from '../platforms/index.js'
 import { ConfigService } from '../services/configService.js'
+import { getPlatformRegistry, initializePlatformRegistry } from '../services/platformRegistry.js'
+import { getPlatformTranslations, getAvailableLanguages } from '../utils/translationLoader.js'
 
 // User Preferences Controller
 export class UserPreferencesController {
@@ -10,8 +12,6 @@ export class UserPreferencesController {
       const preferences = await ConfigService.getUserPreferences() || {
         lastSelectedPlatforms: [],
         defaultHashtags: [],
-        emailRecipients: [],
-        smtpConfig: null,
         uiPreferences: {
           darkMode: false
         }
@@ -66,28 +66,48 @@ export class UserPreferencesController {
 }
 
 export class PlatformController {
+  // Initialize registry on first use
+  private static async ensureRegistry() {
+    try {
+      const registry = getPlatformRegistry()
+      if (!registry.isInitialized()) {
+        await initializePlatformRegistry()
+      }
+      return registry
+    } catch (error) {
+      console.error('Platform registry initialization failed:', error)
+      throw error
+    }
+  }
+
   // Get all available platforms with metadata
   static async getPlatforms(req: Request, res: Response) {
     try {
-      const platforms = getAllPlatformNames().map(platformName => {
-        const plugin = getPlatformPlugin(platformName)
-        if (!plugin) return null
+      const registry = await PlatformController.ensureRegistry()
+      
+      if (!registry.isInitialized()) {
+        throw new Error('Platform registry not initialized')
+      }
 
-        return {
-          id: plugin.name,
-          name: plugin.displayName,
-          version: plugin.version,
-          capabilities: plugin.capabilities,
-          limits: plugin.validator.getLimits(),
-          config: {
-            supportedFormats: plugin.config?.supportedFormats || [],
-            rateLimits: plugin.config?.rateLimits
-          },
-          templates: plugin.templates ? Object.keys(plugin.templates) : []
-        }
-      }).filter(Boolean)
+      const platforms = registry.getAllPlatforms().map(platform => ({
+        id: platform.metadata.id,
+        name: platform.metadata.displayName,
+        version: platform.metadata.version,
+        category: platform.metadata.category,
+        icon: platform.metadata.icon,
+        color: platform.metadata.color,
+        description: platform.metadata.description,
+        capabilities: platform.capabilities,
+        limits: platform.validator.getLimits(),
+        config: {
+          supportedFormats: platform.config?.supportedFormats || [],
+          rateLimits: platform.config?.rateLimits
+        },
+        templates: platform.templates ? Object.keys(platform.templates) : [],
+        hasSchema: !!platform.schema
+      }))
 
-      res.json({
+      return res.json({
         success: true,
         platforms
       })
@@ -104,30 +124,39 @@ export class PlatformController {
   static async getPlatform(req: Request, res: Response) {
     try {
       const { platformId } = req.params
-      const plugin = getPlatformPlugin(platformId)
+      const registry = await PlatformController.ensureRegistry()
 
-      if (!plugin) {
-        return res.status(404).json({
-          error: 'Platform not found',
-          availablePlatforms: getAllPlatformNames()
+      // ✅ GENERIC: Only use registry system
+      if (!registry || !registry.isInitialized()) {
+        return res.status(500).json({
+          error: 'Platform registry not initialized'
         })
       }
 
-      // Generate UI field configuration based on capabilities
-      const fieldConfig = PlatformController.generateFieldConfig(plugin)
+      const platform = registry.getPlatform(platformId)
+      if (!platform) {
+        return res.status(404).json({
+          error: 'Platform not found',
+          availablePlatforms: registry.getPlatformIds()
+        })
+      }
 
-      res.json({
+      return res.json({
         success: true,
         platform: {
-          id: plugin.name,
-          name: plugin.displayName,
-          version: plugin.version,
-          capabilities: plugin.capabilities,
-          limits: plugin.validator.getLimits(),
-          fields: fieldConfig,
-          templates: plugin.templates || {},
-          config: plugin.config,
-          uiConfig: plugin.uiConfig // Dynamic UI configuration
+          id: platform.metadata.id,
+          name: platform.metadata.displayName,
+          version: platform.metadata.version,
+          category: platform.metadata.category,
+          icon: platform.metadata.icon,
+          color: platform.metadata.color,
+          description: platform.metadata.description,
+          capabilities: platform.capabilities,
+          limits: platform.validator.getLimits(),
+          schema: platform.schema,
+          templates: platform.templates || {},
+          config: platform.config,
+          uiConfig: platform.uiConfig
         }
       })
     } catch (error: any) {
@@ -139,19 +168,125 @@ export class PlatformController {
     }
   }
 
+  // Get platform schema
+  static async getPlatformSchema(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params
+      const registry = await PlatformController.ensureRegistry()
+
+      if (!registry || !registry.isInitialized()) {
+        return res.status(500).json({
+          error: 'Platform registry not initialized'
+        })
+      }
+
+      const schema = registry.getPlatformSchema(platformId)
+      if (!schema) {
+        return res.status(404).json({
+          error: 'Schema not available for this platform',
+          platform: platformId,
+          availablePlatforms: registry.getPlatformIds()
+        })
+      }
+
+      return res.json({
+        success: true,
+        platform: platformId,
+        schema
+      })
+    } catch (error: any) {
+      console.error('Get platform schema error:', error)
+      res.status(500).json({
+        error: 'Failed to get platform schema',
+        details: error.message
+      })
+    }
+  }
+
+  // Get platform translations
+  static async getPlatformTranslations(req: Request, res: Response) {
+    try {
+      const { platformId, lang } = req.params
+
+      // Validate language
+      const validLangs = ['en', 'de', 'es']
+      if (!validLangs.includes(lang)) {
+        return res.status(400).json({
+          error: 'Invalid language',
+          supportedLanguages: validLangs
+        })
+      }
+
+      const translations = await getPlatformTranslations(platformId, lang)
+      
+      res.json({
+        success: true,
+        platform: platformId,
+        language: lang,
+        translations
+      })
+    } catch (error: any) {
+      console.error('Get platform translations error:', error)
+      res.status(500).json({
+        error: 'Failed to get platform translations',
+        details: error.message
+      })
+    }
+  }
+
+  // Get available languages for a platform
+  static async getPlatformLanguages(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params
+      const languages = await getAvailableLanguages(platformId)
+
+      res.json({
+        success: true,
+        platform: platformId,
+        languages
+      })
+    } catch (error: any) {
+      console.error('Get platform languages error:', error)
+      res.status(500).json({
+        error: 'Failed to get platform languages',
+        details: error.message
+      })
+    }
+  }
+
   // Get platforms that support specific capabilities
   static async getPlatformsByCapability(req: Request, res: Response) {
     try {
       const { capability } = req.params
-      const platforms = getPlatformsWithCapability(capability)
+      const registry = await PlatformController.ensureRegistry()
+
+      if (!registry || !registry.isInitialized()) {
+        return res.status(500).json({
+          error: 'Platform registry not initialized'
+        })
+      }
+
+      // ✅ GENERIC: Filter platforms by capability from registry
+      const allPlatforms = registry.getAllPlatforms()
+      const matchingPlatforms = allPlatforms.filter(platform => {
+        // Check if platform supports the capability
+        if (capability === 'text' && platform.capabilities.supportsText) return true
+        if (capability === 'image' && platform.capabilities.supportsImages) return true
+        if (capability === 'video' && platform.capabilities.supportsVideo) return true
+        if (capability === 'link' && platform.capabilities.supportsLinks) return true
+        if (capability === 'hashtag' && platform.capabilities.supportsHashtags) return true
+        if (capability === 'mention' && platform.capabilities.supportsMentions) return true
+        if (capability === 'scheduling' && platform.capabilities.supportsScheduling) return true
+        return false
+      })
 
       res.json({
         success: true,
         capability,
-        platforms: platforms.map(plugin => ({
-          id: plugin.name,
-          name: plugin.displayName,
-          capabilities: plugin.capabilities
+        platforms: matchingPlatforms.map(platform => ({
+          id: platform.metadata.id,
+          name: platform.metadata.displayName,
+          capabilities: platform.capabilities
         }))
       })
     } catch (error: any) {
@@ -163,116 +298,30 @@ export class PlatformController {
     }
   }
 
-  // Generate UI field configuration based on platform capabilities
-  private static generateFieldConfig(plugin: any) {
-    const fields = []
-    const capabilities = plugin.capabilities || []
-    const limits = plugin.validator.getLimits()
-
-    // Text input field
-    if (capabilities.some((cap: any) => cap.type === 'text')) {
-      const textCap = capabilities.find((cap: any) => cap.type === 'text')
-      fields.push({
-        type: 'textarea',
-        name: 'text',
-        label: `${plugin.displayName} Text`,
-        placeholder: `Enter your ${plugin.displayName} content...`,
-        required: textCap?.required || true,
-        maxLength: limits.maxLength,
-        rows: plugin.name === 'twitter' ? 4 : plugin.name === 'instagram' ? 6 : 4
-      })
-    }
-
-    // Caption field (Instagram specific)
-    if (plugin.name === 'instagram') {
-      fields.push({
-        type: 'textarea',
-        name: 'caption',
-        label: 'Instagram Caption',
-        placeholder: 'Write a caption for your post...',
-        required: true,
-        maxLength: limits.maxLength,
-        rows: 6
-      })
-    }
-
-    // Title field (Reddit specific)
-    if (plugin.name === 'reddit') {
-      fields.push({
-        type: 'text',
-        name: 'title',
-        label: 'Post Title',
-        placeholder: 'Enter an engaging title...',
-        required: true,
-        maxLength: 300
-      })
-    }
-
-    // Body field (Reddit specific)
-    if (plugin.name === 'reddit') {
-      fields.push({
-        type: 'textarea',
-        name: 'body',
-        label: 'Post Body',
-        placeholder: 'Write your post content...',
-        required: true,
-        maxLength: limits.maxLength,
-        rows: 6
-      })
-    }
-
-    // Email specific fields
-    if (plugin.name === 'email') {
-      fields.push({
-        type: 'text',
-        name: 'subject',
-        label: 'Email Subject',
-        placeholder: 'Enter email subject...',
-        required: true,
-        maxLength: 78
-      })
-    }
-
-    // Subreddit field (Reddit specific)
-    if (plugin.name === 'reddit') {
-      fields.push({
-        type: 'text',
-        name: 'subreddit',
-        label: 'Subreddit',
-        placeholder: 'r/subreddit',
-        required: true
-      })
-    }
-
-    // Recipients field (Email specific)
-    if (plugin.name === 'email') {
-      fields.push({
-        type: 'multiselect',
-        name: 'recipients',
-        label: 'Email Recipients',
-        placeholder: 'Select recipients...',
-        required: true
-      })
-    }
-
-    return fields
-  }
+  // ❌ REMOVED: generateFieldConfig() - No longer needed, all fields come from schema
 
   // Get platform settings configuration
   static async getPlatformSettings(req: Request, res: Response) {
     try {
       const { platformId } = req.params
-      const plugin = getPlatformPlugin(platformId)
+      const registry = await PlatformController.ensureRegistry()
 
-      if (!plugin) {
-        return res.status(404).json({
-          error: 'Platform not found',
-          availablePlatforms: getAllPlatformNames()
+      if (!registry || !registry.isInitialized()) {
+        return res.status(500).json({
+          error: 'Platform registry not initialized'
         })
       }
 
-      // Get settings from platform module (UI configuration)
-      const settingsConfig = plugin.uiConfig?.settings
+      const platform = registry.getPlatform(platformId)
+      if (!platform) {
+        return res.status(404).json({
+          error: 'Platform not found',
+          availablePlatforms: registry.getPlatformIds()
+        })
+      }
+
+      // ✅ GENERIC: Get settings from platform schema
+      const settingsConfig = platform.schema?.settings
 
       // Get actual values from environment variables (but don't expose secrets)
       const envSettings = ConfigService.getPlatformSettings(platformId)
@@ -303,10 +352,19 @@ export class PlatformController {
       const { platformId } = req.params
       const { settings } = req.body
 
-      const plugin = getPlatformPlugin(platformId)
-      if (!plugin) {
+      const registry = await PlatformController.ensureRegistry()
+
+      if (!registry || !registry.isInitialized()) {
+        return res.status(500).json({
+          error: 'Platform registry not initialized'
+        })
+      }
+
+      const platform = registry.getPlatform(platformId)
+      if (!platform) {
         return res.status(404).json({
-          error: 'Platform not found'
+          error: 'Platform not found',
+          availablePlatforms: registry.getPlatformIds()
         })
       }
 

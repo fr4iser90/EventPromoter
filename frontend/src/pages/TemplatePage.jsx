@@ -23,21 +23,21 @@ import {
 import { useTheme, createTheme } from '@mui/material/styles'
 import TemplateList from '../components/TemplateEditor/TemplateList'
 import useStore from '../store'
-
-const PLATFORMS = [
-  { id: 'twitter', name: 'Twitter', icon: '🐦' },
-  { id: 'facebook', name: 'Facebook', icon: '📘' },
-  { id: 'instagram', name: 'Instagram', icon: '📷' },
-  { id: 'linkedin', name: 'LinkedIn', icon: '💼' },
-  { id: 'reddit', name: 'Reddit', icon: '🟠' },
-  { id: 'email', name: 'Email', icon: '📧' }
-]
+import { usePlatforms } from '../hooks/usePlatformSchema'
 
 function TemplatePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [selectedPlatform, setSelectedPlatform] = useState('twitter')
+  const { platforms, loading: platformsLoading } = usePlatforms()
+  const [selectedPlatform, setSelectedPlatform] = useState(null)
   const { darkMode, setDarkMode } = useStore()
+
+  // Set first platform as default when platforms are loaded
+  useEffect(() => {
+    if (platforms && platforms.length > 0 && !selectedPlatform) {
+      setSelectedPlatform(platforms[0].id)
+    }
+  }, [platforms, selectedPlatform])
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
@@ -155,14 +155,14 @@ function TemplatePage() {
                   }
                 }}
               >
-                {PLATFORMS.map((platform) => (
+                {platforms && platforms.map((platform) => (
                   <Tab
                     key={platform.id}
                     value={platform.id}
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <span>{platform.icon}</span>
-                        <span>{platform.name}</span>
+                        <span>{platform.icon || platform.metadata?.icon || '📱'}</span>
+                        <span>{platform.name || platform.metadata?.displayName || platform.id}</span>
                       </Box>
                     }
                   />

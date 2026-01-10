@@ -1,26 +1,50 @@
-// Twitter Platform Plugin
-import { PlatformPlugin, PlatformCapability } from '../../types/index.js'
+/**
+ * Twitter Platform Module
+ * 
+ * Self-discovering platform architecture with schema-driven UI.
+ * 
+ * @module platforms/twitter/index
+ */
+
+import { PlatformModule } from '../../types/platformModule.js'
 import { TwitterParser } from './parser.js'
 import { TwitterService } from './service.js'
 import { TWITTER_TEMPLATES } from './templates.js'
 import { TwitterValidator } from './validator.js'
+import { twitterSchema } from './schema/index.js'
 
-const TwitterCapabilities: PlatformCapability[] = [
-  { type: 'text', maxLength: 280, required: true },
-  { type: 'image', required: false },
-  { type: 'link', required: false },
-  { type: 'hashtag', required: false },
-  { type: 'mention', required: false }
-]
-
-const TwitterPlugin: PlatformPlugin = {
-  name: 'twitter',
-  version: '1.0.0',
-  displayName: 'Twitter/X',
-  capabilities: TwitterCapabilities,
-
-  parser: TwitterParser,
+/**
+ * Twitter Platform Module
+ * 
+ * Complete platform module using the self-discovering architecture.
+ * This module will be automatically discovered by the PlatformRegistry.
+ */
+export const TwitterPlatformModule: PlatformModule = {
+  metadata: {
+    id: 'twitter',
+    displayName: 'Twitter/X',
+    version: '1.0.0',
+    category: 'social',
+    icon: '🐦',
+    color: '#1DA1F2',
+    description: 'Share events on Twitter/X with character-limited posts',
+    author: 'EventPromoter',
+    license: 'MIT'
+  },
+  schema: twitterSchema,
+  capabilities: {
+    supportsText: true,
+    supportsImages: true,
+    supportsVideo: false,
+    supportsLinks: true,
+    supportsHashtags: true,
+    supportsMentions: true,
+    supportsPolls: false,
+    supportsScheduling: false,
+    requiresAuth: true
+  },
   service: new TwitterService(),
+  parser: TwitterParser,
   validator: {
     validate: (content: any) => TwitterValidator.validateContent(content),
     getLimits: () => ({
@@ -30,7 +54,6 @@ const TwitterPlugin: PlatformPlugin = {
     })
   },
   templates: TWITTER_TEMPLATES,
-
   config: {
     apiEndpoints: {
       postTweet: 'https://api.twitter.com/2/tweets',
@@ -44,4 +67,5 @@ const TwitterPlugin: PlatformPlugin = {
   }
 }
 
-export default TwitterPlugin
+// Export as default for discovery
+export default TwitterPlatformModule

@@ -6,6 +6,9 @@ const config = {
 
   // API Base URL for future server-side features
   apiBaseUrl: 'http://localhost:3001',
+  
+  // API URL for backend services
+  apiUrl: 'http://localhost:4000',
 
   // File upload settings
   maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -16,47 +19,10 @@ const config = {
     'image/webp': ['.webp'],
     'text/plain': ['.txt'],
     'text/markdown': ['.md']
-  },
-
-  // Platform configurations
-  platforms: {
-    twitter: {
-      name: 'Twitter/X',
-      icon: '🐦',
-      color: '#1DA1F2',
-      requiredSettings: ['apiKey', 'apiSecret', 'accessToken', 'accessTokenSecret']
-    },
-    instagram: {
-      name: 'Instagram',
-      icon: '📷',
-      color: '#E4405F',
-      requiredSettings: ['username', 'password']
-    },
-    facebook: {
-      name: 'Facebook',
-      icon: '👤',
-      color: '#1877F2',
-      requiredSettings: ['pageId', 'pageName', 'accessToken']
-    },
-    linkedin: {
-      name: 'LinkedIn',
-      icon: '💼',
-      color: '#0A66C2',
-      requiredSettings: ['profileId', 'accessToken']
-    },
-    reddit: {
-      name: 'Reddit',
-      icon: '🔴',
-      color: '#FF4500',
-      requiredSettings: ['subreddit', 'username', 'password']
-    },
-    email: {
-      name: 'Email',
-      icon: '📧',
-      color: '#EA4335',
-      requiredSettings: ['recipients', 'subject']
-    }
   }
+
+  // Platform configurations are now loaded dynamically from backend
+  // No hardcoded platform data - everything comes from /api/platforms
 }
 
 export default config

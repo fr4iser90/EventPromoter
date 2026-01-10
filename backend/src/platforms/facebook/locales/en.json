@@ -1,0 +1,25 @@
+{
+  "form": {
+    "labels": {
+      "facebookPost": "Facebook Post"
+    }
+  },
+  "platforms": {
+    "facebook": {
+      "title": "Facebook Post",
+      "contentLabel": "Post Content",
+      "placeholder": "What's on your mind?",
+      "bestPractices": {
+        "title": "Facebook Tips:",
+        "points": [
+          "Posts with questions get 100% more engagement",
+          "Use 1-2 relevant hashtags",
+          "Keep it conversational and authentic"
+        ]
+      },
+      "footer": "Your post will be published to your Facebook page or personal profile."
+    }
+  }
+}
+
+

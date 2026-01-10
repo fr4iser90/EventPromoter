@@ -1,0 +1,25 @@
+{
+  "form": {
+    "labels": {
+      "facebookPost": "Publicación de Facebook"
+    }
+  },
+  "platforms": {
+    "facebook": {
+      "title": "Publicación de Facebook",
+      "contentLabel": "Contenido de la Publicación",
+      "placeholder": "¿En qué estás pensando?",
+      "bestPractices": {
+        "title": "Consejos de Facebook:",
+        "points": [
+          "Las publicaciones con preguntas obtienen 100% más interacción",
+          "Usa 1-2 hashtags relevantes",
+          "Manténlo conversacional y auténtico"
+        ]
+      },
+      "footer": "Tu publicación se publicará en tu página de Facebook o perfil personal."
+    }
+  }
+}
+
+

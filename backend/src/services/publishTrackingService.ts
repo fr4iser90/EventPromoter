@@ -5,7 +5,6 @@ export interface PublishResult {
   data?: {
     postId?: string
     url?: string
-    emailRecipients?: string[]
     sentAt?: string
     status?: string
     submittedAt?: string

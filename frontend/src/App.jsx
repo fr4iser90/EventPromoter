@@ -30,18 +30,14 @@ import ContentEditor from './components/ContentEditor/ContentEditor'
 import Preview from './components/Preview/Preview'
 import HashtagBuilder from './components/HashtagBuilder/HashtagBuilder'
 import PlatformSelector from './components/PlatformSelector/PlatformSelector'
-import RedditPanel from './components/Panels/RedditPanel'
-import EmailPanel from './components/Panels/EmailPanel'
-import TwitterPanel from './components/Panels/TwitterPanel'
-import FacebookPanel from './components/Panels/FacebookPanel'
-import InstagramPanel from './components/Panels/InstagramPanel'
-import LinkedInPanel from './components/Panels/LinkedInPanel'
+import DynamicPanelWrapper from './components/Panels/DynamicPanelWrapper'
 import SettingsModal from './components/SettingsModal/SettingsModal'
 import DuplicateDialog from './components/DuplicateDialog/DuplicateDialog'
 import TemplatePage from './pages/TemplatePage'
 import useStore, { WORKFLOW_STATES } from './store'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useMultiplePlatformTranslations } from './hooks/usePlatformTranslations'
 
 const createAppTheme = (darkMode) => createTheme({
   palette: {
@@ -140,6 +136,9 @@ function MainPage() {
 
   // Ensure arrays are always arrays
   const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
+  
+  // Load platform translations automatically when platforms are selected
+  useMultiplePlatformTranslations(safeSelectedPlatforms, i18n.language)
   const safeSelectedHashtags = Array.isArray(selectedHashtags) ? selectedHashtags : []
   const safeUploadedFileRefs = Array.isArray(uploadedFileRefs) ? uploadedFileRefs : []
 
@@ -151,25 +150,27 @@ function MainPage() {
     reset()
   }
 
-  // Check which panels should be visible
-  const showRedditPanel = safeSelectedPlatforms.includes('reddit')
-  const showTwitterPanel = safeSelectedPlatforms.includes('twitter')
-  const showFacebookPanel = safeSelectedPlatforms.includes('facebook')
-  const showInstagramPanel = safeSelectedPlatforms.includes('instagram')
-  const showLinkedInPanel = safeSelectedPlatforms.includes('linkedin')
-  const showEmailPanel = safeSelectedPlatforms.includes('email')
-
-  // Create panel arrays for left and right sidebars
+  // Create panel arrays for left and right sidebars - GENERIC, loads from backend
   const leftPanels = []
   const rightPanels = []
 
-  if (showRedditPanel) leftPanels.push({ key: 'reddit', component: <RedditPanel /> })
-  if (showTwitterPanel) leftPanels.push({ key: 'twitter', component: <TwitterPanel /> })
-  if (showFacebookPanel) leftPanels.push({ key: 'facebook', component: <FacebookPanel /> })
+  // Dynamically create panels for selected platforms - no hardcoded platform logic
+  safeSelectedPlatforms.forEach((platformId, index) => {
+    const panelComponent = <DynamicPanelWrapper key={platformId} platform={platformId} />
+    // Distribute panels between left and right (alternating)
+    if (index % 2 === 0) {
+      leftPanels.push({ key: platformId, component: panelComponent })
+    } else {
+      rightPanels.push({ key: platformId, component: panelComponent })
+    }
+  })
 
-  if (showInstagramPanel) rightPanels.push({ key: 'instagram', component: <InstagramPanel /> })
-  if (showLinkedInPanel) rightPanels.push({ key: 'linkedin', component: <LinkedInPanel /> })
-  if (showEmailPanel) rightPanels.push({ key: 'email', component: <EmailPanel /> })
+  // Debug: Log panel creation
+  if (safeSelectedPlatforms.length > 0) {
+    console.log('[App] Selected platforms:', safeSelectedPlatforms)
+    console.log('[App] Left panels:', leftPanels.length)
+    console.log('[App] Right panels:', rightPanels.length)
+  }
 
   // Check if panels should be shown
   const hasLeftPanels = leftPanels.length > 0

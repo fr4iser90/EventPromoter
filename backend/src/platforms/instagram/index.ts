@@ -1,24 +1,50 @@
-// Instagram Platform Plugin
-import { PlatformPlugin, PlatformCapability } from '../../types/index.js'
+/**
+ * Instagram Platform Module
+ * 
+ * Self-discovering platform architecture with schema-driven UI.
+ * 
+ * @module platforms/instagram/index
+ */
+
+import { PlatformModule } from '../../types/platformModule.js'
 import { InstagramParser } from './parser.js'
 import { InstagramService } from './service.js'
 import { INSTAGRAM_TEMPLATES } from './templates.js'
 import { InstagramValidator } from './validator.js'
+import { instagramSchema } from './schema/index.js'
 
-const InstagramCapabilities: PlatformCapability[] = [
-  { type: 'text', maxLength: 2200, required: true },
-  { type: 'image', required: true },
-  { type: 'hashtag', required: false }
-]
-
-const InstagramPlugin: PlatformPlugin = {
-  name: 'instagram',
-  version: '1.0.0',
-  displayName: 'Instagram',
-  capabilities: InstagramCapabilities,
-
-  parser: InstagramParser,
+/**
+ * Instagram Platform Module
+ * 
+ * Complete platform module using the self-discovering architecture.
+ * This module will be automatically discovered by the PlatformRegistry.
+ */
+export const InstagramPlatformModule: PlatformModule = {
+  metadata: {
+    id: 'instagram',
+    displayName: 'Instagram',
+    version: '1.0.0',
+    category: 'social',
+    icon: '📸',
+    color: '#E4405F',
+    description: 'Share events on Instagram with images and captions',
+    author: 'EventPromoter',
+    license: 'MIT'
+  },
+  schema: instagramSchema,
+  capabilities: {
+    supportsText: true,
+    supportsImages: true,
+    supportsVideo: false,
+    supportsLinks: false,
+    supportsHashtags: true,
+    supportsMentions: true,
+    supportsPolls: false,
+    supportsScheduling: false,
+    requiresAuth: true
+  },
   service: new InstagramService(),
+  parser: InstagramParser,
   validator: {
     validate: (content: any) => InstagramValidator.validateContent(content),
     getLimits: () => ({
@@ -28,7 +54,6 @@ const InstagramPlugin: PlatformPlugin = {
     })
   },
   templates: INSTAGRAM_TEMPLATES,
-
   config: {
     apiEndpoints: {
       createPost: 'https://graph.instagram.com/me/media',
@@ -42,4 +67,5 @@ const InstagramPlugin: PlatformPlugin = {
   }
 }
 
-export default InstagramPlugin
+// Export as default for discovery
+export default InstagramPlatformModule

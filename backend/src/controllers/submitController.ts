@@ -43,7 +43,7 @@ export class SubmitController {
 
       // Validate platforms
       if (platforms && content) {
-        const platformValidation = ValidationService.validatePlatforms(content, Object.keys(platforms))
+        const platformValidation = await ValidationService.validatePlatforms(content, Object.keys(platforms))
         if (!platformValidation.isValid) {
           return res.status(400).json({
             error: 'Platform validation failed',
