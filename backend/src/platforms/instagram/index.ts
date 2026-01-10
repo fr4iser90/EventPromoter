@@ -9,7 +9,7 @@
 import { PlatformModule } from '../../types/platformModule.js'
 import { InstagramParser } from './parser.js'
 import { InstagramService } from './service.js'
-import { INSTAGRAM_TEMPLATES } from './templates.js'
+import { INSTAGRAM_TEMPLATES } from './templates/index.js'
 import { InstagramValidator } from './validator.js'
 import { instagramSchema } from './schema/index.js'
 

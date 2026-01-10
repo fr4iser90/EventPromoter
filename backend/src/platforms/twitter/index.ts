@@ -9,7 +9,7 @@
 import { PlatformModule } from '../../types/platformModule.js'
 import { TwitterParser } from './parser.js'
 import { TwitterService } from './service.js'
-import { TWITTER_TEMPLATES } from './templates.js'
+import { TWITTER_TEMPLATES } from './templates/index.js'
 import { TwitterValidator } from './validator.js'
 import { twitterSchema } from './schema/index.js'
 

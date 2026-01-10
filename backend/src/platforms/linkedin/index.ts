@@ -9,7 +9,7 @@
 import { PlatformModule } from '../../types/platformModule.js'
 import { LinkedInParser } from './parser.js'
 import { LinkedInService } from './service.js'
-import { LINKEDIN_TEMPLATES } from './templates.js'
+import { LINKEDIN_TEMPLATES } from './templates/index.js'
 import { LinkedInValidator } from './validator.js'
 import { linkedinSchema } from './schema/index.js'
 

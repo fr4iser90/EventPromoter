@@ -1,0 +1,32 @@
+import { EmailTemplate } from '../templates';
+
+export const basicEventAnnouncementTemplate: EmailTemplate = {
+  id: 'basic-event-announcement',
+  name: 'Basic Event Announcement',
+  template: {
+    subject: '🎉 {eventTitle} - {date}',
+    html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎉 {eventTitle}</h1>
+    <p><strong>📅 Date:</strong> {date}</p>
+    <p><strong>🕐 Time:</strong> {time}</p>
+    <p><strong>📍 Location:</strong> {venue}, {city}</p>
+    <p>{description}</p>
+    <p><a href="{link}">Get Tickets</a></p>
+  </div>
+</body>
+</html>`
+  },
+  category: 'announcement',
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link']
+};
+

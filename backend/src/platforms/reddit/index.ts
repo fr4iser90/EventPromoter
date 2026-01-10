@@ -9,7 +9,7 @@
 import { PlatformModule } from '../../types/platformModule.js'
 import { RedditParser } from './parser.js'
 import { RedditService } from './service.js'
-import { REDDIT_TEMPLATES } from './templates.js'
+import { REDDIT_TEMPLATES } from './templates/index.js'
 import { RedditValidator } from './validator.js'
 import { redditSchema } from './schema/index.js'
 

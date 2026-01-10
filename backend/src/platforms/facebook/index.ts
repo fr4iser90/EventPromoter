@@ -9,7 +9,7 @@
 import { PlatformModule } from '../../types/platformModule.js'
 import { FacebookParser } from './parser.js'
 import { FacebookService } from './service.js'
-import { FACEBOOK_TEMPLATES } from './templates.js'
+import { FACEBOOK_TEMPLATES } from './templates/index.js'
 import { FacebookValidator } from './validator.js'
 import { facebookSchema } from './schema/index.js'
 

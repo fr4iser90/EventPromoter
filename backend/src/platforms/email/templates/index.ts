@@ -19,17 +19,23 @@ export interface EmailTemplate {
 }
 
 // Import templates first
+import { basicEventAnnouncementTemplate } from './basic-event-announcement'
+import { professionalEventAnnouncementTemplate } from './professional-event-announcement'
 import { eventAnnouncementTemplate } from './event-announcement'
 import { lastMinuteTicketsTemplate } from './last-minute-tickets'
 import { eventReminderTemplate } from './event-reminder'
 
 // Export individual templates
+export { basicEventAnnouncementTemplate } from './basic-event-announcement'
+export { professionalEventAnnouncementTemplate } from './professional-event-announcement'
 export { eventAnnouncementTemplate } from './event-announcement'
 export { lastMinuteTicketsTemplate } from './last-minute-tickets'
 export { eventReminderTemplate } from './event-reminder'
 
 // Main templates array
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
+  basicEventAnnouncementTemplate,
+  professionalEventAnnouncementTemplate,
   eventAnnouncementTemplate,
   lastMinuteTicketsTemplate,
   eventReminderTemplate

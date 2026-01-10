@@ -7,16 +7,29 @@ import {
   Grid,
   Typography,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material'
+import {
+  AutoAwesome as TemplateIcon
+} from '@mui/icons-material'
 import GenericPlatformEditor from '../GenericPlatformEditor/GenericPlatformEditor'
 import PlatformPreview from '../PlatformPreview/PlatformPreview'
+import BulkTemplateApplier from '../BulkTemplateApplier/BulkTemplateApplier'
 import { usePlatforms } from '../../hooks/usePlatformSchema'
+import { useTemplateCategories } from '../../hooks/useTemplateCategories'
 import config from '../../config'
 
 function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentChange, disabled = false }) {
   const [activeTab, setActiveTab] = useState(0)
+  const [bulkApplierOpen, setBulkApplierOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('')
   const { platforms, loading, error } = usePlatforms()
+  const { categories, loading: categoriesLoading } = useTemplateCategories()
 
   // Get available platforms with metadata from backend
   const availablePlatforms = selectedPlatforms.filter(platformId => {
@@ -49,8 +62,16 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
   // Get editor component - always use generic
   const getEditorComponent = (platformId) => {
     const content = platformContent[platformId] || {}
+    // Use a ref to track the latest content to avoid stale closures
     const onChange = (field, value) => {
-      onPlatformContentChange(platformId, { ...content, [field]: value })
+      // Get fresh content from platformContent to avoid stale state
+      const currentContent = platformContent[platformId] || {}
+      onPlatformContentChange(platformId, { ...currentContent, [field]: value })
+    }
+    
+    // Batch change handler - sets entire content object at once (for template application)
+    const onBatchChange = (newContent) => {
+      onPlatformContentChange(platformId, newContent)
     }
 
     return (
@@ -58,6 +79,7 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
         platform={platformId}
         content={content}
         onChange={onChange}
+        onBatchChange={onBatchChange}
         isActive={true}
         onSelect={() => {}}
       />
@@ -111,38 +133,61 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
 
   const activePlatform = availablePlatforms[activeTab]
 
+  const handleBulkApply = (platformId, newContent) => {
+    onPlatformContentChange(platformId, newContent)
+  }
+
+  const handleOpenBulkApplier = () => {
+    setBulkApplierOpen(true)
+  }
+
   return (
     <Paper sx={{ p: 0 }}>
-      {/* Tabs Header */}
+      {/* Tabs Header with Bulk Apply Button */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs
-          value={activeTab}
-          onChange={(e, newValue) => setActiveTab(newValue)}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{ px: 2, pt: 1 }}
-        >
-          {availablePlatforms.map((platformId, index) => {
-            const info = getPlatformInfo(platformId)
-            return (
-              <Tab
-                key={platformId}
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <span>{info.icon}</span>
-                    <span>{info.name}</span>
-                  </Box>
-                }
-                sx={{
-                  minHeight: 48,
-                  textTransform: 'none',
-                  fontWeight: activeTab === index ? 'bold' : 'normal',
-                  color: info.color
-                }}
-              />
-            )
-          })}
-        </Tabs>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, pt: 1 }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ flex: 1 }}
+          >
+            {availablePlatforms.map((platformId, index) => {
+              const info = getPlatformInfo(platformId)
+              return (
+                <Tab
+                  key={platformId}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <span>{info.icon}</span>
+                      <span>{info.name}</span>
+                    </Box>
+                  }
+                  sx={{
+                    minHeight: 48,
+                    textTransform: 'none',
+                    fontWeight: activeTab === index ? 'bold' : 'normal',
+                    color: info.color
+                  }}
+                />
+              )
+            })}
+          </Tabs>
+          
+          {/* Bulk Apply Entry Point */}
+          <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant="outlined"
+              startIcon={<TemplateIcon />}
+              onClick={handleOpenBulkApplier}
+              disabled={disabled || availablePlatforms.length === 0}
+              size="small"
+            >
+              Apply Templates
+            </Button>
+          </Box>
+        </Box>
       </Box>
 
       {/* Content Area */}
@@ -165,6 +210,15 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
           </Grid>
         </Grid>
       </Box>
+
+      {/* Bulk Template Applier Modal */}
+      <BulkTemplateApplier
+        open={bulkApplierOpen}
+        onClose={() => setBulkApplierOpen(false)}
+        selectedPlatforms={availablePlatforms}
+        platformContent={platformContent}
+        onApply={handleBulkApply}
+      />
     </Paper>
   )
 }

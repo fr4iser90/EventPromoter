@@ -244,20 +244,64 @@ export class TemplateController {
     }
   }
 
-  // GET /api/templates/categories - Get available template categories
+  // GET /api/templates/categories - Get available template categories (dynamically from all platforms)
   static async getCategories(req: Request, res: Response) {
     try {
-      // Static categories - could be made dynamic later
-      const categories: TemplateCategoriesResponse['categories'] = [
-        { id: 'announcement', name: 'Event Announcement', description: 'Announce upcoming events', platform: 'all' },
-        { id: 'promotion', name: 'Ticket Promotion', description: 'Promote ticket sales', platform: 'all' },
-        { id: 'reminder', name: 'Event Reminder', description: 'Remind about upcoming events', platform: 'all' },
-        { id: 'urgent', name: 'Urgent Update', description: 'Last-minute changes or urgent info', platform: 'all' },
-        { id: 'welcome', name: 'Welcome Message', description: 'Welcome new attendees', platform: 'all' },
-        { id: 'thank-you', name: 'Thank You', description: 'Post-event thank you messages', platform: 'all' },
-        { id: 'music', name: 'Music Focus', description: 'DJ/Artist focused content', platform: 'all' },
-        { id: 'general', name: 'General', description: 'General purpose templates', platform: 'all' }
-      ]
+      // ✅ GENERIC: Load all platforms from registry
+      const { getPlatformRegistry, initializePlatformRegistry } = await import('../services/platformRegistry.js')
+      const registry = getPlatformRegistry()
+      if (!registry.isInitialized()) {
+        await initializePlatformRegistry()
+      }
+
+      const allPlatforms = registry.getAllPlatforms()
+      const categorySet = new Set<string>()
+
+      // Collect categories from all platforms
+      for (const platform of allPlatforms) {
+        try {
+          const platformId = platform.metadata?.id
+          if (!platformId) {
+            console.warn(`Platform has no ID:`, platform)
+            continue
+          }
+          const templates = await TemplateService.getAllTemplates(platformId)
+          templates.forEach(t => {
+            if (t.category) {
+              categorySet.add(t.category)
+            }
+          })
+        } catch (error) {
+          // Skip platforms that fail to load templates
+          const platformId = platform.metadata?.id || 'unknown'
+          console.warn(`Failed to load templates for ${platformId}:`, error)
+        }
+      }
+
+      // Convert to response format with readable names
+      const categoryNameMap: Record<string, string> = {
+        'announcement': 'Event Announcement',
+        'promotion': 'Ticket Promotion',
+        'reminder': 'Event Reminder',
+        'urgent': 'Urgent Update',
+        'welcome': 'Welcome Message',
+        'thank-you': 'Thank You',
+        'music': 'Music Focus',
+        'discussion': 'Discussion',
+        'event': 'Event',
+        'review': 'Review',
+        'afterparty': 'Afterparty',
+        'general': 'General'
+      }
+
+      const categories: TemplateCategoriesResponse['categories'] = Array.from(categorySet)
+        .sort()
+        .map(id => ({
+          id,
+          name: categoryNameMap[id] || id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' '),
+          description: `Templates in category: ${id}`,
+          platform: 'all'
+        }))
 
       const response: TemplateCategoriesResponse = {
         success: true,
@@ -270,6 +314,87 @@ export class TemplateController {
       res.status(500).json({
         success: false,
         error: 'Failed to get categories',
+        details: error.message
+      })
+    }
+  }
+
+  // GET /api/templates/by-category/:category - Get templates for a category across all platforms
+  static async getTemplatesByCategory(req: Request, res: Response) {
+    try {
+      const { category } = req.params
+      const platformsParam = req.query.platforms as string | undefined
+
+      // ✅ GENERIC: Load all platforms from registry
+      const { getPlatformRegistry, initializePlatformRegistry } = await import('../services/platformRegistry.js')
+      const registry = getPlatformRegistry()
+      if (!registry.isInitialized()) {
+        await initializePlatformRegistry()
+      }
+
+      // Filter platforms if specified
+      const allPlatforms = platformsParam
+        ? platformsParam.split(',').map(p => p.trim())
+        : registry.getAllPlatforms().map(p => p.metadata.id)
+
+      const result: Array<{
+        platformId: string
+        templateId: string | null
+        templateName: string | null
+        hasTemplate: boolean
+        availableTemplates: Array<{ id: string; name: string }>
+      }> = []
+
+      for (const platformId of allPlatforms) {
+        try {
+          const templates = await TemplateService.getAllTemplates(platformId)
+          const categoryTemplates = templates.filter(t => t.category === category)
+          
+          // If multiple templates exist, return all of them
+          if (categoryTemplates.length > 0) {
+            // Return first template as default, but include all available templates
+            result.push({
+              platformId,
+              templateId: categoryTemplates[0]?.id || null,
+              templateName: categoryTemplates[0]?.name || null,
+              hasTemplate: true,
+              availableTemplates: categoryTemplates.map(t => ({
+                id: t.id,
+                name: t.name
+              }))
+            })
+          } else {
+            result.push({
+              platformId,
+              templateId: null,
+              templateName: null,
+              hasTemplate: false,
+              availableTemplates: []
+            })
+          }
+        } catch (error) {
+          // Skip platforms that fail to load
+          console.warn(`Failed to load templates for ${platformId}:`, error)
+          result.push({
+            platformId,
+            templateId: null,
+            templateName: null,
+            hasTemplate: false,
+            availableTemplates: []
+          })
+        }
+      }
+
+      res.json({
+        success: true,
+        category,
+        templates: result
+      })
+    } catch (error: any) {
+      console.error('Get templates by category error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get templates by category',
         details: error.message
       })
     }

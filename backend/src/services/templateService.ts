@@ -75,7 +75,7 @@ export class TemplateService {
 
       // Try to load templates from platform module
       try {
-        const templatesModule = await import(`../platforms/${platform}/templates.js`)
+        const templatesModule = await import(`../platforms/${platform}/templates/index.js`)
         const templateKey = `${platform.toUpperCase()}_TEMPLATES`
         const defaultTemplates = templatesModule[templateKey] || platformModule.templates || []
 

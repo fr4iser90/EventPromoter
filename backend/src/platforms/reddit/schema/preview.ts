@@ -54,7 +54,7 @@ export const redditPreviewSchema: PreviewSchema = {
     },
     {
       field: 'text',
-      renderAs: 'paragraph',
+      renderAs: 'markdown',
       label: 'Post Body',
       order: 3
     },

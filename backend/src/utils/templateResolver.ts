@@ -38,33 +38,47 @@ function stripStyles(template: Template): Template {
       const value = processed.template[key]
       
       if (typeof value === 'string' && value.trim()) {
-        try {
-          // Parse HTML with JSDOM
-          const dom = new JSDOM(value, {
-            contentType: 'text/html',
-            // Don't execute scripts for security
-            runScripts: 'outside-only'
-          })
-          
-          const document = dom.window.document
-          
-          // Remove <style> tags
-          document.querySelectorAll('style').forEach((node: Element) => node.remove())
-          
-          // Remove style="" attributes from all elements
-          document.querySelectorAll('[style]').forEach((node: Element) => {
-            node.removeAttribute('style')
-          })
-          
-          // Get cleaned HTML
-          processedContent[key] = document.documentElement.innerHTML
-            .replace(/^<html><head><\/head><body>/, '')
-            .replace(/<\/body><\/html>$/, '')
-        } catch (error) {
-          // If parsing fails, fallback to original value
-          if (process.env.NODE_ENV === 'development') {
-            console.warn(`[TemplateResolver] Failed to parse HTML for key ${key}:`, error)
+        // Check if content is actually HTML (contains HTML tags)
+        // If it's Markdown or plain text, don't process it with JSDOM
+        const hasHtmlTags = /<[a-z][\s\S]*>/i.test(value)
+        
+        if (hasHtmlTags) {
+          // Only process if it contains HTML tags
+          try {
+            // Parse HTML with JSDOM
+            const dom = new JSDOM(value, {
+              contentType: 'text/html',
+              // Don't execute scripts for security
+              runScripts: 'outside-only'
+            })
+            
+            const document = dom.window.document
+            
+            // Remove <style> tags
+            document.querySelectorAll('style').forEach((node: Element) => node.remove())
+            
+            // Remove style="" attributes from all elements
+            document.querySelectorAll('[style]').forEach((node: Element) => {
+              node.removeAttribute('style')
+            })
+            
+            // Get cleaned HTML - extract body content
+            const bodyContent = document.body?.innerHTML || document.documentElement.innerHTML
+            // Remove any remaining HTML wrapper tags
+            processedContent[key] = bodyContent
+              .replace(/^<html><head><\/head><body>/, '')
+              .replace(/<\/body><\/html>$/, '')
+              .replace(/^<body>/, '')
+              .replace(/<\/body>$/, '')
+          } catch (error) {
+            // If parsing fails, fallback to original value
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`[TemplateResolver] Failed to parse HTML for key ${key}:`, error)
+            }
+            processedContent[key] = value
           }
+        } else {
+          // Not HTML - pass through unchanged (Markdown, plain text, etc.)
           processedContent[key] = value
         }
       } else {

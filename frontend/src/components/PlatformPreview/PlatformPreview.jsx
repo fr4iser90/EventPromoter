@@ -8,6 +8,7 @@ import {
   Alert,
   useTheme
 } from '@mui/material'
+import ReactMarkdown from 'react-markdown'
 import { usePlatformSchema, usePlatformMetadata } from '../../hooks/usePlatformSchema'
 import config from '../../config'
 
@@ -69,6 +70,56 @@ function PlatformPreview({ platform, content, isActive }) {
           <Typography variant="body2" sx={{ mb: 1 }} className={className}>
             {fieldValue}
           </Typography>
+        )
+      case 'markdown':
+        return (
+          <Box 
+            sx={{ 
+              mb: 1,
+              '& p': { mb: 1 },
+              '& ul, & ol': { mb: 1, pl: 2 },
+              '& li': { mb: 0.5 },
+              '& strong': { fontWeight: 'bold' },
+              '& em': { fontStyle: 'italic' },
+              '& code': { 
+                bgcolor: 'background.default', 
+                px: 0.5, 
+                borderRadius: 0.5,
+                fontFamily: 'monospace',
+                fontSize: '0.9em'
+              },
+              '& pre': {
+                bgcolor: 'background.default',
+                p: 1,
+                borderRadius: 1,
+                overflow: 'auto',
+                mb: 1
+              },
+              '& pre code': {
+                bgcolor: 'transparent',
+                px: 0
+              },
+              '& a': { color: platformColor },
+              '& h1, & h2, & h3, & h4, & h5, & h6': {
+                fontWeight: 'bold',
+                mb: 1,
+                mt: 2
+              },
+              '& h1': { fontSize: '1.5em' },
+              '& h2': { fontSize: '1.3em' },
+              '& h3': { fontSize: '1.1em' },
+              '& blockquote': {
+                borderLeft: `3px solid ${platformColor}`,
+                pl: 2,
+                ml: 0,
+                fontStyle: 'italic',
+                color: 'text.secondary'
+              }
+            }} 
+            className={className}
+          >
+            <ReactMarkdown>{fieldValue}</ReactMarkdown>
+          </Box>
         )
       case 'html':
         return (

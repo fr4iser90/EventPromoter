@@ -76,10 +76,25 @@ export class N8nService {
       // Move all platform content to root level for N8N compatibility
       Object.entries(n8nPayload.platformContent).forEach(([platformId, content]: [string, any]) => {
         if (content && typeof content === 'object') {
+          let text = content.body || content.text || content.html || ''
+          
+          // Platform-specific formatting
+          if (platformId === 'reddit') {
+            // Reddit requires Markdown format - ensure text is in Markdown
+            // If content contains HTML tags, we should convert to Markdown
+            // For now, we assume the content is already in Markdown format (from templates or editor)
+            // Just ensure it's a string and not HTML
+            if (typeof text === 'string') {
+              // Remove any HTML tags that might have been accidentally included
+              // This is a safety measure - Reddit expects Markdown, not HTML
+              text = text.replace(/<[^>]*>/g, '')
+            }
+          }
+          
           n8nPayload[platformId] = {
             ...content,
             // Normalize text field (some platforms use 'body', others use 'text')
-            text: content.body || content.text || content.html || ''
+            text: text
           }
         }
       })

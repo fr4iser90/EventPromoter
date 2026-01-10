@@ -18,7 +18,7 @@ import useStore from '../../store'
 import { getTemplateVariables, replaceTemplateVariables } from '../../utils/templateUtils'
 import config from '../../config'
 
-function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect }) {
+function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect, onBatchChange }) {
   const { t } = useTranslation()
   const theme = useTheme()
   const { schema, loading: schemaLoading, error: schemaError } = usePlatformSchema(platform)
@@ -128,7 +128,20 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     // Replace variables in each field
     editorBlocks.forEach(block => {
       const fieldName = block.id
-      const fieldValue = templateContent[fieldName] || templateContent.html || templateContent.text || ''
+      // Check for exact field match first, then fallback to html/text
+      let fieldValue = templateContent[fieldName]
+      
+      // If no exact match, check for common field name mappings
+      if (!fieldValue) {
+        // Map common template fields to editor blocks
+        if (fieldName === 'body' && (templateContent.html || templateContent.text)) {
+          fieldValue = templateContent.html || templateContent.text
+        } else if (fieldName === 'subject' && templateContent.subject) {
+          fieldValue = templateContent.subject
+        } else if (fieldName === 'text' && (templateContent.text || templateContent.html)) {
+          fieldValue = templateContent.text || templateContent.html
+        }
+      }
       
       if (fieldValue) {
         // Replace template variables with actual values
@@ -137,10 +150,10 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       }
     })
     
-    // If template has direct html/text, apply to first text field
-    if (templateContent.html || templateContent.text) {
+    // Fallback: If template has html/text but no body block found, apply to first paragraph/text block
+    if ((templateContent.html || templateContent.text) && !newContent.body) {
       const firstTextBlock = editorBlocks.find(b => 
-        b.type === 'text' || b.type === 'paragraph' || b.type === 'heading'
+        (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject'
       )
       if (firstTextBlock) {
         const templateText = templateContent.html || templateContent.text
@@ -148,10 +161,52 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       }
     }
     
-    // Update all fields at once
+    // Debug: Log what we're setting
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[TemplateSelector] Applying template:', {
+        templateContent,
+        newContent,
+        editorBlocks: editorBlocks.map(b => ({ id: b.id, type: b.type })),
+        currentContent: content
+      })
+    }
+    
+    // Collect all fields to update
+    const fieldsToUpdate = {}
     Object.keys(newContent).forEach(key => {
-      onChange(key, newContent[key])
+      if (newContent[key] !== undefined && newContent[key] !== null && newContent[key] !== '') {
+        fieldsToUpdate[key] = newContent[key]
+      }
     })
+    
+    // Also explicitly set fields from template that might have been mapped
+    editorBlocks.forEach(block => {
+      const fieldName = block.id
+      if (newContent[fieldName] !== undefined && newContent[fieldName] !== null && newContent[fieldName] !== '') {
+        fieldsToUpdate[fieldName] = newContent[fieldName]
+      }
+    })
+    
+    // Debug: Log what we're about to update
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[TemplateSelector] Updating fields:', fieldsToUpdate)
+    }
+    
+    // Update all fields at once by merging with current content
+    // This ensures all fields are set in one operation
+    const updatedContent = { ...content, ...fieldsToUpdate }
+    
+    // If onBatchChange is available, use it to set all fields at once
+    // Otherwise, fall back to individual onChange calls
+    if (onBatchChange) {
+      onBatchChange(updatedContent)
+    } else {
+      // Set all fields - call onChange for each field
+      // Note: This might cause race conditions if onChange uses stale closures
+      Object.keys(fieldsToUpdate).forEach(key => {
+        onChange(key, updatedContent[key])
+      })
+    }
   }
 
   // Get current content as string for template selector
