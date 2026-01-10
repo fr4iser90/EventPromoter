@@ -3,6 +3,8 @@ import { EmailTemplate } from '../templates';
 export const eventAnnouncementTemplate: EmailTemplate = {
   id: 'event-announcement',
   name: 'Event Announcement',
+  description: 'A comprehensive email template for event announcements with detailed information and call-to-action',
+  category: 'announcement',
   template: {
     subject: '🎉 {eventTitle} - {date} at {venue}',
     html: `<!DOCTYPE html>
@@ -55,6 +57,7 @@ export const eventAnnouncementTemplate: EmailTemplate = {
 </body>
 </html>`
   },
-  category: 'announcement',
-  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'ticketInfo', 'description', 'highlights', 'link', 'unsubscribeLink', 'website']
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'ticketInfo', 'description', 'highlights', 'link', 'unsubscribeLink', 'website'],
+  createdAt: '2025-01-01T00:00:00Z',
+  updatedAt: '2025-01-01T00:00:00Z'
 };

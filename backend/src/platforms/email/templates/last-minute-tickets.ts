@@ -3,6 +3,8 @@ import { EmailTemplate } from '../templates';
 export const lastMinuteTicketsTemplate: EmailTemplate = {
   id: 'last-minute-tickets',
   name: 'Last Minute Tickets',
+  description: 'An urgent email template for last-minute ticket sales with countdown and special pricing',
+  category: 'urgent',
   template: {
     subject: '⏰ LAST CHANCE: {eventTitle} - Limited Tickets Available!',
     html: `<!DOCTYPE html>
@@ -61,6 +63,7 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
 </body>
 </html>`
   },
-  category: 'urgent',
-  variables: ['eventTitle', 'date', 'venue', 'remainingTickets', 'originalPrice', 'discountedPrice', 'hoursUntilEvent', 'link', 'highlights', 'unsubscribeLink']
+  variables: ['eventTitle', 'date', 'venue', 'remainingTickets', 'originalPrice', 'discountedPrice', 'hoursUntilEvent', 'link', 'highlights', 'unsubscribeLink'],
+  createdAt: '2025-01-01T00:00:00Z',
+  updatedAt: '2025-01-01T00:00:00Z'
 };

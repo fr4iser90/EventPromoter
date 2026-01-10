@@ -3,6 +3,8 @@ import { RedditTemplate } from './types'
 export const musicDiscoveryShareTemplate: RedditTemplate = {
   id: 'music-discovery',
   name: 'Music Discovery Share',
+  description: 'A Reddit post template for sharing music discoveries from events',
+  category: 'music',
   template: {
     title: 'Just discovered this amazing track - thoughts?',
     text: `Found this track through {eventTitle} at {venue} and it's been on repeat!
@@ -20,8 +22,9 @@ Have you heard this? What do you think? Any similar recommendations?
 
 #Music #Discovery #Electronic #Techno`
   },
-  category: 'music',
   variables: ['eventTitle', 'venue', 'trackName', 'artist', 'city', 'reasons', 'link'],
-  recommendedSubreddits: ['r/electronicmusic', 'r/Techno', 'r/Music']
+  recommendedSubreddits: ['r/electronicmusic', 'r/Techno', 'r/Music'],
+  createdAt: '2025-01-01T00:00:00Z',
+  updatedAt: '2025-01-01T00:00:00Z'
 }
 

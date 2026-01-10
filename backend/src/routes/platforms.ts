@@ -11,8 +11,19 @@ const router = Router()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
+// ⚠️ IMPORTANT: Specific routes must be defined BEFORE parameterized routes
+// Otherwise Express will match /preferences as /:platformId with platformId='preferences'
+
 // Get all platforms metadata
 router.get('/', PlatformController.getPlatforms)
+
+// Get platforms that support specific capability
+router.get('/capability/:capability', PlatformController.getPlatformsByCapability)
+
+// User preferences (must be before /:platformId routes)
+router.get('/preferences', UserPreferencesController.getPreferences)
+router.post('/preferences', UserPreferencesController.savePreferences)
+router.patch('/preferences', UserPreferencesController.updatePreferences)
 
 // Get specific platform metadata and field configuration
 router.get('/:platformId', PlatformController.getPlatform)
@@ -31,14 +42,6 @@ router.get('/:platformId/settings', PlatformController.getPlatformSettings)
 
 // Update platform settings
 router.put('/:platformId/settings', PlatformController.updatePlatformSettings)
-
-// Get platforms that support specific capability
-router.get('/capability/:capability', PlatformController.getPlatformsByCapability)
-
-// User preferences
-router.get('/preferences', UserPreferencesController.getPreferences)
-router.post('/preferences', UserPreferencesController.savePreferences)
-router.patch('/preferences', UserPreferencesController.updatePreferences)
 
 // ✅ GENERIC: Dynamically load platform-specific routes
 // Scans platforms/ directory and loads routes.ts from each platform

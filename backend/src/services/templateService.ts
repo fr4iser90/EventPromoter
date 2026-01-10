@@ -79,35 +79,57 @@ export class TemplateService {
         const templateKey = `${platform.toUpperCase()}_TEMPLATES`
         const defaultTemplates = templatesModule[templateKey] || platformModule.templates || []
 
-        // Convert to Template interface format
-        return defaultTemplates.map((template: any) => ({
-          id: template.id,
-          name: template.name,
-          description: template.name, // Use name as description for defaults
-          platform,
-          category: template.category || 'general',
-          template: template.template,
-          variables: template.variables || [],
-          isDefault: true,
-          createdAt: '2026-01-01T00:00:00Z', // Fixed date for defaults
-          updatedAt: '2026-01-01T00:00:00Z'
-        }))
+        // Convert to Template interface format - use ONLY what's in the template files
+        return defaultTemplates.map((template: any) => {
+          // Normalize template content: if it's a string, convert to object with 'text' field
+          let normalizedTemplate = template.template
+          if (typeof normalizedTemplate === 'string') {
+            // String template (LinkedIn, Twitter, Facebook, Instagram) -> convert to { text: '...' }
+            normalizedTemplate = { text: normalizedTemplate }
+          } else if (!normalizedTemplate || typeof normalizedTemplate !== 'object') {
+            // Skip invalid templates
+            return null
+          }
+          
+          return {
+            id: template.id,
+            name: template.name,
+            description: template.description,
+            platform,
+            category: template.category,
+            template: normalizedTemplate,
+            variables: template.variables,
+            isDefault: true,
+            createdAt: template.createdAt,
+            updatedAt: template.updatedAt
+          }
+        }).filter((t: any): t is NonNullable<typeof t> => t !== null)
       } catch (importError) {
         // If templates file doesn't exist, check if platform has templates in module
         if (platformModule.templates) {
           const templates = Object.values(platformModule.templates)
-          return templates.map((template: any) => ({
-            id: template.id || template.name,
-            name: template.name,
-            description: template.description || template.name,
-            platform,
-            category: template.category || 'general',
-            template: template.template,
-            variables: template.variables || [],
-            isDefault: true,
-            createdAt: '2026-01-01T00:00:00Z',
-            updatedAt: '2026-01-01T00:00:00Z'
-          }))
+          return templates.map((template: any) => {
+            // Normalize template content: if it's a string, convert to object with 'text' field
+            let normalizedTemplate = template.template
+            if (typeof normalizedTemplate === 'string') {
+              normalizedTemplate = { text: normalizedTemplate }
+            } else if (!normalizedTemplate || typeof normalizedTemplate !== 'object') {
+              return null
+            }
+            
+            return {
+              id: template.id,
+              name: template.name,
+              description: template.description,
+              platform,
+              category: template.category,
+              template: normalizedTemplate,
+              variables: template.variables,
+              isDefault: true,
+              createdAt: template.createdAt,
+              updatedAt: template.updatedAt
+            }
+          }).filter((t: any): t is NonNullable<typeof t> => t !== null)
         }
         return []
       }

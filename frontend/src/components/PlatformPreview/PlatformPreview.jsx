@@ -122,13 +122,41 @@ function PlatformPreview({ platform, content, isActive }) {
           </Box>
         )
       case 'html':
+        // Remove <style> tags and inline styles from HTML to respect dark mode
+        const cleanHtml = (() => {
+          if (typeof fieldValue !== 'string') return fieldValue
+          
+          // Create a temporary DOM element to parse HTML
+          const tempDiv = document.createElement('div')
+          tempDiv.innerHTML = fieldValue
+          
+          // Remove all <style> tags
+          const styleTags = tempDiv.querySelectorAll('style')
+          styleTags.forEach(tag => tag.remove())
+          
+          // Remove style="" attributes from all elements
+          const elementsWithStyle = tempDiv.querySelectorAll('[style]')
+          elementsWithStyle.forEach(el => el.removeAttribute('style'))
+          
+          return tempDiv.innerHTML
+        })()
+        
         return (
           <Box 
-            dangerouslySetInnerHTML={{ __html: fieldValue }}
+            dangerouslySetInnerHTML={{ __html: cleanHtml }}
             className={className}
             sx={{ 
               '& img': { maxWidth: '100%', height: 'auto', display: 'block', marginBottom: 1 },
-              '& a': { color: platformColor }
+              '& a': { color: platformColor },
+              // Ensure all elements inherit theme colors
+              '& *': {
+                color: 'inherit !important'
+              },
+              // Override any remaining background colors
+              '& [class*="container"], & [class*="header"], & [class*="footer"], & div, & p, & span': {
+                backgroundColor: 'transparent !important',
+                background: 'transparent !important'
+              }
             }}
           />
         )

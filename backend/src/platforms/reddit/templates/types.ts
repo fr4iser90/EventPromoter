@@ -7,6 +7,7 @@
 export interface RedditTemplate {
   id: string
   name: string
+  description?: string
   template: {
     title: string
     text: string
@@ -14,6 +15,8 @@ export interface RedditTemplate {
   category: string
   variables: string[]
   recommendedSubreddits: string[]
+  createdAt?: string
+  updatedAt?: string
 }
 
 

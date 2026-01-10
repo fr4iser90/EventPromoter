@@ -3,6 +3,8 @@ import { EmailTemplate } from '../templates';
 export const professionalEventAnnouncementTemplate: EmailTemplate = {
   id: 'professional-event-announcement',
   name: 'Professional Event Announcement',
+  description: 'A professional email template with header styling for corporate events and networking',
+  category: 'announcement',
   template: {
     subject: '📅 {eventTitle} - Professional Event Invitation',
     html: `<!DOCTYPE html>
@@ -36,7 +38,8 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
 </body>
 </html>`
   },
-  category: 'announcement',
-  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link']
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link'],
+  createdAt: '2025-01-01T00:00:00Z',
+  updatedAt: '2025-01-01T00:00:00Z'
 };
 

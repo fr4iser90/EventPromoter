@@ -3,6 +3,8 @@ import { RedditTemplate } from './types'
 export const eventAnnouncementTemplate: RedditTemplate = {
   id: 'event-announcement',
   name: 'Event Announcement',
+  description: 'A Reddit post template for announcing events with markdown formatting',
+  category: 'announcement',
   template: {
     title: '[EVENT] {eventTitle} - {date}',
     text: `**Event Details:**
@@ -22,8 +24,9 @@ Feel free to ask questions in the comments! 🎉
 
 #Event #Music #Nightlife`
   },
-  category: 'announcement',
   variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link', 'highlights'],
-  recommendedSubreddits: ['r/events', 'r/party', 'r/music']
+  recommendedSubreddits: ['r/events', 'r/party', 'r/music'],
+  createdAt: '2025-01-01T00:00:00Z',
+  updatedAt: '2025-01-01T00:00:00Z'
 }
 

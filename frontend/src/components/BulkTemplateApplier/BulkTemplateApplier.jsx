@@ -203,42 +203,59 @@ function BulkTemplateApplier({
           const template = templateData.template
           const templateContent = template.template || {}
           
+          // Handle different template structures:
+          // - Email: { subject: '...', html: '...' }
+          // - LinkedIn: template: '...' (string)
+          // - Reddit: { title: '...', text: '...' }
+          
           // Apply template (same logic as GenericPlatformEditor)
           const newContent = { ...(platformContent[platformId] || {}) }
           
-          // Map template fields to editor blocks (same logic as GenericPlatformEditor)
-          editorBlocks.forEach(block => {
-            const fieldName = block.id
-            let fieldValue = templateContent[fieldName]
-            
-            // If no exact match, check for common field name mappings
-            if (!fieldValue) {
-              if (fieldName === 'body' && (templateContent.html || templateContent.text)) {
-                fieldValue = templateContent.html || templateContent.text
-              } else if (fieldName === 'subject' && templateContent.subject) {
-                fieldValue = templateContent.subject
-              } else if (fieldName === 'text' && (templateContent.text || templateContent.html)) {
-                fieldValue = templateContent.text || templateContent.html
-              }
-            }
-            
-            if (fieldValue) {
-              // Replace template variables with actual values
-              const replacedValue = typeof fieldValue === 'string'
-                ? replaceTemplateVariables(fieldValue, templateVariables)
-                : fieldValue
-              newContent[fieldName] = replacedValue
-            }
-          })
-          
-          // Fallback: If template has html/text but no body block found, apply to first paragraph/text block
-          if ((templateContent.html || templateContent.text) && !newContent.body) {
+          // If template is a string (LinkedIn, Twitter, etc.), use it directly
+          if (typeof templateContent === 'string') {
             const firstTextBlock = editorBlocks.find(b => 
-              (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject'
+              (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject' && b.id !== 'title'
             )
             if (firstTextBlock) {
-              const templateText = templateContent.html || templateContent.text
-              newContent[firstTextBlock.id] = replaceTemplateVariables(templateText, templateVariables)
+              newContent[firstTextBlock.id] = replaceTemplateVariables(templateContent, templateVariables)
+            }
+          } else {
+            // Template is an object - map fields to editor blocks
+            editorBlocks.forEach(block => {
+              const fieldName = block.id
+              let fieldValue = templateContent[fieldName]
+              
+              // If no exact match, check for common field name mappings
+              if (!fieldValue) {
+                if (fieldName === 'body' && (templateContent.html || templateContent.text)) {
+                  fieldValue = templateContent.html || templateContent.text
+                } else if (fieldName === 'subject' && templateContent.subject) {
+                  fieldValue = templateContent.subject
+                } else if (fieldName === 'text' && (templateContent.text || templateContent.html)) {
+                  fieldValue = templateContent.text || templateContent.html
+                } else if (fieldName === 'title' && templateContent.title) {
+                  fieldValue = templateContent.title
+                }
+              }
+              
+              if (fieldValue) {
+                // Replace template variables with actual values
+                const replacedValue = typeof fieldValue === 'string'
+                  ? replaceTemplateVariables(fieldValue, templateVariables)
+                  : fieldValue
+                newContent[fieldName] = replacedValue
+              }
+            })
+            
+            // Fallback: If template has html/text but no body/text block found, apply to first paragraph/text block
+            if ((templateContent.html || templateContent.text) && !newContent.body && !newContent.text) {
+              const firstTextBlock = editorBlocks.find(b => 
+                (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject' && b.id !== 'title'
+              )
+              if (firstTextBlock) {
+                const templateText = templateContent.html || templateContent.text
+                newContent[firstTextBlock.id] = replaceTemplateVariables(templateText, templateVariables)
+              }
             }
           }
 
@@ -260,6 +277,14 @@ function BulkTemplateApplier({
       }
 
       setApplyResults(results)
+      
+      // Close modal if apply was successful (at least one platform applied)
+      if (results.applied.length > 0 && results.errors.length === 0) {
+        // Small delay to show success message
+        setTimeout(() => {
+          onClose()
+        }, 1500)
+      }
     } catch (error) {
       setApplyResults({
         applied: [],
@@ -402,42 +427,42 @@ function BulkTemplateApplier({
                             />
                           </Box>
                         }
-                        secondary={
-                          templateInfo.hasTemplate ? (
-                            <Box>
-                              {templateInfo.availableTemplates && templateInfo.availableTemplates.length > 0 ? (
-                                <FormControl size="small" sx={{ minWidth: 200, mt: 1 }}>
-                                  <Select
-                                    value={selectedTemplates[templateInfo.platformId] || templateInfo.availableTemplates[0]?.templateId || templateInfo.availableTemplates[0]?.id || ''}
-                                    onChange={(e) => setSelectedTemplates({
-                                      ...selectedTemplates,
-                                      [templateInfo.platformId]: e.target.value
-                                    })}
-                                    disabled={applying}
-                                    displayEmpty
-                                  >
-                                    {templateInfo.availableTemplates.map(t => {
-                                      const templateId = t.templateId || t.id
-                                      const templateName = t.templateName || t.name
-                                      return (
-                                        <MenuItem key={templateId} value={templateId}>
-                                          {templateName}
-                                        </MenuItem>
-                                      )
-                                    })}
-                                  </Select>
-                                </FormControl>
-                              ) : (
-                                <Typography variant="body2" color="text.secondary">
-                                  No template available
-                                </Typography>
-                              )}
-                            </Box>
-                          ) : (
-                            'No template for this category'
-                          )
-                        }
                       />
+                      {templateInfo.hasTemplate ? (
+                        <Box sx={{ mt: 1 }}>
+                          {templateInfo.availableTemplates && templateInfo.availableTemplates.length > 0 ? (
+                            <FormControl size="small" sx={{ minWidth: 200 }}>
+                              <Select
+                                value={selectedTemplates[templateInfo.platformId] || templateInfo.availableTemplates[0]?.templateId || templateInfo.availableTemplates[0]?.id || ''}
+                                onChange={(e) => setSelectedTemplates({
+                                  ...selectedTemplates,
+                                  [templateInfo.platformId]: e.target.value
+                                })}
+                                disabled={applying}
+                                displayEmpty
+                              >
+                                {templateInfo.availableTemplates.map(t => {
+                                  const templateId = t.templateId || t.id
+                                  const templateName = t.templateName || t.name
+                                  return (
+                                    <MenuItem key={templateId} value={templateId}>
+                                      {templateName}
+                                    </MenuItem>
+                                  )
+                                })}
+                              </Select>
+                            </FormControl>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No template available
+                            </Typography>
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                          No template for this category
+                        </Typography>
+                      )}
                     </ListItem>
                   )
                 })}

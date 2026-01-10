@@ -10,12 +10,15 @@
 export interface EmailTemplate {
   id: string
   name: string
+  description?: string
   template: {
     subject: string
     html: string
   }
   category: string
   variables: string[]
+  createdAt?: string
+  updatedAt?: string
 }
 
 // Import templates first

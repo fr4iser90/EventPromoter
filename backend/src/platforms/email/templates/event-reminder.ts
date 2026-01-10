@@ -3,6 +3,8 @@ import { EmailTemplate } from '../templates';
 export const eventReminderTemplate: EmailTemplate = {
   id: 'event-reminder',
   name: 'Event Reminder',
+  description: 'An email template for sending event reminders with preparation tips and event details',
+  category: 'reminder',
   template: {
     subject: '📅 Reminder: {eventTitle} tomorrow at {venue}',
     html: `<!DOCTYPE html>
@@ -52,6 +54,7 @@ export const eventReminderTemplate: EmailTemplate = {
 </body>
 </html>`
   },
-  category: 'reminder',
-  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'prepTips', 'link', 'contactLink', 'unsubscribeLink']
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'prepTips', 'link', 'contactLink', 'unsubscribeLink'],
+  createdAt: '2025-01-01T00:00:00Z',
+  updatedAt: '2025-01-01T00:00:00Z'
 };

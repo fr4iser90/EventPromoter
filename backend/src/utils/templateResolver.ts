@@ -42,45 +42,72 @@ function stripStyles(template: Template): Template {
         // If it's Markdown or plain text, don't process it with JSDOM
         const hasHtmlTags = /<[a-z][\s\S]*>/i.test(value)
         
-        if (hasHtmlTags) {
-          // Only process if it contains HTML tags
-          try {
-            // Parse HTML with JSDOM
-            const dom = new JSDOM(value, {
-              contentType: 'text/html',
-              // Don't execute scripts for security
-              runScripts: 'outside-only'
-            })
-            
-            const document = dom.window.document
-            
-            // Remove <style> tags
-            document.querySelectorAll('style').forEach((node: Element) => node.remove())
-            
-            // Remove style="" attributes from all elements
-            document.querySelectorAll('[style]').forEach((node: Element) => {
-              node.removeAttribute('style')
-            })
-            
-            // Get cleaned HTML - extract body content
-            const bodyContent = document.body?.innerHTML || document.documentElement.innerHTML
-            // Remove any remaining HTML wrapper tags
-            processedContent[key] = bodyContent
-              .replace(/^<html><head><\/head><body>/, '')
-              .replace(/<\/body><\/html>$/, '')
-              .replace(/^<body>/, '')
-              .replace(/<\/body>$/, '')
-          } catch (error) {
-            // If parsing fails, fallback to original value
-            if (process.env.NODE_ENV === 'development') {
+          if (hasHtmlTags) {
+            // Only process if it contains HTML tags
+            try {
+              // Check if value already has <html> or <body> tags (full HTML document)
+              const isFullDocument = /<html[\s>]|<body[\s>]/i.test(value)
+              
+              if (isFullDocument) {
+                // Full HTML document - parse and extract body content
+                const dom = new JSDOM(value, {
+                  contentType: 'text/html',
+                  runScripts: 'outside-only'
+                })
+                
+                const document = dom.window.document
+                
+                // Remove <style> tags
+                document.querySelectorAll('style').forEach((node: Element) => node.remove())
+                
+                // Remove style="" attributes from all elements
+                document.querySelectorAll('[style]').forEach((node: Element) => {
+                  node.removeAttribute('style')
+                })
+                
+                // Extract body content only
+                const bodyElement = document.body
+                if (bodyElement) {
+                  processedContent[key] = bodyElement.innerHTML
+                } else {
+                  // Fallback: use original value
+                  processedContent[key] = value
+                }
+              } else {
+                // Fragment HTML (no <html> or <body> tags) - wrap in div to avoid JSDOM adding wrappers
+                const wrappedValue = `<div id="template-wrapper">${value}</div>`
+                const dom = new JSDOM(wrappedValue, {
+                  contentType: 'text/html',
+                  runScripts: 'outside-only'
+                })
+                
+                const document = dom.window.document
+                
+                // Remove <style> tags
+                document.querySelectorAll('style').forEach((node: Element) => node.remove())
+                
+                // Remove style="" attributes from all elements
+                document.querySelectorAll('[style]').forEach((node: Element) => {
+                  node.removeAttribute('style')
+                })
+                
+                // Extract from wrapper div
+                const wrapper = document.getElementById('template-wrapper')
+                if (wrapper) {
+                  processedContent[key] = wrapper.innerHTML
+                } else {
+                  processedContent[key] = value
+                }
+              }
+            } catch (error) {
+              // If parsing fails, fallback to original value
               console.warn(`[TemplateResolver] Failed to parse HTML for key ${key}:`, error)
+              processedContent[key] = value
             }
+          } else {
+            // Not HTML - pass through unchanged (Markdown, plain text, etc.)
             processedContent[key] = value
           }
-        } else {
-          // Not HTML - pass through unchanged (Markdown, plain text, etc.)
-          processedContent[key] = value
-        }
       } else {
         // Non-string values pass through unchanged
         processedContent[key] = value
