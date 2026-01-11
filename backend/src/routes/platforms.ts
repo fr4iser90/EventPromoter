@@ -43,6 +43,9 @@ router.get('/:platformId/settings', PlatformController.getPlatformSettings)
 // Update platform settings
 router.put('/:platformId/settings', PlatformController.updatePlatformSettings)
 
+// Render preview HTML (schema-driven, backend renders everything)
+router.post('/:platformId/preview', PlatformController.renderPreview)
+
 // ✅ GENERIC: Dynamically load platform-specific routes
 // Scans platforms/ directory and loads routes.ts from each platform
 async function loadPlatformRoutes() {

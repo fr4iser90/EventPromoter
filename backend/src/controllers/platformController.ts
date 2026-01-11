@@ -65,6 +65,8 @@ export class UserPreferencesController {
   }
 }
 
+import { PreviewRenderer } from '../services/previewRenderer.js'
+
 export class PlatformController {
   // Initialize registry on first use
   private static async ensureRegistry() {
@@ -394,6 +396,72 @@ export class PlatformController {
       console.error('Update platform settings error:', error)
       res.status(500).json({
         error: 'Failed to update platform settings',
+        details: error.message
+      })
+    }
+  }
+
+  /**
+   * Render preview HTML
+   * 
+   * Schema-driven preview rendering.
+   * Backend renders HTML, frontend only displays it.
+   * 
+   * GET /api/platforms/:platformId/preview?mode=desktop&darkMode=false
+   * Body: { content: { ... } }
+   */
+  static async renderPreview(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params
+      const { mode, client, darkMode } = req.query
+      const { content } = req.body
+
+      if (!platformId) {
+        return res.status(400).json({ error: 'Platform ID required' })
+      }
+
+      if (!content) {
+        return res.status(400).json({ error: 'Content required' })
+      }
+
+      // Get platform schema
+      const registry = await PlatformController.ensureRegistry()
+      const platformModule = registry.getPlatform(platformId.toLowerCase())
+
+      if (!platformModule) {
+        return res.status(404).json({
+          error: `Platform '${platformId}' not found`,
+          availablePlatforms: registry.getPlatformIds()
+        })
+      }
+
+      const schema = platformModule.schema
+      if (!schema?.preview) {
+        return res.status(404).json({
+          error: `Preview schema not available for platform '${platformId}'`
+        })
+      }
+
+      // Render preview using PreviewRenderer
+      const result = await PreviewRenderer.render({
+        platform: platformId,
+        mode: mode as string,
+        client: client as string,
+        content,
+        schema: schema.preview,
+        darkMode: darkMode === 'true'
+      })
+
+      res.json({
+        success: true,
+        html: result.html,
+        css: result.css,
+        dimensions: result.dimensions
+      })
+    } catch (error: any) {
+      console.error('Render preview error:', error)
+      res.status(500).json({
+        error: 'Failed to render preview',
         details: error.message
       })
     }

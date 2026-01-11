@@ -9,10 +9,10 @@
 import { EditorSchema } from '../../../types/platformSchema.js'
 
 export const emailEditorSchema: EditorSchema = {
-  version: '1.0.0',
+  version: '2.0.0',
   title: 'Email Content Editor',
-  description: 'Create and edit email content',
-  mode: 'rich',
+  description: 'Create and edit email content with structured fields',
+  mode: 'structured',
   blocks: [
     {
       type: 'text',
@@ -33,53 +33,151 @@ export const emailEditorSchema: EditorSchema = {
         order: 1,
         enabled: true
       },
-      // ✅ Rendering config for schema-driven editor
       rendering: {
         fieldType: 'text',
         placeholder: 'Enter email subject...'
       }
     },
     {
-      type: 'paragraph',
-      id: 'body',
-      label: 'Email Body',
-      description: 'Main email content (HTML supported)',
-      required: true,
-      constraints: {
-        maxLength: 50000,
-        minLength: 1
-      },
-      validation: [
-        { type: 'required', message: 'Email body is required' }
-      ],
-      ui: {
-        icon: 'text',
-        order: 2,
-        enabled: true
-      },
-      // ✅ Rendering config
-      rendering: {
-        fieldType: 'textarea',
-        placeholder: 'Enter email body content...'
-      }
-    },
-    {
       type: 'image',
-      id: 'images',
-      label: 'Images',
-      description: 'Email images',
+      id: 'headerImage',
+      label: 'Header Image',
+      description: 'Main image displayed at the top of the email',
       required: false,
       constraints: {
-        maxItems: 10,
+        maxItems: 1,
         allowedFormats: ['jpg', 'jpeg', 'png', 'gif'],
         maxFileSize: 5242880 // 5MB
       },
       ui: {
         icon: 'image',
+        order: 2,
+        enabled: true
+      },
+      rendering: {
+        fieldType: 'file',
+        uploadEndpoint: '/api/platforms/:platformId/upload'
+      }
+    },
+    {
+      type: 'paragraph',
+      id: 'bodyText',
+      label: 'Body Text',
+      description: 'Main email content (plain text, will be formatted automatically)',
+      required: true,
+      constraints: {
+        maxLength: 10000,
+        minLength: 1
+      },
+      validation: [
+        { type: 'required', message: 'Body text is required' }
+      ],
+      ui: {
+        icon: 'text',
         order: 3,
         enabled: true
       },
-      // ✅ Rendering config for file upload
+      rendering: {
+        fieldType: 'textarea',
+        placeholder: 'Enter your email content here...',
+        rows: 8
+      }
+    },
+    {
+      type: 'text',
+      id: 'ctaButtonText',
+      label: 'CTA Button Text',
+      description: 'Text for the call-to-action button',
+      required: false,
+      constraints: {
+        maxLength: 50,
+        minLength: 1
+      },
+      ui: {
+        icon: 'button',
+        order: 4,
+        enabled: true
+      },
+      rendering: {
+        fieldType: 'text',
+        placeholder: 'e.g., Get Tickets Now'
+      }
+    },
+    {
+      type: 'link',
+      id: 'ctaButtonLink',
+      label: 'CTA Button Link',
+      description: 'URL for the call-to-action button',
+      required: false,
+      constraints: {
+        maxLength: 500
+      },
+      ui: {
+        icon: 'link',
+        order: 5,
+        enabled: true
+      },
+      rendering: {
+        fieldType: 'url',
+        placeholder: 'https://example.com/tickets'
+      }
+    },
+    {
+      type: 'paragraph',
+      id: 'footerText',
+      label: 'Footer Text',
+      description: 'Optional footer text (e.g., unsubscribe link, contact info)',
+      required: false,
+      constraints: {
+        maxLength: 500
+      },
+      ui: {
+        icon: 'footer',
+        order: 6,
+        enabled: true
+      },
+      rendering: {
+        fieldType: 'textarea',
+        placeholder: 'Optional footer text...',
+        rows: 3
+      }
+    },
+    // Legacy fields for backward compatibility
+    {
+      type: 'paragraph',
+      id: 'body',
+      label: 'Email Body (HTML)',
+      description: 'Legacy: Full HTML body (use structured fields above instead)',
+      required: false,
+      constraints: {
+        maxLength: 50000
+      },
+      ui: {
+        icon: 'code',
+        order: 99,
+        enabled: false // Hidden by default, only for backward compatibility
+      },
+      rendering: {
+        fieldType: 'textarea',
+        placeholder: 'HTML content...'
+      }
+    },
+    {
+      type: 'image',
+      id: 'images',
+      label: 'Images (Legacy)',
+      description: 'Legacy: Additional images',
+      required: false,
+      constraints: {
+        maxItems: 10,
+        allowedFormats: ['jpg', 'jpeg', 'png', 'gif'],
+        maxFileSize: 5242880
+      },
+      ui: {
+        icon: 'image',
+        order: 98,
+        enabled: false // Hidden by default
+      },
       rendering: {
         fieldType: 'file',
         uploadEndpoint: '/api/platforms/:platformId/upload'
@@ -88,18 +186,17 @@ export const emailEditorSchema: EditorSchema = {
     {
       type: 'link',
       id: 'links',
-      label: 'Links',
-      description: 'Email links',
+      label: 'Links (Legacy)',
+      description: 'Legacy: Additional links',
       required: false,
       constraints: {
         maxItems: 10
       },
       ui: {
         icon: 'link',
-        order: 4,
-        enabled: true
+        order: 97,
+        enabled: false // Hidden by default
       },
-      // ✅ Rendering config
       rendering: {
         fieldType: 'url',
         placeholder: 'https://example.com'

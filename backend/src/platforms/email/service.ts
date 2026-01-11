@@ -178,7 +178,315 @@ export class EmailService {
   /**
    * Export recipient groups
    */
-  async exportGroups(): Promise<{ success: boolean; groups?: Record<string, string[]>; error?: string }> {
+  async   exportGroups(): Promise<{ success: boolean; groups?: Record<string, string[]>; error?: string }> {
     return await EmailRecipientService.exportGroups()
+  }
+
+  /**
+   * Build HTML email body from structured fields
+   * This allows users to edit simple fields instead of raw HTML
+   * 
+   * @param content - Content object with structured fields
+   * @returns HTML email body
+   */
+  buildBodyFromStructuredFields(content: any): string {
+    // If legacy body exists and structured fields are not used, return it
+    if (content.body && !content.bodyText && !content.headerImage && !content.ctaButtonText) {
+      return content.body
+    }
+
+    // Build HTML from structured fields
+    let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+    .header-image { width: 100%; max-width: 100%; height: auto; display: block; margin-bottom: 20px; border-radius: 8px; }
+    .body-text { line-height: 1.6; margin: 20px 0; }
+    .cta-button { display: inline-block; background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0; text-align: center; }
+    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">`
+
+    // Header Image
+    if (content.headerImage) {
+      const imageUrl = content.headerImage.startsWith('http') 
+        ? content.headerImage 
+        : content.headerImage.startsWith('/')
+          ? `http://localhost:4000${content.headerImage}`
+          : content.headerImage
+      html += `
+    <img src="${imageUrl}" alt="Event Image" class="header-image" />`
+    }
+
+    // Body Text
+    if (content.bodyText) {
+      // Convert plain text to HTML (preserve line breaks)
+      const bodyHtml = content.bodyText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+      html += `
+    <div class="body-text">
+      <p>${bodyHtml}</p>
+    </div>`
+    }
+
+    // CTA Button
+    if (content.ctaButtonText && content.ctaButtonLink) {
+      html += `
+    <div style="text-align: center;">
+      <a href="${content.ctaButtonLink}" class="cta-button">${content.ctaButtonText}</a>
+    </div>`
+    }
+
+    // Footer
+    if (content.footerText) {
+      const footerHtml = content.footerText
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>')
+      html += `
+    <div class="footer">
+      <p>${footerHtml}</p>
+    </div>`
+    }
+
+    html += `
+  </div>
+</body>
+</html>`
+
+    return html
+  }
+
+  /**
+   * Process content before saving - builds HTML from structured fields if needed
+   * 
+   * @param content - Raw content from frontend
+   * @returns Processed content with HTML body built from structured fields
+   */
+  processContentForSave(content: any): any {
+    const processed = { ...content }
+    
+    // Check if structured fields are used
+    const hasStructuredFields = content.bodyText || content.headerImage || content.ctaButtonText || content.ctaButtonLink || content.footerText
+    
+    if (hasStructuredFields) {
+      // Build HTML body from structured fields
+      processed.body = this.buildBodyFromStructuredFields(content)
+    }
+    
+    return processed
+  }
+
+  /**
+   * Render preview HTML
+   * 
+   * Schema-driven rendering: Uses slots from schema to build email-like preview
+   * Preview === Send (identical rendering logic)
+   * 
+   * @param options - Render options
+   * @returns Rendered HTML preview
+   */
+  async renderPreview(options: {
+    content: Record<string, any>
+    schema: any
+    mode?: string
+    client?: string
+    darkMode?: boolean
+  }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
+    const { content, schema, mode = 'desktop', client, darkMode = false } = options
+    
+    // Resolve content: build body from structured fields if needed
+    const processedContent = this.processContentForSave(content)
+    
+    // Get mode dimensions
+    const selectedMode = schema.modes?.find((m: any) => m.id === mode) || schema.modes?.[0]
+    const width = selectedMode?.width || 600
+    const height = selectedMode?.height || 800
+    
+    // Resolve styling tokens
+    const bgColor = darkMode ? '#1a1a1a' : '#f5f5f5'
+    const textColor = darkMode ? '#ffffff' : '#000000'
+    const containerBg = darkMode ? '#2a2a2a' : '#ffffff'
+    const fontFamily = schema.styling?.fontFamily || 'Arial, sans-serif'
+    
+    // Build email-like HTML (Gmail/Outlook style)
+    let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: ${fontFamily};
+      background-color: ${bgColor};
+      color: ${textColor};
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .email-container {
+      max-width: ${width}px;
+      margin: 0 auto;
+      background: ${containerBg};
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .email-header {
+      padding: 20px;
+      border-bottom: 1px solid ${darkMode ? '#444' : '#eee'};
+      background: ${containerBg};
+    }
+    .email-subject {
+      font-size: 18px;
+      font-weight: bold;
+      color: ${textColor};
+      margin-bottom: 8px;
+    }
+    .email-body {
+      padding: 20px;
+      color: ${textColor};
+    }
+    .email-body img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .email-body p {
+      margin-bottom: 16px;
+    }
+    .email-body a {
+      color: ${darkMode ? '#4a9eff' : '#007bff'};
+      text-decoration: none;
+    }
+    .email-body a:hover {
+      text-decoration: underline;
+    }
+    .email-footer {
+      padding: 20px;
+      border-top: 1px solid ${darkMode ? '#444' : '#eee'};
+      font-size: 12px;
+      color: ${darkMode ? '#aaa' : '#666'};
+      background: ${containerBg};
+    }
+    .cta-button {
+      display: inline-block;
+      background: ${darkMode ? '#4a9eff' : '#007bff'};
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+`
+
+    // Render header slot (subject)
+    if (processedContent.subject) {
+      html += `    <div class="email-header">
+      <div class="email-subject">${this.escapeHtml(processedContent.subject)}</div>
+    </div>
+`
+    }
+
+    // Render body slot
+    html += `    <div class="email-body">
+`
+    
+    // Hero slot (headerImage)
+    if (processedContent.headerImage) {
+      const imageUrl = processedContent.headerImage.startsWith('http') 
+        ? processedContent.headerImage 
+        : processedContent.headerImage.startsWith('/')
+          ? `http://localhost:4000${processedContent.headerImage}`
+          : processedContent.headerImage
+      html += `      <img src="${imageUrl}" alt="Event Image" />
+`
+    }
+
+    // Body content (from body or bodyText)
+    const bodyContent = processedContent.body || processedContent.bodyText
+    if (bodyContent) {
+      // If it's HTML, use it directly (already processed)
+      if (bodyContent.includes('<') && bodyContent.includes('>')) {
+        // Extract body content from full HTML if needed
+        const bodyMatch = bodyContent.match(/<body[^>]*>([\s\S]*)<\/body>/i)
+        const bodyHtml = bodyMatch ? bodyMatch[1] : bodyContent
+        html += `      ${bodyHtml}
+`
+      } else {
+        // Plain text - convert to HTML
+        const bodyHtml = this.escapeHtml(bodyContent)
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>')
+        html += `      <p>${bodyHtml}</p>
+`
+      }
+    }
+
+    // CTA Button
+    if (processedContent.ctaButtonText && processedContent.ctaButtonLink) {
+      html += `      <div style="text-align: center;">
+      <a href="${processedContent.ctaButtonLink}" class="cta-button">${this.escapeHtml(processedContent.ctaButtonText)}</a>
+    </div>
+`
+    }
+
+    html += `    </div>
+`
+
+    // Footer slot
+    if (processedContent.footerText) {
+      const footerHtml = this.escapeHtml(processedContent.footerText)
+        .replace(/\n/g, '<br>')
+      html += `    <div class="email-footer">
+      ${footerHtml}
+    </div>
+`
+    }
+
+    html += `  </div>
+</body>
+</html>`
+
+    return {
+      html,
+      dimensions: {
+        width,
+        height
+      }
+    }
+  }
+
+  /**
+   * Escape HTML
+   */
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
   }
 }

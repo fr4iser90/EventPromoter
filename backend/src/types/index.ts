@@ -95,6 +95,18 @@ export interface PlatformService {
   getRequirements?(): any
   getOptimizationTips?(content: any): string[]
 
+  // Content processing methods
+  processContentForSave?(content: any): any
+
+  // Preview rendering (schema-driven)
+  renderPreview?(options: {
+    content: Record<string, any>
+    schema: any
+    mode?: string
+    client?: string
+    darkMode?: boolean
+  }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }>
+
   // API integration methods (for future use)
   authenticate?(credentials: any): Promise<boolean>
   validateCredentials?(credentials: any): Promise<boolean>

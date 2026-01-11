@@ -284,8 +284,31 @@ export type PreviewMode =
   | 'custom'
 
 /**
+ * Preview Slot Definition
+ * Defines a layout slot where content should be placed
+ * Schema defines LAYOUT, not rendering - Renderer handles how to render
+ */
+export interface PreviewSlot {
+  /** Slot identifier (e.g., 'header', 'hero', 'body', 'footer') */
+  slot: string
+  /** Content field name (from editor blocks) to fill this slot */
+  field: string
+  /** Display order */
+  order?: number
+  /** Optional: Field fallback chain (try first field, then fallback to second, etc.) */
+  fallback?: string[]
+  /** Optional: Conditional rendering (only show if condition is met) */
+  condition?: {
+    field: string
+    operator: 'exists' | 'notEmpty' | 'equals' | 'notEquals'
+    value?: any
+  }
+}
+
+/**
  * Preview schema
- * Defines how content should be previewed
+ * Defines LAYOUT (slots) and MODES, not rendering details
+ * Renderer (platform service) handles actual HTML generation
  */
 export interface PreviewSchema {
   /** Schema version */
@@ -304,24 +327,11 @@ export interface PreviewSchema {
     width?: number
     height?: number
     aspectRatio?: string
+    /** Optional: Client-specific mode (e.g., 'gmail', 'outlook' for email) */
+    client?: string
   }>
-  /** Content field mapping (defines which content fields to render and how) */
-  contentMapping?: Array<{
-    /** Content field name (from editor blocks) */
-    field: string
-    /** How to render this field */
-    renderAs: 'text' | 'heading' | 'paragraph' | 'html' | 'image' | 'video' | 'link' | 'list' | 'quote' | 'code' | 'markdown' | 'markdown' | 'markdown'
-    /** Display label (optional, uses block label if not specified) */
-    label?: string
-    /** CSS class for this field */
-    className?: string
-    /** Whether to show this field */
-    show?: boolean
-    /** Display order */
-    order?: number
-    /** Custom renderer component (optional) */
-    component?: string
-  }>
+  /** Layout slots - defines WHERE content goes, not HOW it's rendered */
+  slots: PreviewSlot[]
   /** Preview options */
   options?: {
     /** Show metadata */
@@ -332,20 +342,26 @@ export interface PreviewSchema {
     showTimestamp?: boolean
     /** Enable interactive preview */
     interactive?: boolean
-    /** Custom preview component */
-    component?: string
   }
-  /** Preview styling */
+  /** Preview styling tokens (resolved by backend based on darkMode) */
   styling?: {
-    /** Background color */
+    /** Background color token */
     backgroundColor?: string
-    /** Text color */
+    /** Text color token */
     textColor?: string
-    /** Font family */
+    /** Font family (concrete value, not token) */
     fontFamily?: string
-    /** Custom CSS */
-    customCSS?: string
   }
+  /** Legacy: contentMapping (deprecated, use slots instead) */
+  contentMapping?: Array<{
+    field: string
+    renderAs?: string
+    label?: string
+    className?: string
+    show?: boolean
+    order?: number
+    component?: string
+  }>
 }
 
 /**

@@ -29,33 +29,37 @@ export const emailPreviewSchema: PreviewSchema = {
       height: 568
     }
   ],
-  // ✅ Content mapping for schema-driven preview
-  contentMapping: [
+  // ✅ LAYOUT SLOTS: Defines WHERE content goes, not HOW it's rendered
+  // Renderer (EmailService.renderPreview) handles actual HTML generation
+  slots: [
     {
+      slot: 'header',
       field: 'subject',
-      renderAs: 'heading',
-      label: 'Subject',
       order: 1
     },
     {
+      slot: 'hero',
+      field: 'headerImage',
+      order: 2,
+      condition: {
+        field: 'headerImage',
+        operator: 'exists'
+      }
+    },
+    {
+      slot: 'body',
       field: 'body',
-      renderAs: 'html',
-      label: 'Body',
-      order: 2
-    },
-    {
-      field: 'images',
-      renderAs: 'image',
-      label: 'Images',
       order: 3,
-      show: false // Hide in preview, images are embedded in HTML
+      fallback: ['bodyText'] // Try body first, fallback to bodyText (structured fields)
     },
     {
-      field: 'links',
-      renderAs: 'link',
-      label: 'Links',
+      slot: 'footer',
+      field: 'footerText',
       order: 4,
-      show: false // Hide in preview, links are embedded in HTML
+      condition: {
+        field: 'footerText',
+        operator: 'notEmpty'
+      }
     }
   ],
   options: {

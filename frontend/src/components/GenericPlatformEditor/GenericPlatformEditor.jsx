@@ -48,6 +48,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     return uploadedFileRefs.filter(file => file.isImage || file.type?.startsWith('image/'))
   }, [uploadedFileRefs])
 
+
   // CRITICAL: Track _var_ fields separately - update persistentVarFields when _var_ fields change
   useEffect(() => {
     if (!content) {

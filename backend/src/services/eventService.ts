@@ -549,7 +549,23 @@ export class EventService {
           const platform = platformFile.replace('.json', '')
           try {
             const contentPath = path.join(platformContentDir, platformFile)
-            platformContent[platform] = JSON.parse(fs.readFileSync(contentPath, 'utf8'))
+            let content = JSON.parse(fs.readFileSync(contentPath, 'utf8'))
+            
+            // ✅ GENERIC: Process content through platform service if available (for preview/display)
+            try {
+              const { PlatformManager } = await import('../services/platformManager.js')
+              const platformService = await PlatformManager.getPlatformService(platform)
+              
+              // If platform service has processContentForSave method, use it to build HTML from structured fields
+              if (platformService && typeof platformService.processContentForSave === 'function') {
+                content = platformService.processContentForSave(content)
+              }
+            } catch (error: any) {
+              // Platform service not available - use content as-is
+              console.debug(`No content processing for platform ${platform} on load:`, error?.message || 'Unknown error')
+            }
+            
+            platformContent[platform] = content
           } catch (error) {
             console.warn(`Failed to load platform content for ${platform}:`, error)
           }

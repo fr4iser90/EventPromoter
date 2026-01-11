@@ -609,7 +609,23 @@ export class ContentExtractionService {
         const platform = file.replace('.json', '')
         const platformFile = path.join(platformContentDir, file)
         try {
-          platformContent[platform] = JSON.parse(fs.readFileSync(platformFile, 'utf8'))
+          let content = JSON.parse(fs.readFileSync(platformFile, 'utf8'))
+          
+          // ✅ GENERIC: Process content through platform service if available (for preview/display)
+          try {
+            const { PlatformManager } = await import('../services/platformManager.js')
+            const platformService = await PlatformManager.getPlatformService(platform)
+            
+            // If platform service has processContentForSave method, use it to build HTML from structured fields
+            if (platformService && typeof platformService.processContentForSave === 'function') {
+              content = platformService.processContentForSave(content)
+            }
+          } catch (error: any) {
+            // Platform service not available - use content as-is
+            console.debug(`No content processing for platform ${platform} on load:`, error?.message || 'Unknown error')
+          }
+          
+          platformContent[platform] = content
         } catch (error) {
           console.warn(`Failed to load platform content for ${platform}:`, error)
         }
@@ -631,9 +647,24 @@ export class ContentExtractionService {
       fs.mkdirSync(platformContentDir, { recursive: true })
     }
 
+    // ✅ GENERIC: Process content through platform service if available
+    let processedContent = content
+    try {
+      const { PlatformManager } = await import('../services/platformManager.js')
+      const platformService = await PlatformManager.getPlatformService(platform)
+      
+      // If platform service has processContentForSave method, use it
+      if (platformService && typeof platformService.processContentForSave === 'function') {
+        processedContent = platformService.processContentForSave(content)
+      }
+    } catch (error: any) {
+      // Platform service not available or doesn't have processContentForSave - use content as-is
+      console.debug(`No content processing for platform ${platform}:`, error?.message || 'Unknown error')
+    }
+
     // Add lastModified timestamp
     const contentWithTimestamp = {
-      ...content,
+      ...processedContent,
       lastModified: new Date().toISOString()
     }
 
