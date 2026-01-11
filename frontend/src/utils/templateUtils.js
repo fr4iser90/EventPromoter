@@ -160,3 +160,29 @@ export function getTemplateVariableNames(parsedData, uploadedFileRefs = []) {
   return [...new Set(variableNames)] // Remove duplicates
 }
 
+/**
+ * Extract unfulfilled template variables from content
+ * Returns array of variable names that are still in {variableName} format
+ */
+export function getUnfulfilledVariables(content, availableVariables = {}) {
+  if (!content || typeof content !== 'string') {
+    return []
+  }
+
+  // Find all {variableName} patterns
+  const variablePattern = /\{([a-zA-Z0-9_]+)\}/g
+  const matches = []
+  let match
+
+  while ((match = variablePattern.exec(content)) !== null) {
+    const variableName = match[1]
+    // Only include if not in availableVariables
+    if (!availableVariables[variableName]) {
+      matches.push(variableName)
+    }
+  }
+
+  // Remove duplicates
+  return [...new Set(matches)]
+}
+

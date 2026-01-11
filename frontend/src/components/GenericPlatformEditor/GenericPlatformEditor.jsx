@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Paper,
@@ -8,14 +8,24 @@ import {
   CircularProgress,
   Alert,
   Button,
-  useTheme
+  useTheme,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Collapse,
+  IconButton,
+  Avatar,
+  TextField
 } from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import DescriptionIcon from '@mui/icons-material/Description'
 import { usePlatformSchema } from '../../hooks/usePlatformSchema'
 import SchemaRenderer from '../SchemaRenderer/SchemaRenderer'
 import TemplateSelector from '../TemplateEditor/TemplateSelector'
 import useStore from '../../store'
-import { getTemplateVariables, replaceTemplateVariables } from '../../utils/templateUtils'
+import { getTemplateVariables, replaceTemplateVariables, getUnfulfilledVariables } from '../../utils/templateUtils'
 import config from '../../config'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect, onBatchChange }) {
@@ -26,6 +36,45 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { parsedData, uploadedFileRefs } = useStore()
+  const [unfulfilledVarsOpen, setUnfulfilledVarsOpen] = useState(false)
+  const [unfulfilledVariables, setUnfulfilledVariables] = useState({})
+
+  // Get available images for image selection (memoized to prevent hook issues)
+  const availableImages = useMemo(() => {
+    return uploadedFileRefs.filter(file => file.isImage || file.type?.startsWith('image/'))
+  }, [uploadedFileRefs])
+
+  // Check for unfulfilled template variables in content
+  useEffect(() => {
+    if (!content) {
+      setUnfulfilledVariables({})
+      setUnfulfilledVarsOpen(false)
+      return
+    }
+
+    const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
+    const unfulfilled = {}
+    const allMissingVars = new Set()
+
+    // Check all content fields for unfulfilled variables
+    Object.entries(content).forEach(([fieldName, fieldValue]) => {
+      if (typeof fieldValue === 'string') {
+        const missing = getUnfulfilledVariables(fieldValue, templateVariables)
+        if (missing.length > 0) {
+          unfulfilled[fieldName] = missing
+          missing.forEach(v => allMissingVars.add(v))
+        }
+      }
+    })
+
+    setUnfulfilledVariables(unfulfilled)
+    // Auto-expand if there are unfulfilled variables
+    if (allMissingVars.size > 0) {
+      setUnfulfilledVarsOpen(true)
+    } else {
+      setUnfulfilledVarsOpen(false)
+    }
+  }, [content, parsedData, uploadedFileRefs])
 
   // Load platform configuration from backend - NO FALLBACKS
   useEffect(() => {
@@ -215,6 +264,56 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     return Object.values(content).filter(v => typeof v === 'string').join('\n')
   }
 
+  // Render image selector for image fields
+  const renderImageSelector = (block, field) => {
+    const fieldValue = content?.[block.id]
+    const imageUrl = fieldValue?.startsWith('http') ? fieldValue : fieldValue ? `http://localhost:4000${fieldValue}` : null
+
+    return (
+      <FormControl key={block.id} fullWidth sx={{ mb: 2 }}>
+        <InputLabel>{block.label}</InputLabel>
+        <Select
+          value={fieldValue || ''}
+          onChange={(e) => onChange(block.id, e.target.value)}
+          label={block.label}
+          renderValue={(selected) => {
+            if (!selected) return 'No image selected'
+            const selectedFile = availableImages.find(img => {
+              const imgUrl = img.url?.startsWith('http') ? img.url : `http://localhost:4000${img.url}`
+              return imgUrl === selected || img.url === selected
+            })
+            return selectedFile ? selectedFile.name : 'Selected image'
+          }}
+        >
+          <MenuItem value="">
+            <em>No image</em>
+          </MenuItem>
+          {availableImages.map((file, index) => {
+            const fileUrl = file.url?.startsWith('http') ? file.url : `http://localhost:4000${file.url}`
+            return (
+              <MenuItem key={index} value={fileUrl}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar
+                    src={fileUrl}
+                    alt={file.name}
+                    variant="rounded"
+                    sx={{ width: 40, height: 40 }}
+                  />
+                  <Typography variant="body2">{file.name}</Typography>
+                </Box>
+              </MenuItem>
+            )
+          })}
+        </Select>
+        {block.description && (
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            {block.description}
+          </Typography>
+        )}
+      </FormControl>
+    )
+  }
+
   // Use schema-driven editor if available
   const editorSchema = schema?.editor || platformConfig?.schema?.editor
   const editorBlocks = editorSchema?.blocks || []
@@ -275,8 +374,18 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                 action: rendering.action
               }
 
-              // ✅ Handle media blocks (image/video) - use file input if fieldType is 'file'
-              if ((block.type === 'image' || block.type === 'video') && fieldType === 'file') {
+              // ✅ Handle image blocks - use image selector if images are available
+              if (block.type === 'image') {
+                if (availableImages.length > 0) {
+                  return renderImageSelector(block, field)
+                } else {
+                  // No images uploaded - don't show anything
+                  return null
+                }
+              }
+
+              // ✅ Handle video blocks - use file input
+              if (block.type === 'video' && fieldType === 'file') {
                 return (
                   <Box key={block.id} sx={{ mb: 2 }}>
                     <SchemaRenderer
@@ -321,6 +430,80 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         <Alert severity="info" sx={{ mt: 2 }}>
           No editor schema available for this platform. Please configure the platform schema in the backend.
         </Alert>
+      )}
+
+      {/* Dynamic Template Variables Section */}
+      {Object.keys(unfulfilledVariables).length > 0 && (
+        <Box sx={{ mt: 3, borderTop: 1, borderColor: 'divider', pt: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'warning.main' }}>
+              ⚠️ Additional Template Variables Required
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setUnfulfilledVarsOpen(!unfulfilledVarsOpen)}
+            >
+              {unfulfilledVarsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+            These variables are used in your template but haven't been filled yet. Please provide values:
+          </Typography>
+          
+          <Collapse in={unfulfilledVarsOpen}>
+            <Box sx={{ mt: 2 }}>
+              {(() => {
+                // Collect all unique variables across all fields
+                const allVars = new Set()
+                Object.values(unfulfilledVariables).forEach(vars => {
+                  vars.forEach(v => allVars.add(v))
+                })
+                const uniqueVars = Array.from(allVars)
+
+                return (
+                  <>
+                    {/* Show all unique variables once */}
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                      {uniqueVars.map((varName) => (
+                        <Chip key={varName} label={`{${varName}}`} size="small" color="warning" />
+                      ))}
+                    </Box>
+                    {/* Show input fields for each unique variable */}
+                    {uniqueVars.map((varName) => (
+                      <TextField
+                        key={varName}
+                        fullWidth
+                        label={`${varName} (for {${varName}})`}
+                        placeholder={`Enter value for ${varName}...`}
+                        value={content?.[`_var_${varName}`] || ''}
+                        onChange={(e) => {
+                          const newValue = e.target.value
+                          onChange(`_var_${varName}`, newValue)
+                          
+                          // Auto-replace in ALL fields that contain this variable
+                          Object.keys(unfulfilledVariables).forEach(fieldName => {
+                            if (unfulfilledVariables[fieldName].includes(varName)) {
+                              const fieldValue = content?.[fieldName]
+                              if (typeof fieldValue === 'string') {
+                                const updatedValue = fieldValue.replace(
+                                  new RegExp(`\\{${varName}\\}`, 'g'),
+                                  newValue
+                                )
+                                onChange(fieldName, updatedValue)
+                              }
+                            }
+                          })
+                        }}
+                        sx={{ mb: 1 }}
+                        size="small"
+                      />
+                    ))}
+                  </>
+                )
+              })()}
+            </Box>
+          </Collapse>
+        </Box>
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
