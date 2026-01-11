@@ -6,7 +6,7 @@ export const eventAnnouncementTemplate: EmailTemplate = {
   description: 'A comprehensive email template for event announcements with detailed information and call-to-action',
   category: 'announcement',
   template: {
-    subject: '🎉 {eventTitle} - {date} at {venue}',
+    subject: '🎉 {title} - {date} at {venue}',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -23,7 +23,7 @@ export const eventAnnouncementTemplate: EmailTemplate = {
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎉 {eventTitle}</h1>
+      <h1>🎉 {title}</h1>
       <p>You're invited to an amazing event!</p>
     </div>
 

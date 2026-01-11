@@ -6,7 +6,7 @@ export const basicEventAnnouncementTemplate: RedditTemplate = {
   description: 'A simple Reddit post template for basic event announcements',
   category: 'announcement',
   template: {
-    title: '[EVENT] {eventTitle} - {date}',
+    title: '[EVENT] {title} - {date}',
     text: `**Event Details:**
 - **Date:** {date}
 - **Time:** {time}

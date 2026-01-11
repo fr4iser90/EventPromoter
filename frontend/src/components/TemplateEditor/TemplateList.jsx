@@ -112,7 +112,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
     const templateSchema = schema?.template
     if (!templateSchema?.defaultStructure) {
       // Fallback if no schema
-      return { text: '{eventTitle} - {description}' }
+      return { text: '{title} - {description}' }
     }
 
     // Build default structure from schema

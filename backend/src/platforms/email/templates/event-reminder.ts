@@ -6,7 +6,7 @@ export const eventReminderTemplate: EmailTemplate = {
   description: 'An email template for sending event reminders with preparation tips and event details',
   category: 'reminder',
   template: {
-    subject: '📅 Reminder: {eventTitle} tomorrow at {venue}',
+    subject: '📅 Reminder: {title} tomorrow at {venue}',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -23,12 +23,12 @@ export const eventReminderTemplate: EmailTemplate = {
   <div class="container">
     <div class="reminder">
       <h2>📅 EVENT REMINDER</h2>
-      <p>{eventTitle} is tomorrow!</p>
+      <p>{title} is tomorrow!</p>
     </div>
 
     <div class="details">
       <h3>Your Event Details</h3>
-      <p><strong>🎉 Event:</strong> {eventTitle}</p>
+      <p><strong>🎉 Event:</strong> {title}</p>
       <p><strong>📅 Date:</strong> {date}</p>
       <p><strong>🕐 Time:</strong> {time}</p>
       <p><strong>📍 Location:</strong> {venue}, {city}</p>

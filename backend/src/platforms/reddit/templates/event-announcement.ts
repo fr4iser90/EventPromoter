@@ -6,7 +6,7 @@ export const eventAnnouncementTemplate: RedditTemplate = {
   description: 'A Reddit post template for announcing events with markdown formatting',
   category: 'announcement',
   template: {
-    title: '[EVENT] {eventTitle} - {date}',
+    title: '[EVENT] {title} - {date}',
     text: `**Event Details:**
 - **Date:** {date}
 - **Time:** {time}
@@ -15,7 +15,7 @@ export const eventAnnouncementTemplate: RedditTemplate = {
 
 **Tickets/Info:** {link}
 
-We're excited to announce {eventTitle}! This promises to be an amazing event with great music, atmosphere, and people.
+We're excited to announce {title}! This promises to be an amazing event with great music, atmosphere, and people.
 
 **What to expect:**
 - {highlights}

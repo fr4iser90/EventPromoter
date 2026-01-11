@@ -38,7 +38,7 @@
     "managementSystem": "📝 Template Management System",
     "preview": "Template Preview",
     "usage": "💡 Template Usage",
-    "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{eventTitle}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
+    "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{title}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
     "defaultTemplates": "Default templates",
     "customTemplates": "Custom templates",
     "defaultTemplatesNote": "cannot be modified but serve as examples.",

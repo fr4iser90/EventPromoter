@@ -6,7 +6,7 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
   description: 'A simple and clean email template for announcing events with basic event details',
   category: 'announcement',
   template: {
-    subject: '🎉 {eventTitle} - {date}',
+    subject: '🎉 {title} - {date}',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -18,7 +18,7 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
 </head>
 <body>
   <div class="container">
-    <h1>🎉 {eventTitle}</h1>
+    <h1>🎉 {title}</h1>
     <p><strong>📅 Date:</strong> {date}</p>
     <p><strong>🕐 Time:</strong> {time}</p>
     <p><strong>📍 Location:</strong> {venue}, {city}</p>

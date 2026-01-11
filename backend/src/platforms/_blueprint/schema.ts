@@ -174,7 +174,7 @@ export const platformIdSchema: PlatformSchema = {
       text: {
         label: 'Content',
         type: 'text',
-        default: '{eventTitle} - {description}',
+        default: '{title} - {description}',
         placeholder: 'Use {variable} for dynamic content',
         required: true,
         description: 'Content template'

@@ -9,7 +9,7 @@ export const djSetDiscussionTemplate: RedditTemplate = {
     title: 'DJ {djName} at {venue} - Set Discussion',
     text: `Just caught DJ {djName} at {venue} last night and wanted to discuss the set!
 
-**Event:** {eventTitle}
+**Event:** {title}
 **Venue:** {venue}, {city}
 **Date:** {date}
 

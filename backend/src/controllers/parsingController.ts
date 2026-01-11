@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import path from 'path'
 import fs from 'fs'
-import { ContentExtractionService, DuplicateCheckResult } from '../services/contentParsingService.js'
+import { ContentExtractionService, DuplicateCheckResult } from '../services/parsing/contentParsingService.js'
 import { ParsedEventData } from '../types/index.js'
 import { PlatformParsingService } from '../services/platformParsingService.js'
 import { UploadedFile } from '../types/index.js'

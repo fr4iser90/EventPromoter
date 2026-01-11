@@ -38,11 +38,38 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   const { parsedData, uploadedFileRefs } = useStore()
   const [unfulfilledVarsOpen, setUnfulfilledVarsOpen] = useState(false)
   const [unfulfilledVariables, setUnfulfilledVariables] = useState({})
+  // Track original content with variables for undo functionality
+  const [originalContentWithVars, setOriginalContentWithVars] = useState({})
+  // CRITICAL: Track _var_ fields separately - they persist even if variable is replaced in content
+  const [persistentVarFields, setPersistentVarFields] = useState(new Set())
 
   // Get available images for image selection (memoized to prevent hook issues)
   const availableImages = useMemo(() => {
     return uploadedFileRefs.filter(file => file.isImage || file.type?.startsWith('image/'))
   }, [uploadedFileRefs])
+
+  // CRITICAL: Track _var_ fields separately - update persistentVarFields when _var_ fields change
+  useEffect(() => {
+    if (!content) {
+      setPersistentVarFields(new Set())
+      return
+    }
+
+    const newPersistentVars = new Set()
+    Object.keys(content).forEach(key => {
+      if (key.startsWith('_var_')) {
+        const varName = key.replace('_var_', '')
+        const varValue = content[key]
+        
+        // If _var_ field has ANY value, add to persistent set
+        if (varValue !== null && varValue !== undefined && String(varValue).length > 0) {
+          newPersistentVars.add(varName)
+        }
+      }
+    })
+    
+    setPersistentVarFields(newPersistentVars)
+  }, [content])
 
   // Check for unfulfilled template variables in content
   useEffect(() => {
@@ -56,16 +83,56 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     const unfulfilled = {}
     const allMissingVars = new Set()
 
-    // Check all content fields for unfulfilled variables
+    // CRITICAL: FIRST check persistentVarFields - these ALWAYS stay visible
+    // This is the PERSISTENCE rule - field NEVER disappears if _var_ has value
+    persistentVarFields.forEach(varName => {
+      allMissingVars.add(varName)
+      
+      // Find a field to associate this variable with
+      const contentFields = Object.keys(content).filter(k => !k.startsWith('_var_') && typeof content[k] === 'string')
+      const firstField = contentFields[0] || 'body'
+      
+      if (!unfulfilled[firstField]) {
+        unfulfilled[firstField] = []
+      }
+      
+      if (!unfulfilled[firstField].includes(varName)) {
+        unfulfilled[firstField].push(varName)
+      }
+    })
+
+    // SECOND: Check content fields for unfulfilled variables (only if not already persistent)
     Object.entries(content).forEach(([fieldName, fieldValue]) => {
+      // Skip _var_ fields
+      if (fieldName.startsWith('_var_')) return
+      
       if (typeof fieldValue === 'string') {
         const missing = getUnfulfilledVariables(fieldValue, templateVariables)
         if (missing.length > 0) {
-          unfulfilled[fieldName] = missing
-          missing.forEach(v => allMissingVars.add(v))
+          // Only add if not already handled by persistentVarFields
+          missing.forEach(v => {
+            if (!allMissingVars.has(v)) {
+              allMissingVars.add(v)
+              if (!unfulfilled[fieldName]) {
+                unfulfilled[fieldName] = []
+              }
+              if (!unfulfilled[fieldName].includes(v)) {
+                unfulfilled[fieldName].push(v)
+              }
+            }
+          })
         }
       }
     })
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[UnfulfilledVars] Final state:', {
+        unfulfilled,
+        allMissingVars: Array.from(allMissingVars),
+        persistentVars: Array.from(persistentVarFields),
+        contentKeys: Object.keys(content).filter(k => k.startsWith('_var_'))
+      })
+    }
 
     setUnfulfilledVariables(unfulfilled)
     // Auto-expand if there are unfulfilled variables
@@ -74,7 +141,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     } else {
       setUnfulfilledVarsOpen(false)
     }
-  }, [content, parsedData, uploadedFileRefs])
+  }, [content, parsedData, uploadedFileRefs, persistentVarFields])
 
   // Load platform configuration from backend - NO FALLBACKS
   useEffect(() => {
@@ -173,6 +240,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     const editorBlocks = editorSchema?.blocks || []
     
     const newContent = { ...content }
+    const originalContent = {} // Track original content with variables for undo
     
     // Replace variables in each field
     editorBlocks.forEach(block => {
@@ -193,6 +261,8 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       }
       
       if (fieldValue) {
+        // Store original content with variables for undo
+        originalContent[fieldName] = fieldValue
         // Replace template variables with actual values
         const replacedValue = replaceTemplateVariables(fieldValue, templateVariables)
         newContent[fieldName] = replacedValue
@@ -206,6 +276,8 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       )
       if (firstTextBlock) {
         const templateText = templateContent.html || templateContent.text
+        // Store original content with variables for undo
+        originalContent[firstTextBlock.id] = templateText
         newContent[firstTextBlock.id] = replaceTemplateVariables(templateText, templateVariables)
       }
     }
@@ -244,6 +316,9 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     // Update all fields at once by merging with current content
     // This ensures all fields are set in one operation
     const updatedContent = { ...content, ...fieldsToUpdate }
+    
+    // Store original content with variables for undo
+    setOriginalContentWithVars(originalContent)
     
     // If onBatchChange is available, use it to set all fields at once
     // Otherwise, fall back to individual onChange calls
@@ -478,18 +553,69 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                         value={content?.[`_var_${varName}`] || ''}
                         onChange={(e) => {
                           const newValue = e.target.value
+                          const oldValue = content?.[`_var_${varName}`] || ''
+                          
+                          // Update _var_ field (persistence)
                           onChange(`_var_${varName}`, newValue)
                           
-                          // Auto-replace in ALL fields that contain this variable
-                          Object.keys(unfulfilledVariables).forEach(fieldName => {
-                            if (unfulfilledVariables[fieldName].includes(varName)) {
-                              const fieldValue = content?.[fieldName]
-                              if (typeof fieldValue === 'string') {
-                                const updatedValue = fieldValue.replace(
-                                  new RegExp(`\\{${varName}\\}`, 'g'),
-                                  newValue
-                                )
-                                onChange(fieldName, updatedValue)
+                          // Live replacement: Replace variable in ALL content fields
+                          Object.keys(content).forEach(fieldName => {
+                            // Skip _var_ fields
+                            if (fieldName.startsWith('_var_')) return
+                            
+                            const fieldValue = content?.[fieldName]
+                            if (typeof fieldValue === 'string') {
+                              if (newValue) {
+                                // Replace variable with new value (or update existing replacement)
+                                let updatedValue = fieldValue
+                                
+                                // If variable still exists, replace it
+                                if (fieldValue.includes(`{${varName}}`)) {
+                                  updatedValue = fieldValue.replace(
+                                    new RegExp(`\\{${varName}\\}`, 'g'),
+                                    newValue
+                                  )
+                                } else if (oldValue && fieldValue.includes(oldValue)) {
+                                  // If old value exists, replace it with new value (update)
+                                  updatedValue = fieldValue.replace(
+                                    new RegExp(oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+                                    newValue
+                                  )
+                                } else {
+                                  // Check original content for variable
+                                  const originalField = originalContentWithVars[fieldName]
+                                  if (originalField && originalField.includes(`{${varName}}`)) {
+                                    // Replace in original content
+                                    updatedValue = originalField.replace(
+                                      new RegExp(`\\{${varName}\\}`, 'g'),
+                                      newValue
+                                    )
+                                  }
+                                }
+                                
+                                if (updatedValue !== fieldValue) {
+                                  onChange(fieldName, updatedValue)
+                                }
+                              } else {
+                                // Undo: Restore variable from original content
+                                const originalField = originalContentWithVars[fieldName]
+                                if (originalField && originalField.includes(`{${varName}}`)) {
+                                  // Restore original content with variable
+                                  let restoredValue = fieldValue
+                                  
+                                  // Replace old value with variable
+                                  if (oldValue && fieldValue.includes(oldValue)) {
+                                    restoredValue = fieldValue.replace(
+                                      new RegExp(oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+                                      `{${varName}}`
+                                    )
+                                  } else {
+                                    // Use original content
+                                    restoredValue = originalField
+                                  }
+                                  
+                                  onChange(fieldName, restoredValue)
+                                }
                               }
                             }
                           })

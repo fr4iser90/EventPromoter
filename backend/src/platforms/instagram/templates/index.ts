@@ -6,7 +6,8 @@
  * @module platforms/instagram/templates
  */
 
-// Export types
+// Import and export types
+import type { InstagramTemplate } from './types'
 export type { InstagramTemplate } from './types'
 
 // Import templates first

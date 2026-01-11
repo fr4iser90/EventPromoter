@@ -16,7 +16,7 @@ export const emailTemplateSchema: TemplateSchema = {
     subject: {
       label: 'Email Subject',
       type: 'text',
-      default: 'New Event: {eventTitle}',
+      default: 'New Event: {title}',
       placeholder: 'Use {variable} for dynamic content',
       required: true,
       description: 'Email subject line template'
@@ -24,7 +24,7 @@ export const emailTemplateSchema: TemplateSchema = {
     html: {
       label: 'Email HTML Content',
       type: 'html',
-      default: '<h1>{eventTitle}</h1><p>{description}</p>',
+      default: '<h1>{title}</h1><p>{description}</p>',
       placeholder: 'Use {variable} for dynamic content',
       required: true,
       description: 'HTML email body template'

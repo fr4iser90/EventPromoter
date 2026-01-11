@@ -6,7 +6,8 @@
  * @module platforms/twitter/templates
  */
 
-// Export types
+// Import and export types
+import type { EventTemplate } from './types'
 export type { EventTemplate } from './types'
 
 // Import templates first

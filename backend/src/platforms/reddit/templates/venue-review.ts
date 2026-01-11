@@ -11,7 +11,7 @@ export const venueReviewTemplate: RedditTemplate = {
 
 **Venue:** {venue}
 **Location:** {city}
-**Event:** {eventTitle}
+**Event:** {title}
 **Date:** {date}
 
 **Rating:** {rating}/10

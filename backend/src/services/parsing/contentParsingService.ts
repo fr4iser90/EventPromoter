@@ -5,7 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
 import yaml from 'js-yaml'
-import { UploadedFile, ParsedEventData } from '../types/index.js'
+import { UploadedFile, ParsedEventData } from '../../types/index.js'
 
 export interface DuplicateCheckResult {
   isDuplicate: boolean

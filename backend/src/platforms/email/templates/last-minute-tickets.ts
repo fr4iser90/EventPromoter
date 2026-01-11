@@ -6,7 +6,7 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
   description: 'An urgent email template for last-minute ticket sales with countdown and special pricing',
   category: 'urgent',
   template: {
-    subject: '⏰ LAST CHANCE: {eventTitle} - Limited Tickets Available!',
+    subject: '⏰ LAST CHANCE: {title} - Limited Tickets Available!',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -24,11 +24,11 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
   <div class="container">
     <div class="urgent">
       <h2>🚨 LAST MINUTE OPPORTUNITY!</h2>
-      <p>Limited tickets still available for {eventTitle}</p>
+      <p>Limited tickets still available for {title}</p>
     </div>
 
     <div style="text-align: center; margin: 30px 0;">
-      <h1>{eventTitle}</h1>
+      <h1>{title}</h1>
       <p style="font-size: 18px; color: #666;">{date} at {venue}</p>
     </div>
 
@@ -49,7 +49,7 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
     </div>
 
     <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
-      <h3>Why attend {eventTitle}?</h3>
+      <h3>Why attend {title}?</h3>
       <ul>
         {highlights}
       </ul>

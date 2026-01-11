@@ -6,7 +6,7 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
   description: 'A professional email template with header styling for corporate events and networking',
   category: 'announcement',
   template: {
-    subject: '📅 {eventTitle} - Professional Event Invitation',
+    subject: '📅 {title} - Professional Event Invitation',
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -20,7 +20,7 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
 <body>
   <div class="container">
     <div class="header">
-      <h1>📅 {eventTitle}</h1>
+      <h1>📅 {title}</h1>
     </div>
     <p>Dear Colleague,</p>
     <p>We are pleased to invite you to join us for an exciting professional event.</p>

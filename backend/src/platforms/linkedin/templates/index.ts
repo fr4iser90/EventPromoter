@@ -6,7 +6,8 @@
  * @module platforms/linkedin/templates
  */
 
-// Export types
+// Import and export types
+import type { LinkedInTemplate } from './types'
 export type { LinkedInTemplate } from './types'
 
 // Import templates first

@@ -56,7 +56,7 @@
     ]
   },
   "templates": {
-    "subject": "{{eventTitle}} - {{formattedDate}}",
+    "subject": "{{title}} - {{formattedDate}}",
     "signature": "\n\n--\nYour Event Team\nwww.yourevents.com\n📧 events@yourdomain.com"
   },
   "rateLimits": {

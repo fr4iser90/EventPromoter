@@ -6,7 +6,8 @@
  * @module platforms/facebook/templates
  */
 
-// Export types
+// Import and export types
+import type { FacebookTemplate } from './types'
 export type { FacebookTemplate } from './types'
 
 // Import templates first

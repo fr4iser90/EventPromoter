@@ -310,7 +310,7 @@ export interface PreviewSchema {
     /** Content field name (from editor blocks) */
     field: string
     /** How to render this field */
-    renderAs: 'text' | 'heading' | 'paragraph' | 'html' | 'image' | 'video' | 'link' | 'list' | 'quote' | 'code'
+    renderAs: 'text' | 'heading' | 'paragraph' | 'html' | 'image' | 'video' | 'link' | 'list' | 'quote' | 'code' | 'markdown' | 'markdown' | 'markdown'
     /** Display label (optional, uses block label if not specified) */
     label?: string
     /** CSS class for this field */

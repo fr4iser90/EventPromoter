@@ -60,8 +60,7 @@ const useStore = create((set, get) => ({
     // Load global configurations
     await get().loadGlobalConfigs()
 
-    // Load last selected platforms if no platforms are currently selected
-    get().loadLastSelectedPlatforms()
+    // NOTE: selectedPlatforms are event-specific only, not loaded from user preferences
   },
 
   // Save workspace to backend whenever state changes
@@ -356,7 +355,7 @@ const useStore = create((set, get) => ({
 
   // User preferences
   userPreferences: {
-    lastSelectedPlatforms: [],
+    // NOTE: lastSelectedPlatforms removed - platforms are event-specific only
     defaultHashtags: [],
     uiPreferences: {
       darkMode: false
@@ -597,31 +596,15 @@ const useStore = create((set, get) => ({
     get().updateWorkflowState()
     
     // Save immediately when platforms change (unless skipSave is true, e.g., during load)
+    // NOTE: selectedPlatforms are event-specific only, saved in event.json, not in user preferences
     if (!skipSave) {
       // Use debounced save to avoid too many API calls when toggling multiple platforms quickly
       get().debouncedSave()
-      
-      // Save last selected platforms to user preferences
-      if (newPlatforms.length > 0) {
-        get().updateUserPreferences({ lastSelectedPlatforms: newPlatforms })
-      }
     }
   },
 
-  // Load last selected platforms from user preferences
-  // Only loads if no platforms are currently selected AND no current event exists
-  loadLastSelectedPlatforms: () => {
-    const state = get()
-    // Only load from preferences if:
-    // 1. No platforms are currently selected
-    // 2. No current event exists (to avoid overwriting event-specific platforms)
-    if (state.selectedPlatforms.length === 0 && 
-        !state.currentEvent && 
-        state.userPreferences?.lastSelectedPlatforms?.length > 0) {
-      console.log('Loading last selected platforms from preferences:', state.userPreferences.lastSelectedPlatforms)
-      get().setSelectedPlatforms(state.userPreferences.lastSelectedPlatforms, false) // Allow save for preferences
-    }
-  },
+  // NOTE: loadLastSelectedPlatforms removed - selectedPlatforms are event-specific only
+  // Platforms are only stored in event.json, not in user preferences
   platformSettings: {},
   setPlatformSettings: (settings) => {
     set({ platformSettings: settings })

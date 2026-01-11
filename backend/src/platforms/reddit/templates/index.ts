@@ -6,7 +6,8 @@
  * @module platforms/reddit/templates
  */
 
-// Export types
+// Import and export types
+import type { RedditTemplate } from './types'
 export type { RedditTemplate } from './types'
 
 // Import templates first

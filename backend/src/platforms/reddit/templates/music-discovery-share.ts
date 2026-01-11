@@ -7,11 +7,11 @@ export const musicDiscoveryShareTemplate: RedditTemplate = {
   category: 'music',
   template: {
     title: 'Just discovered this amazing track - thoughts?',
-    text: `Found this track through {eventTitle} at {venue} and it's been on repeat!
+    text: `Found this track through {title} at {venue} and it's been on repeat!
 
 **Track:** {trackName}
 **Artist:** {artist}
-**Played at:** {eventTitle} - {venue}, {city}
+**Played at:** {title} - {venue}, {city}
 
 **Why I love it:**
 - {reasons}

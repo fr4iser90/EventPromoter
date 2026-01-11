@@ -6,10 +6,10 @@ export const professionalEventAnnouncementTemplate: RedditTemplate = {
   description: 'A formal Reddit post template for professional events and networking',
   category: 'announcement',
   template: {
-    title: '[EVENT] {eventTitle} - {date}',
+    title: '[EVENT] {title} - {date}',
     text: `**Event Announcement**
 
-We are pleased to announce {eventTitle}.
+We are pleased to announce {title}.
 
 **Event Details:**
 - **Date:** {date}
