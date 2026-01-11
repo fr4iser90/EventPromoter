@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { validatePlatforms, validateEventData, validateUrl } from './utils/validation'
+import { validatePlatforms, validateEventData, validateUrl } from './shared/utils/validation'
 import axios from 'axios'
 import config from './config'
 

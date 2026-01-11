@@ -29,6 +29,36 @@ export const redditPreviewSchema: PreviewSchema = {
       height: 500
     }
   ],
+  slots: [
+    {
+      slot: 'title',
+      field: 'title',
+      order: 1
+    },
+    {
+      slot: 'content',
+      field: 'text',
+      order: 2
+    },
+    {
+      slot: 'media',
+      field: 'image',
+      order: 3,
+      condition: {
+        field: 'image',
+        operator: 'exists'
+      }
+    },
+    {
+      slot: 'link',
+      field: 'link',
+      order: 4,
+      condition: {
+        field: 'link',
+        operator: 'exists'
+      }
+    }
+  ],
   options: {
     showMetadata: true,
     showTimestamp: true,

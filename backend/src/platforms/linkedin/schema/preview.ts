@@ -29,6 +29,31 @@ export const linkedinPreviewSchema: PreviewSchema = {
       height: 500
     }
   ],
+  slots: [
+    {
+      slot: 'content',
+      field: 'text',
+      order: 1
+    },
+    {
+      slot: 'media',
+      field: 'image',
+      order: 2,
+      condition: {
+        field: 'image',
+        operator: 'exists'
+      }
+    },
+    {
+      slot: 'link',
+      field: 'link',
+      order: 3,
+      condition: {
+        field: 'link',
+        operator: 'exists'
+      }
+    }
+  ],
   options: {
     showMetadata: true,
     showTimestamp: true,

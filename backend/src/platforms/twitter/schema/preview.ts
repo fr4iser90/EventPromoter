@@ -29,6 +29,22 @@ export const twitterPreviewSchema: PreviewSchema = {
       height: 400
     }
   ],
+  slots: [
+    {
+      slot: 'content',
+      field: 'text',
+      order: 1
+    },
+    {
+      slot: 'media',
+      field: 'image',
+      order: 2,
+      condition: {
+        field: 'image',
+        operator: 'exists'
+      }
+    }
+  ],
   options: {
     showMetadata: true,
     showTimestamp: true,

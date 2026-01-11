@@ -12,7 +12,7 @@ export const emailEditorSchema: EditorSchema = {
   version: '2.0.0',
   title: 'Email Content Editor',
   description: 'Create and edit email content with structured fields',
-  mode: 'structured',
+  mode: 'advanced',
   blocks: [
     {
       type: 'text',
@@ -79,8 +79,7 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Enter your email content here...',
-        rows: 8
+        placeholder: 'Enter your email content here...'
       }
     },
     {
@@ -138,8 +137,7 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Optional footer text...',
-        rows: 3
+        placeholder: 'Optional footer text...'
       }
     },
     // Legacy fields for backward compatibility

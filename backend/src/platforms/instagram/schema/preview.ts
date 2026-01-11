@@ -29,6 +29,22 @@ export const instagramPreviewSchema: PreviewSchema = {
       height: 600
     }
   ],
+  slots: [
+    {
+      slot: 'media',
+      field: 'image',
+      order: 1,
+      condition: {
+        field: 'image',
+        operator: 'exists'
+      }
+    },
+    {
+      slot: 'content',
+      field: 'caption',
+      order: 2
+    }
+  ],
   options: {
     showMetadata: true,
     showTimestamp: true,

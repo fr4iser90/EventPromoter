@@ -139,6 +139,22 @@ export const platformIdSchema: PlatformSchema = {
         height: 568
       }
     ],
+    slots: [
+      {
+        slot: 'content',
+        field: 'text',
+        order: 1
+      },
+      {
+        slot: 'media',
+        field: 'images',
+        order: 2,
+        condition: {
+          field: 'images',
+          operator: 'exists'
+        }
+      }
+    ],
     contentMapping: [
       {
         field: 'text',

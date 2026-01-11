@@ -613,7 +613,7 @@ export class ContentExtractionService {
           
           // ✅ GENERIC: Process content through platform service if available (for preview/display)
           try {
-            const { PlatformManager } = await import('../services/platformManager.js')
+            const { PlatformManager } = await import('../platformManager.js')
             const platformService = await PlatformManager.getPlatformService(platform)
             
             // If platform service has processContentForSave method, use it to build HTML from structured fields
@@ -650,7 +650,7 @@ export class ContentExtractionService {
     // ✅ GENERIC: Process content through platform service if available
     let processedContent = content
     try {
-      const { PlatformManager } = await import('../services/platformManager.js')
+      const { PlatformManager } = await import('../platformManager.js')
       const platformService = await PlatformManager.getPlatformService(platform)
       
       // If platform service has processContentForSave method, use it
