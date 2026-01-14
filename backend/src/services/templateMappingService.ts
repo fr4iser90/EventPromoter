@@ -8,15 +8,18 @@ import { getTemplateVariables, replaceTemplateVariables } from './parsing/templa
 import { PlatformManager } from './platformManager.js'
 import { getPlatformRegistry, initializePlatformRegistry } from './platformRegistry.js'
 
+// Content value types that can be stored in editor content
+type ContentValue = string | number | boolean | null | undefined
+
 export interface TemplateMappingRequest {
   templateId: string
   parsedData?: ParsedEventData | null
   uploadedFileRefs?: Array<{ url: string; type: string; isImage?: boolean }>
-  existingContent?: Record<string, any>
+  existingContent?: Record<string, ContentValue>
 }
 
 export interface TemplateMappingResult {
-  content: Record<string, any>
+  content: Record<string, ContentValue>
   templateId: string
   variables: Record<string, string>
 }
@@ -72,7 +75,7 @@ export class TemplateMappingService {
     const templateContent = template.template || {}
 
     // Start with existing content (if any)
-    const newContent: Record<string, any> = {
+    const newContent: Record<string, ContentValue> = {
       ...(request.existingContent || {}),
       _templateId: template.id
     }
@@ -186,7 +189,8 @@ export class TemplateMappingService {
     }
 
     // Extract variables from template content (look for {variable} patterns)
-    const templateContent = template.template as string | Record<string, any>
+    // Template content can be a string (LinkedIn/Twitter) or an object (Email/Reddit)
+    const templateContent = template.template as string | Record<string, string>
     if (typeof templateContent === 'string') {
       const matches = templateContent.match(/\{([^}]+)\}/g)
       if (matches) {

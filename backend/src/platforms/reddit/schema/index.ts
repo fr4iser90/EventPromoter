@@ -13,6 +13,7 @@ import { PlatformSchema } from '../../../types/platformSchema.js'
 import { redditSettingsSchema } from './settings.js'
 import { redditEditorSchema } from './editor.js'
 import { redditPreviewSchema } from './preview.js'
+import { redditPanelSchema } from './panel.js'
 
 /**
  * Complete Reddit Platform Schema
@@ -25,6 +26,7 @@ export const redditSchema: PlatformSchema = {
   settings: redditSettingsSchema,
   editor: redditEditorSchema,
   preview: redditPreviewSchema,
+  panel: redditPanelSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

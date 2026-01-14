@@ -137,6 +137,11 @@ const PublishResults = ({ open, onClose, publishSessionId }) => {
                   </Typography>
                 )}
 
+                {result.data.method && (
+                  <Typography variant="body2" color="text.secondary">
+                    Methode: {result.data.method.toUpperCase()}
+                  </Typography>
+                )}
 
                 {result.data.sentAt && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

@@ -3,6 +3,7 @@
 import { Request, Response } from 'express'
 import { ValidationService } from '../services/validationService.js'
 import { N8nService } from '../services/n8nService.js'
+import { PublishingService } from '../services/publishingService.js'
 import { HistoryService } from '../services/historyService.js'
 import { ConfigService } from '../services/configService.js'
 import { EventService } from '../services/eventService.js'
@@ -63,30 +64,16 @@ export class SubmitController {
         }
       }
 
-      // Get N8N URL from config if not provided
-      let webhookUrl = n8nUrl
-      if (!webhookUrl) {
-        const appConfig = await ConfigService.getAppConfig()
-        if (appConfig?.n8nWebhookUrl) {
-          webhookUrl = appConfig.n8nWebhookUrl
-        } else {
-          return res.status(400).json({
-            error: 'N8N webhook URL not configured'
-          })
-        }
-      }
-
-      // Transform payload for N8N
-      const n8nPayload = N8nService.transformPayloadForN8n(
+      // Use PublishingService which handles n8n/API/Playwright routing
+      const publishRequest = {
         files,
         platforms,
         content,
         hashtags,
         eventData
-      )
+      }
 
-      // Submit to N8N
-      const n8nResult = await N8nService.submitToN8n(webhookUrl, n8nPayload)
+      const publishResult = await PublishingService.publish(publishRequest)
 
       // Save to history
       try {
@@ -113,15 +100,20 @@ export class SubmitController {
         // Don't fail the whole submission if history save fails
       }
 
-      // Add success tracking for all platforms
+      // Add tracking for all platforms
       if (publishSessionId) {
         for (const platform of platformList) {
+          const platformResult = publishResult.results[platform]
           const result: PublishResult = {
             platform,
-            success: true,
+            success: platformResult?.success || false,
             data: {
-              status: 'submitted_to_n8n',
-              submittedAt: new Date().toISOString()
+              status: platformResult?.success ? 'published' : 'failed',
+              method: platformResult?.method || 'unknown',
+              submittedAt: new Date().toISOString(),
+              postId: platformResult?.postId,
+              url: platformResult?.url,
+              error: platformResult?.error
             }
           }
           PublishTrackingService.addPublishResult(publishSessionId, result)
@@ -129,9 +121,9 @@ export class SubmitController {
       }
 
       res.json({
-        success: true,
-        n8nResponse: n8nResult.data,
-        message: 'Successfully submitted to N8N',
+        success: publishResult.success,
+        results: publishResult.results,
+        message: publishResult.message,
         historySaved: true,
         publishSessionId
       })
@@ -156,7 +148,7 @@ export class SubmitController {
       }
 
       if (error.type) {
-        // Custom error from N8nService
+        // Custom error from services
         const statusCode = error.type === 'N8N_ERROR' ? error.status || 502 :
                           error.type === 'CONNECTION_ERROR' ? 503 :
                           error.type === 'NOT_FOUND_ERROR' ? 503 : 500

@@ -9,6 +9,8 @@ export interface PublishResult {
     status?: string
     submittedAt?: string
     failedAt?: string
+    method?: 'n8n' | 'api' | 'playwright' | 'unknown'
+    error?: string
     metrics?: Record<string, any>
   }
 }
