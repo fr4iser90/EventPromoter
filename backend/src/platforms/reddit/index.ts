@@ -29,7 +29,8 @@ export const RedditPlatformModule: PlatformModule = {
     color: '#FF4500',
     description: 'Share events on Reddit with text posts and images',
     author: 'EventPromoter',
-    license: 'MIT'
+    license: 'MIT',
+    dataSource: 'subreddits.json'
   },
   schema: redditSchema,
   capabilities: {

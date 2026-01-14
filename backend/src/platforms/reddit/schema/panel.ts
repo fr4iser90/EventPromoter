@@ -40,17 +40,11 @@ export const redditPanelSchema: PanelSchema = {
           label: 'Subreddits auswählen',
           description: 'Wähle die Subreddits für diesen Post',
           required: false,
-          // ✅ GENERIC: Options come from backend API
+          // ✅ GENERIC: Options come from backend API (already transformed)
           optionsSource: {
             endpoint: '/api/platforms/:platformId/subreddits',
             method: 'GET',
-            transform: (data: any) => {
-              const subreddits = data?.available || []
-              return subreddits.map((subreddit: string) => ({
-                label: `r/${subreddit}`,
-                value: subreddit
-              }))
-            }
+            responsePath: 'options' // Backend returns { success: true, options: [{ label, value }] }
           },
           ui: {
             width: 12,

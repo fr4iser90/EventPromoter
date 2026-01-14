@@ -40,17 +40,11 @@ export const emailPanelSchema: PanelSchema = {
           label: 'Empfänger auswählen',
           description: 'Wähle die Email-Empfänger für diesen Versand',
           required: false,
-          // ✅ GENERIC: Options come from backend API
+          // ✅ GENERIC: Options come from backend API (already transformed)
           optionsSource: {
             endpoint: '/api/platforms/:platformId/recipients',
             method: 'GET',
-            transform: (data: any) => {
-              const recipients = data?.available || []
-              return recipients.map((email: string) => ({
-                label: email,
-                value: email
-              }))
-            }
+            responsePath: 'options' // Backend returns { success: true, options: [{ label, value }] }
           },
           ui: {
             width: 12,

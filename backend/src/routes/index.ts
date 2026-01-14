@@ -11,6 +11,7 @@ import fileRoutes from './files.js'
 import platformRoutes from './platforms.js'
 import templateRoutes from './templates.js'
 import translationRoutes from './translations.js'
+import hashtagRoutes from './hashtags.js'
 
 const router = Router()
 
@@ -25,6 +26,7 @@ router.use('/files', fileRoutes)
 router.use('/platforms', platformRoutes)
 router.use('/templates', templateRoutes)
 router.use('/translations', translationRoutes)
+router.use('/hashtags', hashtagRoutes)
 
 // Health check (could be moved to a health controller)
 router.get('/health', (req, res) => {

@@ -29,7 +29,8 @@ export const FacebookPlatformModule: PlatformModule = {
     color: '#1877F2',
     description: 'Share events on Facebook with rich content',
     author: 'EventPromoter',
-    license: 'MIT'
+    license: 'MIT',
+    dataSource: 'groups.json'
   },
   schema: facebookSchema,
   capabilities: {

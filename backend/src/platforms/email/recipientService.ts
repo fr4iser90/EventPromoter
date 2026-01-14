@@ -7,16 +7,18 @@
  * @module platforms/email/recipientService
  */
 
-import { ConfigService } from '../../services/configService.js'
+import { readPlatformData, writePlatformData } from '../../utils/platformDataUtils.js'
 import { EmailValidator } from './validator.js'
+
+const PLATFORM_ID = 'email'
 
 export class EmailRecipientService {
   /**
    * Get all recipients and groups
    */
   static async getRecipients() {
-    // ✅ GENERIC: Use generic config method instead of hardcoded getEmailConfig()
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility (reads from platforms/email/data/recipients.json)
+    const config = await readPlatformData(PLATFORM_ID)
     return {
       available: config?.available || [],
       groups: config?.groups || {},
@@ -35,8 +37,8 @@ export class EmailRecipientService {
       return { success: false, error: 'Invalid email format' }
     }
 
-    // ✅ GENERIC: Use generic config method instead of hardcoded getEmailConfig()
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const available = config?.available || []
 
     if (available.includes(emailLower)) {
@@ -48,8 +50,8 @@ export class EmailRecipientService {
       available: [...available, emailLower]
     }
 
-    // ✅ GENERIC: Use generic config method instead of hardcoded saveEmailConfig()
-    await ConfigService.saveConfig('emails', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, email: emailLower }
   }
 
@@ -57,8 +59,8 @@ export class EmailRecipientService {
    * Remove a recipient
    */
   static async removeRecipient(email: string) {
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const available = (config?.available || []).filter((e: string) => e !== email)
     const groups = { ...(config?.groups || {}) }
 
@@ -73,8 +75,8 @@ export class EmailRecipientService {
       groups
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('emails', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true }
   }
 
@@ -90,8 +92,8 @@ export class EmailRecipientService {
       return { success: false, error: 'No valid emails provided' }
     }
 
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = config?.groups || {}
 
     if (groups[groupName]) {
@@ -115,8 +117,8 @@ export class EmailRecipientService {
       }
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('emails', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, group: { name: groupName, emails: normalizedEmails } }
   }
 
@@ -132,8 +134,8 @@ export class EmailRecipientService {
       return { success: false, error: 'No valid emails provided' }
     }
 
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = config?.groups || {}
 
     if (!groups[groupName]) {
@@ -157,8 +159,8 @@ export class EmailRecipientService {
       }
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('emails', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, group: { name: groupName, emails: normalizedEmails } }
   }
 
@@ -166,8 +168,8 @@ export class EmailRecipientService {
    * Delete a recipient group
    */
   static async deleteGroup(groupName: string) {
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = { ...(config?.groups || {}) }
     delete groups[groupName]
 
@@ -176,8 +178,8 @@ export class EmailRecipientService {
       groups
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('emails', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true }
   }
 
@@ -185,8 +187,8 @@ export class EmailRecipientService {
    * Import groups from JSON
    */
   static async importGroups(groupsData: Record<string, string[]>) {
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = { ...(config?.groups || {}) }
     const available = [...(config?.available || [])]
 
@@ -212,8 +214,8 @@ export class EmailRecipientService {
       groups
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('emails', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, groups }
   }
 
@@ -221,8 +223,8 @@ export class EmailRecipientService {
    * Export groups as JSON
    */
   static async exportGroups() {
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('emails')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     return {
       success: true,
       groups: config?.groups || {}

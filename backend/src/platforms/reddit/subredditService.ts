@@ -7,15 +7,17 @@
  * @module platforms/reddit/subredditService
  */
 
-import { ConfigService } from '../../services/configService.js'
+import { readPlatformData, writePlatformData } from '../../utils/platformDataUtils.js'
+
+const PLATFORM_ID = 'reddit'
 
 export class RedditSubredditService {
   /**
    * Get all subreddits and groups
    */
   static async getSubreddits() {
-    // ✅ GENERIC: Use generic config method with platform-specific key
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility (reads from platforms/reddit/data/subreddits.json)
+    const config = await readPlatformData(PLATFORM_ID)
     return {
       available: config?.available || [],
       groups: config?.groups || {},
@@ -34,8 +36,8 @@ export class RedditSubredditService {
       return { success: false, error: 'Invalid subreddit name. Must be 3-21 characters, alphanumeric and underscores only.' }
     }
 
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const available = config?.available || []
 
     if (available.includes(subredditLower)) {
@@ -47,8 +49,8 @@ export class RedditSubredditService {
       available: [...available, subredditLower]
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('reddit.subreddits', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, subreddit: subredditLower }
   }
 
@@ -58,8 +60,8 @@ export class RedditSubredditService {
   static async removeSubreddit(subreddit: string) {
     const subredditLower = subreddit.trim().toLowerCase().replace(/^r\//, '').replace(/^\//, '')
     
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const available = (config?.available || []).filter((s: string) => s !== subredditLower)
     const groups = { ...(config?.groups || {}) }
 
@@ -74,8 +76,8 @@ export class RedditSubredditService {
       groups
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('reddit.subreddits', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true }
   }
 
@@ -91,8 +93,8 @@ export class RedditSubredditService {
       return { success: false, error: 'No valid subreddits provided' }
     }
 
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = config?.groups || {}
 
     if (groups[groupName]) {
@@ -116,8 +118,8 @@ export class RedditSubredditService {
       }
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('reddit.subreddits', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, group: { name: groupName, subreddits: normalizedSubreddits } }
   }
 
@@ -133,8 +135,8 @@ export class RedditSubredditService {
       return { success: false, error: 'No valid subreddits provided' }
     }
 
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = config?.groups || {}
 
     if (!groups[groupName]) {
@@ -158,8 +160,8 @@ export class RedditSubredditService {
       }
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('reddit.subreddits', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, group: { name: groupName, subreddits: normalizedSubreddits } }
   }
 
@@ -167,8 +169,8 @@ export class RedditSubredditService {
    * Delete a subreddit group
    */
   static async deleteGroup(groupName: string) {
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = { ...(config?.groups || {}) }
     delete groups[groupName]
 
@@ -177,8 +179,8 @@ export class RedditSubredditService {
       groups
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('reddit.subreddits', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true }
   }
 
@@ -186,8 +188,8 @@ export class RedditSubredditService {
    * Import groups from JSON
    */
   static async importGroups(groupsData: Record<string, string[]>) {
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     const groups = { ...(config?.groups || {}) }
     const available = [...(config?.available || [])]
 
@@ -213,8 +215,8 @@ export class RedditSubredditService {
       groups
     }
 
-    // ✅ GENERIC: Use generic config method
-    await ConfigService.saveConfig('reddit.subreddits', updated)
+    // ✅ GENERIC: Use platform data utility
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true, groups }
   }
 
@@ -222,8 +224,8 @@ export class RedditSubredditService {
    * Export groups as JSON
    */
   static async exportGroups() {
-    // ✅ GENERIC: Use generic config method
-    const config = await ConfigService.getConfig('reddit.subreddits')
+    // ✅ GENERIC: Use platform data utility
+    const config = await readPlatformData(PLATFORM_ID)
     return {
       success: true,
       groups: config?.groups || {}

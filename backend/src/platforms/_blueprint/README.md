@@ -75,13 +75,26 @@ myplatform/
 
 ### Example: Email Recipients
 
-**1. Service (`recipientService.ts`):**
+**1. Define dataSource in Platform Metadata (`index.ts`):**
 ```typescript
-import { ConfigService } from '../../services/configService.js'
+metadata: {
+  id: 'email',
+  displayName: 'Email',
+  // ... other metadata
+  dataSource: 'recipients.json' // Defines filename in platforms/email/data/
+}
+```
+
+**2. Service (`recipientService.ts`):**
+```typescript
+import { readPlatformData, writePlatformData } from '../../utils/platformDataUtils.js'
+
+const PLATFORM_ID = 'email'
 
 export class EmailRecipientService {
   static async getRecipients() {
-    const config = await ConfigService.getConfig('email.recipients')
+    // ✅ GENERIC: Reads from platforms/email/data/recipients.json
+    const config = await readPlatformData(PLATFORM_ID)
     return {
       available: config?.available || [],
       groups: config?.groups || {}
@@ -90,9 +103,9 @@ export class EmailRecipientService {
   
   static async addRecipient(email: string) {
     // Validation and business logic
-    const config = await ConfigService.getConfig('email.recipients')
+    const config = await readPlatformData(PLATFORM_ID)
     // ... update logic
-    await ConfigService.saveConfig('email.recipients', updated)
+    await writePlatformData(PLATFORM_ID, updated)
     return { success: true }
   }
 }
@@ -151,13 +164,15 @@ export const emailPanelSchema: PanelSchema = {
 }
 ```
 
-### Config Storage Pattern
+### Data Storage Pattern
 
-- Use `ConfigService.getConfig('{platformId}.{resource}')` for storage
+- Each platform defines its `dataSource` in `metadata.dataSource` (e.g., `'recipients.json'`, `'subreddits.json'`)
+- Data is stored in `platforms/{platformId}/data/{dataSource}`
+- Use `readPlatformData(platformId)` and `writePlatformData(platformId, data)` utilities
 - Examples:
-  - `email.recipients` - Email recipients and groups
-  - `reddit.subreddits` - Reddit subreddits and groups
-  - `twitter.lists` - Twitter lists
+  - Email: `metadata.dataSource: 'recipients.json'` → `platforms/email/data/recipients.json`
+  - Reddit: `metadata.dataSource: 'subreddits.json'` → `platforms/reddit/data/subreddits.json`
+  - Twitter: `metadata.dataSource: 'accounts.json'` → `platforms/twitter/data/accounts.json`
 
 ### Frontend Integration
 

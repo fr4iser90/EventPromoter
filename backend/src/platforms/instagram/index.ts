@@ -29,7 +29,8 @@ export const InstagramPlatformModule: PlatformModule = {
     color: '#E4405F',
     description: 'Share events on Instagram with images and captions',
     author: 'EventPromoter',
-    license: 'MIT'
+    license: 'MIT',
+    dataSource: 'accounts.json'
   },
   schema: instagramSchema,
   capabilities: {

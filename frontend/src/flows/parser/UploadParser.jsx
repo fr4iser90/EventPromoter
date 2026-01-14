@@ -37,6 +37,7 @@ import {
 import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
 import { Editor as GenericPlatformEditor } from '../../features/platform'
 import { Preview as PlatformPreview } from '../../features/platform'
+import HashtagBuilder from './HashtagBuilder'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -290,11 +291,12 @@ function UploadParser() {
             sx={{ mb: 3 }}
           >
             <Tab label={t('tabs.rawData')} />
+            <Tab label="# Hashtags" />
             <Tab label={t('tabs.contentCreation')} />
             <Tab label={t('tabs.platformPreview')} />
           </Tabs>
 
-          {/* Tab 1: Raw Data */}
+          {/* Tab 0: Raw Data */}
           {activeTab === 0 && (
             <Box>
               <Typography variant="h6" gutterBottom>
@@ -312,8 +314,25 @@ function UploadParser() {
             </Box>
           )}
 
-          {/* Tab 2: Content Creation - Side-by-Side Layout */}
+          {/* Tab 1: Hashtags */}
           {activeTab === 1 && editedData && (
+            <HashtagBuilder
+              eventData={editedData}
+              onHashtagsChange={(hashtags) => {
+                // Update platform content with hashtags
+                selectedPlatforms.forEach(platform => {
+                  const currentContent = platformContent[platform] || {}
+                  setPlatformContent(platform, {
+                    ...currentContent,
+                    hashtags: hashtags
+                  })
+                })
+              }}
+            />
+          )}
+
+          {/* Tab 2: Content Creation - Side-by-Side Layout */}
+          {activeTab === 2 && editedData && (
             <Box>
               <Typography variant="h6" gutterBottom>
                 🎨 Content Creation Studio
@@ -423,7 +442,7 @@ function UploadParser() {
           )}
 
           {/* Tab 3: Platform Preview */}
-          {activeTab === 2 && editedData && (
+          {activeTab === 3 && editedData && (
             <Box>
               <Typography variant="h6" gutterBottom>
                 Platform Preview

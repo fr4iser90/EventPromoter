@@ -14,11 +14,23 @@ export class RedditController {
   /**
    * Get all subreddits and groups
    * GET /api/platforms/reddit/subreddits
+   * Returns data in format ready for frontend (no transformation needed)
    */
   static async getSubreddits(req: Request, res: Response) {
     try {
       const result = await RedditSubredditService.getSubreddits()
-      return res.json({ success: true, ...result })
+      // Transform to frontend-ready format
+      const options = (result.available || []).map((subreddit: string) => ({
+        label: `r/${subreddit}`,
+        value: subreddit
+      }))
+      return res.json({ 
+        success: true, 
+        options, // Frontend-ready format
+        available: result.available, // Keep for backward compatibility
+        groups: result.groups,
+        selected: result.selected
+      })
     } catch (error: any) {
       console.error('Get subreddits error:', error)
       res.status(500).json({

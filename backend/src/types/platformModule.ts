@@ -32,6 +32,8 @@ export interface PlatformMetadata {
   author?: string
   /** License information */
   license?: string
+  /** Data source filename (e.g., 'recipients.json', 'subreddits.json') - stored in platforms/{id}/data/ */
+  dataSource?: string
 }
 
 /**

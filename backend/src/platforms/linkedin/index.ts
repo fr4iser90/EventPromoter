@@ -29,7 +29,8 @@ export const LinkedInPlatformModule: PlatformModule = {
     color: '#0A66C2',
     description: 'Share events on LinkedIn with professional content',
     author: 'EventPromoter',
-    license: 'MIT'
+    license: 'MIT',
+    dataSource: 'connections.json'
   },
   schema: linkedinSchema,
   capabilities: {

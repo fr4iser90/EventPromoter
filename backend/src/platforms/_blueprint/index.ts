@@ -63,7 +63,8 @@ export const PLATFORM_IDPlatformModule: PlatformModule = convertPlatformPluginTo
     color: '#000000', // Platform brand color
     description: 'PLATFORM_DESCRIPTION',
     author: 'EventPromoter',
-    license: 'MIT'
+    license: 'MIT',
+    dataSource: 'data.json' // Optional: filename for platform data (stored in platforms/{id}/data/)
   }
 )
 

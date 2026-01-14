@@ -121,15 +121,25 @@ function DynamicPanelWrapper({ platform }) {
               }
             }
 
-            // Transform data based on transform type
+            // Extract options from response (backend should return ready-to-use format)
             let transformedOptions = []
-            if (Array.isArray(data)) {
-              if (typeof field.optionsSource.transform === 'function') {
-                transformedOptions = data.map(field.optionsSource.transform)
-              } else {
-                // Default: assume array of {label, value} objects
-                transformedOptions = data
+            
+            // Use responsePath if specified (e.g., 'options', 'data.items')
+            if (field.optionsSource.responsePath) {
+              const paths = field.optionsSource.responsePath.split('.')
+              let extractedData = response.data
+              for (const path of paths) {
+                extractedData = extractedData?.[path]
               }
+              if (Array.isArray(extractedData)) {
+                transformedOptions = extractedData
+              }
+            } else if (Array.isArray(data)) {
+              // Default: assume array of {label, value} objects
+              transformedOptions = data
+            } else if (response.data?.options && Array.isArray(response.data.options)) {
+              // Fallback: check for 'options' key
+              transformedOptions = response.data.options
             }
 
             optionsMap[field.name] = transformedOptions

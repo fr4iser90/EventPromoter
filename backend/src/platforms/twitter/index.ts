@@ -29,7 +29,8 @@ export const TwitterPlatformModule: PlatformModule = {
     color: '#1DA1F2',
     description: 'Share events on Twitter/X with character-limited posts',
     author: 'EventPromoter',
-    license: 'MIT'
+    license: 'MIT',
+    dataSource: 'accounts.json'
   },
   schema: twitterSchema,
   capabilities: {
