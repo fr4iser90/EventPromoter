@@ -9,7 +9,7 @@
 import { EditorSchema } from '../../../types/platformSchema.js'
 
 export const emailEditorSchema: EditorSchema = {
-  version: '2.0.0',
+  version: '1.0.0',
   title: 'Email Content Editor',
   description: 'Create and edit email content with structured fields',
   mode: 'advanced',

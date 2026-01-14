@@ -35,6 +35,7 @@ export interface ParsedEventData {
   website?: string
   lineup?: string[] // Array of artists/DJs/bands
   genre?: string // Music genre or event type
+  hashtags?: string[] // Array of hashtags (with or without #)
   platformContent?: Record<string, any> // Platform-specific content
 
   // Internationalization support

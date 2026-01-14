@@ -30,7 +30,7 @@ import {
 import { useTemplateCategories } from '../hooks/useTemplateCategories'
 import { useTemplatesByCategory } from '../hooks/useTemplatesByCategory'
 import useStore from '../../../store'
-import { getTemplateVariables, replaceTemplateVariables } from '../../../shared/utils/templateUtils'
+import { getTemplateVariables } from '../../../shared/utils/templateUtils'
 import config from '../../../config'
 
 /**
@@ -173,91 +173,35 @@ function BulkTemplateApplier({
             throw new Error('No template selected')
           }
 
-          // Load full template
-          const templateResponse = await fetch(
-            `${config.apiUrl || 'http://localhost:4000'}/api/templates/${platformId}/${templateIdToUse}?mode=raw`
+          // ✅ Use backend API to apply template (same as Editor)
+          // This removes all mapping logic from frontend!
+          const applyResponse = await fetch(
+            `${config.apiUrl || 'http://localhost:4000'}/api/templates/${platformId}/${templateIdToUse}/apply`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                templateId: templateIdToUse,
+                parsedData: parsedData || null,
+                uploadedFileRefs: uploadedFileRefs || [],
+                existingContent: platformContent[platformId] || {}
+              })
+            }
           )
-          
-          if (!templateResponse.ok) {
-            throw new Error(`Failed to load template: ${templateResponse.status}`)
+
+          if (!applyResponse.ok) {
+            throw new Error(`Failed to apply template: ${applyResponse.status}`)
           }
 
-          const templateData = await templateResponse.json()
-          if (!templateData.success || !templateData.template) {
-            throw new Error('Invalid template response')
+          const applyResult = await applyResponse.json()
+          if (!applyResult.success) {
+            throw new Error(applyResult.error || 'Failed to apply template')
           }
 
-          // Load platform schema to get editor blocks (for field mapping)
-          const schemaResponse = await fetch(
-            `${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}/schema`
-          )
-          
-          let editorBlocks = []
-          if (schemaResponse.ok) {
-            const schemaData = await schemaResponse.json()
-            if (schemaData.success && schemaData.schema?.editor?.blocks) {
-              editorBlocks = schemaData.schema.editor.blocks
-            }
-          }
-
-          const template = templateData.template
-          const templateContent = template.template || {}
-          
-          // Handle different template structures:
-          // - Email: { subject: '...', html: '...' }
-          // - LinkedIn: template: '...' (string)
-          // - Reddit: { title: '...', text: '...' }
-          
-          // Apply template (same logic as GenericPlatformEditor)
-          const newContent = { ...(platformContent[platformId] || {}) }
-          
-          // If template is a string (LinkedIn, Twitter, etc.), use it directly
-          if (typeof templateContent === 'string') {
-            const firstTextBlock = editorBlocks.find(b => 
-              (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject' && b.id !== 'title'
-            )
-            if (firstTextBlock) {
-              newContent[firstTextBlock.id] = replaceTemplateVariables(templateContent, templateVariables)
-            }
-          } else {
-            // Template is an object - map fields to editor blocks
-            editorBlocks.forEach(block => {
-              const fieldName = block.id
-              let fieldValue = templateContent[fieldName]
-              
-              // If no exact match, check for common field name mappings
-              if (!fieldValue) {
-                if (fieldName === 'body' && (templateContent.html || templateContent.text)) {
-                  fieldValue = templateContent.html || templateContent.text
-                } else if (fieldName === 'subject' && templateContent.subject) {
-                  fieldValue = templateContent.subject
-                } else if (fieldName === 'text' && (templateContent.text || templateContent.html)) {
-                  fieldValue = templateContent.text || templateContent.html
-                } else if (fieldName === 'title' && templateContent.title) {
-                  fieldValue = templateContent.title
-                }
-              }
-              
-              if (fieldValue) {
-                // Replace template variables with actual values
-                const replacedValue = typeof fieldValue === 'string'
-                  ? replaceTemplateVariables(fieldValue, templateVariables)
-                  : fieldValue
-                newContent[fieldName] = replacedValue
-              }
-            })
-            
-            // Fallback: If template has html/text but no body/text block found, apply to first paragraph/text block
-            if ((templateContent.html || templateContent.text) && !newContent.body && !newContent.text) {
-              const firstTextBlock = editorBlocks.find(b => 
-                (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject' && b.id !== 'title'
-              )
-              if (firstTextBlock) {
-                const templateText = templateContent.html || templateContent.text
-                newContent[firstTextBlock.id] = replaceTemplateVariables(templateText, templateVariables)
-              }
-            }
-          }
+          // Backend returns mapped content - use it directly!
+          const newContent = applyResult.content
 
           // Apply via onApply callback
           if (onApply) {

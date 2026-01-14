@@ -186,3 +186,137 @@ export function getUnfulfilledVariables(content, availableVariables = {}) {
   return [...new Set(matches)]
 }
 
+/**
+ * Extract all template variables from a template object
+ * Extracts from template.variables array OR parses from template.template.html/subject
+ * 
+ * @param template - Template object with variables array or html/subject with {variable} patterns
+ * @returns Array of unique variable names
+ */
+export function extractTemplateVariables(template) {
+  if (!template) return []
+
+  // Use ONLY template.variables array (no fallbacks)
+  if (template.variables && Array.isArray(template.variables)) {
+    return template.variables
+  }
+
+  return []
+}
+
+/**
+ * Check if a variable is auto-filled (comes from parsedData)
+ * Auto-filled variables: date, time, venue, city, title, eventTitle, etc.
+ * 
+ * @param variableName - Name of the variable
+ * @param parsedData - Parsed event data
+ * @returns true if variable is auto-filled from parsedData
+ */
+export function isAutoFilledVariable(variableName, parsedData) {
+  if (!parsedData) return false
+
+  // Map variable names to parsedData fields
+  const autoFilledMap = {
+    'date': 'date',
+    'eventDate': 'date',
+    'time': 'time',
+    'eventTime': 'time',
+    'venue': 'venue',
+    'location': 'venue',
+    'city': 'city',
+    'title': 'title',
+    'eventTitle': 'title',
+    'name': 'title',
+    'description': 'description',
+    'desc': 'description',
+    'text': 'description',
+    'price': 'price',
+    'ticketPrice': 'price',
+    'genre': 'genre',
+    'category': 'genre',
+    'organizer': 'organizer',
+    'organiser': 'organizer',
+    'website': 'website',
+    'url': 'website',
+    'link': 'website',
+    'lineup': 'lineup',
+    'performers': 'lineup',
+    'artists': 'lineup'
+  }
+
+  const mappedField = autoFilledMap[variableName]
+  return mappedField && parsedData[mappedField] !== undefined && parsedData[mappedField] !== null
+}
+
+/**
+ * Get label and icon for a template variable
+ * 
+ * @param variableName - Name of the variable
+ * @returns Object with label and icon
+ */
+export function getVariableLabel(variableName) {
+  const labels = {
+    'date': { label: 'Date', icon: '📅' },
+    'eventDate': { label: 'Date', icon: '📅' },
+    'time': { label: 'Time', icon: '🕐' },
+    'eventTime': { label: 'Time', icon: '🕐' },
+    'venue': { label: 'Venue', icon: '📍' },
+    'location': { label: 'Location', icon: '📍' },
+    'city': { label: 'City', icon: '🏙️' },
+    'title': { label: 'Title', icon: '🎉' },
+    'eventTitle': { label: 'Title', icon: '🎉' },
+    'name': { label: 'Title', icon: '🎉' },
+    'description': { label: 'Description', icon: '📝' },
+    'desc': { label: 'Description', icon: '📝' },
+    'text': { label: 'Description', icon: '📝' },
+    'price': { label: 'Price', icon: '💰' },
+    'ticketPrice': { label: 'Price', icon: '💰' },
+    'genre': { label: 'Genre', icon: '🎵' },
+    'category': { label: 'Category', icon: '🎵' },
+    'organizer': { label: 'Organizer', icon: '👤' },
+    'organiser': { label: 'Organizer', icon: '👤' },
+    'website': { label: 'Website', icon: '🔗' },
+    'url': { label: 'URL', icon: '🔗' },
+    'link': { label: 'Link', icon: '🔗' },
+    'lineup': { label: 'Lineup', icon: '🎤' },
+    'performers': { label: 'Performers', icon: '🎤' },
+    'artists': { label: 'Artists', icon: '🎤' },
+    'ticketInfo': { label: 'Ticket Info', icon: '🎫' },
+    'highlights': { label: 'Highlights', icon: '✨' },
+    'prepTips': { label: 'Preparation Tips', icon: '💡' },
+    'unsubscribeLink': { label: 'Unsubscribe Link', icon: '🔕' },
+    'contactLink': { label: 'Contact Link', icon: '📧' }
+  }
+
+  return labels[variableName] || { label: variableName, icon: '📌' }
+}
+
+/**
+ * Extract template variables from content object
+ * Reads _var_{variableName} fields and filters out disabled ones
+ * 
+ * @param content - Content object with _var_* fields
+ * @returns Object with variable values (disabled ones excluded)
+ */
+export function extractVariablesFromContent(content) {
+  if (!content) return {}
+  
+  const variables = {}
+  
+  Object.keys(content).forEach(key => {
+    // Check if it's a variable field
+    if (key.startsWith('_var_')) {
+      const varName = key.replace('_var_', '')
+      
+      // Check if variable is disabled
+      const isDisabled = content[`_disabled_${varName}`] === true
+      
+      // Only include if not disabled and has a value
+      if (!isDisabled && content[key] !== undefined && content[key] !== null && content[key] !== '') {
+        variables[varName] = content[key]
+      }
+    }
+  })
+  
+  return variables
+}

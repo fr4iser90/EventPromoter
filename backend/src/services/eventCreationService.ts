@@ -15,12 +15,13 @@ export class EventCreationService {
     const eventId = EventService.generateReadableEventId(eventTitle, new Date())
 
     // Create event data structure (without parsedData and platformContent)
+    // Include hashtags from parsed data if available
     const eventData = {
       id: eventId,
       name: eventTitle,
       created: new Date().toISOString(),
       uploadedFileRefs: uploadedFiles,
-      selectedHashtags: [],
+      selectedHashtags: parsedData.hashtags && Array.isArray(parsedData.hashtags) ? parsedData.hashtags : [],
       selectedPlatforms: []
     }
 

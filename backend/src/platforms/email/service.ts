@@ -282,6 +282,14 @@ export class EmailService {
     if (hasStructuredFields) {
       // Build HTML body from structured fields
       processed.body = this.buildBodyFromStructuredFields(content)
+    } else if (content.html && !content.body) {
+      // If html is present but no structured fields, use html as body
+      // Extract body content from full HTML if needed
+      const bodyMatch = content.html.match(/<body[^>]*>([\s\S]*)<\/body>/i)
+      processed.body = bodyMatch ? bodyMatch[1] : content.html
+    } else if (!content.body && content.bodyText) {
+      // If only bodyText is present, convert to HTML
+      processed.body = this.buildBodyFromStructuredFields({ bodyText: content.bodyText })
     }
     
     return processed

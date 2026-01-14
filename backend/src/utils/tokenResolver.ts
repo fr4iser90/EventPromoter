@@ -11,8 +11,9 @@
 /**
  * Token Pattern: <platform>.<category>.<path...>
  * Minimum 3 segments, flexible depth
+ * First segment must start with a letter (to exclude version numbers like "1.0.0")
  */
-const TOKEN_PATTERN = /^[a-z0-9_-]+\.[a-z0-9_-]+(\.[a-z0-9_-]+)+$/
+const TOKEN_PATTERN = /^[a-z][a-z0-9_-]*\.[a-z0-9_-]+(\.[a-z0-9_-]+)+$/
 
 /**
  * Token value with Light/Dark variants

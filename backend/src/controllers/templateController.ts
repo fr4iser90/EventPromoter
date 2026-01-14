@@ -2,6 +2,7 @@
 
 import { Request, Response } from 'express'
 import { TemplateService } from '../services/templateService.js'
+import { TemplateMappingService, TemplateMappingRequest } from '../services/templateMappingService.js'
 import { resolveTemplates, TemplateMode } from '../utils/templateResolver.js'
 import {
   TemplateCreateRequest,
@@ -395,6 +396,45 @@ export class TemplateController {
       res.status(500).json({
         success: false,
         error: 'Failed to get templates by category',
+        details: error.message
+      })
+    }
+  }
+
+  // POST /api/templates/:platform/:id/apply - Apply template to editor content
+  static async applyTemplate(req: Request, res: Response) {
+    try {
+      const { platform, id } = req.params
+      const mappingRequest: TemplateMappingRequest = req.body
+
+      // Get template
+      const template = await TemplateService.getTemplate(platform, id)
+      if (!template) {
+        res.status(404).json({
+          success: false,
+          error: 'Template not found'
+        })
+        return
+      }
+
+      // Map template to editor content
+      const result = await TemplateMappingService.mapTemplateToEditorContent(
+        platform,
+        template,
+        mappingRequest
+      )
+
+      res.json({
+        success: true,
+        content: result.content,
+        templateId: result.templateId,
+        variables: result.variables
+      })
+    } catch (error: any) {
+      console.error('Apply template error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to apply template',
         details: error.message
       })
     }

@@ -16,32 +16,46 @@ import {
   Collapse,
   IconButton,
   Avatar,
-  TextField
+  TextField,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import DescriptionIcon from '@mui/icons-material/Description'
+import CloseIcon from '@mui/icons-material/Close'
 import { usePlatformSchema } from '../hooks/usePlatformSchema'
 import SchemaRenderer from '../../schema/components/Renderer'
 import { Selector as TemplateSelector } from '../../templates'
+import { useTemplates } from '../../templates/hooks/useTemplates'
 import useStore from '../../../store'
-import { getTemplateVariables, replaceTemplateVariables, getUnfulfilledVariables } from '../../../shared/utils/templateUtils'
+import { 
+  getTemplateVariables, 
+  replaceTemplateVariables, 
+  extractTemplateVariables,
+  isAutoFilledVariable,
+  getVariableLabel
+} from '../../../shared/utils/templateUtils'
 import config from '../../../config'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect, onBatchChange }) {
   const { t } = useTranslation()
   const theme = useTheme()
   const { schema, loading: schemaLoading, error: schemaError } = usePlatformSchema(platform)
+  const { templates, getTemplate } = useTemplates(platform)
   const [platformConfig, setPlatformConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { parsedData, uploadedFileRefs } = useStore()
-  const [unfulfilledVarsOpen, setUnfulfilledVarsOpen] = useState(false)
-  const [unfulfilledVariables, setUnfulfilledVariables] = useState({})
   // Track original content with variables for undo functionality
   const [originalContentWithVars, setOriginalContentWithVars] = useState({})
   // CRITICAL: Track _var_ fields separately - they persist even if variable is replaced in content
   const [persistentVarFields, setPersistentVarFields] = useState(new Set())
+  // Track active template and disabled variables
+  const [activeTemplate, setActiveTemplate] = useState(null)
+  const [disabledVariables, setDisabledVariables] = useState(new Set())
+  const [hideAutoFilled, setHideAutoFilled] = useState(true) // Hide auto-filled variables by default
+  
 
   // Get available images for image selection (memoized to prevent hook issues)
   const availableImages = useMemo(() => {
@@ -72,77 +86,6 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     setPersistentVarFields(newPersistentVars)
   }, [content])
 
-  // Check for unfulfilled template variables in content
-  useEffect(() => {
-    if (!content) {
-      setUnfulfilledVariables({})
-      setUnfulfilledVarsOpen(false)
-      return
-    }
-
-    const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
-    const unfulfilled = {}
-    const allMissingVars = new Set()
-
-    // CRITICAL: FIRST check persistentVarFields - these ALWAYS stay visible
-    // This is the PERSISTENCE rule - field NEVER disappears if _var_ has value
-    persistentVarFields.forEach(varName => {
-      allMissingVars.add(varName)
-      
-      // Find a field to associate this variable with
-      const contentFields = Object.keys(content).filter(k => !k.startsWith('_var_') && typeof content[k] === 'string')
-      const firstField = contentFields[0] || 'body'
-      
-      if (!unfulfilled[firstField]) {
-        unfulfilled[firstField] = []
-      }
-      
-      if (!unfulfilled[firstField].includes(varName)) {
-        unfulfilled[firstField].push(varName)
-      }
-    })
-
-    // SECOND: Check content fields for unfulfilled variables (only if not already persistent)
-    Object.entries(content).forEach(([fieldName, fieldValue]) => {
-      // Skip _var_ fields
-      if (fieldName.startsWith('_var_')) return
-      
-      if (typeof fieldValue === 'string') {
-        const missing = getUnfulfilledVariables(fieldValue, templateVariables)
-        if (missing.length > 0) {
-          // Only add if not already handled by persistentVarFields
-          missing.forEach(v => {
-            if (!allMissingVars.has(v)) {
-              allMissingVars.add(v)
-              if (!unfulfilled[fieldName]) {
-                unfulfilled[fieldName] = []
-              }
-              if (!unfulfilled[fieldName].includes(v)) {
-                unfulfilled[fieldName].push(v)
-              }
-            }
-          })
-        }
-      }
-    })
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[UnfulfilledVars] Final state:', {
-        unfulfilled,
-        allMissingVars: Array.from(allMissingVars),
-        persistentVars: Array.from(persistentVarFields),
-        contentKeys: Object.keys(content).filter(k => k.startsWith('_var_'))
-      })
-    }
-
-    setUnfulfilledVariables(unfulfilled)
-    // Auto-expand if there are unfulfilled variables
-    if (allMissingVars.size > 0) {
-      setUnfulfilledVarsOpen(true)
-    } else {
-      setUnfulfilledVarsOpen(false)
-    }
-  }, [content, parsedData, uploadedFileRefs, persistentVarFields])
 
   // Load platform configuration from backend - NO FALLBACKS
   useEffect(() => {
@@ -178,6 +121,39 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
 
     loadPlatformConfig()
   }, [platform])
+
+  // Sync disabled variables from content on mount/update
+  // MUST be before early returns to ensure consistent hook order
+  useEffect(() => {
+    const disabled = new Set()
+    if (content) {
+      Object.keys(content).forEach(key => {
+        if (key.startsWith('_disabled_') && content[key] === true) {
+          const varName = key.replace('_disabled_', '')
+          disabled.add(varName)
+        }
+      })
+    }
+    setDisabledVariables(disabled)
+  }, [content])
+
+  // Restore active template from content._templateId when content loads
+  useEffect(() => {
+    if (!platform || !content?._templateId || activeTemplate) return
+    
+    let cancelled = false
+    getTemplate(content._templateId).then(template => {
+      if (!cancelled && template) {
+        setActiveTemplate(template)
+      }
+    }).catch(() => {
+      // Ignore errors
+    })
+    
+    return () => {
+      cancelled = true
+    }
+  }, [platform, content?._templateId, activeTemplate, getTemplate])
 
   // Calculate character count from content
   const getTextLength = () => {
@@ -228,110 +204,91 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     )
   }
 
-  // Handle template selection
-  const handleTemplateSelect = (template, filledContent) => {
-    // Get template variables from parsed data and uploaded files
-    const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
-    
-    // Get template content structure
-    const templateContent = template.template || {}
-    
-    // Apply template to content fields based on platform schema
-    const editorSchema = schema?.editor || platformConfig?.schema?.editor
-    const editorBlocks = editorSchema?.blocks || []
-    
-    const newContent = { ...content }
-    const originalContent = {} // Track original content with variables for undo
-    
-    // Replace variables in each field
-    editorBlocks.forEach(block => {
-      const fieldName = block.id
-      // Check for exact field match first, then fallback to html/text
-      let fieldValue = templateContent[fieldName]
+  // Handle template selection - NOW USES BACKEND API
+  const handleTemplateSelect = async (template, filledContent) => {
+    try {
+      // Store active template (for UI)
+      setActiveTemplate(template)
       
-      // If no exact match, check for common field name mappings
-      if (!fieldValue) {
-        // Map common template fields to editor blocks
-        if (fieldName === 'body' && (templateContent.html || templateContent.text)) {
-          fieldValue = templateContent.html || templateContent.text
-        } else if (fieldName === 'subject' && templateContent.subject) {
-          fieldValue = templateContent.subject
-        } else if (fieldName === 'text' && (templateContent.text || templateContent.html)) {
-          fieldValue = templateContent.text || templateContent.html
+      // ✅ Call backend API to map template to editor content
+      // This removes all mapping logic from frontend!
+      const response = await fetch(
+        `${config.apiUrl || 'http://localhost:4000'}/api/templates/${platform}/${template.id}/apply`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            templateId: template.id,
+            parsedData: parsedData || null,
+            uploadedFileRefs: uploadedFileRefs || [],
+            existingContent: content || {}
+          })
         }
-      }
-      
-      if (fieldValue) {
-        // Store original content with variables for undo
-        originalContent[fieldName] = fieldValue
-        // Replace template variables with actual values
-        const replacedValue = replaceTemplateVariables(fieldValue, templateVariables)
-        newContent[fieldName] = replacedValue
-      }
-    })
-    
-    // Fallback: If template has html/text but no body block found, apply to first paragraph/text block
-    if ((templateContent.html || templateContent.text) && !newContent.body) {
-      const firstTextBlock = editorBlocks.find(b => 
-        (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject'
       )
-      if (firstTextBlock) {
-        const templateText = templateContent.html || templateContent.text
-        // Store original content with variables for undo
-        originalContent[firstTextBlock.id] = templateText
-        newContent[firstTextBlock.id] = replaceTemplateVariables(templateText, templateVariables)
+
+      if (!response.ok) {
+        throw new Error(`Failed to apply template: ${response.status}`)
       }
-    }
-    
-    // Debug: Log what we're setting
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[TemplateSelector] Applying template:', {
-        templateContent,
-        newContent,
-        editorBlocks: editorBlocks.map(b => ({ id: b.id, type: b.type })),
-        currentContent: content
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to apply template')
+      }
+
+      // Backend returns mapped content - use it directly!
+      const mappedContent = result.content
+
+      // Store original content with variables for undo (extract from template)
+      const templateContent = template.template || {}
+      const originalContent = {}
+      Object.keys(templateContent).forEach(key => {
+        if (typeof templateContent[key] === 'string') {
+          originalContent[key] = templateContent[key]
+        }
       })
-    }
-    
-    // Collect all fields to update
-    const fieldsToUpdate = {}
-    Object.keys(newContent).forEach(key => {
-      if (newContent[key] !== undefined && newContent[key] !== null && newContent[key] !== '') {
-        fieldsToUpdate[key] = newContent[key]
+      setOriginalContentWithVars(originalContent)
+
+      // Update all fields at once
+      const updatedContent = { ...content, ...mappedContent }
+
+      // Always ensure _templateId is set first
+      if (mappedContent._templateId) {
+        onChange('_templateId', mappedContent._templateId)
       }
-    })
-    
-    // Also explicitly set fields from template that might have been mapped
-    editorBlocks.forEach(block => {
-      const fieldName = block.id
-      if (newContent[fieldName] !== undefined && newContent[fieldName] !== null && newContent[fieldName] !== '') {
-        fieldsToUpdate[fieldName] = newContent[fieldName]
+
+      // If onBatchChange is available, use it to set all fields at once
+      if (onBatchChange) {
+        onBatchChange(updatedContent)
+      } else {
+        // Set all fields individually (including _templateId)
+        Object.keys(mappedContent).forEach(key => {
+          if (mappedContent[key] !== undefined && mappedContent[key] !== null) {
+            onChange(key, mappedContent[key])
+          }
+        })
       }
-    })
-    
-    // Debug: Log what we're about to update
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[TemplateSelector] Updating fields:', fieldsToUpdate)
+    } catch (error) {
+      console.error('Failed to apply template:', error)
+      // Show error to user (you might want to add a toast/alert here)
+      setError(error.message || 'Failed to apply template')
     }
-    
-    // Update all fields at once by merging with current content
-    // This ensures all fields are set in one operation
-    const updatedContent = { ...content, ...fieldsToUpdate }
-    
-    // Store original content with variables for undo
-    setOriginalContentWithVars(originalContent)
-    
-    // If onBatchChange is available, use it to set all fields at once
-    // Otherwise, fall back to individual onChange calls
-    if (onBatchChange) {
-      onBatchChange(updatedContent)
+  }
+  
+  // Handle disabling/enabling a template variable
+  const handleToggleVariable = (variableName) => {
+    const newDisabled = new Set(disabledVariables)
+    if (newDisabled.has(variableName)) {
+      newDisabled.delete(variableName)
+      // Remove disabled flag from content
+      onChange(`_disabled_${variableName}`, false)
     } else {
-      // Set all fields - call onChange for each field
-      // Note: This might cause race conditions if onChange uses stale closures
-      Object.keys(fieldsToUpdate).forEach(key => {
-        onChange(key, updatedContent[key])
-      })
+      newDisabled.add(variableName)
+      // Set disabled flag in content
+      onChange(`_disabled_${variableName}`, true)
     }
+    setDisabledVariables(newDisabled)
   }
 
   // Get current content as string for template selector
@@ -418,219 +375,95 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         />
       </Box>
 
-      {/* ✅ FULLY SCHEMA-DRIVEN: Render blocks based on schema.rendering config */}
-      {editorSchema && editorBlocks.length > 0 ? (
-        <Box sx={{ mt: 2 }}>
-          {editorBlocks
-            .filter(block => block.ui?.enabled !== false)
-            .sort((a, b) => (a.ui?.order || 999) - (b.ui?.order || 999))
-            .map((block) => {
-              // ✅ Use block.rendering config if available, otherwise infer from block.type
-              const rendering = block.rendering || {}
-              const fieldType = rendering.fieldType || 
-                (block.type === 'paragraph' ? 'textarea' : 
-                 block.type === 'heading' ? 'text' : 
-                 block.type === 'text' ? 'textarea' :
-                 block.type)
-
-              // Convert block to field format for SchemaRenderer
-              const field = {
-                name: block.id,
-                type: fieldType,
-                label: block.label,
-                description: block.description || rendering.placeholder,
-                required: block.required,
-                placeholder: rendering.placeholder || block.description,
-                default: rendering.default,
-                validation: block.validation,
-                ui: block.ui,
-                constraints: block.constraints,
-                // Add rendering-specific config
-                optionsSource: rendering.optionsSource,
-                action: rendering.action
+      {/* ✅ Template Variables: Show template variables as separate fields */}
+      {activeTemplate && (() => {
+        
+        const templateVars = extractTemplateVariables(activeTemplate)
+        const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
+        
+        // Show ALL variables from template.variables array (no filtering)
+        const displayVars = templateVars
+        
+        if (displayVars.length === 0) return null
+        
+        return (
+          <Box sx={{ mt: 2, mb: 2 }}>
+            {/* Checkbox to hide/show auto-filled variables */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={hideAutoFilled}
+                  onChange={(e) => setHideAutoFilled(e.target.checked)}
+                  size="small"
+                />
               }
-
-              // ✅ Handle image blocks - use image selector if images are available
-              if (block.type === 'image') {
-                if (availableImages.length > 0) {
-                  return renderImageSelector(block, field)
-                } else {
-                  // No images uploaded - don't show anything
-                  return null
-                }
-              }
-
-              // ✅ Handle video blocks - use file input
-              if (block.type === 'video' && fieldType === 'file') {
-                return (
-                  <Box key={block.id} sx={{ mb: 2 }}>
-                    <SchemaRenderer
-                      fields={[field]}
-                      values={content || {}}
-                      onChange={(fieldName, value) => onChange(fieldName, value)}
-                      errors={{}}
-                    />
-                  </Box>
-                )
-              }
-
-              // ✅ Handle hashtag/mention blocks - use multiselect if configured
-              if ((block.type === 'hashtag' || block.type === 'mention') && fieldType === 'multiselect') {
-                return (
-                  <Box key={block.id} sx={{ mb: 2 }}>
-                    <SchemaRenderer
-                      fields={[field]}
-                      values={content || {}}
-                      onChange={(fieldName, value) => onChange(fieldName, value)}
-                      errors={{}}
-                    />
-                  </Box>
-                )
-              }
-
-              // ✅ Render all other blocks using SchemaRenderer (fully generic)
+              label="Hide auto-filled variables"
+              sx={{ mb: 1 }}
+            />
+            
+            {displayVars.map(varName => {
+              const varValue = content?.[`_var_${varName}`] || templateVariables[varName] || ''
+              const isDisabled = disabledVariables.has(varName)
+              const isAutoFilled = isAutoFilledVariable(varName, parsedData)
+              const { label, icon } = getVariableLabel(varName)
+              
+              // Hide auto-filled variables if checkbox is checked
+              if (hideAutoFilled && isAutoFilled && !isDisabled) return null
+              
               return (
-                <Box key={block.id} sx={{ mb: 2 }}>
-                  <SchemaRenderer
-                    fields={[field]}
-                    values={content || {}}
-                    onChange={(fieldName, value) => onChange(fieldName, value)}
-                    errors={{}}
+                <Box key={varName} sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                      {icon} {label}:
+                    </Typography>
+                    {isAutoFilled && (
+                      <IconButton
+                        size="small"
+                        onClick={() => handleToggleVariable(varName)}
+                        sx={{ 
+                          ml: 'auto',
+                          color: isDisabled ? 'text.disabled' : 'text.secondary',
+                          '&:hover': { bgcolor: 'action.hover' }
+                        }}
+                        title={isDisabled ? 'Enable field' : 'Disable field'}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Box>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    value={varValue}
+                    disabled={isDisabled}
+                    onChange={(e) => {
+                      // Allow manual editing if not auto-filled
+                      if (!isAutoFilled) {
+                        onChange(`_var_${varName}`, e.target.value)
+                      }
+                    }}
+                    sx={{
+                      '& .MuiInputBase-root': {
+                        bgcolor: isDisabled ? 'action.disabledBackground' : 'background.paper',
+                        opacity: isDisabled ? 0.6 : 1
+                      }
+                    }}
+                    InputProps={{
+                      readOnly: isAutoFilled && !isDisabled
+                    }}
                   />
                 </Box>
               )
             })}
-        </Box>
-      ) : (
-        // Fallback: Show message if no schema available
-        <Alert severity="info" sx={{ mt: 2 }}>
-          No editor schema available for this platform. Please configure the platform schema in the backend.
-        </Alert>
-      )}
-
-      {/* Dynamic Template Variables Section */}
-      {Object.keys(unfulfilledVariables).length > 0 && (
-        <Box sx={{ mt: 3, borderTop: 1, borderColor: 'divider', pt: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'warning.main' }}>
-              ⚠️ Additional Template Variables Required
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setUnfulfilledVarsOpen(!unfulfilledVarsOpen)}
-            >
-              {unfulfilledVarsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </IconButton>
           </Box>
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-            These variables are used in your template but haven't been filled yet. Please provide values:
-          </Typography>
-          
-          <Collapse in={unfulfilledVarsOpen}>
-            <Box sx={{ mt: 2 }}>
-              {(() => {
-                // Collect all unique variables across all fields
-                const allVars = new Set()
-                Object.values(unfulfilledVariables).forEach(vars => {
-                  vars.forEach(v => allVars.add(v))
-                })
-                const uniqueVars = Array.from(allVars)
+        )
+      })()}
 
-                return (
-                  <>
-                    {/* Show all unique variables once */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                      {uniqueVars.map((varName) => (
-                        <Chip key={varName} label={`{${varName}}`} size="small" color="warning" />
-                      ))}
-                    </Box>
-                    {/* Show input fields for each unique variable */}
-                    {uniqueVars.map((varName) => (
-                      <TextField
-                        key={varName}
-                        fullWidth
-                        label={`${varName} (for {${varName}})`}
-                        placeholder={`Enter value for ${varName}...`}
-                        value={content?.[`_var_${varName}`] || ''}
-                        onChange={(e) => {
-                          const newValue = e.target.value
-                          const oldValue = content?.[`_var_${varName}`] || ''
-                          
-                          // Update _var_ field (persistence)
-                          onChange(`_var_${varName}`, newValue)
-                          
-                          // Live replacement: Replace variable in ALL content fields
-                          Object.keys(content).forEach(fieldName => {
-                            // Skip _var_ fields
-                            if (fieldName.startsWith('_var_')) return
-                            
-                            const fieldValue = content?.[fieldName]
-                            if (typeof fieldValue === 'string') {
-                              if (newValue) {
-                                // Replace variable with new value (or update existing replacement)
-                                let updatedValue = fieldValue
-                                
-                                // If variable still exists, replace it
-                                if (fieldValue.includes(`{${varName}}`)) {
-                                  updatedValue = fieldValue.replace(
-                                    new RegExp(`\\{${varName}\\}`, 'g'),
-                                    newValue
-                                  )
-                                } else if (oldValue && fieldValue.includes(oldValue)) {
-                                  // If old value exists, replace it with new value (update)
-                                  updatedValue = fieldValue.replace(
-                                    new RegExp(oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-                                    newValue
-                                  )
-                                } else {
-                                  // Check original content for variable
-                                  const originalField = originalContentWithVars[fieldName]
-                                  if (originalField && originalField.includes(`{${varName}}`)) {
-                                    // Replace in original content
-                                    updatedValue = originalField.replace(
-                                      new RegExp(`\\{${varName}\\}`, 'g'),
-                                      newValue
-                                    )
-                                  }
-                                }
-                                
-                                if (updatedValue !== fieldValue) {
-                                  onChange(fieldName, updatedValue)
-                                }
-                              } else {
-                                // Undo: Restore variable from original content
-                                const originalField = originalContentWithVars[fieldName]
-                                if (originalField && originalField.includes(`{${varName}}`)) {
-                                  // Restore original content with variable
-                                  let restoredValue = fieldValue
-                                  
-                                  // Replace old value with variable
-                                  if (oldValue && fieldValue.includes(oldValue)) {
-                                    restoredValue = fieldValue.replace(
-                                      new RegExp(oldValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
-                                      `{${varName}}`
-                                    )
-                                  } else {
-                                    // Use original content
-                                    restoredValue = originalField
-                                  }
-                                  
-                                  onChange(fieldName, restoredValue)
-                                }
-                              }
-                            }
-                          })
-                        }}
-                        sx={{ mb: 1 }}
-                        size="small"
-                      />
-                    ))}
-                  </>
-                )
-              })()}
-            </Box>
-          </Collapse>
-        </Box>
+      {/* Template-based editing only - no editorBlocks */}
+      {!activeTemplate && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Please select a template to start editing. All content is managed through templates.
+        </Alert>
       )}
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>

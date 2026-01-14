@@ -549,6 +549,14 @@ const useStore = create((set, get) => ({
       }
     })
 
+    // Apply hashtags from parsed data if available
+    if (parsedData && parsedData.hashtags && Array.isArray(parsedData.hashtags) && parsedData.hashtags.length > 0) {
+      const currentHashtags = get().selectedHashtags || []
+      // Merge parsed hashtags with existing ones, avoiding duplicates
+      const mergedHashtags = [...new Set([...currentHashtags, ...parsedData.hashtags])]
+      set({ selectedHashtags: mergedHashtags })
+    }
+
     set({ platformContent: updatedPlatformContent })
     get().saveEventWorkspace()
 

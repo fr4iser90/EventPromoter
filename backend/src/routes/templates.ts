@@ -18,6 +18,9 @@ router.get('/:platform', TemplateController.getTemplates)
 // Get single template
 router.get('/:platform/:id', TemplateController.getTemplate)
 
+// Apply template to editor content (must be before other POST routes)
+router.post('/:platform/:id/apply', TemplateController.applyTemplate)
+
 // Create new template
 router.post('/:platform', TemplateController.createTemplate)
 

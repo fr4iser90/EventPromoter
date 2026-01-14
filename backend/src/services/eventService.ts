@@ -576,6 +576,11 @@ export class EventService {
     // Use file references from event data
     const uploadedFileRefs = eventData.uploadedFileRefs || []
 
+    // Use hashtags from eventData if available, otherwise fall back to parsedData
+    const selectedHashtags = eventData.selectedHashtags && eventData.selectedHashtags.length > 0
+      ? eventData.selectedHashtags
+      : (parsedData?.hashtags && Array.isArray(parsedData.hashtags) ? parsedData.hashtags : [])
+
     return {
       id: eventId,
       name: eventData.name,
@@ -584,7 +589,7 @@ export class EventService {
       platformContent,
       uploadedFileRefs,
       selectedPlatforms: eventData.selectedPlatforms || [],
-      selectedHashtags: eventData.selectedHashtags || [],
+      selectedHashtags,
       loadedAt: new Date().toISOString()
     }
   }

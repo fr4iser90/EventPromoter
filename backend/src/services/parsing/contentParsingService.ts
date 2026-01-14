@@ -126,6 +126,19 @@ export class ContentExtractionService {
 
           const dateResult = this.normalizeStructuredDate(yamlData.date)
 
+          // Parse hashtags from YAML (supports both string and array formats)
+          let hashtags: string[] | undefined = undefined
+          if (yamlData.hashtags || yamlData.hashtag) {
+            const hashtagValue = yamlData.hashtags || yamlData.hashtag
+            if (Array.isArray(hashtagValue)) {
+              hashtags = hashtagValue.map(tag => typeof tag === 'string' ? tag : String(tag))
+                .map(tag => this.parseHashtags(tag))
+                .flat()
+            } else if (typeof hashtagValue === 'string') {
+              hashtags = this.parseHashtags(hashtagValue)
+            }
+          }
+
           return {
             title: yamlData.title,
             date: dateResult?.normalized,
@@ -139,6 +152,7 @@ export class ContentExtractionService {
             website: yamlData.website,
             lineup: Array.isArray(yamlData.lineup) ? yamlData.lineup : yamlData.lineup ? [yamlData.lineup] : undefined,
             genre: yamlData.genre,
+            hashtags,
             rawText: content,
             confidence: 1.0,
             parsedAt: new Date().toISOString(),
@@ -208,6 +222,11 @@ export class ContentExtractionService {
               break
             case 'GENRE':
               parsed.genre = value
+              break
+            case 'HASHTAG':
+            case 'HASHTAGS':
+              // Parse hashtags: support both with and without #, comma-separated
+              parsed.hashtags = this.parseHashtags(value)
               break
             case 'DESCRIPTION':
               inDescription = true
@@ -444,6 +463,27 @@ export class ContentExtractionService {
     // Handle Date objects or other formats
     const str = dateValue.toString()
     return { normalized: str, original: str }
+  }
+
+  // Parse hashtags from string (supports both with and without #)
+  private static parseHashtags(hashtagString: string): string[] {
+    if (!hashtagString || !hashtagString.trim()) {
+      return []
+    }
+
+    // Split by comma and clean up
+    const hashtags = hashtagString
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0)
+      .map(tag => {
+        // Normalize: ensure hashtag starts with #, remove spaces
+        const cleaned = tag.replace(/\s+/g, '')
+        return cleaned.startsWith('#') ? cleaned : `#${cleaned}`
+      })
+
+    // Remove duplicates
+    return [...new Set(hashtags)]
   }
 
   // Check for duplicates in existing events
