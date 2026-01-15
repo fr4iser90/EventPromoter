@@ -81,58 +81,34 @@ export class TemplateMappingService {
     }
 
     // Handle string templates (LinkedIn, Twitter, etc.)
+    // String templates must have a 'text' block in editor schema - no fallbacks
     if (typeof templateContent === 'string') {
-      const firstTextBlock = editorBlocks.find((b: ContentBlock) => 
-        (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject' && b.id !== 'title'
-      )
-      if (firstTextBlock) {
-        newContent[firstTextBlock.id] = replaceTemplateVariables(templateContent, templateVariables)
+      const textBlock = editorBlocks.find((b: ContentBlock) => b.id === 'text')
+      if (textBlock) {
+        newContent.text = replaceTemplateVariables(templateContent, templateVariables)
       }
     } else {
-      // Template is an object - map fields to editor blocks
+      // Template is an object - map fields to editor blocks (EXACT MATCHES ONLY - no fallbacks)
       editorBlocks.forEach((block: ContentBlock) => {
         const fieldName = block.id
-        let fieldValue = templateContent[fieldName]
+        const fieldValue = templateContent[fieldName]
 
-        // If no exact match, check for common field name mappings
-        if (!fieldValue) {
-          if (fieldName === 'body' && (templateContent.html || templateContent.text)) {
-            fieldValue = templateContent.html || templateContent.text
-          } else if (fieldName === 'bodyText' && (templateContent.html || templateContent.text)) {
-            // For email: extract text from html for bodyText
-            if (templateContent.html) {
-              fieldValue = this.extractTextFromHtml(templateContent.html)
-            } else {
-              fieldValue = templateContent.text
-            }
-          } else if (fieldName === 'subject' && templateContent.subject) {
-            fieldValue = templateContent.subject
-          } else if (fieldName === 'text' && (templateContent.text || templateContent.html)) {
-            fieldValue = templateContent.text || templateContent.html
-          } else if (fieldName === 'title' && templateContent.title) {
-            fieldValue = templateContent.title
-          }
-        }
-
+        // Only use exact matches - no fallback mappings
         if (fieldValue && typeof fieldValue === 'string') {
           newContent[fieldName] = replaceTemplateVariables(fieldValue, templateVariables)
         }
       })
 
-      // ✅ CRITICAL: Also set body if html is present (for preview rendering)
-      // This ensures preview works even if body block doesn't exist in editor schema
-      if (templateContent.html && !newContent.body) {
-        newContent.body = replaceTemplateVariables(templateContent.html, templateVariables)
-      }
-
-      // Fallback: If template has html/text but no body/bodyText block found, apply to first paragraph/text block
-      if ((templateContent.html || templateContent.text) && !newContent.body && !newContent.bodyText && !newContent.text) {
-        const firstTextBlock = editorBlocks.find((b: ContentBlock) => 
-          (b.type === 'paragraph' || b.type === 'text') && b.id !== 'subject' && b.id !== 'title'
-        )
-        if (firstTextBlock) {
-          const templateText = templateContent.html || templateContent.text
-          newContent[firstTextBlock.id] = replaceTemplateVariables(templateText, templateVariables)
+      // Extract body content from template HTML and set as bodyText (if html exists and bodyText not already set)
+      if (templateContent.html && !newContent.bodyText) {
+        const templateHtml = replaceTemplateVariables(templateContent.html, templateVariables)
+        // Extract body content from full HTML document (remove DOCTYPE, html, head, style tags)
+        const bodyMatch = templateHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+        if (bodyMatch && bodyMatch[1]) {
+          // Extract body content, remove style tags (preview has its own styles)
+          const bodyContent = bodyMatch[1].replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').trim()
+          // Set as bodyText (structured field) - preview will render it
+          newContent.bodyText = bodyContent
         }
       }
     }

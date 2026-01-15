@@ -2,6 +2,7 @@
 
 import { InstagramContent, InstagramConfig } from './types.js'
 import { InstagramValidator } from './validator.js'
+import { renderInstagramPreview } from './preview.js'
 
 export class InstagramService {
   private config: InstagramConfig
@@ -41,5 +42,15 @@ export class InstagramService {
       required: ['caption', 'image'],
       recommended: ['hashtags', 'location']
     }
+  }
+
+  async renderPreview(options: {
+    content: Record<string, any>
+    schema: any
+    mode?: string
+    client?: string
+    darkMode?: boolean
+  }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
+    return renderInstagramPreview(options)
   }
 }

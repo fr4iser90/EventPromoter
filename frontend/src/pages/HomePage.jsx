@@ -28,7 +28,6 @@ import { History as EventHistory } from '../features/event'
 import FileUpload from '../flows/upload/FileUpload'
 import { Container as ContentEditor } from '../features/platform'
 import { DataPreview as Preview } from '../features/event'
-import HashtagBuilder from '../features/platform/components/HashtagBuilder'
 import { Selector as PlatformSelector } from '../features/platform'
 import { Panel as DynamicPanelWrapper } from '../features/platform'
 import SettingsModal from '../shared/components/ui/Dialog/Settings'
@@ -347,10 +346,6 @@ function HomePage() {
                 onPlatformContentChange={setPlatformContent}
                 disabled={!canEditContent}
               />
-            </Box>
-
-            <Box sx={{ mb: 4 }}>
-              <HashtagBuilder disabled={!canEditContent} />
             </Box>
 
             {/* Next Step Guidance */}

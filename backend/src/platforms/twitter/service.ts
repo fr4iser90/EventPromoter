@@ -2,6 +2,7 @@
 
 import { TwitterContent, TwitterConfig } from './types.js'
 import { TwitterValidator } from './validator.js'
+import { renderTwitterPreview } from './preview.js'
 
 export class TwitterService {
   private config: TwitterConfig
@@ -84,5 +85,23 @@ export class TwitterService {
     }
 
     return tips
+  }
+
+  /**
+   * Render preview HTML
+   * 
+   * Delegates to platform-specific preview renderer
+   * 
+   * @param options - Render options
+   * @returns Rendered HTML preview
+   */
+  async renderPreview(options: {
+    content: Record<string, any>
+    schema: any
+    mode?: string
+    client?: string
+    darkMode?: boolean
+  }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
+    return renderTwitterPreview(options)
   }
 }

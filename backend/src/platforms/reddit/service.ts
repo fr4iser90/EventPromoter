@@ -2,6 +2,7 @@
 
 import { RedditContent, RedditConfig } from './types.js'
 import { RedditValidator } from './validator.js'
+import { renderRedditPreview } from './preview.js'
 
 export class RedditService {
   private config: RedditConfig
@@ -90,5 +91,15 @@ export class RedditService {
   getPostUrl(subreddit: string, postId?: string): string {
     const baseUrl = this.getSubredditUrl(subreddit)
     return postId ? `${baseUrl}/${postId}` : baseUrl
+  }
+
+  async renderPreview(options: {
+    content: Record<string, any>
+    schema: any
+    mode?: string
+    client?: string
+    darkMode?: boolean
+  }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
+    return renderRedditPreview(options)
   }
 }

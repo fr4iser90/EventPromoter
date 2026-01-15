@@ -43,13 +43,15 @@ export class ContentExtractionService {
               mergedData = structuredData
             } else {
               // Merge: txt data (first) takes priority, md data fills missing fields
+              // TypeScript: mergedData is guaranteed to be non-null here
+              const existingData: ParsedEventData = mergedData
               mergedData = {
                 ...structuredData, // md data (second)
-                ...mergedData,     // txt data (first) - overwrites md
+                ...existingData,   // txt data (first) - overwrites md
                 // Special handling for arrays - merge them
-                lineup: mergedData.lineup || structuredData.lineup,
-                hashtags: mergedData.hashtags && mergedData.hashtags.length > 0 
-                  ? mergedData.hashtags 
+                lineup: existingData.lineup || structuredData.lineup,
+                hashtags: existingData.hashtags && existingData.hashtags.length > 0 
+                  ? existingData.hashtags 
                   : (structuredData.hashtags || [])
               }
             }
@@ -202,11 +204,13 @@ export class ContentExtractionService {
 
       for (const line of lines) {
         if (inDescription) {
-          if (line.toUpperCase().startsWith('LINEUP:') ||
-              line.toUpperCase().startsWith('ADDITIONAL INFO:') ||
-              line === '') {
+          // Check if this line starts a new key-value pair (only uppercase letters + colon)
+          // This ends the description block
+          if (line.includes(':') && /^[A-Z\s]+:\s*/.test(line.trim())) {
             inDescription = false
+            // Continue processing this line as a key-value pair below
           } else {
+            // Everything else (empty lines, text, text with colons) is part of description
             descriptionLines.push(line)
             continue
           }

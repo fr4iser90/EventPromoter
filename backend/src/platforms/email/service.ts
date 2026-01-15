@@ -3,6 +3,7 @@
 import { EmailContent, EmailConfig } from './types.js'
 import { EmailValidator } from './validator.js'
 import { EmailRecipientService } from './recipientService.js'
+import { renderEmailPreview } from './preview.js'
 
 export class EmailService {
   private config: EmailConfig
@@ -298,8 +299,7 @@ export class EmailService {
   /**
    * Render preview HTML
    * 
-   * Schema-driven rendering: Uses slots from schema to build email-like preview
-   * Preview === Send (identical rendering logic)
+   * Delegates to platform-specific preview renderer
    * 
    * @param options - Render options
    * @returns Rendered HTML preview
@@ -311,190 +311,7 @@ export class EmailService {
     client?: string
     darkMode?: boolean
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
-    const { content, schema, mode = 'desktop', client, darkMode = false } = options
-    
-    // Resolve content: build body from structured fields if needed
-    const processedContent = this.processContentForSave(content)
-    
-    // Get mode dimensions
-    const selectedMode = schema.modes?.find((m: any) => m.id === mode) || schema.modes?.[0]
-    const width = selectedMode?.width || 600
-    const height = selectedMode?.height || 800
-    
-    // Resolve styling tokens
-    const bgColor = darkMode ? '#1a1a1a' : '#f5f5f5'
-    const textColor = darkMode ? '#ffffff' : '#000000'
-    const containerBg = darkMode ? '#2a2a2a' : '#ffffff'
-    const fontFamily = schema.styling?.fontFamily || 'Arial, sans-serif'
-    
-    // Build email-like HTML (Gmail/Outlook style)
-    let html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: ${fontFamily};
-      background-color: ${bgColor};
-      color: ${textColor};
-      padding: 20px;
-      line-height: 1.6;
-    }
-    .email-container {
-      max-width: ${width}px;
-      margin: 0 auto;
-      background: ${containerBg};
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .email-header {
-      padding: 20px;
-      border-bottom: 1px solid ${darkMode ? '#444' : '#eee'};
-      background: ${containerBg};
-    }
-    .email-subject {
-      font-size: 18px;
-      font-weight: bold;
-      color: ${textColor};
-      margin-bottom: 8px;
-    }
-    .email-body {
-      padding: 20px;
-      color: ${textColor};
-    }
-    .email-body img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 20px 0;
-      border-radius: 4px;
-    }
-    .email-body p {
-      margin-bottom: 16px;
-    }
-    .email-body a {
-      color: ${darkMode ? '#4a9eff' : '#007bff'};
-      text-decoration: none;
-    }
-    .email-body a:hover {
-      text-decoration: underline;
-    }
-    .email-footer {
-      padding: 20px;
-      border-top: 1px solid ${darkMode ? '#444' : '#eee'};
-      font-size: 12px;
-      color: ${darkMode ? '#aaa' : '#666'};
-      background: ${containerBg};
-    }
-    .cta-button {
-      display: inline-block;
-      background: ${darkMode ? '#4a9eff' : '#007bff'};
-      color: white;
-      padding: 12px 24px;
-      text-decoration: none;
-      border-radius: 5px;
-      margin: 20px 0;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <div class="email-container">
-`
-
-    // Render header slot (subject)
-    if (processedContent.subject) {
-      html += `    <div class="email-header">
-      <div class="email-subject">${this.escapeHtml(processedContent.subject)}</div>
-    </div>
-`
-    }
-
-    // Render body slot
-    html += `    <div class="email-body">
-`
-    
-    // Hero slot (headerImage)
-    if (processedContent.headerImage) {
-      const imageUrl = processedContent.headerImage.startsWith('http') 
-        ? processedContent.headerImage 
-        : processedContent.headerImage.startsWith('/')
-          ? `http://localhost:4000${processedContent.headerImage}`
-          : processedContent.headerImage
-      html += `      <img src="${imageUrl}" alt="Event Image" />
-`
-    }
-
-    // Body content (from body or bodyText)
-    const bodyContent = processedContent.body || processedContent.bodyText
-    if (bodyContent) {
-      // If it's HTML, use it directly (already processed)
-      if (bodyContent.includes('<') && bodyContent.includes('>')) {
-        // Extract body content from full HTML if needed
-        const bodyMatch = bodyContent.match(/<body[^>]*>([\s\S]*)<\/body>/i)
-        const bodyHtml = bodyMatch ? bodyMatch[1] : bodyContent
-        html += `      ${bodyHtml}
-`
-      } else {
-        // Plain text - convert to HTML
-        const bodyHtml = this.escapeHtml(bodyContent)
-          .replace(/\n\n/g, '</p><p>')
-          .replace(/\n/g, '<br>')
-        html += `      <p>${bodyHtml}</p>
-`
-      }
-    }
-
-    // CTA Button
-    if (processedContent.ctaButtonText && processedContent.ctaButtonLink) {
-      html += `      <div style="text-align: center;">
-      <a href="${processedContent.ctaButtonLink}" class="cta-button">${this.escapeHtml(processedContent.ctaButtonText)}</a>
-    </div>
-`
-    }
-
-    html += `    </div>
-`
-
-    // Footer slot
-    if (processedContent.footerText) {
-      const footerHtml = this.escapeHtml(processedContent.footerText)
-        .replace(/\n/g, '<br>')
-      html += `    <div class="email-footer">
-      ${footerHtml}
-    </div>
-`
-    }
-
-    html += `  </div>
-</body>
-</html>`
-
-    return {
-      html,
-      dimensions: {
-        width,
-        height
-      }
-    }
+    return renderEmailPreview(this, options)
   }
 
-  /**
-   * Escape HTML
-   */
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;')
-  }
 }

@@ -2,6 +2,7 @@
 
 import { FacebookContent, FacebookConfig } from './types.js'
 import { FacebookValidator } from './validator.js'
+import { renderFacebookPreview } from './preview.js'
 
 export class FacebookService {
   private config: FacebookConfig
@@ -72,5 +73,15 @@ export class FacebookService {
     }
 
     return tips
+  }
+
+  async renderPreview(options: {
+    content: Record<string, any>
+    schema: any
+    mode?: string
+    client?: string
+    darkMode?: boolean
+  }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
+    return renderFacebookPreview(options)
   }
 }

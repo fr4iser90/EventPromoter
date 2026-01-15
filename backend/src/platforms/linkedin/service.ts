@@ -2,6 +2,7 @@
 
 import { LinkedInContent, LinkedInConfig } from './types.js'
 import { LinkedInValidator } from './validator.js'
+import { renderLinkedInPreview } from './preview.js'
 
 export class LinkedInService {
   private config: LinkedInConfig
@@ -58,5 +59,15 @@ export class LinkedInService {
       required: ['text'],
       recommended: ['professional-tone', 'industry-hashtags']
     }
+  }
+
+  async renderPreview(options: {
+    content: Record<string, any>
+    schema: any
+    mode?: string
+    client?: string
+    darkMode?: boolean
+  }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
+    return renderLinkedInPreview(options)
   }
 }
