@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path'
+
 export interface PublishResult {
   platform: string
   success: boolean
@@ -118,9 +121,6 @@ export class PublishTrackingService {
       const sessionFile = `${eventDir}/publish-session-${session.id}.json`
 
       // Ensure directory exists
-      const fs = require('fs')
-      const path = require('path')
-
       if (!fs.existsSync(eventDir)) {
         fs.mkdirSync(eventDir, { recursive: true })
       }
@@ -134,7 +134,6 @@ export class PublishTrackingService {
   // Load session from file
   static loadPublishSession(eventId: string, sessionId: string): PublishSession | null {
     try {
-      const fs = require('fs')
       const sessionFile = `events/${eventId}/publish-session-${sessionId}.json`
 
       if (!fs.existsSync(sessionFile)) {
@@ -158,9 +157,6 @@ export class PublishTrackingService {
     const sessionsToDelete = sessions.slice(10) // Keep first 10 (most recent)
 
     try {
-      const fs = require('fs')
-      const path = require('path')
-
       for (const session of sessionsToDelete) {
         const sessionFile = `events/${eventId}/publish-session-${session.id}.json`
         if (fs.existsSync(sessionFile)) {

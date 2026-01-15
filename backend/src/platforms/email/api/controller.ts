@@ -4,11 +4,11 @@
  * Email-specific API endpoints for recipient management.
  * This is Email-platform-specific, NOT generic!
  * 
- * @module platforms/email/controller
+ * @module platforms/email/api/controller
  */
 
 import { Request, Response } from 'express'
-import { EmailRecipientService } from './recipientService.js'
+import { EmailRecipientService } from '../services/recipientService.js'
 
 export class EmailController {
   /**
@@ -244,4 +244,3 @@ export class EmailController {
     }
   }
 }
-

@@ -1,6 +1,6 @@
 // Email-specific validation
 
-import { EmailContent, EmailValidation } from './types.js'
+import { EmailContent, EmailValidation } from '../types.js'
 
 export class EmailValidator {
   private static readonly MAX_RECIPIENTS = 100
@@ -8,6 +8,9 @@ export class EmailValidator {
   private static readonly MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25MB
 
   static validateEmail(email: string): boolean {
+    if (!email || typeof email !== 'string') {
+      return false
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email.trim())
   }
@@ -16,16 +19,25 @@ export class EmailValidator {
     const errors: string[] = []
 
     // Required fields
-    if (!content.subject || content.subject.trim().length === 0) {
+    if (!content.subject || typeof content.subject !== 'string' || content.subject.trim().length === 0) {
       errors.push('Email subject is required')
     }
 
-    if (!content.html || content.html.trim().length === 0) {
-      errors.push('Email content is required')
+    // Accept both html and bodyText (bodyText is from editor, html is legacy/full HTML)
+    const hasHtml = content.html && typeof content.html === 'string' && content.html.trim().length > 0
+    const hasBodyText = content.bodyText && typeof content.bodyText === 'string' && content.bodyText.trim().length > 0
+    if (!hasHtml && !hasBodyText) {
+      errors.push('Email content is required (html or bodyText)')
     }
 
-    if (!content.recipients || content.recipients.length === 0) {
-      errors.push('At least one recipient is required')
+    // Recipients are required but may come from platform settings, not content
+    // Only validate if recipients are provided in content
+    if (content.recipients) {
+      if (!Array.isArray(content.recipients)) {
+        errors.push('Recipients must be an array')
+      } else if (content.recipients.length === 0) {
+        errors.push('At least one recipient is required')
+      }
     }
 
     // Subject validation
@@ -33,20 +45,21 @@ export class EmailValidator {
       errors.push(`Subject too long: ${content.subject.length}/${this.MAX_SUBJECT_LENGTH} characters (may be truncated)`)
     }
 
-    // Recipients validation
-    if (content.recipients) {
+    // Recipients validation (only if array)
+    if (content.recipients && Array.isArray(content.recipients)) {
       if (content.recipients.length > this.MAX_RECIPIENTS) {
         errors.push(`Too many recipients: ${content.recipients.length}/${this.MAX_RECIPIENTS} maximum`)
       }
 
-      const invalidEmails = content.recipients.filter(email => !this.validateEmail(email))
+      const invalidEmails = content.recipients.filter(email => !email || !this.validateEmail(email))
       if (invalidEmails.length > 0) {
         errors.push(`Invalid email addresses: ${invalidEmails.join(', ')}`)
       }
 
-      // Check for duplicates
-      const uniqueRecipients = new Set(content.recipients.map(email => email.toLowerCase()))
-      if (uniqueRecipients.size !== content.recipients.length) {
+      // Check for duplicates (only valid emails)
+      const validRecipients = content.recipients.filter(email => email && typeof email === 'string')
+      const uniqueRecipients = new Set(validRecipients.map(email => email.toLowerCase()))
+      if (uniqueRecipients.size !== validRecipients.length) {
         errors.push('Duplicate email addresses found')
       }
     }
@@ -80,8 +93,8 @@ export class EmailValidator {
       }
     }
 
-    // HTML content validation
-    if (content.html) {
+    // HTML content validation (only if html exists)
+    if (content.html && typeof content.html === 'string') {
       // Check for basic HTML structure
       if (!content.html.includes('<') || !content.html.includes('>')) {
         errors.push('Email content should contain proper HTML formatting')
@@ -93,6 +106,14 @@ export class EmailValidator {
       }
     }
 
+    // bodyText validation (only if bodyText exists)
+    if (content.bodyText && typeof content.bodyText === 'string') {
+      // Check for very long content
+      if (content.bodyText.length > 50000) {
+        errors.push('Email content is very long - consider breaking into multiple emails or using attachments')
+      }
+    }
+
     const warnings: string[] = []
 
     // Add warnings for optimization
@@ -100,8 +121,11 @@ export class EmailValidator {
       warnings.push('Subject is quite short - consider making it more descriptive')
     }
 
-    if (!content.html.includes('<img') && !content.attachments?.length) {
-      warnings.push('Consider adding images or attachments to make the email more engaging')
+    // Only check for images if html exists
+    if (content.html && typeof content.html === 'string') {
+      if (!content.html.includes('<img') && !content.attachments?.length) {
+        warnings.push('Consider adding images or attachments to make the email more engaging')
+      }
     }
 
     return {

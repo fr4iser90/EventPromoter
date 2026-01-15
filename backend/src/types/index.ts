@@ -206,8 +206,8 @@ export interface AppConfig {
   n8nWebhookUrl?: string
   n8nEnabled?: boolean
   publishingMode?: 'n8n' | 'api' | 'playwright' | 'auto' // auto = try n8n first, fallback to api
-  darkMode: boolean
-  lastUpdated: string
+  darkMode?: boolean
+  lastUpdated?: string
 }
 
 export interface PlatformValidationResult {

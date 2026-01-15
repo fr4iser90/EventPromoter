@@ -4,11 +4,11 @@
  * Handles all recipient management logic for the email platform.
  * This is platform-specific business logic that belongs in the backend.
  * 
- * @module platforms/email/recipientService
+ * @module platforms/email/services/recipientService
  */
 
-import { readPlatformData, writePlatformData } from '../../utils/platformDataUtils.js'
-import { EmailValidator } from './validator.js'
+import { readPlatformData, writePlatformData } from '../../../utils/platformDataUtils.js'
+import { EmailValidator } from '../validators/emailValidator.js'
 
 const PLATFORM_ID = 'email'
 
@@ -231,4 +231,3 @@ export class EmailRecipientService {
     }
   }
 }
-

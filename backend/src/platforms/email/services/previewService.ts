@@ -1,12 +1,12 @@
 /**
- * Email Platform Preview Renderer
+ * Email Platform Preview Service
  * 
  * Handles rendering of email preview HTML
  * 
- * @module platforms/email/preview
+ * @module platforms/email/services/previewService
  */
 
-import { EmailService } from './service.js'
+import { EmailService } from './emailService.js'
 
 export async function renderEmailPreview(
   service: EmailService,

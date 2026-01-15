@@ -29,11 +29,13 @@ export class ConfigService {
   }
 
   static async updateAppConfig(updates: Partial<AppConfig>): Promise<boolean> {
-    const current = await this.getAppConfig()
-    if (!current) {
-      return false
+    const current = await this.getAppConfig() || {}
+    // Merge updates with current config (updates take precedence) - NO FALLBACKS, only real data
+    const merged: AppConfig = {
+      ...current,
+      ...updates
     }
-    return await this.saveAppConfig({ ...current, ...updates })
+    return await this.saveAppConfig(merged)
   }
 
   // Environment variable access

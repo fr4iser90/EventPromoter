@@ -2,7 +2,8 @@
 
 export interface EmailContent {
   subject: string
-  html: string
+  html?: string
+  bodyText?: string
   recipients: string[]
   cc?: string[]
   bcc?: string[]

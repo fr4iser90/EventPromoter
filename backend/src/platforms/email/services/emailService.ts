@@ -1,9 +1,9 @@
 // Email platform service
 
-import { EmailContent, EmailConfig } from './types.js'
-import { EmailValidator } from './validator.js'
+import { EmailContent, EmailConfig } from '../types.js'
+import { EmailValidator } from '../validators/emailValidator.js'
 import { EmailRecipientService } from './recipientService.js'
-import { renderEmailPreview } from './preview.js'
+import { renderEmailPreview } from './previewService.js'
 
 export class EmailService {
   private config: EmailConfig
@@ -25,12 +25,14 @@ export class EmailService {
   }
 
   transformForAPI(content: EmailContent) {
+    // Use html if available, otherwise use bodyText (convert to HTML if needed)
+    const html = content.html || (content.bodyText ? this.buildBodyFromStructuredFields({ bodyText: content.bodyText }) : '')
     return {
       to: content.recipients,
       cc: content.cc || [],
       bcc: content.bcc || [],
       subject: content.subject,
-      html: content.html,
+      html,
       attachments: content.attachments || []
     }
   }
@@ -69,27 +71,31 @@ export class EmailService {
       tips.push('Large recipient list - consider segmenting or using a mailing service')
     }
 
-    if (!content.html.includes('unsubscribe') && !content.html.includes('opt-out')) {
-      tips.push('Consider adding an unsubscribe link for compliance')
-    }
+    // Only check html if it exists
+    const html = content.html
+    if (html) {
+      if (!html.includes('unsubscribe') && !html.includes('opt-out')) {
+        tips.push('Consider adding an unsubscribe link for compliance')
+      }
 
-    if (content.html.length < 500) {
-      tips.push('Email content is quite short - consider adding more details or images')
-    }
+      if (html.length < 500) {
+        tips.push('Email content is quite short - consider adding more details or images')
+      }
 
-    if (!content.html.includes('<img') && !content.attachments?.length) {
-      tips.push('Consider adding images to make the email more engaging')
+      if (!html.includes('<img') && !content.attachments?.length) {
+        tips.push('Consider adding images to make the email more engaging')
+      }
+
+      // Check for personalization
+      const personalizationTags = ['{name}', '{firstName}', '{email}']
+      const hasPersonalization = personalizationTags.some(tag => html.includes(tag))
+      if (!hasPersonalization && validation.recipientCount > 1) {
+        tips.push('Consider personalizing the email content for better engagement')
+      }
     }
 
     if (content.attachments && content.attachments.length > 3) {
       tips.push('Multiple attachments may increase bounce rate')
-    }
-
-    // Check for personalization
-    const personalizationTags = ['{name}', '{firstName}', '{email}']
-    const hasPersonalization = personalizationTags.some(tag => content.html.includes(tag))
-    if (!hasPersonalization && validation.recipientCount > 1) {
-      tips.push('Consider personalizing the email content for better engagement')
     }
 
     return tips
@@ -119,9 +125,10 @@ export class EmailService {
   }
 
   generatePreview(content: EmailContent): { subject: string, preview: string } {
+    const htmlContent = content.html || content.bodyText || ''
     return {
       subject: content.subject,
-      preview: this.createPlainTextVersion(content.html).substring(0, 150) + '...'
+      preview: htmlContent ? this.createPlainTextVersion(htmlContent).substring(0, 150) + '...' : ''
     }
   }
 

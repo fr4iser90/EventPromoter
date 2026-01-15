@@ -8,23 +8,26 @@ export class ValidationService {
   static validateEventData(eventData: any): { isValid: boolean, errors: string[] } {
     const errors: string[] = []
 
-    const requiredFields = ['eventTitle', 'eventDate', 'venue', 'city']
+    // Use ONLY ParsedEventData format: title, date (NO legacy eventTitle/eventDate)
+    const requiredFields = ['title', 'date', 'venue', 'city']
     for (const field of requiredFields) {
-      if (!eventData[field] || eventData[field].trim() === '') {
+      if (!eventData[field] || (typeof eventData[field] === 'string' && eventData[field].trim().length === 0)) {
         errors.push(`Missing required field: ${field}`)
       }
     }
 
-    if (eventData.eventDate) {
-      const date = new Date(eventData.eventDate)
-      if (isNaN(date.getTime())) {
+    // Validate date format
+    if (eventData.date) {
+      const dateObj = new Date(eventData.date)
+      if (isNaN(dateObj.getTime())) {
         errors.push('Invalid date format')
       }
     }
 
-    if (eventData.eventTime) {
+    // Validate time format (if provided)
+    if (eventData.time) {
       const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
-      if (!timeRegex.test(eventData.eventTime)) {
+      if (!timeRegex.test(eventData.time)) {
         errors.push('Invalid time format (use HH:MM)')
       }
     }

@@ -637,11 +637,10 @@ const useStore = create((set, get) => ({
   n8nWebhookUrl: 'http://localhost:5678/webhook/multiplatform-publisher',
   setN8nWebhookUrl: async (url) => {
     set({ n8nWebhookUrl: url })
-    // Save to backend config
+    // Save to backend config (use PATCH to only update n8nWebhookUrl, not overwrite other fields)
     try {
-      await axios.post('http://localhost:4000/api/config/app', {
-        n8nWebhookUrl: url,
-        darkMode: false // We don't manage darkMode in store anymore
+      await axios.patch('http://localhost:4000/api/config/app', {
+        n8nWebhookUrl: url
       })
     } catch (error) {
       console.warn('Failed to save n8nWebhookUrl to backend:', error)
@@ -886,45 +885,22 @@ const useStore = create((set, get) => ({
         throw new Error('Please select at least one platform')
       }
 
-      // Run publish parser to finalize content
+      // ✅ Frontend sends ONLY eventId - Backend loads everything from storage
       console.log('🎯 Starting publish process...')
-      const finalizedContent = await get().publishParser()
-
-      // Use uploaded file references (URLs) instead of converting to base64
-      console.log('Using uploaded file references...')
-      const processedFiles = state.uploadedFileRefs.map(fileRef => ({
-        name: fileRef.name,
-        url: fileRef.url,
-        type: fileRef.type,
-        size: fileRef.size,
-        isImage: fileRef.isImage
-      }))
-
-      // Prepare publishTo object
-      const publishTo = {}
-      state.selectedPlatforms.forEach(platform => {
-        publishTo[platform] = true
-      })
-
-      // Prepare payload for backend
-      const payload = {
-        files: processedFiles,
-        platforms: publishTo,
-        content: finalizedContent,  // Use finalized content from publish parser
-        hashtags: state.selectedHashtags,
-        n8nUrl: state.n8nWebhookUrl,
-        eventData: {
-          eventTitle: state.platformContent.eventTitle,
-          eventDate: state.platformContent.eventDate,
-          eventTime: state.platformContent.eventTime,
-          venue: state.platformContent.venue,
-          city: state.platformContent.city
-        }
+      
+      const eventId = state.currentEvent?.id
+      if (!eventId) {
+        throw new Error('No current event found. Please upload files first.')
       }
 
-      console.log('Sending data to backend:', payload)
+      // Prepare minimal payload - Backend loads everything else
+      const payload = {
+        eventId: eventId
+      }
 
-      // Send to backend (which validates and forwards to N8N)
+      console.log('Sending submit request for event:', eventId)
+
+      // Send to backend (which loads everything from storage and publishes)
       const response = await axios.post('http://localhost:4000/api/submit', payload, {
         headers: {
           'Content-Type': 'application/json',
@@ -987,7 +963,24 @@ const useStore = create((set, get) => ({
       } else if (error.code === 'ENOTFOUND') {
         errorMessage = 'Backend server not found. Please check if backend is running on localhost:4000'
       } else if (error.response) {
-        errorMessage = error.response.data?.message || error.response.data?.error || `Backend error: ${error.response.status}`
+        const responseData = error.response.data || {}
+        errorMessage = responseData.message || responseData.error || `Backend error: ${error.response.status}`
+        
+        // Include validation details if available
+        if (responseData.details) {
+          if (Array.isArray(responseData.details)) {
+            // Format platform validation errors
+            const detailMessages = responseData.details
+              .filter(d => !d.valid && d.errors && d.errors.length > 0)
+              .map(d => `${d.platform}: ${d.errors.join(', ')}`)
+            if (detailMessages.length > 0) {
+              errorMessage += '\n\n' + detailMessages.join('\n')
+            }
+          } else if (Array.isArray(responseData.details)) {
+            // If details is already an array of strings
+            errorMessage += '\n\n' + responseData.details.join('\n')
+          }
+        }
       } else if (error.message) {
         errorMessage = error.message
       }
@@ -1078,10 +1071,10 @@ const useStore = create((set, get) => ({
     // Update local state
     set({ darkMode })
 
-    // Save to backend
+    // Save to backend (use PATCH to only update darkMode, not overwrite other fields like n8nWebhookUrl)
     try {
       const response = await fetch('http://localhost:4000/api/config/app', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ darkMode })
       })

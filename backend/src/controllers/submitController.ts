@@ -12,40 +12,91 @@ import { PublishTrackingService, PublishResult } from '../services/publishTracki
 export class SubmitController {
   static async submit(req: Request, res: Response) {
     let publishSessionId: string | null = null
-    const {
-      files,
-      platforms,
-      content,
-      hashtags,
-      n8nUrl,
-      eventData
-    } = req.body
+    let eventId: string | null = null
 
     try {
-
-      console.log('Received submit request:', { files: files?.length, platforms, n8nUrl })
-      console.log('Content structure:', JSON.stringify(content, null, 2))
-
-      // Start publish tracking session
-      const eventId = eventData?.id || `event-${Date.now()}`
-      const platformList = Object.keys(platforms || {})
-      publishSessionId = PublishTrackingService.startPublishSession(eventId, platformList)
-
-      // Validate event data
-      if (eventData) {
-        const eventValidation = ValidationService.validateEventData(eventData)
-        if (!eventValidation.isValid) {
-          return res.status(400).json({
-            error: 'Event data validation failed',
-            details: eventValidation.errors
-          })
-        }
+      // ✅ Frontend sends ONLY eventId (or nothing, then use currentEventId)
+      const { eventId: requestEventId } = req.body
+      
+      // Get eventId: from request, or use currentEventId from backend
+      eventId = requestEventId || await EventService.getCurrentEventId()
+      
+      if (!eventId) {
+        return res.status(400).json({
+          error: 'Event ID required',
+          details: 'No event ID provided and no current event found'
+        })
       }
 
-      // Validate platforms
-      if (platforms && content) {
-        const platformValidation = await ValidationService.validatePlatforms(content, Object.keys(platforms))
+      console.log('Received submit request for event:', eventId)
+
+      // ✅ Backend loads EVERYTHING from saved state
+      // 1. Load event data
+      const eventData = await EventService.getEventData(eventId)
+      if (!eventData) {
+        return res.status(404).json({
+          error: 'Event not found',
+          details: `Event ${eventId} does not exist`
+        })
+      }
+
+      // 2. Load platform content
+      const platformContent = await EventService.getAllPlatformContent(eventId)
+      console.log('Loaded platform content for:', Object.keys(platformContent))
+
+      // 3. Get selected platforms from event data
+      if (!eventData.selectedPlatforms || !Array.isArray(eventData.selectedPlatforms) || eventData.selectedPlatforms.length === 0) {
+        return res.status(400).json({
+          error: 'No platforms selected',
+          details: 'Please select at least one platform before publishing'
+        })
+      }
+      const selectedPlatforms = eventData.selectedPlatforms
+
+      // 4. Get files from event data
+      if (!eventData.uploadedFileRefs || !Array.isArray(eventData.uploadedFileRefs) || eventData.uploadedFileRefs.length === 0) {
+        return res.status(400).json({
+          error: 'No files found',
+          details: 'Event has no uploaded files'
+        })
+      }
+      const files = eventData.uploadedFileRefs
+
+      // 5. Get hashtags from event data
+      const hashtags = eventData.selectedHashtags && Array.isArray(eventData.selectedHashtags) ? eventData.selectedHashtags : []
+
+      // 6. Get parsed data for eventData validation
+      const parsedData = await EventService.getParsedData(eventId)
+
+      // Build platforms object from selectedPlatforms array
+      const platforms: Record<string, boolean> = {}
+      selectedPlatforms.forEach((platform: string) => {
+        platforms[platform] = true
+      })
+
+      publishSessionId = PublishTrackingService.startPublishSession(eventId, selectedPlatforms)
+
+      // Validate event data from parsed data
+      if (!parsedData) {
+        return res.status(400).json({
+          error: 'Parsed data not found',
+          details: 'Event has no parsed data. Please upload files first.'
+        })
+      }
+      const eventValidation = ValidationService.validateEventData(parsedData)
+      if (!eventValidation.isValid) {
+        console.error('❌ Event data validation failed:', eventValidation.errors)
+        return res.status(400).json({
+          error: 'Event data validation failed',
+          details: eventValidation.errors
+        })
+      }
+
+      // Validate platforms using saved content
+      if (platforms && platformContent) {
+        const platformValidation = await ValidationService.validatePlatforms(platformContent, selectedPlatforms)
         if (!platformValidation.isValid) {
+          console.error('❌ Platform validation failed:', platformValidation.results)
           return res.status(400).json({
             error: 'Platform validation failed',
             details: platformValidation.results
@@ -54,23 +105,23 @@ export class SubmitController {
       }
 
       // Validate files
-      if (files) {
-        const fileValidation = ValidationService.validateFiles(files)
-        if (!fileValidation.isValid) {
-          return res.status(400).json({
-            error: 'File validation failed',
-            details: fileValidation.errors
-          })
-        }
+      const fileValidation = ValidationService.validateFiles(files)
+      if (!fileValidation.isValid) {
+        console.error('❌ File validation failed:', fileValidation.errors)
+        return res.status(400).json({
+          error: 'File validation failed',
+          details: fileValidation.errors
+        })
       }
 
       // Use PublishingService which handles n8n/API/Playwright routing
+      // All data comes from backend storage
       const publishRequest = {
         files,
         platforms,
-        content,
+        content: platformContent, // Use saved platform content
         hashtags,
-        eventData
+        eventData: parsedData // Use parsed data for eventData
       }
 
       const publishResult = await PublishingService.publish(publishRequest)
@@ -79,16 +130,16 @@ export class SubmitController {
       try {
         const historyEntry = {
           id: `published-${Date.now()}`,
-          name: eventData?.title || content?.eventTitle || 'Event Promotion',
+          name: parsedData.title,
           status: 'published' as const,
-          platforms: Object.keys(platforms || {}),
+          platforms: selectedPlatforms,
           publishedAt: new Date().toISOString(),
           eventData: {
-            title: eventData?.title || content?.eventTitle,
-            date: eventData?.date || content?.eventDate,
-            time: eventData?.time || content?.eventTime,
-            venue: eventData?.venue || content?.venue,
-            city: eventData?.city || content?.city
+            title: parsedData.title,
+            date: parsedData.date,
+            time: parsedData.time,
+            venue: parsedData.venue,
+            city: parsedData.city
           },
           stats: {} // Will be updated later with actual metrics
         }
@@ -102,21 +153,23 @@ export class SubmitController {
 
       // Add tracking for all platforms
       if (publishSessionId) {
-        for (const platform of platformList) {
+        for (const platform of selectedPlatforms) {
           const platformResult = publishResult.results[platform]
-          const result: PublishResult = {
-            platform,
-            success: platformResult?.success || false,
-            data: {
-              status: platformResult?.success ? 'published' : 'failed',
-              method: platformResult?.method || 'unknown',
-              submittedAt: new Date().toISOString(),
-              postId: platformResult?.postId,
-              url: platformResult?.url,
-              error: platformResult?.error
+          if (platformResult) {
+            const result: PublishResult = {
+              platform,
+              success: platformResult.success,
+              data: {
+                status: platformResult.success ? 'published' : 'failed',
+                method: platformResult.method,
+                submittedAt: new Date().toISOString(),
+                postId: platformResult.postId,
+                url: platformResult.url,
+                error: platformResult.error
+              }
             }
+            PublishTrackingService.addPublishResult(publishSessionId, result)
           }
-          PublishTrackingService.addPublishResult(publishSessionId, result)
         }
       }
 
@@ -132,26 +185,38 @@ export class SubmitController {
       console.error('Submit error:', error)
 
       // Track the error in publish session
-      if (publishSessionId) {
-        for (const platform of Object.keys(platforms || {})) {
-          const result: PublishResult = {
-            platform,
-            success: false,
-            error: error.message || 'Unknown error',
-            data: {
-              status: 'failed',
-              failedAt: new Date().toISOString()
+      if (publishSessionId && eventId) {
+        try {
+          const eventData = await EventService.getEventData(eventId)
+          if (eventData && eventData.selectedPlatforms && Array.isArray(eventData.selectedPlatforms)) {
+            for (const platform of eventData.selectedPlatforms) {
+              const result: PublishResult = {
+                platform,
+                success: false,
+                error: error.message,
+                data: {
+                  status: 'failed',
+                  failedAt: new Date().toISOString()
+                }
+              }
+              PublishTrackingService.addPublishResult(publishSessionId, result)
             }
           }
-          PublishTrackingService.addPublishResult(publishSessionId, result)
+        } catch (trackError) {
+          console.warn('Failed to track error in publish session:', trackError)
         }
       }
 
       if (error.type) {
         // Custom error from services
-        const statusCode = error.type === 'N8N_ERROR' ? error.status || 502 :
-                          error.type === 'CONNECTION_ERROR' ? 503 :
-                          error.type === 'NOT_FOUND_ERROR' ? 503 : 500
+        let statusCode = 500
+        if (error.type === 'N8N_ERROR') {
+          statusCode = error.status ? error.status : 502
+        } else if (error.type === 'CONNECTION_ERROR') {
+          statusCode = 503
+        } else if (error.type === 'NOT_FOUND_ERROR') {
+          statusCode = 503
+        }
 
         return res.status(statusCode).json({
           error: error.message,

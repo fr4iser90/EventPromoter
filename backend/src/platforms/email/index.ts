@@ -8,9 +8,9 @@
 
 import { PlatformModule } from '../../types/platformModule.js'
 import { EmailParser } from './parser.js'
-import { EmailService } from './service.js'
+import { EmailService } from './services/emailService.js'
 import { EMAIL_TEMPLATES } from './templates/index.js'
-import { EmailValidator } from './validator.js'
+import { EmailValidator } from './validators/emailValidator.js'
 import { emailSchema } from './schema/index.js'
 
 /**
