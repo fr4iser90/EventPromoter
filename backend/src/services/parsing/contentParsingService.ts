@@ -19,15 +19,40 @@ export class ContentExtractionService {
 
   // Parse uploaded files and extract event data
   static async parseUploadedFiles(files: Express.Multer.File[]): Promise<ParsedEventData | null> {
-    // Find and parse text files
-    for (const file of files) {
+    // Sort files: .txt first, then .md
+    const sortedFiles = [...files].sort((a, b) => {
+      const aIsTxt = a.mimetype === 'text/plain'
+      const bIsTxt = b.mimetype === 'text/plain'
+      if (aIsTxt && !bIsTxt) return -1 // .txt comes first
+      if (!aIsTxt && bIsTxt) return 1
+      return 0 // Keep original order for same type
+    })
+
+    let mergedData: ParsedEventData | null = null
+
+    // Parse all text files and merge data
+    for (const file of sortedFiles) {
       if (file.mimetype === 'text/plain' || file.mimetype === 'text/markdown') {
         try {
           const content = fs.readFileSync(file.path, 'utf8')
           const structuredData = this.parseStructuredData(content)
 
           if (structuredData && structuredData.title) {
-            return structuredData // Return as soon as we find structured data with title
+            // Merge with existing data (txt data takes priority, then md fills gaps)
+            if (!mergedData) {
+              mergedData = structuredData
+            } else {
+              // Merge: txt data (first) takes priority, md data fills missing fields
+              mergedData = {
+                ...structuredData, // md data (second)
+                ...mergedData,     // txt data (first) - overwrites md
+                // Special handling for arrays - merge them
+                lineup: mergedData.lineup || structuredData.lineup,
+                hashtags: mergedData.hashtags && mergedData.hashtags.length > 0 
+                  ? mergedData.hashtags 
+                  : (structuredData.hashtags || [])
+              }
+            }
           }
         } catch (error) {
           console.warn(`Failed to parse ${file.originalname}:`, error)
@@ -35,7 +60,7 @@ export class ContentExtractionService {
       }
     }
 
-    return null // No structured data with title found
+    return mergedData
   }
 
   // Initialize OCR worker
@@ -168,7 +193,8 @@ export class ContentExtractionService {
         rawText: content,
         confidence: 1.0,
         parsedAt: new Date().toISOString(),
-        hash: ''
+        hash: '',
+        hashtags: [] // Initialize as empty array
       }
 
       let inDescription = false
@@ -189,8 +215,9 @@ export class ContentExtractionService {
         if (line.includes(':')) {
           const [key, ...valueParts] = line.split(':')
           const value = valueParts.join(':').trim()
+          const trimmedKey = key.trim().toUpperCase()
 
-          switch (key.toUpperCase()) {
+          switch (trimmedKey) {
             case 'TITLE':
               parsed.title = value
               break

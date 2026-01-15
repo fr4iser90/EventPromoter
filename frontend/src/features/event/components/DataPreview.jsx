@@ -17,7 +17,14 @@ import {
   Chip,
   Tooltip,
   Button,
-  Alert
+  Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material'
 import ImageIcon from '@mui/icons-material/Image'
 import DescriptionIcon from '@mui/icons-material/Description'
@@ -25,10 +32,14 @@ import CloseIcon from '@mui/icons-material/Close'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ErrorIcon from '@mui/icons-material/Error'
 import SaveIcon from '@mui/icons-material/Save'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { useTranslation } from 'react-i18next'
 import useStore from '../../../store'
 import DateDisplay from '../../../shared/components/ui/DateDisplay'
+import HashtagBuilder from '../../../flows/parser/HashtagBuilder'
 import axios from 'axios'
+import config from '../../../config'
 
 
 function Preview() {
@@ -48,6 +59,9 @@ function Preview() {
   const [textContent, setTextContent] = useState('')
   const [loadingText, setLoadingText] = useState(false)
   const [editedData, setEditedData] = useState(storeParsedData || {})
+  const [hashtags, setHashtags] = useState([])
+  const [hashtagDialogOpen, setHashtagDialogOpen] = useState(false)
+  const [hashtagPanelExpanded, setHashtagPanelExpanded] = useState(true)
   const descriptionRef = React.useRef(null)
 
   // Sync with store when it changes externally
@@ -132,6 +146,24 @@ function Preview() {
     const lineupArray = value.split(',').map(item => item.trim()).filter(item => item)
     handleFieldChange('lineup', lineupArray)
   }
+
+  // Update hashtags in store (for platform content)
+  const updateHashtagsInStore = (newHashtags) => {
+    // Store hashtags in parsedData so they're available for platform content
+    const updated = { ...editedData, hashtags: newHashtags }
+    setEditedData(updated)
+    debouncedSaveParsedData(updated)
+  }
+
+  // Load hashtags from editedData on mount and when editedData changes
+  useEffect(() => {
+    if (editedData?.hashtags && Array.isArray(editedData.hashtags) && editedData.hashtags.length > 0) {
+      setHashtags(editedData.hashtags)
+    } else if (editedData && (!editedData.hashtags || (Array.isArray(editedData.hashtags) && editedData.hashtags.length === 0))) {
+      // If no hashtags in data, start with empty array
+      setHashtags([])
+    }
+  }, [editedData?.hashtags, editedData])
 
   // Generate dynamic template placeholders based on available data
   const getAvailablePlaceholders = () => {
@@ -515,6 +547,93 @@ function Preview() {
                         </Box>
                       </Grid>
                     )}
+
+                    {/* Hashtags Section - After Description */}
+                    <Grid item xs={12}>
+                      <Accordion 
+                        expanded={hashtagPanelExpanded} 
+                        onChange={() => setHashtagPanelExpanded(!hashtagPanelExpanded)}
+                        sx={{ mt: 2 }}
+                      >
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                              #️⃣ Hashtags
+                            </Typography>
+                            {hashtags.length > 0 && (
+                              <Chip 
+                                label={`${hashtags.length}/30`} 
+                                size="small" 
+                                color="primary" 
+                                sx={{ ml: 'auto' }}
+                              />
+                            )}
+                          </Box>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          <Box sx={{ mb: 2 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                              Geparste Hashtags aus der Datei:
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                              {hashtags.length > 0 ? (
+                                hashtags.map((hashtag) => (
+                                  <Chip
+                                    key={hashtag}
+                                    label={hashtag}
+                                    size="small"
+                                    onDelete={() => {
+                                      const newHashtags = hashtags.filter(h => h !== hashtag)
+                                      setHashtags(newHashtags)
+                                      updateHashtagsInStore(newHashtags)
+                                    }}
+                                    color="primary"
+                                    variant="filled"
+                                  />
+                                ))
+                              ) : (
+                                <Typography variant="body2" color="text.secondary">
+                                  Keine Hashtags in der geparsten Datei gefunden
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ flex: 1 }}></Box>
+                            <Box sx={{ display: 'flex', gap: 1, ml: 2, alignItems: 'center' }}>
+                              <TextField
+                                size="small"
+                                placeholder="Weitere Hashtags (komma-getrennt)"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const input = e.target.value.trim()
+                                    if (input) {
+                                      const newTags = input
+                                        .split(',')
+                                        .map(tag => tag.trim())
+                                        .filter(tag => tag.length > 0)
+                                        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+                                      const newHashtags = [...new Set([...hashtags, ...newTags])]
+                                      setHashtags(newHashtags)
+                                      updateHashtagsInStore(newHashtags)
+                                      e.target.value = ''
+                                    }
+                                  }
+                                }}
+                                sx={{ width: 250 }}
+                              />
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() => setHashtagDialogOpen(true)}
+                              >
+                                Manage Hashtags
+                              </Button>
+                            </Box>
+                          </Box>
+                        </AccordionDetails>
+                      </Accordion>
+                    </Grid>
                   </Grid>
 
                   <Box sx={{ mt: 2, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
@@ -678,6 +797,30 @@ function Preview() {
           </Box>
         </Fade>
       </Modal>
+
+      {/* Hashtag Builder Dialog */}
+      <Dialog
+        open={hashtagDialogOpen}
+        onClose={() => setHashtagDialogOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle># Hashtag Builder</DialogTitle>
+        <DialogContent>
+          <HashtagBuilder
+            eventData={editedData}
+            onHashtagsChange={(newHashtags) => {
+              setHashtags(newHashtags)
+              updateHashtagsInStore(newHashtags)
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setHashtagDialogOpen(false)}>
+            Done
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   )
 }

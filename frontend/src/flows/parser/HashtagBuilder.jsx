@@ -50,6 +50,18 @@ function HashtagBuilder({ eventData, onHashtagsChange }) {
     loadHashtags()
   }, [])
 
+  // Load hashtags from eventData if available (parsed from file)
+  useEffect(() => {
+    if (eventData?.hashtags && Array.isArray(eventData.hashtags) && eventData.hashtags.length > 0) {
+      // Set parsed hashtags as selected
+      setSelected(eventData.hashtags)
+      // Also save them
+      if (onHashtagsChange) {
+        onHashtagsChange(eventData.hashtags)
+      }
+    }
+  }, [eventData?.hashtags])
+
   // Load suggested hashtags when eventData changes
   useEffect(() => {
     if (eventData) {

@@ -37,7 +37,6 @@ import {
 import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
 import { Editor as GenericPlatformEditor } from '../../features/platform'
 import { Preview as PlatformPreview } from '../../features/platform'
-import HashtagBuilder from './HashtagBuilder'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -291,7 +290,6 @@ function UploadParser() {
             sx={{ mb: 3 }}
           >
             <Tab label={t('tabs.rawData')} />
-            <Tab label="# Hashtags" />
             <Tab label={t('tabs.contentCreation')} />
             <Tab label={t('tabs.platformPreview')} />
           </Tabs>
@@ -314,25 +312,8 @@ function UploadParser() {
             </Box>
           )}
 
-          {/* Tab 1: Hashtags */}
+          {/* Tab 1: Content Creation - Side-by-Side Layout */}
           {activeTab === 1 && editedData && (
-            <HashtagBuilder
-              eventData={editedData}
-              onHashtagsChange={(hashtags) => {
-                // Update platform content with hashtags
-                selectedPlatforms.forEach(platform => {
-                  const currentContent = platformContent[platform] || {}
-                  setPlatformContent(platform, {
-                    ...currentContent,
-                    hashtags: hashtags
-                  })
-                })
-              }}
-            />
-          )}
-
-          {/* Tab 2: Content Creation - Side-by-Side Layout */}
-          {activeTab === 2 && editedData && (
             <Box>
               <Typography variant="h6" gutterBottom>
                 🎨 Content Creation Studio
