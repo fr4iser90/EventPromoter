@@ -104,4 +104,69 @@ export class TwitterService {
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderTwitterPreview(options)
   }
+
+  /**
+   * Extract human-readable target from Twitter content
+   * Returns username or "Timeline"
+   */
+  extractTarget(content: TwitterContent): string {
+    if (content.username) {
+      return `@${content.username.replace('@', '')}`
+    }
+    return 'Timeline'
+  }
+
+  /**
+   * Extract response data from n8n/API/Playwright response
+   * Twitter API returns: { json: { id_str, id } }
+   */
+  extractResponseData(response: any): { postId?: string, url?: string, success: boolean, error?: string } {
+    // Handle n8n Twitter node response: { json: { id_str, id } }
+    if (response.json) {
+      const data = response.json
+      const postId = data.id_str || data.id
+      const url = data.url || (postId ? `https://twitter.com/i/web/status/${postId}` : undefined)
+      
+      return {
+        success: true,
+        postId: postId?.toString(),
+        url
+      }
+    }
+
+    // Handle direct API response
+    if (response.id_str || response.id) {
+      const postId = response.id_str || response.id
+      return {
+        success: true,
+        postId: postId?.toString(),
+        url: response.url || `https://twitter.com/i/web/status/${postId}`
+      }
+    }
+
+    // Handle error response
+    if (response.error || response.success === false) {
+      return {
+        success: false,
+        error: response.error || response.message || 'Unknown error'
+      }
+    }
+
+    // If response has success field, use it
+    if (typeof response.success === 'boolean') {
+      return {
+        success: response.success,
+        postId: response.postId,
+        url: response.url,
+        error: response.error
+      }
+    }
+
+    // Default: assume success
+    return {
+      success: true,
+      postId: response.postId,
+      url: response.url
+    }
+  }
 }

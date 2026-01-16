@@ -84,4 +84,71 @@ export class FacebookService {
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderFacebookPreview(options)
   }
+
+  /**
+   * Extract human-readable target from Facebook content
+   * Returns page or "Timeline"
+   */
+  extractTarget(content: FacebookContent): string {
+    if (content.page) {
+      return content.page
+    }
+    if (content.pageId) {
+      return `Page ${content.pageId}`
+    }
+    return 'Timeline'
+  }
+
+  /**
+   * Extract response data from n8n/API/Playwright response
+   * Facebook API returns: { json: { id } }
+   */
+  extractResponseData(response: any): { postId?: string, url?: string, success: boolean, error?: string } {
+    // Handle n8n Facebook node response: { json: { id } }
+    if (response.json) {
+      const data = response.json
+      const postId = data.id
+      const url = data.url || (postId ? `https://facebook.com/${postId}` : undefined)
+      
+      return {
+        success: true,
+        postId: postId?.toString(),
+        url
+      }
+    }
+
+    // Handle direct API response
+    if (response.id) {
+      return {
+        success: true,
+        postId: response.id?.toString(),
+        url: response.url || `https://facebook.com/${response.id}`
+      }
+    }
+
+    // Handle error response
+    if (response.error || response.success === false) {
+      return {
+        success: false,
+        error: response.error || response.message || 'Unknown error'
+      }
+    }
+
+    // If response has success field, use it
+    if (typeof response.success === 'boolean') {
+      return {
+        success: response.success,
+        postId: response.postId,
+        url: response.url,
+        error: response.error
+      }
+    }
+
+    // Default: assume success
+    return {
+      success: true,
+      postId: response.postId,
+      url: response.url
+    }
+  }
 }

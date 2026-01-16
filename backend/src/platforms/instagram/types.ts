@@ -4,6 +4,7 @@ export interface InstagramContent {
   caption: string
   image?: string
   hashtags?: string[]
+  account?: string
 }
 
 export interface InstagramConfig {

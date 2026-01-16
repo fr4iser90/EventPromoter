@@ -5,6 +5,7 @@ export interface FacebookContent {
   image?: string
   link?: string
   pageId?: string
+  page?: string
 }
 
 export interface FacebookConfig {

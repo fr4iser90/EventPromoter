@@ -1,6 +1,8 @@
 // N8N service for API integration and forwarding
+// ✅ GENERIC: No platform-specific knowledge - delegates to platform services
 
 import axios from 'axios'
+import { PlatformManager } from './platformManager.js'
 
 export class N8nService {
   static async submitToN8n(webhookUrl: string, payload: any): Promise<any> {
@@ -28,7 +30,7 @@ export class N8nService {
         throw {
           type: 'N8N_ERROR',
           status: error.response.status,
-          message: error.response.data?.message || error.message,
+          message: error.response.data && error.response.data.message ? error.response.data.message : error.message,
           details: error.response.data
         }
       } else if (error.code === 'ECONNREFUSED') {
@@ -44,60 +46,59 @@ export class N8nService {
       } else {
         throw {
           type: 'UNKNOWN_ERROR',
-          message: error.message || 'Unknown error occurred'
+          message: error.message ? error.message : 'Unknown error occurred'
         }
       }
     }
   }
 
-  static transformPayloadForN8n(
+  static async transformPayloadForN8n(
     files: any[],
     platforms: Record<string, boolean>,
     content: any,
     hashtags: string[],
     eventData: any
-  ): any {
+  ): Promise<any> {
     // Transform platformContent for N8N API format
     const n8nPayload: any = {
-      files: files || [],
-      hashtags: hashtags || [],
+      files: files,
+      hashtags: hashtags,
       publishTo: Object.keys(platforms).filter(p => platforms[p]),
       platformSettings: {},
-      platformContent: content || {},
+      platformContent: content,
       metadata: {
         submittedAt: new Date().toISOString(),
         validationPassed: true,
-        eventData: eventData || {}
+        eventData: eventData
       }
     }
 
-    // ✅ GENERIC: Transform platformContent for N8N (all platforms, not hardcoded)
+    // ✅ GENERIC: Transform platformContent for N8N - delegate to platform services
     if (n8nPayload.platformContent) {
-      // Move all platform content to root level for N8N compatibility
-      Object.entries(n8nPayload.platformContent).forEach(([platformId, content]: [string, any]) => {
-        if (content && typeof content === 'object') {
-          let text = content.body || content.text || content.html || ''
-          
-          // Platform-specific formatting
-          if (platformId === 'reddit') {
-            // Reddit requires Markdown format - ensure text is in Markdown
-            // If content contains HTML tags, we should convert to Markdown
-            // For now, we assume the content is already in Markdown format (from templates or editor)
-            // Just ensure it's a string and not HTML
-            if (typeof text === 'string') {
-              // Remove any HTML tags that might have been accidentally included
-              // This is a safety measure - Reddit expects Markdown, not HTML
-              text = text.replace(/<[^>]*>/g, '')
+      const platformList = Object.keys(n8nPayload.platformContent)
+      
+      for (const platformId of platformList) {
+        const platformContent = n8nPayload.platformContent[platformId]
+        
+        if (platformContent && typeof platformContent === 'object') {
+          try {
+            // Get platform service
+            const platformService = await PlatformManager.getPlatformService(platformId)
+            
+            // Check if platform has transformForN8n method
+            // If not, use content as-is
+            if (platformService && typeof (platformService as any).transformForN8n === 'function') {
+              // Platform-specific transformation
+              n8nPayload[platformId] = (platformService as any).transformForN8n(platformContent)
+            } else {
+              // No platform-specific transformation - use content as-is
+              n8nPayload[platformId] = platformContent
             }
-          }
-          
-          n8nPayload[platformId] = {
-            ...content,
-            // Normalize text field (some platforms use 'body', others use 'text')
-            text: text
+          } catch (error: any) {
+            throw new Error(`Failed to transform content for platform ${platformId}: ${error.message}`)
           }
         }
-      })
+      }
     }
 
     // Transform files to include full URLs for n8n
@@ -106,7 +107,10 @@ export class N8nService {
         // If file has URL, ensure it's a full URL
         if (file.url && file.url.startsWith('/api/files/')) {
           // Convert relative URL to absolute URL
-          const baseUrl = process.env.BASE_URL || 'http://localhost:4000'
+          const baseUrl = process.env.BASE_URL
+          if (!baseUrl) {
+            throw new Error('BASE_URL environment variable is required for file URL transformation')
+          }
           file.url = `${baseUrl}${file.url}`
         }
         return file

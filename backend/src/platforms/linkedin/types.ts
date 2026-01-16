@@ -4,6 +4,8 @@ export interface LinkedInContent {
   text: string
   link?: string
   image?: string
+  profile?: string
+  companyPage?: string
 }
 
 export interface LinkedInConfig {

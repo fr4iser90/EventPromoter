@@ -4,6 +4,7 @@ import { EmailContent, EmailConfig } from '../types.js'
 import { EmailValidator } from '../validators/emailValidator.js'
 import { EmailRecipientService } from './recipientService.js'
 import { renderEmailPreview } from './previewService.js'
+import { EmailN8nService } from './n8nService.js'
 
 export class EmailService {
   private config: EmailConfig
@@ -319,6 +320,62 @@ export class EmailService {
     darkMode?: boolean
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderEmailPreview(this, options)
+  }
+
+  /**
+   * Transform email content for N8N webhook
+   * Delegates to platform-specific N8N service
+   */
+  transformForN8n(content: EmailContent): any {
+    return EmailN8nService.transformForN8n(content, this)
+  }
+
+  /**
+   * Extract human-readable target from email content
+   * Returns comma-separated list of recipients
+   */
+  extractTarget(content: EmailContent): string {
+    if (content.recipients) {
+      if (Array.isArray(content.recipients)) {
+        return content.recipients.join(', ')
+      }
+      if (typeof content.recipients === 'string') {
+        return content.recipients
+      }
+    }
+    return 'No recipients'
+  }
+
+  /**
+   * Extract response data from n8n/API/Playwright response
+   * Email responses typically don't have postId/url, just success status
+   */
+  extractResponseData(response: any): { postId?: string, url?: string, success: boolean, error?: string } {
+    // Handle n8n email node response: { json: { success, messageId } }
+    if (response.json) {
+      const data = response.json
+      return {
+        success: data.success !== false,
+        postId: data.messageId,
+        error: data.error || (data.success === false ? data.message : undefined)
+      }
+    }
+
+    // Handle direct API response
+    if (typeof response.success === 'boolean') {
+      return {
+        success: response.success,
+        postId: response.messageId || response.postId,
+        error: response.error
+      }
+    }
+
+    // Default: assume success if no error
+    return {
+      success: !response.error,
+      postId: response.messageId,
+      error: response.error
+    }
   }
 
 }

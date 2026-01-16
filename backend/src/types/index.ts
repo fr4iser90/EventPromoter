@@ -112,6 +112,10 @@ export interface PlatformService {
   authenticate?(credentials: any): Promise<boolean>
   validateCredentials?(credentials: any): Promise<boolean>
   post?(content: any, credentials: any): Promise<PostResult>
+
+  // Publishing feedback methods
+  extractTarget?(content: any): string // Extract human-readable target from content
+  extractResponseData?(response: any): { postId?: string, url?: string, success: boolean, error?: string } // Extract response data from n8n/API/Playwright response
 }
 
 export interface ContentValidator {

@@ -4,6 +4,7 @@ import { N8nService } from './n8nService.js'
 import { ConfigService } from './configService.js'
 import { getPlatformRegistry, initializePlatformRegistry } from './platformRegistry.js'
 import { PostResult } from '../types/index.js'
+import { PublishingFeedbackService, PublishingFeedback } from './publishingFeedbackService.js'
 
 export type PublishingMode = 'n8n' | 'api' | 'playwright' | 'auto'
 
@@ -25,6 +26,7 @@ export interface PublishResult {
     method?: 'n8n' | 'api' | 'playwright'
   }>
   message: string
+  feedback?: PublishingFeedback[] // Structured feedback for each platform
 }
 
 export class PublishingService {
@@ -79,7 +81,7 @@ export class PublishingService {
    * Publish via N8N webhook (existing implementation)
    */
   private static async publishViaN8n(request: PublishRequest, webhookUrl: string): Promise<PublishResult> {
-    const n8nPayload = N8nService.transformPayloadForN8n(
+    const n8nPayload = await N8nService.transformPayloadForN8n(
       request.files,
       request.platforms,
       request.content,
@@ -89,22 +91,60 @@ export class PublishingService {
 
     const n8nResult = await N8nService.submitToN8n(webhookUrl, n8nPayload)
 
-    // Transform N8N response to our format
+    // Transform N8N response to our format using platform services
     const results: Record<string, any> = {}
     const platformList = Object.keys(request.platforms).filter(p => request.platforms[p])
+    const registry = getPlatformRegistry()
+    if (!registry.isInitialized()) {
+      await initializePlatformRegistry()
+    }
 
-    platformList.forEach(platform => {
-      results[platform] = {
-        success: n8nResult.success,
-        method: 'n8n',
-        ...(n8nResult.data?.[platform] || {})
+    for (const platformId of platformList) {
+      try {
+        const platformModule = registry.getPlatform(platformId.toLowerCase())
+        if (!platformModule || !platformModule.service) {
+          throw new Error(`Platform ${platformId} not found or has no service`)
+        }
+
+        const service = platformModule.service
+        
+        // Platform MUST implement extractResponseData - NO FALLBACKS
+        if (!service.extractResponseData || typeof service.extractResponseData !== 'function') {
+          throw new Error(`Platform ${platformId} must implement extractResponseData method`)
+        }
+
+        // Get platform-specific response data from n8n result
+        const platformResponse = n8nResult.data?.[platformId] || n8nResult.data || {}
+        const extractedData = service.extractResponseData(platformResponse)
+
+        results[platformId] = {
+          success: extractedData.success,
+          method: 'n8n',
+          postId: extractedData.postId,
+          url: extractedData.url,
+          error: extractedData.error
+        }
+      } catch (error: any) {
+        results[platformId] = {
+          success: false,
+          method: 'n8n',
+          error: error.message || 'Failed to extract response data'
+        }
       }
-    })
+    }
 
-    return {
+    const publishResult = {
       success: n8nResult.success,
       results,
       message: 'Successfully published via N8N'
+    }
+
+    // Generate feedback
+    const feedback = await PublishingFeedbackService.generateFeedback(request, publishResult)
+
+    return {
+      ...publishResult,
+      feedback
     }
   }
 
@@ -178,12 +218,20 @@ export class PublishingService {
     }
 
     const allSuccess = Object.values(results).every(r => r.success)
-    return {
+    const publishResult = {
       success: allSuccess,
       results,
       message: allSuccess
         ? 'Successfully published via API'
         : 'Some platforms failed to publish via API'
+    }
+
+    // Generate feedback
+    const feedback = await PublishingFeedbackService.generateFeedback(request, publishResult)
+
+    return {
+      ...publishResult,
+      feedback
     }
   }
 
@@ -228,12 +276,20 @@ export class PublishingService {
     }
 
     const allSuccess = Object.values(results).every(r => r.success)
-    return {
+    const publishResult = {
       success: allSuccess,
       results,
       message: allSuccess
         ? 'Successfully published via Playwright'
         : 'Some platforms failed to publish via Playwright'
+    }
+
+    // Generate feedback
+    const feedback = await PublishingFeedbackService.generateFeedback(request, publishResult)
+
+    return {
+      ...publishResult,
+      feedback
     }
   }
 

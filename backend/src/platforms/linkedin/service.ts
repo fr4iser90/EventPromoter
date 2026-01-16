@@ -70,4 +70,72 @@ export class LinkedInService {
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderLinkedInPreview(options)
   }
+
+  /**
+   * Extract human-readable target from LinkedIn content
+   * Returns profile or "Company Page"
+   */
+  extractTarget(content: LinkedInContent): string {
+    if (content.profile) {
+      return content.profile
+    }
+    if (content.companyPage) {
+      return content.companyPage
+    }
+    return 'Company Page'
+  }
+
+  /**
+   * Extract response data from n8n/API/Playwright response
+   * LinkedIn API returns: { json: { id } }
+   */
+  extractResponseData(response: any): { postId?: string, url?: string, success: boolean, error?: string } {
+    // Handle n8n LinkedIn node response: { json: { id } }
+    if (response.json) {
+      const data = response.json
+      const postId = data.id || data.urn?.split(':').pop()
+      const url = data.url || (postId ? `https://linkedin.com/feed/update/${postId}` : undefined)
+      
+      return {
+        success: true,
+        postId: postId?.toString(),
+        url
+      }
+    }
+
+    // Handle direct API response
+    if (response.id || response.urn) {
+      const postId = response.id || response.urn?.split(':').pop()
+      return {
+        success: true,
+        postId: postId?.toString(),
+        url: response.url || `https://linkedin.com/feed/update/${postId}`
+      }
+    }
+
+    // Handle error response
+    if (response.error || response.success === false) {
+      return {
+        success: false,
+        error: response.error || response.message || 'Unknown error'
+      }
+    }
+
+    // If response has success field, use it
+    if (typeof response.success === 'boolean') {
+      return {
+        success: response.success,
+        postId: response.postId,
+        url: response.url,
+        error: response.error
+      }
+    }
+
+    // Default: assume success
+    return {
+      success: true,
+      postId: response.postId,
+      url: response.url
+    }
+  }
 }

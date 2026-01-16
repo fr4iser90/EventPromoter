@@ -53,4 +53,69 @@ export class InstagramService {
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderInstagramPreview(options)
   }
+
+  /**
+   * Extract human-readable target from Instagram content
+   * Returns account or "Feed"
+   */
+  extractTarget(content: InstagramContent): string {
+    if (content.account) {
+      return content.account
+    }
+    return 'Feed'
+  }
+
+  /**
+   * Extract response data from n8n/API/Playwright response
+   * Instagram API returns: { json: { id } }
+   */
+  extractResponseData(response: any): { postId?: string, url?: string, success: boolean, error?: string } {
+    // Handle n8n Instagram node response: { json: { id } }
+    if (response.json) {
+      const data = response.json
+      const postId = data.id || data.media_id
+      const url = data.url || (postId ? `https://instagram.com/p/${postId}/` : undefined)
+      
+      return {
+        success: true,
+        postId: postId?.toString(),
+        url
+      }
+    }
+
+    // Handle direct API response
+    if (response.id || response.media_id) {
+      const postId = response.id || response.media_id
+      return {
+        success: true,
+        postId: postId?.toString(),
+        url: response.url || `https://instagram.com/p/${postId}/`
+      }
+    }
+
+    // Handle error response
+    if (response.error || response.success === false) {
+      return {
+        success: false,
+        error: response.error || response.message || 'Unknown error'
+      }
+    }
+
+    // If response has success field, use it
+    if (typeof response.success === 'boolean') {
+      return {
+        success: response.success,
+        postId: response.postId,
+        url: response.url,
+        error: response.error
+      }
+    }
+
+    // Default: assume success
+    return {
+      success: true,
+      postId: response.postId,
+      url: response.url
+    }
+  }
 }

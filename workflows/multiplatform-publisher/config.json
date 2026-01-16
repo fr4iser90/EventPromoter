@@ -192,14 +192,26 @@
       "typeVersion": 1
     },
     {
+      "id": "structure-response",
+      "name": "🔧 Structure Response",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Structure all platform responses into unified format\nconst result = {\n  success: true,\n  data: {}\n};\n\n// Platform mapping from node names/response patterns\nconst platformPatterns = {\n  'twitter': ['twitter', 'tweet', 'id_str'],\n  'instagram': ['instagram', 'media_id'],\n  'facebook': ['facebook', 'pageId'],\n  'linkedin': ['linkedin', 'urn'],\n  'reddit': ['reddit', 'subreddit', 'name'],\n  'email': ['email', 'recipients', 'messageId']\n};\n\n// Process all incoming items\nfor (const item of $input.all()) {\n  const json = item.json || {};\n  const responseData = json.json || json;\n  \n  // Try to identify platform\n  let platform = null;\n  \n  // Method 1: Check if platform is explicitly set\n  if (json.platform) {\n    platform = json.platform;\n  }\n  // Method 2: Check response data patterns\n  else {\n    for (const [platformName, patterns] of Object.entries(platformPatterns)) {\n      if (patterns.some(pattern => \n        json[pattern] !== undefined || \n        responseData[pattern] !== undefined ||\n        JSON.stringify(json).toLowerCase().includes(pattern) ||\n        JSON.stringify(responseData).toLowerCase().includes(pattern)\n      )) {\n        platform = platformName;\n        break;\n      }\n    }\n  }\n  \n  if (platform) {\n    // Extract response data based on platform\n    const extracted = {\n      success: responseData.success !== false && !responseData.error && responseData.errorCode === undefined,\n      error: responseData.error || responseData.errorMessage || (responseData.success === false ? responseData.message : undefined)\n    };\n    \n    // Platform-specific extraction\n    if (platform === 'twitter') {\n      extracted.postId = responseData.id_str || responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://twitter.com/i/web/status/${extracted.postId}` : undefined);\n    } else if (platform === 'reddit') {\n      extracted.postId = responseData.id || responseData.name?.replace('t3_', '');\n      extracted.url = responseData.url || responseData.permalink || (extracted.postId ? `https://reddit.com${responseData.permalink || ''}` : undefined);\n    } else if (platform === 'email') {\n      extracted.postId = responseData.messageId || responseData.id;\n      // Emails don't have URLs\n    } else if (platform === 'instagram') {\n      extracted.postId = responseData.id || responseData.media_id;\n      extracted.url = responseData.url || (extracted.postId ? `https://instagram.com/p/${extracted.postId}/` : undefined);\n    } else if (platform === 'facebook') {\n      extracted.postId = responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://facebook.com/${extracted.postId}` : undefined);\n    } else if (platform === 'linkedin') {\n      extracted.postId = responseData.id || responseData.urn?.split(':').pop();\n      extracted.url = responseData.url || (extracted.postId ? `https://linkedin.com/feed/update/${extracted.postId}` : undefined);\n    }\n    \n    // Remove undefined fields\n    Object.keys(extracted).forEach(key => {\n      if (extracted[key] === undefined) delete extracted[key];\n    });\n    \n    result.data[platform] = extracted;\n  }\n}\n\n// Check if any platform failed\nconst allSuccess = Object.values(result.data).every(p => p.success !== false);\nresult.success = allSuccess && Object.keys(result.data).length > 0;\n\nreturn result;"
+      },
+      "position": [500, 0],
+      "typeVersion": 2
+    },
+    {
       "id": "webhook-response",
       "name": "✅ Send Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "parameters": {
-        "respondWith": "allIncomingItems",
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
         "options": {}
       },
-      "position": [600, 0],
+      "position": [700, 0],
       "typeVersion": 1
     }
   ],
@@ -256,7 +268,7 @@
       "main": [
         [
           {
-            "node": "✅ Send Response",
+            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
@@ -279,7 +291,7 @@
       "main": [
         [
           {
-            "node": "✅ Send Response",
+            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
@@ -302,7 +314,7 @@
       "main": [
         [
           {
-            "node": "✅ Send Response",
+            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
@@ -325,7 +337,7 @@
       "main": [
         [
           {
-            "node": "✅ Send Response",
+            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
@@ -348,7 +360,7 @@
       "main": [
         [
           {
-            "node": "✅ Send Response",
+            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
@@ -368,6 +380,17 @@
       ]
     },
     "🔴 Post to Reddit": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 Structure Response": {
       "main": [
         [
           {

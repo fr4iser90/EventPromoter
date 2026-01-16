@@ -4,6 +4,7 @@ export interface TwitterContent {
   text: string
   image?: string
   link?: string
+  username?: string
 }
 
 export interface TwitterConfig {

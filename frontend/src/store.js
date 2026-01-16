@@ -766,9 +766,13 @@ const useStore = create((set, get) => ({
       const { platformContent } = response.data
       set({ platformContent: platformContent || {} })
       console.log(`Platform content loaded for event ${eventId}`)
+      // Update workflow state after loading content
+      get().updateWorkflowState()
     } catch (error) {
       console.warn('Failed to load platform content for event:', error)
       set({ platformContent: {} })
+      // Update workflow state even if loading failed
+      get().updateWorkflowState()
     }
   },
 

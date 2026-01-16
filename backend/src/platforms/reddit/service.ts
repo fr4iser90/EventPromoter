@@ -102,4 +102,72 @@ export class RedditService {
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderRedditPreview(options)
   }
+
+  /**
+   * Extract human-readable target from Reddit content
+   * Returns subreddit with r/ prefix
+   */
+  extractTarget(content: RedditContent): string {
+    if (content.subreddit) {
+      const subreddit = content.subreddit.toString()
+      return subreddit.startsWith('r/') ? subreddit : `r/${subreddit}`
+    }
+    return 'No subreddit'
+  }
+
+  /**
+   * Extract response data from n8n/API/Playwright response
+   * Reddit API returns: { json: { id, name, url, permalink } }
+   */
+  extractResponseData(response: any): { postId?: string, url?: string, success: boolean, error?: string } {
+    // Handle n8n response format: { json: { id, name, url, permalink } }
+    if (response.json) {
+      const data = response.json
+      const postId = data.id || data.name?.replace('t3_', '')
+      const url = data.url || data.permalink || (postId ? `https://reddit.com${data.permalink || ''}` : undefined)
+      
+      return {
+        success: true,
+        postId,
+        url: url?.startsWith('http') ? url : url ? `https://reddit.com${url}` : undefined
+      }
+    }
+
+    // Handle direct API response format: { id, name, url, permalink }
+    if (response.id || response.name) {
+      const postId = response.id || response.name?.replace('t3_', '')
+      const url = response.url || response.permalink || (response.name ? `https://reddit.com/r/${response.subreddit}/comments/${postId}/` : undefined)
+      
+      return {
+        success: true,
+        postId,
+        url: url?.startsWith('http') ? url : url ? `https://reddit.com${url}` : undefined
+      }
+    }
+
+    // Handle error response
+    if (response.error || response.success === false) {
+      return {
+        success: false,
+        error: response.error || response.message || 'Unknown error'
+      }
+    }
+
+    // If response has success field, use it
+    if (typeof response.success === 'boolean') {
+      return {
+        success: response.success,
+        postId: response.postId,
+        url: response.url,
+        error: response.error
+      }
+    }
+
+    // Default: assume success if we have any data
+    return {
+      success: true,
+      postId: response.postId,
+      url: response.url
+    }
+  }
 }
