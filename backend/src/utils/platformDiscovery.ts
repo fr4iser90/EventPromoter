@@ -47,22 +47,27 @@ async function isValidPlatformDirectory(dirPath: string): Promise<boolean> {
   try {
     const stats = await stat(dirPath)
     if (!stats.isDirectory()) {
+      console.log(`    ❌ ${dirPath} is not a directory`)
       return false
     }
 
-    // Check for index.ts or index.js
-    const indexFiles = ['index.ts', 'index.js']
+    // Check for index.ts or index.js (try .js first for production)
+    const indexFiles = ['index.js', 'index.ts']
     for (const indexFile of indexFiles) {
       try {
-        await access(join(dirPath, indexFile))
+        const indexPath = join(dirPath, indexFile)
+        await access(indexPath)
+        console.log(`    ✅ Found ${indexFile} in ${dirPath}`)
         return true
       } catch {
         // Continue checking other files
       }
     }
 
+    console.log(`    ❌ No index.js or index.ts found in ${dirPath}`)
     return false
-  } catch {
+  } catch (error: any) {
+    console.log(`    ❌ Error checking ${dirPath}: ${error.message}`)
     return false
   }
 }
@@ -76,18 +81,38 @@ async function loadPlatformModule(
   config: DiscoveryConfig
 ): Promise<PlatformModule | null> {
   try {
+    console.log(`📦 Loading platform module: ${platformName} from ${platformPath}`)
     // Try to import the platform module
-    const modulePath = join(platformPath, 'index.ts')
-    const module = await import(modulePath)
+    // In production (Docker), files are compiled to .js, so try .js first
+    let module
+    try {
+      const modulePath = join(platformPath, 'index.js')
+      console.log(`  Trying to import: ${modulePath}`)
+      module = await import(modulePath)
+      console.log(`  ✅ Successfully imported index.js`)
+    } catch (jsError: any) {
+      console.log(`  ❌ Failed to import index.js: ${jsError.message}`)
+      // Fallback to .ts for development
+      const modulePath = join(platformPath, 'index.ts')
+      console.log(`  Trying to import: ${modulePath}`)
+      module = await import(modulePath)
+      console.log(`  ✅ Successfully imported index.ts`)
+    }
 
     // Get the platform module (support both default and named exports)
     let platformModule: any = module.default || module[platformName] || module.PlatformModule
+    console.log(`  Found module export: ${platformModule ? 'yes' : 'no'}`)
+    if (platformModule) {
+      console.log(`  Module has metadata: ${platformModule.metadata ? 'yes' : 'no'}`)
+    }
 
     // If it's a PlatformPlugin, we need to convert it
     // This will be handled by the registry during migration
     if (!isPlatformModule(platformModule)) {
+      console.log(`  ❌ Platform ${platformName} is not a valid PlatformModule`)
       // Check if it's a PlatformPlugin (legacy)
       if (platformModule && platformModule.name && platformModule.parser) {
+        console.log(`  ⚠️  Platform ${platformName} is using legacy PlatformPlugin interface`)
         // Legacy platform - will need schema and conversion
         // Return null for now, will be handled during migration
         if (config.throwOnError) {
@@ -100,6 +125,7 @@ async function loadPlatformModule(
       }
 
       // Invalid platform module
+      console.log(`  ❌ Platform ${platformName} does not export a valid PlatformModule`)
       if (config.throwOnError) {
         throw new PlatformDiscoveryError(
           `Platform ${platformName} does not export a valid PlatformModule`,
@@ -108,12 +134,16 @@ async function loadPlatformModule(
       }
       return null
     }
+    
+    console.log(`  ✅ Platform ${platformName} is a valid PlatformModule`)
 
     // Validate schema if enabled
     if (config.validateSchemas && platformModule.schema) {
       try {
         validatePlatformSchema(platformModule.schema)
+        console.log(`  ✅ Platform ${platformName} schema is valid`)
       } catch (error) {
+        console.log(`  ❌ Platform ${platformName} has invalid schema:`, error)
         if (config.throwOnError) {
           throw new PlatformDiscoveryError(
             `Platform ${platformName} has invalid schema: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -125,8 +155,10 @@ async function loadPlatformModule(
       }
     }
 
+    console.log(`  ✅ Successfully loaded platform: ${platformName} (${platformModule.metadata.id})`)
     return platformModule
   } catch (error) {
+    console.error(`  ❌ Error loading platform ${platformName}:`, error)
     if (config.throwOnError) {
       throw new PlatformDiscoveryError(
         `Failed to load platform ${platformName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -145,22 +177,28 @@ export async function scanPlatformDirectories(
   platformsPath: string = DEFAULT_CONFIG.platformsPath
 ): Promise<string[]> {
   try {
+    console.log(`📂 Scanning platform directory: ${platformsPath}`)
     const entries = await readdir(platformsPath, { withFileTypes: true })
+    console.log(`📋 Found ${entries.length} entries in platforms directory`)
     const platformDirs: string[] = []
 
     for (const entry of entries) {
       // Skip directories starting with _ (e.g., _blueprint, _templates)
       if (entry.isDirectory() && !entry.name.startsWith('_')) {
         const dirPath = join(platformsPath, entry.name)
+        console.log(`🔍 Checking platform directory: ${entry.name}`)
         const isValid = await isValidPlatformDirectory(dirPath)
+        console.log(`  ${isValid ? '✅' : '❌'} ${entry.name} is ${isValid ? 'valid' : 'invalid'}`)
         if (isValid) {
           platformDirs.push(entry.name)
         }
       }
     }
 
+    console.log(`✅ Found ${platformDirs.length} valid platform directories: ${platformDirs.join(', ')}`)
     return platformDirs.sort()
   } catch (error) {
+    console.error(`❌ Failed to scan platform directory ${platformsPath}:`, error)
     throw new PlatformDiscoveryError(
       `Failed to scan platform directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
       platformsPath,
@@ -181,11 +219,13 @@ export async function discoverPlatforms(
   try {
     // Scan for platform directories
     const platformDirs = await scanPlatformDirectories(finalConfig.platformsPath)
+    console.log(`📋 Platform directories found: ${platformDirs.length}`)
 
     // Load each platform
     for (const platformName of platformDirs) {
       const platformPath = join(finalConfig.platformsPath, platformName)
       try {
+        console.log(`🔄 Loading platform: ${platformName}`)
         const platformModule = await loadPlatformModule(
           platformPath,
           platformName,
@@ -194,18 +234,23 @@ export async function discoverPlatforms(
 
         if (platformModule) {
           platforms.set(platformModule.metadata.id, platformModule)
+          console.log(`✅ Successfully loaded and registered platform: ${platformName}`)
+        } else {
+          console.log(`⚠️  Platform ${platformName} loaded but module is null`)
         }
       } catch (error) {
         // Log error but continue with other platforms
-        console.warn(`Failed to load platform ${platformName}:`, error)
+        console.error(`❌ Failed to load platform ${platformName}:`, error)
         if (finalConfig.throwOnError) {
           throw error
         }
       }
     }
 
+    console.log(`✅ Total platforms loaded: ${platforms.size}`)
     return platforms
   } catch (error) {
+    console.error(`❌ Platform discovery failed:`, error)
     throw new PlatformDiscoveryError(
       `Platform discovery failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       finalConfig.platformsPath,

@@ -43,6 +43,7 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import useStore from '../../store'
+import { getApiUrl } from '../../shared/utils/api'
 
 function UploadParser() {
   const { t } = useTranslation()
@@ -146,7 +147,7 @@ function UploadParser() {
       const currentEventId = currentEvent?.id
       if (currentEventId) {
         try {
-          const response = await fetch(`http://localhost:4000/api/parsing/data/${currentEventId}`)
+          const response = await fetch(getApiUrl(`parsing/data/${currentEventId}`))
           if (response.ok) {
             const data = await response.json()
             if (data.success && data.parsedData) {

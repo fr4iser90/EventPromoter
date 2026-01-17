@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
 /**
  * Hook to fetch templates for a specific category across platforms
@@ -29,7 +30,7 @@ export function useTemplatesByCategory(category, platforms = null) {
           : {}
         
         const response = await axios.get(
-          `${config.apiUrl || 'http://localhost:4000'}/api/templates/by-category/${category}`,
+          getApiUrl(`templates/by-category/${category}`),
           { params }
         )
         

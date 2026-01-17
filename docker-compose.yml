@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: eventpromoter-backend
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      # CORS: In Docker mit nginx ist CORS nicht nötig (same-origin über Proxy)
+      # Setze CORS_DISABLE=true wenn alles über nginx/Traefik läuft
+      - CORS_DISABLE=true
+    volumes:
+      # Mount config directory for persistence
+      - ./config:/app/config:rw
+    restart: unless-stopped
+    networks:
+      - eventpromoter-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: eventpromoter-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - eventpromoter-network
+
+networks:
+  eventpromoter-network:
+    driver: bridge

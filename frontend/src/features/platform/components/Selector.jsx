@@ -18,6 +18,7 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import useStore from '../../../store'
 import SettingsModal from './SettingsModal'
 import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
 /**
  * Generic Icon Component
@@ -62,7 +63,7 @@ function PlatformSelector({ disabled = false }) {
         setLoading(true)
         setError(null)
         
-        const response = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms`)
+        const response = await fetch(getApiUrl('platforms'))
         if (!response.ok) {
           throw new Error(`Failed to load platforms: ${response.status}`)
         }

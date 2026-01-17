@@ -17,6 +17,7 @@ import {
 import PublishIcon from '@mui/icons-material/Publish'
 import axios from 'axios'
 import useStore from '../../store'
+import { getApiUrl } from '../../shared/utils/api'
 import Results as PublishResults from '../publish/Results.jsx'
 import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
 
@@ -68,7 +69,7 @@ function PublishParser() {
       let editorSchema = schema?.editor
       if (!editorSchema && platformId) {
         try {
-          const response = await fetch(`http://localhost:4000/api/platforms/${platformId}/schema`)
+          const response = await fetch(getApiUrl(`platforms/${platformId}/schema`))
           if (response.ok) {
             const data = await response.json()
             editorSchema = data.schema?.editor

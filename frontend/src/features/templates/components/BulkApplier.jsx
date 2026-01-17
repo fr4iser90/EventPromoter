@@ -32,6 +32,7 @@ import { useTemplatesByCategory } from '../hooks/useTemplatesByCategory'
 import useStore from '../../../store'
 import { getTemplateVariables } from '../../../shared/utils/templateUtils'
 import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
 /**
  * BulkTemplateApplier Component
@@ -176,7 +177,7 @@ function BulkTemplateApplier({
           // ✅ Use backend API to apply template (same as Editor)
           // This removes all mapping logic from frontend!
           const applyResponse = await fetch(
-            `${config.apiUrl || 'http://localhost:4000'}/api/templates/${platformId}/${templateIdToUse}/apply`,
+            getApiUrl(`templates/${platformId}/${templateIdToUse}/apply`),
             {
               method: 'POST',
               headers: {

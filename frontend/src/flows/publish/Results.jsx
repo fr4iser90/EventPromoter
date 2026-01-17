@@ -25,6 +25,7 @@ import {
 } from '@mui/icons-material'
 import axios from 'axios'
 import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
+import { getApiUrl } from '../../shared/utils/api'
 
 const PublishResults = ({ open, onClose, publishSessionId }) => {
   const [results, setResults] = useState(null)
@@ -49,7 +50,7 @@ const PublishResults = ({ open, onClose, publishSessionId }) => {
       const parts = publishSessionId.split('-')
       const eventId = `event-${parts[1]}`
 
-      const response = await axios.get(`http://localhost:4000/api/publish/results/${eventId}/${publishSessionId}`)
+      const response = await axios.get(getApiUrl(`publish/results/${eventId}/${publishSessionId}`))
 
       if (response.data.success) {
         setResults(response.data.session)

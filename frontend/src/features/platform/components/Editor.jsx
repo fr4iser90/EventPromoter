@@ -37,6 +37,7 @@ import {
   getVariableLabel
 } from '../../../shared/utils/templateUtils'
 import config from '../../../config'
+import { getApiUrl, getFileUrl } from '../../../shared/utils/api'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect, onBatchChange }) {
   const { t } = useTranslation()
@@ -97,7 +98,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         setError(null)
 
         // Load platform data from API
-        const response = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platform}`)
+        const response = await fetch(getApiUrl(`platforms/${platform}`))
         if (!response.ok) {
           throw new Error(`Failed to load platform config: ${response.status}`)
         }
@@ -213,7 +214,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       // ✅ Call backend API to map template to editor content
       // This removes all mapping logic from frontend!
       const response = await fetch(
-        `${config.apiUrl || 'http://localhost:4000'}/api/templates/${platform}/${template.id}/apply`,
+        getApiUrl(`templates/${platform}/${template.id}/apply`),
         {
           method: 'POST',
           headers: {
@@ -300,7 +301,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   // Render image selector for image fields
   const renderImageSelector = (block, field) => {
     const fieldValue = content?.[block.id]
-    const imageUrl = fieldValue?.startsWith('http') ? fieldValue : fieldValue ? `http://localhost:4000${fieldValue}` : null
+    const imageUrl = fieldValue ? getFileUrl(fieldValue) : null
 
     return (
       <FormControl key={block.id} fullWidth sx={{ mb: 2 }}>
@@ -312,7 +313,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
           renderValue={(selected) => {
             if (!selected) return 'No image selected'
             const selectedFile = availableImages.find(img => {
-              const imgUrl = img.url?.startsWith('http') ? img.url : `http://localhost:4000${img.url}`
+              const imgUrl = getFileUrl(img.url)
               return imgUrl === selected || img.url === selected
             })
             return selectedFile ? selectedFile.name : 'Selected image'
@@ -322,7 +323,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
             <em>No image</em>
           </MenuItem>
           {availableImages.map((file, index) => {
-            const fileUrl = file.url?.startsWith('http') ? file.url : `http://localhost:4000${file.url}`
+            const fileUrl = getFileUrl(file.url)
             return (
               <MenuItem key={index} value={fileUrl}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

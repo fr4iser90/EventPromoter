@@ -3,6 +3,8 @@
  * Functions for mapping placeholders and replacing template variables
  */
 
+import { getFileUrl } from './api.js'
+
 /**
  * Map German placeholders to template variable names
  */
@@ -88,7 +90,7 @@ export function getTemplateVariables(parsedData, uploadedFileRefs = []) {
   // Map image files
   const imageFiles = uploadedFileRefs.filter(file => file.type.startsWith('image/'))
   imageFiles.forEach((file, index) => {
-    const imageUrl = file.url.startsWith('http') ? file.url : `http://localhost:4000${file.url}`
+    const imageUrl = file.url.startsWith('http') ? file.url : getFileUrl(file.url)
     const imageNum = index + 1
     
     // Support multiple variable names for images

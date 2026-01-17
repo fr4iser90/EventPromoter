@@ -11,6 +11,21 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'mui-icons': ['@mui/icons-material']
+        }
+      }
+    },
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true
+    }
+  },
+  optimizeDeps: {
+    include: ['@mui/icons-material'],
+    exclude: ['@mui/icons-material/MenuBookOutlined']
   }
 })

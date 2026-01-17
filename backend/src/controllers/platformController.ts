@@ -71,27 +71,39 @@ export class PlatformController {
   // Initialize registry on first use
   private static async ensureRegistry() {
     try {
+      console.log('🔍 Getting platform registry instance...')
       const registry = getPlatformRegistry()
+      console.log(`📊 Registry initialized: ${registry.isInitialized()}`)
       if (!registry.isInitialized()) {
+        console.log('🔄 Initializing platform registry...')
         await initializePlatformRegistry()
+        console.log('✅ Platform registry initialized')
       }
       return registry
     } catch (error) {
-      console.error('Platform registry initialization failed:', error)
+      console.error('❌ Platform registry initialization failed:', error)
       throw error
     }
   }
 
   // Get all available platforms with metadata
   static async getPlatforms(req: Request, res: Response) {
+    console.log('🌐 API Request: GET /api/platforms')
     try {
+      console.log('📦 Getting platform registry...')
       const registry = await PlatformController.ensureRegistry()
+      console.log('✅ Registry obtained, checking initialization...')
       
       if (!registry.isInitialized()) {
+        console.error('❌ Platform registry not initialized')
         throw new Error('Platform registry not initialized')
       }
 
-      const platforms = registry.getAllPlatforms().map(platform => ({
+      console.log('📋 Getting all platforms from registry...')
+      const allPlatforms = registry.getAllPlatforms()
+      console.log(`✅ Found ${allPlatforms.length} platforms`)
+      
+      const platforms = allPlatforms.map(platform => ({
         id: platform.metadata.id,
         name: platform.metadata.displayName,
         version: platform.metadata.version,
@@ -109,6 +121,7 @@ export class PlatformController {
         hasSchema: !!platform.schema
       }))
 
+      console.log(`✅ Sending ${platforms.length} platforms to client`)
       return res.json({
         success: true,
         platforms

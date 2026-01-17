@@ -7,20 +7,20 @@
  */
 
 // Import and export types
-import type { FacebookTemplate } from './types'
-export type { FacebookTemplate } from './types'
+import type { FacebookTemplate } from './types.js'
+export type { FacebookTemplate } from './types.js'
 
 // Import templates first
-import { basicEventAnnouncementTemplate } from './basic-event-announcement'
-import { professionalEventAnnouncementTemplate } from './professional-event-announcement'
-import { eventAnnouncementTemplate } from './event-announcement'
-import { ticketSalePromotionTemplate } from './ticket-sale-promotion'
+import { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
+import { professionalEventAnnouncementTemplate } from './professional-event-announcement.js'
+import { eventAnnouncementTemplate } from './event-announcement.js'
+import { ticketSalePromotionTemplate } from './ticket-sale-promotion.js'
 
 // Export individual templates
-export { basicEventAnnouncementTemplate } from './basic-event-announcement'
-export { professionalEventAnnouncementTemplate } from './professional-event-announcement'
-export { eventAnnouncementTemplate } from './event-announcement'
-export { ticketSalePromotionTemplate } from './ticket-sale-promotion'
+export { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
+export { professionalEventAnnouncementTemplate } from './professional-event-announcement.js'
+export { eventAnnouncementTemplate } from './event-announcement.js'
+export { ticketSalePromotionTemplate } from './ticket-sale-promotion.js'
 
 // Main templates array
 export const FACEBOOK_TEMPLATES: FacebookTemplate[] = [

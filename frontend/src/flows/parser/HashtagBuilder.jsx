@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material'
 import axios from 'axios'
 import config from '../../config'
+import { getApiUrl } from '../../shared/utils/api'
 
 function HashtagBuilder({ eventData, onHashtagsChange }) {
   const [available, setAvailable] = useState([])
@@ -73,7 +74,7 @@ function HashtagBuilder({ eventData, onHashtagsChange }) {
     try {
       setLoading(true)
       setError(null)
-      const response = await axios.get(`${config.apiUrl || 'http://localhost:4000'}/api/hashtags`)
+      const response = await axios.get(getApiUrl('hashtags'))
       if (response.data.success) {
         setAvailable(response.data.available || [])
         setGroups(response.data.groups || {})
@@ -95,7 +96,7 @@ function HashtagBuilder({ eventData, onHashtagsChange }) {
 
   const loadSuggestions = async () => {
     try {
-      const response = await axios.post(`${config.apiUrl || 'http://localhost:4000'}/api/hashtags/suggest`, {
+      const response = await axios.post(getApiUrl('hashtags/suggest'), {
         eventData
       })
       if (response.data.success) {
@@ -137,7 +138,7 @@ function HashtagBuilder({ eventData, onHashtagsChange }) {
 
   const saveSelected = async (hashtags) => {
     try {
-      await axios.put(`${config.apiUrl || 'http://localhost:4000'}/api/hashtags/selected`, {
+      await axios.put(getApiUrl('hashtags/selected'), {
         selected: hashtags
       })
       if (onHashtagsChange) {

@@ -11,20 +11,20 @@ import type { RedditTemplate } from './types'
 export type { RedditTemplate } from './types'
 
 // Import templates first
-import { basicEventAnnouncementTemplate } from './basic-event-announcement'
-import { professionalEventAnnouncementTemplate } from './professional-event-announcement'
-import { eventAnnouncementTemplate } from './event-announcement'
-import { djSetDiscussionTemplate } from './dj-set-discussion'
-import { musicDiscoveryShareTemplate } from './music-discovery-share'
-import { venueReviewTemplate } from './venue-review'
+import { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
+import { professionalEventAnnouncementTemplate } from './professional-event-announcement.js'
+import { eventAnnouncementTemplate } from './event-announcement.js'
+import { djSetDiscussionTemplate } from './dj-set-discussion.js'
+import { musicDiscoveryShareTemplate } from './music-discovery-share.js'
+import { venueReviewTemplate } from './venue-review.js'
 
 // Export individual templates
-export { basicEventAnnouncementTemplate } from './basic-event-announcement'
-export { professionalEventAnnouncementTemplate } from './professional-event-announcement'
-export { eventAnnouncementTemplate } from './event-announcement'
-export { djSetDiscussionTemplate } from './dj-set-discussion'
-export { musicDiscoveryShareTemplate } from './music-discovery-share'
-export { venueReviewTemplate } from './venue-review'
+export { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
+export { professionalEventAnnouncementTemplate } from './professional-event-announcement.js'
+export { eventAnnouncementTemplate } from './event-announcement.js'
+export { djSetDiscussionTemplate } from './dj-set-discussion.js'
+export { musicDiscoveryShareTemplate } from './music-discovery-share.js'
+export { venueReviewTemplate } from './venue-review.js'
 
 // Main templates array
 export const REDDIT_TEMPLATES: RedditTemplate[] = [

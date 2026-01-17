@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import config from '../../../config'
 import useStore from '../../../store'
+import { getApiUrl } from '../../../shared/utils/api'
 
 /**
  * Hook to load platform schema
@@ -37,7 +38,7 @@ export function usePlatformSchema(platformId) {
 
         // Build URL with darkMode parameter
         const mode = darkMode ? 'dark' : 'light'
-        const url = `${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}/schema?mode=${mode}`
+        const url = `${getApiUrl(`platforms/${platformId}/schema`)}?mode=${mode}`
         
         // Try to load schema from dedicated endpoint
         const response = await fetch(url)
@@ -51,7 +52,7 @@ export function usePlatformSchema(platformId) {
         }
 
         // Fallback: try to load from platform endpoint
-        const platformUrl = `${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}?mode=${mode}`
+        const platformUrl = `${getApiUrl(`platforms/${platformId}`)}?mode=${mode}`
         const platformResponse = await fetch(platformUrl)
         if (platformResponse.ok) {
           const platformData = await platformResponse.json()
@@ -102,7 +103,7 @@ export function usePlatformMetadata(platformId) {
         setLoading(true)
         setError(null)
 
-        const response = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platformId}`)
+        const response = await fetch(getApiUrl(`platforms/${platformId}`))
         if (!response.ok) {
           throw new Error(`Failed to load platform: ${response.status}`)
         }
@@ -144,7 +145,7 @@ export function usePlatforms() {
         setLoading(true)
         setError(null)
 
-        const response = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms`)
+        const response = await fetch(getApiUrl('platforms'))
         if (!response.ok) {
           throw new Error(`Failed to load platforms: ${response.status}`)
         }

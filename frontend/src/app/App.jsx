@@ -6,6 +6,7 @@ import '../i18n' // Initialize i18n
 import HomePage from '../pages/HomePage'
 import TemplatePage from '../pages/templates'
 import useStore from '../store'
+import { getApiUrl } from '../shared/utils/api'
 
 const createAppTheme = (darkMode) => createTheme({
   palette: {
@@ -27,7 +28,7 @@ function App() {
   useEffect(() => {
     const loadAppConfig = async () => {
       try {
-        const response = await fetch('http://localhost:4000/api/config/app')
+        const response = await fetch(getApiUrl('config/app'))
         const config = await response.json()
         if (config.darkMode !== undefined) {
           setDarkMode(config.darkMode)

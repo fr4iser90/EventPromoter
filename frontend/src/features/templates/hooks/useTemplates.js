@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
+import { getApiUrl } from '../../../shared/utils/api'
 
 export const useTemplates = (platform, mode = 'raw') => {
   const [templates, setTemplates] = useState([])
@@ -19,7 +20,7 @@ export const useTemplates = (platform, mode = 'raw') => {
       setError(null)
 
       // Send ?mode=preview|export|raw (backend resolves templates accordingly)
-      const url = `http://localhost:4000/api/templates/${platform}?mode=${mode}`
+      const url = `${getApiUrl(`templates/${platform}`)}?mode=${mode}`
       
       const response = await axios.get(url)
       if (response.data.success) {
@@ -38,7 +39,7 @@ export const useTemplates = (platform, mode = 'raw') => {
   // Load template categories
   const loadCategories = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/templates/categories')
+      const response = await axios.get(getApiUrl('templates/categories'))
       if (response.data.success) {
         setCategories(response.data.categories)
       }
@@ -51,7 +52,7 @@ export const useTemplates = (platform, mode = 'raw') => {
   const createTemplate = useCallback(async (templateData) => {
     try {
       setError(null)
-      const response = await axios.post(`http://localhost:4000/api/templates/${platform}`, templateData)
+      const response = await axios.post(getApiUrl(`templates/${platform}`), templateData)
 
       if (response.data.success) {
         // Reload templates to get updated list
@@ -72,7 +73,7 @@ export const useTemplates = (platform, mode = 'raw') => {
   const updateTemplate = useCallback(async (templateId, updates) => {
     try {
       setError(null)
-      const response = await axios.put(`http://localhost:4000/api/templates/${platform}/${templateId}`, updates)
+      const response = await axios.put(getApiUrl(`templates/${platform}/${templateId}`), updates)
 
       if (response.data.success) {
         // Reload templates to get updated list
@@ -93,7 +94,7 @@ export const useTemplates = (platform, mode = 'raw') => {
   const deleteTemplate = useCallback(async (templateId) => {
     try {
       setError(null)
-      const response = await axios.delete(`http://localhost:4000/api/templates/${platform}/${templateId}`)
+      const response = await axios.delete(getApiUrl(`templates/${platform}/${templateId}`))
 
       if (response.data.success) {
         // Reload templates to get updated list
@@ -113,7 +114,7 @@ export const useTemplates = (platform, mode = 'raw') => {
   // Get single template
   const getTemplate = useCallback(async (templateId) => {
     try {
-      const response = await axios.get(`http://localhost:4000/api/templates/${platform}/${templateId}`)
+      const response = await axios.get(getApiUrl(`templates/${platform}/${templateId}`))
       if (response.data.success) {
         return response.data.template
       }

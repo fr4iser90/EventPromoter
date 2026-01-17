@@ -1,14 +1,12 @@
 // Configuration for the Multi-Platform Publisher Interface
 
 const config = {
-  // n8n Webhook URL - replace with your actual n8n instance URL
-  n8nWebhookUrl: 'http://localhost:5678/webhook/multiplatform-publisher',
 
-  // API Base URL for future server-side features
-  apiBaseUrl: 'http://localhost:3001',
-  
   // API URL for backend services
-  apiUrl: 'http://localhost:4000',
+  // In Docker: use relative path '/api' (nginx proxies /api to backend:4000/api)
+  // In development: use localhost:4000
+  // Can be overridden with VITE_API_URL environment variable
+  apiUrl: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:4000' : '/api'),
 
   // File upload settings
   maxFileSize: 10 * 1024 * 1024, // 10MB

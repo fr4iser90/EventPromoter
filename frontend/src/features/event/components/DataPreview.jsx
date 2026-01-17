@@ -40,6 +40,7 @@ import DateDisplay from '../../../shared/components/ui/DateDisplay'
 import HashtagBuilder from '../../../flows/parser/HashtagBuilder'
 import axios from 'axios'
 import config from '../../../config'
+import { getApiUrl, getFileUrl } from '../../../shared/utils/api'
 
 
 function Preview() {
@@ -100,7 +101,7 @@ function Preview() {
       setTextContent('')
 
       try {
-        const response = await fetch(`http://localhost:4000/api/files/content/${currentEvent?.id}/${fileData.filename}`)
+        const response = await fetch(getApiUrl(`files/content/${currentEvent?.id}/${fileData.filename}`))
         if (response.ok) {
           const data = await response.json()
           setTextContent(data.content || 'No content available')
@@ -115,7 +116,7 @@ function Preview() {
       }
     } else {
       // For non-text files (PDF, etc.), open in new tab
-      const fileUrl = `http://localhost:4000/api/files/${currentEvent?.id}/${fileData.filename}`
+      const fileUrl = getApiUrl(`files/${currentEvent?.id}/${fileData.filename}`)
       window.open(fileUrl, '_blank')
     }
   }
@@ -243,7 +244,7 @@ function Preview() {
                       <CardMedia
                         component="img"
                         height="200"
-                        image={`http://localhost:4000${fileData.url}`}
+                        image={getFileUrl(fileData.url)}
                         alt={fileData.name}
                         sx={{ objectFit: 'cover' }}
                       />
@@ -735,7 +736,7 @@ function Preview() {
             {selectedImage && (
               <Box>
                 <img
-                  src={`http://localhost:4000${selectedImage.url}`}
+                  src={getFileUrl(selectedImage.url)}
                   alt={selectedImage.name}
                   style={{
                     maxWidth: '100%',

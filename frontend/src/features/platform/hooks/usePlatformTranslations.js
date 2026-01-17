@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
 /**
  * Hook to load and merge platform-specific translations from backend
@@ -34,9 +35,8 @@ export function usePlatformTranslations(platformId, lang) {
         setLoading(true)
         setError(null)
 
-        const apiUrl = config.apiUrl || 'http://localhost:4000'
         const response = await axios.get(
-          `${apiUrl}/api/translations/${platformId}/${currentLang}`
+          getApiUrl(`translations/${platformId}/${currentLang}`)
         )
 
         if (response.data.success && response.data.translations) {
@@ -111,11 +111,10 @@ export function useMultiplePlatformTranslations(platformIds = [], lang) {
       try {
         setLoading(true)
 
-        const apiUrl = config.apiUrl || 'http://localhost:4000'
         const promises = toLoad.map(async (platformId) => {
           try {
             const response = await axios.get(
-              `${apiUrl}/api/translations/${platformId}/${currentLang}`
+              getApiUrl(`translations/${platformId}/${currentLang}`)
             )
 
             if (response.data.success && response.data.translations) {

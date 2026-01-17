@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { validatePlatforms, validateEventData, validateUrl } from './shared/utils/validation'
 import axios from 'axios'
 import config from './config'
+import { getApiUrl } from './shared/utils/api'
 
 // Debounce utility function
 const debounce = (func, wait) => {
@@ -86,7 +87,7 @@ const useStore = create((set, get) => ({
         }
       }
 
-      await axios.post('http://localhost:4000/api/event', eventWorkspaceData)
+      await axios.post(getApiUrl('event'), eventWorkspaceData)
       console.log('Store: Event workspace saved to backend successfully')
     } catch (error) {
       console.warn('Store: Failed to save event workspace to backend:', error)
@@ -109,7 +110,7 @@ const useStore = create((set, get) => ({
   // User preferences
   loadUserPreferences: async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/platforms/preferences')
+      const response = await axios.get(getApiUrl('platforms/preferences'))
       const preferences = response.data.preferences
       set({
         userPreferences: preferences
@@ -124,7 +125,7 @@ const useStore = create((set, get) => ({
 
   saveUserPreferences: async (preferences) => {
     try {
-      await axios.post('http://localhost:4000/api/platforms/preferences', { preferences })
+      await axios.post(getApiUrl('platforms/preferences'), { preferences })
       set({ userPreferences: preferences })
       console.log('User preferences saved')
     } catch (error) {
@@ -134,7 +135,7 @@ const useStore = create((set, get) => ({
 
   updateUserPreferences: async (updates) => {
     try {
-      await axios.patch('http://localhost:4000/api/platforms/preferences', updates)
+      await axios.patch(getApiUrl('platforms/preferences'), updates)
       set(state => ({
         userPreferences: { ...state.userPreferences, ...updates }
       }))
@@ -149,7 +150,7 @@ const useStore = create((set, get) => ({
   loadGlobalConfigs: async () => {
     try {
       const [hashtagConfig] = await Promise.all([
-        axios.get('http://localhost:4000/api/config/hashtags')
+        axios.get(getApiUrl('config/hashtags'))
       ])
 
       set({
@@ -170,7 +171,7 @@ const useStore = create((set, get) => ({
       console.log(`🔄 Starting complete restore of event ${eventId}...`)
 
       // Load complete event data from backend
-      const response = await axios.get(`http://localhost:4000/api/event/${eventId}/restore`)
+      const response = await axios.get(getApiUrl(`event/${eventId}/restore`))
       const restoreData = response.data.event
 
       // Reset current state first (but keep global configs)
@@ -214,7 +215,7 @@ const useStore = create((set, get) => ({
   // Check if file exists on server
   checkFileExists: async (fileUrl) => {
     try {
-      const response = await axios.head(fileUrl.replace('/api/files/', 'http://localhost:4000/api/files/'))
+      const response = await axios.head(getApiUrl(fileUrl.replace('/api/files/', 'files/')))
       return response.status === 200
     } catch (error) {
       return false
@@ -224,7 +225,7 @@ const useStore = create((set, get) => ({
   // Check if parsed data exists for event
   checkParsedDataExists: async (eventId) => {
     try {
-      const response = await axios.get(`http://localhost:4000/api/parsing/data/${eventId}`)
+      const response = await axios.get(getApiUrl(`parsing/data/${eventId}`))
       return response.status === 200
     } catch (error) {
       return false
@@ -234,7 +235,7 @@ const useStore = create((set, get) => ({
   // Load event workspace data with validation
   loadEventWorkspace: async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/event')
+      const response = await axios.get(getApiUrl('event'))
       const eventWorkspaceData = response.data
       const event = eventWorkspaceData.currentEvent
 
@@ -397,7 +398,7 @@ const useStore = create((set, get) => ({
         formData.append('files', file)
       })
 
-      const response = await axios.post('http://localhost:4000/api/files/upload-multiple', formData, {
+      const response = await axios.post(getApiUrl('files/upload-multiple'), formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -451,7 +452,7 @@ const useStore = create((set, get) => ({
 
       if (fileRef) {
         // Delete from server
-        await axios.delete(`http://localhost:4000/api/files/${eventId}/${fileRef.filename}`)
+        await axios.delete(getApiUrl(`files/${eventId}/${fileRef.filename}`))
       }
 
       // Remove from local state
@@ -571,7 +572,7 @@ const useStore = create((set, get) => ({
     try {
       if (useExisting) {
         // Load existing parsed data
-        const response = await axios.get(`http://localhost:4000/api/parsing/data/${duplicateData.existingEventId}`)
+        const response = await axios.get(getApiUrl(`parsing/data/${duplicateData.existingEventId}`))
         if (response.data.success) {
           // Apply existing content
           get().applyParsedContent(response.data.parsedData, {}) // Platform content would need to be regenerated
@@ -639,7 +640,7 @@ const useStore = create((set, get) => ({
     set({ n8nWebhookUrl: url })
     // Save to backend config (use PATCH to only update n8nWebhookUrl, not overwrite other fields)
     try {
-      await axios.patch('http://localhost:4000/api/config/app', {
+      await axios.patch(getApiUrl('config/app'), {
         n8nWebhookUrl: url
       })
     } catch (error) {
@@ -650,7 +651,7 @@ const useStore = create((set, get) => ({
   // Load app config (n8nWebhookUrl)
   loadAppConfig: async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/config/app')
+      const response = await axios.get(getApiUrl('config/app'))
       const config = response.data
       if (config.n8nWebhookUrl) {
         set({ n8nWebhookUrl: config.n8nWebhookUrl })
@@ -687,7 +688,7 @@ const useStore = create((set, get) => ({
     }
 
     try {
-      await axios.put(`http://localhost:4000/api/parsing/platform-content/${eventId}`, {
+      await axios.put(getApiUrl(`parsing/platform-content/${eventId}`), {
         platform,
         content: {
           ...content,
@@ -708,7 +709,7 @@ const useStore = create((set, get) => ({
   // Load platform content for specific event
   loadEventParsedData: async (eventId) => {
     try {
-      const response = await axios.get(`http://localhost:4000/api/event/${eventId}/parsed-data`)
+      const response = await axios.get(getApiUrl(`event/${eventId}/parsed-data`))
       const { parsedData } = response.data
       set({
         parsedData: parsedData || null,
@@ -733,7 +734,7 @@ const useStore = create((set, get) => ({
       set({ savingParsedData: true, parsedDataSaveError: null })
       
       const response = await axios.put(
-        `http://localhost:4000/api/parsing/data/${state.currentEvent.id}`,
+        getApiUrl(`parsing/data/${state.currentEvent.id}`),
         { parsedData: updatedData }
       )
 
@@ -762,7 +763,7 @@ const useStore = create((set, get) => ({
 
   loadEventPlatformContent: async (eventId) => {
     try {
-      const response = await axios.get(`http://localhost:4000/api/event/${eventId}/platform-content`)
+      const response = await axios.get(getApiUrl(`event/${eventId}/platform-content`))
       const { platformContent } = response.data
       set({ platformContent: platformContent || {} })
       console.log(`Platform content loaded for event ${eventId}`)
@@ -779,7 +780,7 @@ const useStore = create((set, get) => ({
   // Save platform content for specific event
   saveEventPlatformContent: async (eventId, platformContent) => {
     try {
-      await axios.put(`http://localhost:4000/api/event/${eventId}/platform-content`, platformContent)
+      await axios.put(getApiUrl(`event/${eventId}/platform-content`), platformContent)
       console.log(`Platform content saved for event ${eventId}`)
     } catch (error) {
       console.warn('Failed to save platform content for event:', error)
@@ -905,7 +906,7 @@ const useStore = create((set, get) => ({
       console.log('Sending submit request for event:', eventId)
 
       // Send to backend (which loads everything from storage and publishes)
-      const response = await axios.post('http://localhost:4000/api/submit', payload, {
+      const response = await axios.post(getApiUrl('submit'), payload, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -933,13 +934,13 @@ const useStore = create((set, get) => ({
         }
 
         // Load current history and add new entry
-        const historyResponse = await axios.get('http://localhost:4000/api/history')
+        const historyResponse = await axios.get(getApiUrl('history'))
         const historyData = historyResponse.data
         const updatedHistory = {
           Events: [historyEntry, ...historyData.Events]
         }
 
-        await axios.post('http://localhost:4000/api/history', updatedHistory)
+        await axios.post(getApiUrl('history'), updatedHistory)
         console.log('Event saved to history')
       } catch (historyError) {
         console.warn('Failed to save to history:', historyError)
@@ -999,7 +1000,7 @@ const useStore = create((set, get) => ({
   // Template Management
   loadTemplates: async (platform) => {
     try {
-      const response = await axios.get(`http://localhost:4000/api/templates/${platform}`)
+      const response = await axios.get(getApiUrl(`templates/${platform}`))
       if (response.data.success) {
         set(state => ({
           templates: {
@@ -1017,7 +1018,7 @@ const useStore = create((set, get) => ({
 
   loadTemplateCategories: async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/templates/categories')
+      const response = await axios.get(getApiUrl('templates/categories'))
       if (response.data.success) {
         set({ templateCategories: response.data.categories })
         return response.data.categories
@@ -1030,7 +1031,7 @@ const useStore = create((set, get) => ({
 
   createTemplate: async (platform, templateData) => {
     try {
-      const response = await axios.post(`http://localhost:4000/api/templates/${platform}`, templateData)
+      const response = await axios.post(getApiUrl(`templates/${platform}`), templateData)
       if (response.data.success) {
         // Reload templates for this platform
         get().loadTemplates(platform)
@@ -1044,7 +1045,7 @@ const useStore = create((set, get) => ({
 
   updateTemplate: async (platform, templateId, updates) => {
     try {
-      const response = await axios.put(`http://localhost:4000/api/templates/${platform}/${templateId}`, updates)
+      const response = await axios.put(getApiUrl(`templates/${platform}/${templateId}`), updates)
       if (response.data.success) {
         // Reload templates for this platform
         get().loadTemplates(platform)
@@ -1058,7 +1059,7 @@ const useStore = create((set, get) => ({
 
   deleteTemplate: async (platform, templateId) => {
     try {
-      const response = await axios.delete(`http://localhost:4000/api/templates/${platform}/${templateId}`)
+      const response = await axios.delete(getApiUrl(`templates/${platform}/${templateId}`))
       if (response.data.success) {
         // Reload templates for this platform
         get().loadTemplates(platform)
@@ -1077,7 +1078,7 @@ const useStore = create((set, get) => ({
 
     // Save to backend (use PATCH to only update darkMode, not overwrite other fields like n8nWebhookUrl)
     try {
-      const response = await fetch('http://localhost:4000/api/config/app', {
+      const response = await fetch(getApiUrl('config/app'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ darkMode })

@@ -25,6 +25,7 @@ import SettingsModal from './SettingsModal'
 import axios from 'axios'
 import useStore from '../../../store'
 import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
 function DynamicPanelWrapper({ platform }) {
   const { platformContent, setPlatformContent } = useStore()
@@ -48,7 +49,7 @@ function DynamicPanelWrapper({ platform }) {
         setError(null)
 
         // Try to load platform with uiConfig.panel
-        const platformResponse = await fetch(`${config.apiUrl || 'http://localhost:4000'}/api/platforms/${platform}`)
+        const platformResponse = await fetch(getApiUrl(`platforms/${platform}`))
         if (platformResponse.ok) {
           const platformData = await platformResponse.json()
           if (platformData.success && platformData.platform) {
@@ -105,7 +106,7 @@ function DynamicPanelWrapper({ platform }) {
         if (field.optionsSource) {
           try {
             const endpoint = field.optionsSource.endpoint.replace(':platformId', platformId)
-            const url = `${config.apiUrl || 'http://localhost:4000'}${endpoint}`
+            const url = getApiUrl(endpoint.replace('/api/', ''))
             
             const response = await axios({
               method: field.optionsSource.method || 'GET',
@@ -185,7 +186,7 @@ function DynamicPanelWrapper({ platform }) {
       }
       try {
         const endpoint = fieldDef.action.endpoint.replace(':platformId', platform)
-        const url = `${config.apiUrl || 'http://localhost:4000'}${endpoint}`
+        const url = getApiUrl(endpoint.replace('/api/', ''))
         
         // Build request body from bodyMapping
         let body = {}

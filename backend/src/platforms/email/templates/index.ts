@@ -22,18 +22,18 @@ export interface EmailTemplate {
 }
 
 // Import templates first
-import { basicEventAnnouncementTemplate } from './basic-event-announcement'
-import { professionalEventAnnouncementTemplate } from './professional-event-announcement'
-import { eventAnnouncementTemplate } from './event-announcement'
-import { lastMinuteTicketsTemplate } from './last-minute-tickets'
-import { eventReminderTemplate } from './event-reminder'
+import { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
+import { professionalEventAnnouncementTemplate } from './professional-event-announcement.js'
+import { eventAnnouncementTemplate } from './event-announcement.js'
+import { lastMinuteTicketsTemplate } from './last-minute-tickets.js'
+import { eventReminderTemplate } from './event-reminder.js'
 
 // Export individual templates
-export { basicEventAnnouncementTemplate } from './basic-event-announcement'
-export { professionalEventAnnouncementTemplate } from './professional-event-announcement'
-export { eventAnnouncementTemplate } from './event-announcement'
-export { lastMinuteTicketsTemplate } from './last-minute-tickets'
-export { eventReminderTemplate } from './event-reminder'
+export { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
+export { professionalEventAnnouncementTemplate } from './professional-event-announcement.js'
+export { eventAnnouncementTemplate } from './event-announcement.js'
+export { lastMinuteTicketsTemplate } from './last-minute-tickets.js'
+export { eventReminderTemplate } from './event-reminder.js'
 
 // Main templates array
 export const EMAIL_TEMPLATES: EmailTemplate[] = [

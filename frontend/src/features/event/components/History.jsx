@@ -14,6 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import HistoryCard from './HistoryCard'
 import useStore, { WORKFLOW_STATES } from '../../../store'
+import { getApiUrl } from '../../../shared/utils/api'
 
 function EventHistory() {
   const { t } = useTranslation()
@@ -28,7 +29,7 @@ function EventHistory() {
     const loadEvents = async () => {
       try {
         setLoading(true)
-        const response = await fetch('http://localhost:4000/api/history')
+        const response = await fetch(getApiUrl('history'))
         if (response.ok) {
           const data = await response.json()
           setEvents(data.Events || [])
@@ -56,7 +57,7 @@ function EventHistory() {
 
   const handleLoadEventFiles = async (event, fileIds) => {
     try {
-      const response = await fetch(`http://localhost:4000/api/event/${event.id}/load-files`, {
+      const response = await fetch(getApiUrl(`event/${event.id}/load-files`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileIds })
