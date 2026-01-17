@@ -95,33 +95,9 @@ function CompositeRenderer({ block, value, onChange, platform }) {
   const schema = rendering.schema || {}
   const dataEndpoints = rendering.dataEndpoints || {}
 
-  // ✅ DEBUG: Log what we receive
-  console.log('[CompositeRenderer] Component rendered:', {
-    platform,
-    hasBlock: !!block,
-    hasRendering: !!rendering,
-    hasDataEndpoints: !!dataEndpoints,
-    dataEndpointsKeys: Object.keys(dataEndpoints),
-    dataEndpoints,
-    blockId: block?.id,
-    blockType: block?.type
-  })
-
   // Load data from all endpoints
   useEffect(() => {
-    console.log('[CompositeRenderer] useEffect triggered:', {
-      platform,
-      hasDataEndpoints: !!dataEndpoints,
-      dataEndpointsKeys: dataEndpoints ? Object.keys(dataEndpoints) : [],
-      dataEndpoints
-    })
-
     if (!platform || !dataEndpoints || Object.keys(dataEndpoints).length === 0) {
-      console.warn('[CompositeRenderer] Skipping data load - missing requirements:', {
-        hasPlatform: !!platform,
-        hasDataEndpoints: !!dataEndpoints,
-        dataEndpointsLength: dataEndpoints ? Object.keys(dataEndpoints).length : 0
-      })
       setLoading(false)
       return
     }
@@ -137,15 +113,7 @@ function CompositeRenderer({ block, value, onChange, platform }) {
         for (const [key, endpoint] of Object.entries(dataEndpoints)) {
           try {
             const url = getApiUrl(endpoint.replace(':platformId', platform))
-            console.log(`[CompositeRenderer] Loading data for ${key} from:`, url)
             const response = await axios.get(url)
-            console.log(`[CompositeRenderer] Response for ${key}:`, {
-              status: response.status,
-              success: response.data?.success,
-              hasOptions: !!response.data?.options,
-              optionsLength: response.data?.options?.length || 0,
-              dataKeys: Object.keys(response.data || {})
-            })
             
             if (response.data.success) {
               // Extract options from response
