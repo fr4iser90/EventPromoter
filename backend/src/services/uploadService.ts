@@ -36,7 +36,7 @@ export class UploadService {
         id: path.parse(file.filename).name,
         name: file.originalname,
         filename: file.filename,
-        url: `/api/files/${eventId}/${file.filename}`,
+        url: `/files/${eventId}/${file.filename}`,
         path: finalPath,
         size: file.size,
         type: file.mimetype,
@@ -71,7 +71,7 @@ export class UploadService {
       id: path.parse(file.filename).name,
       name: file.originalname,
       filename: file.filename,
-      url: `/api/files/temp/${file.filename}`, // Temp URL
+      url: `/files/temp/${file.filename}`, // Temp URL
       path: file.path,
       size: file.size,
       type: file.mimetype,

@@ -24,7 +24,7 @@ export class FileController {
         id: path.parse(file.filename).name,
         name: file.originalname,
         filename: file.filename,
-        url: `/api/files/${eventId}/${file.filename}`,
+        url: `/files/${eventId}/${file.filename}`,
         path: file.path,
         size: file.size,
         type: file.mimetype,
@@ -71,7 +71,7 @@ export class FileController {
           id: path.parse(file.filename).name,
           name: file.originalname,
           filename: file.filename,
-          url: `/api/files/temp/${file.filename}`,
+          url: `/files/temp/${file.filename}`,
           path: file.path,
           size: file.size,
           type: file.mimetype,
@@ -239,7 +239,7 @@ export class FileController {
         return {
           id: path.parse(filename).name,
           name: filename,
-          url: `/api/files/${eventId}/${filename}`,
+          url: `/files/${eventId}/${filename}`,
           path: filePath,
           size: stats.size,
           type: 'unknown', // Could be determined from extension

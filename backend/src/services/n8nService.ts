@@ -105,13 +105,15 @@ export class N8nService {
     if (n8nPayload.files && Array.isArray(n8nPayload.files)) {
       n8nPayload.files = n8nPayload.files.map((file: any) => {
         // If file has URL, ensure it's a full URL
-        if (file.url && file.url.startsWith('/api/files/')) {
+        if (file.url && (file.url.startsWith('/files/') || file.url.startsWith('/api/files/'))) {
           // Convert relative URL to absolute URL
           const baseUrl = process.env.BASE_URL
           if (!baseUrl) {
             throw new Error('BASE_URL environment variable is required for file URL transformation')
           }
-          file.url = `${baseUrl}${file.url}`
+          // Ensure URL starts with /api/files/ for n8n
+          const cleanUrl = file.url.startsWith('/api/files/') ? file.url : `/api${file.url}`
+          file.url = `${baseUrl}${cleanUrl}`
         }
         return file
       })
