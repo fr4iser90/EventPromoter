@@ -4,6 +4,17 @@
  * Renders composite blocks that consist of multiple fields.
  * Completely generic - no platform-specific logic.
  * 
+ * IMPORTANT: Generic "targets" concept
+ * - Frontend/Backend: Always use generic "targets" terminology
+ * - Email Platform: "targets" = "recipients" (Email-specific)
+ * - Reddit Platform: "targets" = "subreddits" (Reddit-specific)
+ * - Other platforms: "targets" = platform-specific concept
+ * 
+ * The schema defines what "targets" means for each platform via dataEndpoints.
+ * Example:
+ *   - Email: dataEndpoints.recipients = '/api/platforms/email/recipients'
+ *   - Reddit: dataEndpoints.subreddits = '/api/platforms/reddit/subreddits'
+ * 
  * @module components/CompositeRenderer
  */
 
@@ -14,8 +25,17 @@ import {
   CircularProgress,
   Alert,
   Paper,
-  Divider
+  Divider,
+  Autocomplete,
+  TextField,
+  Chip,
+  Card,
+  CardContent,
+  Checkbox,
+  FormControlLabel,
+  IconButton
 } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close'
 import SchemaRenderer from './Renderer'
 import { getApiUrl } from '../../../shared/utils/api'
 import axios from 'axios'
@@ -76,6 +96,8 @@ function CompositeRenderer({ block, value, onChange, platform }) {
   const [error, setError] = useState(null)
   const [data, setData] = useState({})
   const [compositeValues, setCompositeValues] = useState(value || {})
+  const [searchTerm, setSearchTerm] = useState('')
+  const [reloadTrigger, setReloadTrigger] = useState(0)
 
   const rendering = block.rendering || {}
   const schema = rendering.schema || {}
@@ -124,7 +146,7 @@ function CompositeRenderer({ block, value, onChange, platform }) {
     }
 
     loadData()
-  }, [platform, JSON.stringify(dataEndpoints)])
+  }, [platform, JSON.stringify(dataEndpoints), reloadTrigger]) // Reload when trigger changes
 
   // Sync compositeValues with value prop (when value changes from outside, e.g., template applied)
   useEffect(() => {
@@ -177,6 +199,7 @@ function CompositeRenderer({ block, value, onChange, platform }) {
       required: fieldSchema.required,
       default: fieldSchema.default,
       visibleWhen: fieldSchema.visibleWhen, // Support for conditional visibility
+      source: fieldSchema.source, // Keep source for endpoint lookup
       options: sourceData.map(item => ({
         label: item.label || item.name || item,
         value: item.value || item.id || item
@@ -226,6 +249,177 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                   handleFieldChange,
                   field.options,
                   selectedGroups
+                )}
+              </Box>
+            )
+          }
+
+          // Special handling for multiselect fields (Hybrid: Chips + Cards)
+          // Apply to both 'individual' and 'groups' fields
+          if ((field.name === 'individual' || field.name === 'groups') && field.type === 'multiselect') {
+            const currentValue = compositeValues[field.name] || []
+            const availableOptions = field.options || []
+
+            // Filter options based on search
+            const filteredOptions = availableOptions.filter(opt => {
+              const label = opt.label || opt.value || opt
+              return label.toLowerCase().includes(searchTerm.toLowerCase())
+            })
+
+            // Get selected and unselected options
+            const selectedOptions = availableOptions.filter(opt => {
+              const value = opt.value || opt.label || opt
+              return currentValue.includes(value)
+            })
+            const unselectedOptions = filteredOptions.filter(opt => {
+              const value = opt.value || opt.label || opt
+              return !currentValue.includes(value)
+            })
+
+            return (
+              <Box key={field.name} sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+                  {field.label}
+                </Typography>
+                {field.description && (
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                    {field.description}
+                  </Typography>
+                )}
+
+                {/* Chips: Ausgewählte Targets */}
+                {selectedOptions.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                      Ausgewählt ({selectedOptions.length}):
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {selectedOptions.map((opt) => {
+                        const value = opt.value || opt.label || opt
+                        const label = opt.label || opt.value || opt
+                        return (
+                          <Chip
+                            key={value}
+                            label={label}
+                            onDelete={() => {
+                              const newValue = currentValue.filter(v => v !== value)
+                              handleFieldChange(field.name, newValue)
+                            }}
+                            color="primary"
+                            variant="outlined"
+                          />
+                        )
+                      })}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Autocomplete: Neue Targets hinzufügen (nur für individual field) */}
+                {/* Note: This is generic - for email platform, individual = recipients; for reddit, individual = subreddits, etc. */}
+                {field.name === 'individual' && (
+                  <Autocomplete
+                    freeSolo
+                    options={unselectedOptions.map(opt => opt.value || opt.label || opt)}
+                    value={searchTerm}
+                    onInputChange={(event, newInputValue) => {
+                      setSearchTerm(newInputValue)
+                    }}
+                    onChange={async (event, newValue) => {
+                      if (newValue && typeof newValue === 'string' && newValue.trim()) {
+                        const newTarget = newValue.trim()
+                        
+                        // Check if it's a new target (not in options)
+                        const existingTargets = availableOptions.map(opt => opt.value || opt.label || opt)
+                        const isNewTarget = !existingTargets.includes(newTarget)
+                        
+                        // Save new target to backend
+                        // ✅ GENERIC: Use endpoint from schema dataEndpoints
+                        // For email platform: field.source = 'recipients' → endpoint = '/api/platforms/email/recipients'
+                        // For reddit platform: field.source = 'subreddits' → endpoint = '/api/platforms/reddit/subreddits'
+                        // Backend knows what field name to use based on platform
+                        if (isNewTarget) {
+                          try {
+                            // Get endpoint from dataEndpoints using field.source
+                            const endpointKey = field.source // e.g., 'recipients' for email, 'subreddits' for reddit
+                            const endpointPath = dataEndpoints[endpointKey] // e.g., '/api/platforms/email/recipients'
+                            
+                            if (!endpointPath) {
+                              throw new Error(`No endpoint defined for source: ${endpointKey}`)
+                            }
+                            
+                            // Build full URL (replace :platformId if present)
+                            const fullEndpoint = endpointPath.replace(':platformId', platform).replace('/api/', '')
+                            
+                            // Generic payload - backend knows what field name to use based on platform
+                            // Email expects { email: ... }, Reddit expects { subreddit: ... }, etc.
+                            await axios.post(getApiUrl(fullEndpoint), { 
+                              // Use generic field name - backend will map to platform-specific field
+                              [endpointKey.slice(0, -1)]: newTarget // Remove 's' from 'recipients' → 'recipient', 'subreddits' → 'subreddit'
+                            })
+                            console.log(`Added new target: ${newTarget}`)
+                            setReloadTrigger(prev => prev + 1)
+                          } catch (err) {
+                            console.error(`Failed to add target ${newTarget}:`, err)
+                            alert(`Fehler beim Hinzufügen: ${err.response?.data?.error || err.message}`)
+                            return
+                          }
+                        }
+                        
+                        // Add to selection
+                        if (!currentValue.includes(newTarget)) {
+                          handleFieldChange(field.name, [...currentValue, newTarget])
+                        }
+                        setSearchTerm('')
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder={field.description || "Neue Auswahl hinzufügen..."}
+                        variant="outlined"
+                        size="small"
+                      />
+                    )}
+                    sx={{ mb: 2 }}
+                  />
+                )}
+
+                {/* Cards: Liste zum Auswählen */}
+                {unselectedOptions.length > 0 && (
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                      Verfügbar ({unselectedOptions.length}):
+                    </Typography>
+                    <Box sx={{ maxHeight: 300, overflowY: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
+                      {unselectedOptions.map((opt) => {
+                        const value = opt.value || opt.label || opt
+                        const label = opt.label || opt.value || opt
+                        return (
+                          <Card
+                            key={value}
+                            sx={{
+                              mb: 1,
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: 'action.hover'
+                              }
+                            }}
+                            onClick={() => {
+                              handleFieldChange(field.name, [...currentValue, value])
+                            }}
+                          >
+                            <CardContent sx={{ py: 1, '&:last-child': { pb: 1 } }}>
+                              <FormControlLabel
+                                control={<Checkbox checked={false} />}
+                                label={label}
+                                sx={{ m: 0 }}
+                              />
+                            </CardContent>
+                          </Card>
+                        )
+                      })}
+                    </Box>
+                  </Box>
                 )}
               </Box>
             )
