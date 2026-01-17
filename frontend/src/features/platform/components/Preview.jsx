@@ -24,7 +24,7 @@ import {
   Tab
 } from '@mui/material'
 import { usePlatformMetadata } from '../hooks/usePlatformSchema'
-import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
 function PlatformPreview({ platform, content, isActive }) {
   const { t } = useTranslation()
@@ -58,7 +58,7 @@ function PlatformPreview({ platform, content, isActive }) {
         
         // ✅ GENERIC: Try multi-preview first (backend decides if it's needed)
         // If platform doesn't support multi-preview, backend returns single preview
-        const endpoint = `${config.apiUrl}/api/platforms/${platform}/multi-preview?mode=desktop&darkMode=${darkMode}`
+        const endpoint = getApiUrl(`platforms/${platform}/multi-preview?mode=desktop&darkMode=${darkMode}`)
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -73,7 +73,8 @@ function PlatformPreview({ platform, content, isActive }) {
 
         if (!response.ok) {
           // If multi-preview fails, fallback to single preview
-          const fallbackResponse = await fetch(`${config.apiUrl}/api/platforms/${platform}/preview?mode=desktop&darkMode=${darkMode}`, {
+          const fallbackEndpoint = getApiUrl(`platforms/${platform}/preview?mode=desktop&darkMode=${darkMode}`)
+          const fallbackResponse = await fetch(fallbackEndpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
