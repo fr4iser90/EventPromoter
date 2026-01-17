@@ -243,4 +243,96 @@ export class EmailController {
       })
     }
   }
+
+  /**
+   * Get recipient modes (for composite block)
+   * GET /api/platforms/email/recipient-modes
+   */
+  static async getRecipientModes(req: Request, res: Response) {
+    try {
+      return res.json({
+        success: true,
+        options: [
+          { label: '📬 Alle', value: 'all' },
+          { label: '👥 Gruppen', value: 'groups' },
+          { label: '✉️ Einzelne', value: 'individual' }
+        ]
+      })
+    } catch (error: any) {
+      console.error('Get recipient modes error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get recipient modes',
+        details: error.message
+      })
+    }
+  }
+
+  /**
+   * Get recipient groups with metadata (for composite block)
+   * GET /api/platforms/email/recipient-groups
+   * Returns groups in format ready for multi-select
+   */
+  static async getRecipientGroupsForSelect(req: Request, res: Response) {
+    try {
+      const result = await EmailRecipientService.getRecipients()
+      const groups = result.groups || {}
+      
+      // Transform to frontend-ready format for multi-select
+      const options = Object.keys(groups).map((groupName) => ({
+        label: `${groupName} (${groups[groupName].length})`,
+        value: groupName,
+        metadata: {
+          count: groups[groupName].length,
+          emails: groups[groupName]
+        }
+      }))
+
+      return res.json({
+        success: true,
+        options,
+        groups // Keep full groups object for backward compatibility
+      })
+    } catch (error: any) {
+      console.error('Get recipient groups for select error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get recipient groups',
+        details: error.message
+      })
+    }
+  }
+
+  /**
+   * Get templates (for composite block)
+   * GET /api/platforms/email/templates
+   */
+  static async getTemplates(req: Request, res: Response) {
+    try {
+      // Import template service directly
+      const { TemplateService } = await import('../../../services/templateService.js')
+      const templates = await TemplateService.getAllTemplates('email')
+      
+      // Transform to frontend-ready format
+      const options = templates.map((template: any) => ({
+        label: template.name || template.id,
+        value: template.id,
+        metadata: template
+      }))
+
+      return res.json({
+        success: true,
+        options,
+        templates // Keep full templates array for backward compatibility
+      })
+    } catch (error: any) {
+      console.error('Get templates error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get templates',
+        details: error.message
+      })
+    }
+  }
+
 }

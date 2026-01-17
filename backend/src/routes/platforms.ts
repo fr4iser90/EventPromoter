@@ -46,6 +46,9 @@ router.put('/:platformId/settings', PlatformController.updatePlatformSettings)
 // Render preview HTML (schema-driven, backend renders everything)
 router.post('/:platformId/preview', PlatformController.renderPreview)
 
+// Render multi-preview HTML (generic - any platform can implement)
+router.post('/:platformId/multi-preview', PlatformController.renderMultiPreview)
+
 // ✅ GENERIC: Dynamically load platform-specific routes
 // Scans platforms/ directory and loads routes.ts from each platform
 async function loadPlatformRoutes() {

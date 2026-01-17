@@ -323,10 +323,77 @@ export class EmailService {
   }
 
   /**
+   * Render multi-preview HTML (generic interface implementation)
+   * 
+   * Backend decides if multi-preview is needed based on content.
+   * For email: checks if content.recipients exists and has multiple groups
+   * Other platforms can implement their own logic
+   * 
+   * @param options - Render options
+   * @returns Array of previews (single or multiple)
+   */
+  async renderMultiPreview(options: {
+    content: Record<string, any>
+    targets?: Record<string, any> // Optional: can be extracted from content
+    schema: any
+    mode?: string
+    darkMode?: boolean
+  }): Promise<Array<{
+    target?: string
+    templateId?: string
+    metadata?: Record<string, any>
+    html: string
+    dimensions?: { width: number; height: number }
+  }>> {
+    // Import email-specific multi-preview renderer
+    const { renderMultiPreview } = await import('./previewService.js')
+    
+    // ✅ EMAIL-SPECIFIC: Extract recipients from content (backend knows about email structure)
+    // This is the ONLY place where we know about "recipients" - it's email-specific
+    const recipients = options.targets || options.content.recipients
+    
+    // Check if multi-preview is needed (email-specific logic)
+    const needsMultiPreview = recipients && (
+      (recipients.mode === 'groups' && recipients.groups && recipients.groups.length > 1) ||
+      (recipients.mode === 'all')
+    )
+    
+    if (!needsMultiPreview) {
+      // Return single preview if multi-preview not needed
+      const singlePreview = await this.renderPreview(options)
+      return [{
+        html: singlePreview.html,
+        dimensions: singlePreview.dimensions
+      }]
+    }
+
+    // Use email-specific renderMultiPreview
+    const previews = await renderMultiPreview(this, {
+      content: options.content,
+      recipients,
+      schema: options.schema,
+      mode: options.mode || 'desktop',
+      darkMode: options.darkMode
+    })
+
+    // Transform to generic format
+    return previews.map(preview => ({
+      target: preview.group,
+      templateId: preview.templateId,
+      metadata: {
+        recipients: preview.recipients
+      },
+      html: preview.html,
+      dimensions: preview.dimensions
+    }))
+  }
+
+  /**
    * Transform email content for N8N webhook
    * Delegates to platform-specific N8N service
+   * Now supports async (for extracting recipients from targets)
    */
-  transformForN8n(content: EmailContent): any {
+  async transformForN8n(content: any): Promise<any> {
     return EmailN8nService.transformForN8n(content, this)
   }
 
@@ -376,6 +443,132 @@ export class EmailService {
       postId: response.messageId,
       error: response.error
     }
+  }
+
+  /**
+   * Send emails to recipients with template per group
+   * 
+   * @param recipients - Recipients configuration with groups and template mapping
+   * @param content - Base email content
+   * @param publisher - Email publisher instance
+   * @param files - Files to attach
+   * @param hashtags - Hashtags
+   * @returns Array of send results per group
+   */
+  async sendToRecipientsWithTemplates(
+    recipients: {
+      mode?: 'all' | 'groups' | 'individual'
+      groups?: string[]
+      templateMapping?: Record<string, string>
+      defaultTemplate?: string
+      individuals?: string[]
+    },
+    content: EmailContent,
+    publisher: any,
+    files: any[] = [],
+    hashtags: string[] = []
+  ): Promise<Array<{
+    group?: string
+    templateId?: string
+    recipients: string[]
+    success: boolean
+    error?: string
+    result?: any
+  }>> {
+    const results: Array<{
+      group?: string
+      templateId?: string
+      recipients: string[]
+      success: boolean
+      error?: string
+      result?: any
+    }> = []
+
+    // Get all recipients and groups
+    const recipientData = await EmailRecipientService.getRecipients()
+    const allRecipients = recipientData.available || []
+    const groups = recipientData.groups || {}
+
+    // Determine recipients based on mode
+    if (recipients.mode === 'all') {
+      // Send to all with default template
+      const templateId = recipients.defaultTemplate
+      const emailContent = await this.buildContentWithTemplate(content, templateId)
+      
+      const result = await publisher.publish(emailContent, files, hashtags)
+      results.push({
+        recipients: allRecipients,
+        templateId,
+        success: result.success,
+        error: result.error,
+        result
+      })
+    } else if (recipients.mode === 'groups' && recipients.groups && recipients.groups.length > 0) {
+      // Send to each group with its assigned template
+      for (const groupName of recipients.groups) {
+        const groupEmails = groups[groupName] || []
+        if (groupEmails.length === 0) continue
+
+        // Get template for this group (from mapping or default)
+        const templateId = recipients.templateMapping?.[groupName] || recipients.defaultTemplate
+        
+        // Build content with template
+        const emailContent = await this.buildContentWithTemplate(content, templateId)
+        emailContent.recipients = groupEmails
+
+        // Send email
+        const result = await publisher.publish(emailContent, files, hashtags)
+        results.push({
+          group: groupName,
+          templateId,
+          recipients: groupEmails,
+          success: result.success,
+          error: result.error,
+          result
+        })
+      }
+    } else if (recipients.mode === 'individual' && recipients.individuals && recipients.individuals.length > 0) {
+      // Send to individuals with default template
+      const templateId = recipients.defaultTemplate
+      const emailContent = await this.buildContentWithTemplate(content, templateId)
+      emailContent.recipients = recipients.individuals
+
+      const result = await publisher.publish(emailContent, files, hashtags)
+      results.push({
+        recipients: recipients.individuals,
+        templateId,
+        success: result.success,
+        error: result.error,
+        result
+      })
+    }
+
+    return results
+  }
+
+  /**
+   * Build email content with template applied
+   * 
+   * @param baseContent - Base content
+   * @param templateId - Template ID to apply
+   * @returns Content with template applied
+   */
+  private async buildContentWithTemplate(baseContent: EmailContent, templateId?: string): Promise<EmailContent> {
+    if (!templateId) {
+      return baseContent
+    }
+
+    // Import template service directly
+    const { TemplateService } = await import('../../../services/templateService.js')
+    const template = await TemplateService.getTemplate('email', templateId)
+    
+    if (!template) {
+      return baseContent
+    }
+
+    // Apply template to content (this would use the template application logic)
+    // For now, return baseContent - template application should be handled by template system
+    return baseContent
   }
 
 }

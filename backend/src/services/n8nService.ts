@@ -88,8 +88,9 @@ export class N8nService {
             // Check if platform has transformForN8n method
             // If not, use content as-is
             if (platformService && typeof (platformService as any).transformForN8n === 'function') {
-              // Platform-specific transformation
-              n8nPayload[platformId] = (platformService as any).transformForN8n(platformContent)
+              // Platform-specific transformation (now supports async)
+              const transformed = await (platformService as any).transformForN8n(platformContent)
+              n8nPayload[platformId] = transformed
             } else {
               // No platform-specific transformation - use content as-is
               n8nPayload[platformId] = platformContent

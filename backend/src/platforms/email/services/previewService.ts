@@ -201,3 +201,137 @@ export async function renderEmailPreview(
     }
   }
 }
+
+/**
+ * Render multiple previews for different groups/templates
+ * 
+ * @param service - EmailService instance
+ * @param options - Render options with recipients configuration
+ * @returns Array of previews, one per group/template combination
+ */
+export async function renderMultiPreview(
+  service: EmailService,
+  options: {
+    content: Record<string, any>
+    recipients: {
+      mode?: 'all' | 'groups' | 'individual'
+      groups?: string[]
+      templateMapping?: Record<string, string>
+      defaultTemplate?: string
+      individuals?: string[]
+    }
+    schema: any
+    mode?: string
+    darkMode?: boolean
+  }
+): Promise<Array<{
+  group?: string
+  templateId?: string
+  recipients: string[]
+  html: string
+  dimensions?: { width: number; height: number }
+}>> {
+  const { content, recipients, schema, mode = 'desktop', darkMode = false } = options
+  const previews: Array<{
+    group?: string
+    templateId?: string
+    recipients: string[]
+    html: string
+    dimensions?: { width: number; height: number }
+  }> = []
+
+  // Get recipient data
+  const { EmailRecipientService } = await import('./recipientService.js')
+  const recipientData = await EmailRecipientService.getRecipients()
+  const allRecipients = recipientData.available || []
+  const groups = recipientData.groups || {}
+
+  // Import template service
+  const { TemplateService } = await import('../../../services/templateService.js')
+
+  if (recipients.mode === 'all') {
+    // Single preview for all recipients
+    const templateId = recipients.defaultTemplate
+    let previewContent = { ...content }
+    
+    if (templateId) {
+      const template = await TemplateService.getTemplate('email', templateId)
+      if (template) {
+        // Apply template (simplified - actual template application should use template system)
+        previewContent = { ...content, _templateId: templateId }
+      }
+    }
+
+    const preview = await renderEmailPreview(service, {
+      content: previewContent,
+      schema,
+      mode,
+      darkMode
+    })
+
+    previews.push({
+      recipients: allRecipients,
+      templateId,
+      html: preview.html,
+      dimensions: preview.dimensions
+    })
+  } else if (recipients.mode === 'groups' && recipients.groups && recipients.groups.length > 0) {
+    // Preview for each group with its template
+    for (const groupName of recipients.groups) {
+      const groupEmails = groups[groupName] || []
+      if (groupEmails.length === 0) continue
+
+      const templateId = recipients.templateMapping?.[groupName] || recipients.defaultTemplate
+      let previewContent = { ...content }
+      
+      if (templateId) {
+        const template = await TemplateService.getTemplate('email', templateId)
+        if (template) {
+          previewContent = { ...content, _templateId: templateId }
+        }
+      }
+
+      const preview = await renderEmailPreview(service, {
+        content: previewContent,
+        schema,
+        mode,
+        darkMode
+      })
+
+      previews.push({
+        group: groupName,
+        templateId,
+        recipients: groupEmails,
+        html: preview.html,
+        dimensions: preview.dimensions
+      })
+    }
+  } else if (recipients.mode === 'individual' && recipients.individuals && recipients.individuals.length > 0) {
+    // Single preview for individuals
+    const templateId = recipients.defaultTemplate
+    let previewContent = { ...content }
+    
+    if (templateId) {
+      const template = await TemplateService.getTemplate('email', templateId)
+      if (template) {
+        previewContent = { ...content, _templateId: templateId }
+      }
+    }
+
+    const preview = await renderEmailPreview(service, {
+      content: previewContent,
+      schema,
+      mode,
+      darkMode
+    })
+
+    previews.push({
+      recipients: recipients.individuals,
+      templateId,
+      html: preview.html,
+      dimensions: preview.dimensions
+    })
+  }
+
+  return previews
+}

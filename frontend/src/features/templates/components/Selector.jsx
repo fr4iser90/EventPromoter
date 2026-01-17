@@ -19,17 +19,21 @@ import {
   Check as CheckIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../hooks/useTemplates'
+import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
+import CompositeRenderer from '../../schema/components/CompositeRenderer'
 import useStore from '../../../store'
 import { getTemplateVariables, replaceTemplateVariables } from '../../../shared/utils/templateUtils'
 
 const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx = {} }) => {
   // Use mode='preview' to get templates without <style> tags (backend removes them)
   const { templates, loading, error } = useTemplates(platform, 'preview')
+  const { schema } = usePlatformSchema(platform) // Load schema to check for targets block
   const { parsedData, uploadedFileRefs } = useStore()
   const [anchorEl, setAnchorEl] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
+  const [targetsValue, setTargetsValue] = useState(null) // Store targets selection
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget)
@@ -53,13 +57,18 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
     setPreviewOpen(true)
   }
 
+  // Check if platform has targets block in editor schema
+  const editorSchema = schema?.editor
+  const targetsBlock = editorSchema?.blocks?.find(block => block.type === 'targets')
+
   const handleApplyTemplate = () => {
     if (selectedTemplate && onSelectTemplate) {
-      // Pass template and variables to parent - parent will handle replacement
-      onSelectTemplate(selectedTemplate, null)
+      // Pass template, variables, and targets (if any) to parent
+      onSelectTemplate(selectedTemplate, null, targetsValue)
     }
     setPreviewOpen(false)
     setSelectedTemplate(null)
+    setTargetsValue(null)
   }
 
   // Group templates by category
@@ -223,6 +232,26 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
                   />
                 ))}
               </Box>
+            </Box>
+          )}
+
+          {/* ✅ GENERIC: Show targets selection if schema defines targets block */}
+          {targetsBlock && (
+            <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                {targetsBlock.label || 'Targets'}
+              </Typography>
+              {targetsBlock.description && (
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {targetsBlock.description}
+                </Typography>
+              )}
+              <CompositeRenderer
+                block={targetsBlock}
+                value={targetsValue}
+                onChange={setTargetsValue}
+                platform={platform}
+              />
             </Box>
           )}
         </DialogContent>

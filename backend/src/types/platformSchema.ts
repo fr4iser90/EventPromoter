@@ -157,6 +157,7 @@ export type ContentBlockType =
   | 'quote'
   | 'code'
   | 'custom'
+  | 'targets' // Generic block type for platform-specific targets (e.g., recipients for email, subreddits for reddit)
 
 /**
  * Content block definition
@@ -182,6 +183,8 @@ export interface ContentBlock {
     maxItems?: number
     /** Minimum number of items */
     minItems?: number
+    /** Minimum number of recipients (for recipients block) */
+    minRecipients?: number
     /** Allowed formats (for media) */
     allowedFormats?: string[]
     /** Maximum file size (bytes) */
@@ -206,7 +209,10 @@ export interface ContentBlock {
   }
   /** Block rendering configuration (for schema-driven rendering) */
   rendering?: {
-    /** Field type for SchemaRenderer (if block should be rendered as form field) */
+    /** Rendering strategy: 'schema' (single field), 'composite' (multiple fields), 'custom' (special component) */
+    strategy?: 'schema' | 'composite' | 'custom'
+    
+    /** For 'schema' strategy: Field type for SchemaRenderer */
     fieldType?: FieldType
     /** Placeholder text */
     placeholder?: string
@@ -223,6 +229,30 @@ export interface ContentBlock {
       responsePath?: string
       transform?: 'custom' | ((item: any) => { label: string; value: any })
     }
+    
+    /** For 'composite' strategy: Schema for multiple fields */
+    schema?: Record<string, {
+      fieldType: FieldType | 'mapping'
+      label: string
+      description?: string
+      source: string // Key in dataEndpoints
+      required?: boolean
+      default?: any
+      /** Conditional visibility: show field only when another field has a specific value */
+      visibleWhen?: {
+        field: string // Field name to watch
+        value: any // Value that triggers visibility
+      }
+    }>
+    /** For 'composite' strategy: Data endpoints for loading options */
+    dataEndpoints?: Record<string, string>
+    
+    /** For 'custom' strategy: Component name */
+    component?: string
+    /** For 'custom' strategy: Contract version */
+    contract?: string
+    /** For 'custom' strategy: Endpoints for loading data */
+    endpoints?: Record<string, string>
   }
 }
 

@@ -108,6 +108,22 @@ export interface PlatformService {
     darkMode?: boolean
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }>
 
+  // Multi-preview rendering (for platforms with multiple targets/segments)
+  // Each platform can implement this if they support multiple previews (e.g., email with groups, reddit with subreddits)
+  renderMultiPreview?(options: {
+    content: Record<string, any>
+    targets?: Record<string, any> // Platform-specific target configuration (e.g., recipients for email, subreddits for reddit)
+    schema: any
+    mode?: string
+    darkMode?: boolean
+  }): Promise<Array<{
+    target?: string // Target identifier (e.g., group name, subreddit name)
+    templateId?: string // Template used for this target
+    metadata?: Record<string, any> // Platform-specific metadata
+    html: string
+    dimensions?: { width: number; height: number }
+  }>>
+
   // API integration methods (for future use)
   authenticate?(credentials: any): Promise<boolean>
   validateCredentials?(credentials: any): Promise<boolean>

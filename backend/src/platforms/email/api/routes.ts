@@ -16,11 +16,15 @@ const router = Router()
 router.get('/recipients', EmailController.getRecipients)
 router.post('/recipients', EmailController.addRecipient)
 router.delete('/recipients/:email', EmailController.removeRecipient)
-router.get('/recipient-groups', EmailController.getRecipientGroups)
+router.get('/recipient-groups', EmailController.getRecipientGroupsForSelect) // For composite block
 router.post('/recipient-groups', EmailController.createRecipientGroup)
 router.put('/recipient-groups/:groupName', EmailController.updateRecipientGroup)
 router.delete('/recipient-groups/:groupName', EmailController.deleteRecipientGroup)
 router.post('/recipient-groups/import', EmailController.importRecipientGroups)
 router.get('/recipient-groups/export', EmailController.exportRecipientGroups)
+
+// Composite block endpoints
+router.get('/recipient-modes', EmailController.getRecipientModes)
+router.get('/templates', EmailController.getTemplates)
 
 export default router

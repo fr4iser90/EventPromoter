@@ -26,6 +26,7 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import CloseIcon from '@mui/icons-material/Close'
 import { usePlatformSchema } from '../hooks/usePlatformSchema'
 import SchemaRenderer from '../../schema/components/Renderer'
+import CompositeRenderer from '../../schema/components/CompositeRenderer'
 import { Selector as TemplateSelector } from '../../templates'
 import { useTemplates } from '../../templates/hooks/useTemplates'
 import useStore from '../../../store'
@@ -56,6 +57,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   const [activeTemplate, setActiveTemplate] = useState(null)
   const [disabledVariables, setDisabledVariables] = useState(new Set())
   const [hideAutoFilled, setHideAutoFilled] = useState(true) // Hide auto-filled variables by default
+  const [targetsExpanded, setTargetsExpanded] = useState(false) // For collapsible targets summary
   
 
   // Get available images for image selection (memoized to prevent hook issues)
@@ -206,7 +208,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   }
 
   // Handle template selection - NOW USES BACKEND API
-  const handleTemplateSelect = async (template, filledContent) => {
+  const handleTemplateSelect = async (template, filledContent, targetsValue = null) => {
     try {
       // Store active template (for UI)
       setActiveTemplate(template)
@@ -254,7 +256,26 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       // Update all fields at once
       const updatedContent = { ...content, ...mappedContent }
 
-      // Always ensure _templateId is set first
+      // ✅ Save targets value if provided (from template modal)
+      if (targetsValue) {
+        const targetsBlock = editorSchema?.blocks?.find(block => block.type === 'targets')
+        if (targetsBlock) {
+          updatedContent[targetsBlock.id] = targetsValue
+        }
+      }
+
+      // ✅ Add to _templates array (multiple templates with targets)
+      const existingTemplates = content._templates || []
+      const newTemplateEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Simple unique ID
+        templateId: template.id,
+        templateName: template.name || template.id,
+        targets: targetsValue || null,
+        appliedAt: new Date().toISOString()
+      }
+      updatedContent._templates = [...existingTemplates, newTemplateEntry]
+
+      // Always ensure _templateId is set first (for backward compatibility)
       if (mappedContent._templateId) {
         onChange('_templateId', mappedContent._templateId)
       }
@@ -264,9 +285,9 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         onBatchChange(updatedContent)
       } else {
         // Set all fields individually (including _templateId)
-        Object.keys(mappedContent).forEach(key => {
-          if (mappedContent[key] !== undefined && mappedContent[key] !== null) {
-            onChange(key, mappedContent[key])
+        Object.keys(updatedContent).forEach(key => {
+          if (updatedContent[key] !== undefined && updatedContent[key] !== null) {
+            onChange(key, updatedContent[key])
           }
         })
       }
@@ -375,6 +396,150 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
           sx={{ ml: 'auto' }}
         />
       </Box>
+
+      {/* ✅ All Template+Targets Combinations (shown when templates are applied) */}
+      {(() => {
+        const targetsBlock = editorBlocks.find(block => block.type === 'targets')
+        const templates = content?._templates || []
+        
+        if (!targetsBlock || templates.length === 0) return null
+
+        // Helper to format targets summary
+        const formatTargetsSummary = (targets) => {
+          if (!targets || Object.keys(targets).length === 0) return 'No targets'
+          
+          const mode = targets.mode || 'all'
+          if (mode === 'all') {
+            return 'All targets'
+          } else if (mode === 'groups') {
+            const groups = targets.groups || []
+            return `${groups.length} group(s): ${groups.join(', ')}`
+          } else if (mode === 'individual') {
+            const individuals = targets.individual || []
+            return `${individuals.length} single: ${individuals.slice(0, 3).join(', ')}${individuals.length > 3 ? '...' : ''}`
+          }
+          return 'Targets configured'
+        }
+
+        return (
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+              Angewendete Templates:
+            </Typography>
+            {templates.map((templateEntry, index) => (
+              <Box
+                key={templateEntry.id || index}
+                sx={{
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: 'background.default',
+                  mb: 1,
+                  p: 1.5
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      {templateEntry.templateName || templateEntry.templateId}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Targets: {formatTargetsSummary(templateEntry.targets)}
+                    </Typography>
+                  </Box>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      // Remove this template entry
+                      const updatedTemplates = templates.filter((_, i) => i !== index)
+                      onChange('_templates', updatedTemplates)
+                    }}
+                    sx={{ ml: 1 }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )
+      })()}
+
+      {/* ✅ Editor Blocks: Render blocks from schema */}
+      {/* Show other blocks ONLY if NO template is active */}
+      {editorBlocks.length > 0 && (() => {
+        // Filter out targets block (shown separately above)
+        const sortedBlocks = [...editorBlocks]
+          .filter(block => {
+            // Hide targets block (shown as collapsible summary above)
+            if (block.type === 'targets') return false
+            // Hide other blocks if template is active
+            if (activeTemplate) return false
+            // Show if enabled
+            return block.ui?.enabled !== false
+          })
+          .sort((a, b) => (a.ui?.order || 999) - (b.ui?.order || 999))
+
+        if (sortedBlocks.length === 0) return null
+
+        return (
+          <Box sx={{ mt: 2, mb: 2 }}>
+            {sortedBlocks.map((block) => {
+              const blockValue = content?.[block.id]
+              const rendering = block.rendering || {}
+              const strategy = rendering.strategy || 'schema'
+
+              // Schema strategy: render as single field
+              if (strategy === 'schema') {
+                return (
+                  <Box key={block.id} sx={{ mb: 2 }}>
+                    <SchemaRenderer
+                      fields={[{
+                        name: block.id,
+                        type: rendering.fieldType || 'text',
+                        label: block.label,
+                        description: block.description,
+                        required: block.required,
+                        placeholder: rendering.placeholder,
+                        default: rendering.default,
+                        options: [] // Will be loaded via optionsSource if needed
+                      }]}
+                      values={{ [block.id]: blockValue || rendering.default || '' }}
+                      onChange={(fieldName, value) => onChange(block.id, value)}
+                      errors={{}}
+                    />
+                  </Box>
+                )
+              }
+
+              // Composite strategy: render multiple fields
+              if (strategy === 'composite') {
+                return (
+                  <CompositeRenderer
+                    key={block.id}
+                    block={block}
+                    value={blockValue}
+                    onChange={(value) => onChange(block.id, value)}
+                    platform={platform}
+                  />
+                )
+              }
+
+              // Custom strategy: not implemented yet
+              if (strategy === 'custom') {
+                return (
+                  <Alert key={block.id} severity="warning" sx={{ mb: 2 }}>
+                    Custom component "{rendering.component}" not yet implemented
+                  </Alert>
+                )
+              }
+
+              return null
+            })}
+          </Box>
+        )
+      })()}
 
       {/* ✅ Template Variables: Show template variables as separate fields */}
       {activeTemplate && (() => {

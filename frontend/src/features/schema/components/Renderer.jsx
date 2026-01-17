@@ -96,11 +96,16 @@ function renderField(field, value, onChange, error) {
         )
       }
 
+      // Ensure value is array for multiselect, string for select
+      const selectValue = field.type === 'multiselect' 
+        ? (Array.isArray(value) ? value : (value ? [value] : []))
+        : (value || field.default || '')
+      
       return (
         <FormControl key={field.name} fullWidth error={!!error} required={field.required}>
           <InputLabel>{field.label}</InputLabel>
           <Select
-            value={value || field.default || (field.type === 'multiselect' ? [] : '')}
+            value={selectValue}
             onChange={(e) => onChange(field.name, e.target.value)}
             multiple={field.type === 'multiselect'}
             disabled={field.ui?.disabled}

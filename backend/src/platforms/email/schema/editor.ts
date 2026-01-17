@@ -15,6 +15,57 @@ export const emailEditorSchema: EditorSchema = {
   mode: 'advanced',
   blocks: [
     {
+      type: 'targets',
+      id: 'recipients', // Email-specific ID, but generic block type
+      label: 'Empfänger für diesen Versand',
+      description: 'Wähle die Empfänger für diesen Versand',
+      required: true,
+      constraints: {
+        minRecipients: 1
+      },
+      validation: [
+        { type: 'required', message: 'Mindestens ein Empfänger muss ausgewählt sein' }
+      ],
+      ui: {
+        icon: 'email',
+        order: 0, // Ganz oben, vor allen anderen Feldern
+        enabled: true
+      },
+      rendering: {
+        strategy: 'composite',
+        schema: {
+          mode: {
+            fieldType: 'select',
+            label: 'Auswahl-Modus',
+            description: 'Wähle wie Empfänger ausgewählt werden sollen',
+            source: 'modes',
+            default: 'all'
+          },
+          groups: {
+            fieldType: 'multiselect',
+            label: 'Empfänger-Gruppen',
+            description: 'Wähle eine oder mehrere Gruppen',
+            source: 'recipientGroups',
+            required: false,
+            visibleWhen: { field: 'mode', value: 'groups' }
+          },
+          individual: {
+            fieldType: 'multiselect',
+            label: 'Einzelne Empfänger',
+            description: 'Wähle einzelne Empfänger aus',
+            source: 'recipients',
+            required: false,
+            visibleWhen: { field: 'mode', value: 'individual' }
+          }
+        },
+        dataEndpoints: {
+          modes: '/api/platforms/email/recipient-modes',
+          recipientGroups: '/api/platforms/email/recipient-groups',
+          recipients: '/api/platforms/email/recipients'
+        }
+      }
+    },
+    {
       type: 'text',
       id: 'subject',
       label: 'Subject',

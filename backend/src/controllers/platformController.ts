@@ -479,4 +479,95 @@ export class PlatformController {
       })
     }
   }
+
+  /**
+   * Render multi-preview HTML (generic - any platform can implement)
+   * 
+   * POST /api/platforms/:platformId/multi-preview?mode=desktop&darkMode=false
+   * Body: { content: { ... }, targets: { ... } }
+   * 
+   * Platforms can implement renderMultiPreview in their service to support multiple previews
+   * (e.g., email with recipient groups, reddit with subreddits, etc.)
+   */
+  static async renderMultiPreview(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params
+      const { mode, darkMode } = req.query
+      const { content, targets } = req.body
+
+      if (!platformId) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Platform ID required' 
+        })
+      }
+
+      if (!content) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Content required' 
+        })
+      }
+
+      // Get platform schema and service
+      const registry = await PlatformController.ensureRegistry()
+      const platformModule = registry.getPlatform(platformId.toLowerCase())
+
+      if (!platformModule) {
+        return res.status(404).json({
+          success: false,
+          error: `Platform '${platformId}' not found`,
+          availablePlatforms: registry.getPlatformIds()
+        })
+      }
+
+      const schema = platformModule.schema
+      const service = platformModule.service
+
+      // Check if platform implements renderMultiPreview
+      if (service && typeof service.renderMultiPreview === 'function') {
+        // Backend extracts targets from content if needed (platform-specific)
+        // Service decides if multi-preview is needed based on content
+        const previews = await service.renderMultiPreview({
+          content,
+          targets, // Optional: can be extracted from content by service
+          schema: schema?.preview,
+          mode: (mode as string) || 'desktop',
+          darkMode: darkMode === 'true'
+        })
+
+        // If service returns single preview in array, that's fine
+        // Frontend handles both single and multiple previews
+        return res.json({
+          success: true,
+          previews
+        })
+      }
+
+      // Fallback: return single preview if platform doesn't support multi-preview
+      const result = await PreviewRenderer.render({
+        platform: platformId,
+        mode: mode as string,
+        content,
+        schema: schema?.preview || {},
+        darkMode: darkMode === 'true'
+      })
+
+      res.json({
+        success: true,
+        previews: [{
+          html: result.html,
+          dimensions: result.dimensions
+        }]
+      })
+    } catch (error: any) {
+      console.error('Render multi-preview error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to render multi-preview',
+        details: error.message
+      })
+    }
+  }
+
 }
