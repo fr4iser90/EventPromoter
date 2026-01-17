@@ -23,7 +23,9 @@ export function usePlatformTranslations(platformId, lang) {
     const loadTranslations = async () => {
       // Check if already loaded for this platform+lang combination
       const resourceKey = `platform_${platformId}`
-      const currentLang = lang || i18n.language
+      // Normalize language code: 'en-US' → 'en', 'de-DE' → 'de', etc.
+      const rawLang = lang || i18n.language
+      const currentLang = rawLang.split('-')[0] // Extract base language code
 
       // Skip if already loaded
       if (i18n.hasResourceBundle(currentLang, resourceKey)) {
@@ -103,7 +105,9 @@ export function useMultiplePlatformTranslations(platformIds = [], lang) {
     if (!platformIds || platformIds.length === 0) return
 
     const loadAllTranslations = async () => {
-      const currentLang = lang || i18n.language
+      // Normalize language code: 'en-US' → 'en', 'de-DE' → 'de', etc.
+      const rawLang = lang || i18n.language
+      const currentLang = rawLang.split('-')[0] // Extract base language code
       const toLoad = platformIds.filter(id => !loaded.has(id))
 
       if (toLoad.length === 0) return
