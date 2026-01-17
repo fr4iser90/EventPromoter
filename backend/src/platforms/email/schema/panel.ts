@@ -42,7 +42,7 @@ export const emailPanelSchema: PanelSchema = {
           required: false,
           // ✅ GENERIC: Options come from backend API (already transformed)
           optionsSource: {
-            endpoint: '/api/platforms/:platformId/recipients',
+            endpoint: 'platforms/:platformId/recipients',
             method: 'GET',
             responsePath: 'options' // Backend returns { success: true, options: [{ label, value }] }
           },
@@ -69,7 +69,7 @@ export const emailPanelSchema: PanelSchema = {
           ],
           // ✅ GENERIC: Action to add recipient via API
           action: {
-            endpoint: '/api/platforms/:platformId/recipients',
+            endpoint: 'platforms/:platformId/recipients',
             method: 'POST',
             trigger: 'submit',
             bodyMapping: { email: 'newEmail' },
@@ -119,7 +119,7 @@ export const emailPanelSchema: PanelSchema = {
           label: 'Gruppe erstellen',
           // ✅ GENERIC: Action to create group via API
           action: {
-            endpoint: '/api/platforms/:platformId/recipient-groups',
+            endpoint: 'platforms/:platformId/recipient-groups',
             method: 'POST',
             trigger: 'submit',
             bodyMapping: {

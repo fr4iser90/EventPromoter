@@ -29,7 +29,6 @@ export class PlatformRegistry {
   constructor(config: Partial<DiscoveryConfig> = {}) {
     // In production (Docker), __dirname is dist/services/, so platforms should be at dist/platforms
     const defaultPath = config.platformsPath || join(__dirname, '../platforms')
-    console.log(`📂 Platform registry using path: ${defaultPath}`)
     this.discoveryConfig = {
       platformsPath: defaultPath,
       validateSchemas: config.validateSchemas !== false,
@@ -43,18 +42,14 @@ export class PlatformRegistry {
    */
   async discoverPlatforms(): Promise<void> {
     try {
-      console.log(`🔍 Discovering platforms from: ${this.discoveryConfig.platformsPath}`)
       const discoveredPlatforms = await discoverPlatforms(this.discoveryConfig)
-      console.log(`✅ Discovered ${discoveredPlatforms.size} platforms`)
 
       // Register all discovered platforms
       for (const [id, platform] of discoveredPlatforms.entries()) {
         await this.register(platform)
-        console.log(`✅ Registered platform: ${id}`)
       }
 
       this.initialized = true
-      console.log(`✅ Platform registry initialized with ${this.platforms.size} platforms`)
     } catch (error) {
       console.error('❌ Platform discovery failed:', error)
       throw new PlatformDiscoveryError(

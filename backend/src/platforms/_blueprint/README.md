@@ -150,7 +150,7 @@ export const emailPanelSchema: PanelSchema = {
           name: 'recipients',
           type: 'multiselect',
           optionsSource: {
-            endpoint: '/api/platforms/:platformId/recipients',
+            endpoint: 'platforms/:platformId/recipients',
             method: 'GET',
             transform: (data) => data.available.map(email => ({
               label: email,

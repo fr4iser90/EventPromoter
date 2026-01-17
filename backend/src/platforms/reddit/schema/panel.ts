@@ -42,7 +42,7 @@ export const redditPanelSchema: PanelSchema = {
           required: false,
           // ✅ GENERIC: Options come from backend API (already transformed)
           optionsSource: {
-            endpoint: '/api/platforms/:platformId/subreddits',
+            endpoint: 'platforms/:platformId/subreddits',
             method: 'GET',
             responsePath: 'options' // Backend returns { success: true, options: [{ label, value }] }
           },
@@ -73,7 +73,7 @@ export const redditPanelSchema: PanelSchema = {
           ],
           // ✅ GENERIC: Action to add subreddit via API
           action: {
-            endpoint: '/api/platforms/:platformId/subreddits',
+            endpoint: 'platforms/:platformId/subreddits',
             method: 'POST',
             trigger: 'submit',
             bodyMapping: { subreddit: 'newSubreddit' },
@@ -123,7 +123,7 @@ export const redditPanelSchema: PanelSchema = {
           label: 'Gruppe erstellen',
           // ✅ GENERIC: Action to create group via API
           action: {
-            endpoint: '/api/platforms/:platformId/subreddit-groups',
+            endpoint: 'platforms/:platformId/subreddit-groups',
             method: 'POST',
             trigger: 'submit',
             bodyMapping: {

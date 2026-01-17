@@ -100,7 +100,7 @@ export const platformIdSchema: PlatformSchema = {
         },
         rendering: {
           fieldType: 'file',
-          uploadEndpoint: '/api/platforms/:platformId/upload'
+          uploadEndpoint: 'platforms/:platformId/upload'
         }
       }
     ],

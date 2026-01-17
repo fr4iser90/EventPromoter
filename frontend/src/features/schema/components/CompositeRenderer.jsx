@@ -4,16 +4,8 @@
  * Renders composite blocks that consist of multiple fields.
  * Completely generic - no platform-specific logic.
  * 
- * IMPORTANT: Generic "targets" concept
- * - Frontend/Backend: Always use generic "targets" terminology
- * - Email Platform: "targets" = "recipients" (Email-specific)
- * - Reddit Platform: "targets" = "subreddits" (Reddit-specific)
- * - Other platforms: "targets" = platform-specific concept
- * 
  * The schema defines what "targets" means for each platform via dataEndpoints.
- * Example:
- *   - Email: dataEndpoints.recipients = '/api/platforms/email/recipients'
- *   - Reddit: dataEndpoints.subreddits = '/api/platforms/reddit/subreddits'
+ * Frontend only knows about generic "targets" - platform-specific mapping happens in backend.
  * 
  * @module components/CompositeRenderer
  */
@@ -103,9 +95,33 @@ function CompositeRenderer({ block, value, onChange, platform }) {
   const schema = rendering.schema || {}
   const dataEndpoints = rendering.dataEndpoints || {}
 
+  // ✅ DEBUG: Log what we receive
+  console.log('[CompositeRenderer] Component rendered:', {
+    platform,
+    hasBlock: !!block,
+    hasRendering: !!rendering,
+    hasDataEndpoints: !!dataEndpoints,
+    dataEndpointsKeys: Object.keys(dataEndpoints),
+    dataEndpoints,
+    blockId: block?.id,
+    blockType: block?.type
+  })
+
   // Load data from all endpoints
   useEffect(() => {
+    console.log('[CompositeRenderer] useEffect triggered:', {
+      platform,
+      hasDataEndpoints: !!dataEndpoints,
+      dataEndpointsKeys: dataEndpoints ? Object.keys(dataEndpoints) : [],
+      dataEndpoints
+    })
+
     if (!platform || !dataEndpoints || Object.keys(dataEndpoints).length === 0) {
+      console.warn('[CompositeRenderer] Skipping data load - missing requirements:', {
+        hasPlatform: !!platform,
+        hasDataEndpoints: !!dataEndpoints,
+        dataEndpointsLength: dataEndpoints ? Object.keys(dataEndpoints).length : 0
+      })
       setLoading(false)
       return
     }
@@ -120,18 +136,27 @@ function CompositeRenderer({ block, value, onChange, platform }) {
         // Load data from each endpoint
         for (const [key, endpoint] of Object.entries(dataEndpoints)) {
           try {
-            const url = getApiUrl(endpoint.replace('/api/', '').replace(':platformId', platform))
+            const url = getApiUrl(endpoint.replace(':platformId', platform))
+            console.log(`[CompositeRenderer] Loading data for ${key} from:`, url)
             const response = await axios.get(url)
+            console.log(`[CompositeRenderer] Response for ${key}:`, {
+              status: response.status,
+              success: response.data?.success,
+              hasOptions: !!response.data?.options,
+              optionsLength: response.data?.options?.length || 0,
+              dataKeys: Object.keys(response.data || {})
+            })
             
             if (response.data.success) {
               // Extract options from response
               loadedData[key] = response.data.options || response.data[key] || []
             } else {
-              console.warn(`Failed to load data for ${key}:`, response.data.error)
+              console.warn(`[CompositeRenderer] Endpoint ${key} returned success=false:`, response.data.error)
               loadedData[key] = []
             }
           } catch (err) {
-            console.error(`Error loading data for ${key}:`, err)
+            console.error(`[CompositeRenderer] Failed to load data for ${key} from ${endpoint}:`, err)
+            console.error(`[CompositeRenderer] Error details:`, err.response?.data || err.message)
             loadedData[key] = []
           }
         }
@@ -315,7 +340,7 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                 )}
 
                 {/* Autocomplete: Neue Targets hinzufügen (nur für individual field) */}
-                {/* Note: This is generic - for email platform, individual = recipients; for reddit, individual = subreddits, etc. */}
+                {/* Generic targets selection - platform-specific mapping handled by backend */}
                 {field.name === 'individual' && (
                   <Autocomplete
                     freeSolo
@@ -334,27 +359,25 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                         
                         // Save new target to backend
                         // ✅ GENERIC: Use endpoint from schema dataEndpoints
-                        // For email platform: field.source = 'recipients' → endpoint = '/api/platforms/email/recipients'
-                        // For reddit platform: field.source = 'subreddits' → endpoint = '/api/platforms/reddit/subreddits'
+                        // Generic: field.source defines the endpoint key (e.g., 'targets', 'groups', etc.)
                         // Backend knows what field name to use based on platform
                         if (isNewTarget) {
                           try {
                             // Get endpoint from dataEndpoints using field.source
-                            const endpointKey = field.source // e.g., 'recipients' for email, 'subreddits' for reddit
-                            const endpointPath = dataEndpoints[endpointKey] // e.g., '/api/platforms/email/recipients'
+                            const endpointKey = field.source // Generic endpoint key from schema
+                            const endpointPath = dataEndpoints[endpointKey] // Endpoint path from schema
                             
                             if (!endpointPath) {
                               throw new Error(`No endpoint defined for source: ${endpointKey}`)
                             }
                             
                             // Build full URL (replace :platformId if present)
-                            const fullEndpoint = endpointPath.replace(':platformId', platform).replace('/api/', '')
+                            const fullEndpoint = endpointPath.replace(':platformId', platform)
                             
-                            // Generic payload - backend knows what field name to use based on platform
-                            // Email expects { email: ... }, Reddit expects { subreddit: ... }, etc.
+                            // Send payload - backend API expects platform-specific field name
+                            // For email platform: 'email', for other platforms: platform-specific field
                             await axios.post(getApiUrl(fullEndpoint), { 
-                              // Use generic field name - backend will map to platform-specific field
-                              [endpointKey.slice(0, -1)]: newTarget // Remove 's' from 'recipients' → 'recipient', 'subreddits' → 'subreddit'
+                              email: newTarget
                             })
                             console.log(`Added new target: ${newTarget}`)
                             setReloadTrigger(prev => prev + 1)

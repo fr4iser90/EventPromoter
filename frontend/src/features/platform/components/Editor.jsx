@@ -467,13 +467,14 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       })()}
 
       {/* ✅ Editor Blocks: Render blocks from schema */}
+      {/* Show targets block if NO template is active (for direct editing) */}
       {/* Show other blocks ONLY if NO template is active */}
       {editorBlocks.length > 0 && (() => {
-        // Filter out targets block (shown separately above)
         const sortedBlocks = [...editorBlocks]
           .filter(block => {
-            // Hide targets block (shown as collapsible summary above)
-            if (block.type === 'targets') return false
+            // ✅ RENDER targets block if NO template is active (for direct editing)
+            // Only hide it if template is active (then show summary instead)
+            if (block.type === 'targets' && activeTemplate) return false
             // Hide other blocks if template is active
             if (activeTemplate) return false
             // Show if enabled

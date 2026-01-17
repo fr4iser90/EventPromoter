@@ -21,7 +21,7 @@ import {
   DialogActions
 } from '@mui/material'
 import SchemaRenderer, { validateSchema } from '../../schema/components/Renderer'
-import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
 function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
   const [schema, setSchema] = useState(null)
@@ -41,7 +41,7 @@ function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
         setError(null)
 
         // Try to load schema from new endpoint
-        const schemaResponse = await fetch(`${config.apiUrl}/api/platforms/${platformId}/schema`)
+        const schemaResponse = await fetch(getApiUrl(`platforms/${platformId}/schema`))
         if (schemaResponse.ok) {
           const schemaData = await schemaResponse.json()
           if (schemaData.success && schemaData.schema?.settings) {
@@ -53,7 +53,7 @@ function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
         }
 
         // Fallback: try to load from platform endpoint
-        const platformResponse = await fetch(`${config.apiUrl}/api/platforms/${platformId}`)
+        const platformResponse = await fetch(getApiUrl(`platforms/${platformId}`))
         if (platformResponse.ok) {
           const platformData = await platformResponse.json()
           if (platformData.success && platformData.platform?.schema?.settings) {
@@ -79,7 +79,7 @@ function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
   // Load existing settings
   const loadExistingSettings = async (platformId) => {
     try {
-      const response = await fetch(`${config.apiUrl}/api/platforms/${platformId}/settings`)
+      const response = await fetch(getApiUrl(`platforms/${platformId}/settings`))
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.settings) {
@@ -125,7 +125,7 @@ function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
       setError(null)
 
       // Save settings via API
-      const response = await fetch(`${config.apiUrl}/api/platforms/${platformId}/settings`, {
+      const response = await fetch(getApiUrl(`platforms/${platformId}/settings`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

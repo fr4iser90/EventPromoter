@@ -59,9 +59,9 @@ export const emailEditorSchema: EditorSchema = {
           }
         },
         dataEndpoints: {
-          modes: '/api/platforms/email/recipient-modes',
-          recipientGroups: '/api/platforms/email/recipient-groups',
-          recipients: '/api/platforms/email/recipients'
+          modes: 'platforms/email/recipient-modes',
+          recipientGroups: 'platforms/email/recipient-groups',
+          recipients: 'platforms/email/recipients'
         }
       }
     },
@@ -107,7 +107,7 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'file',
-        uploadEndpoint: '/api/platforms/:platformId/upload'
+        uploadEndpoint: 'platforms/:platformId/upload'
       }
     },
     {
@@ -229,7 +229,7 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'file',
-        uploadEndpoint: '/api/platforms/:platformId/upload'
+        uploadEndpoint: 'platforms/:platformId/upload'
       }
     },
     {

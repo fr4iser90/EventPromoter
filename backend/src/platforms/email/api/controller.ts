@@ -47,14 +47,18 @@ export class EmailController {
    */
   static async addRecipient(req: Request, res: Response) {
     try {
-      const { email } = req.body
+      // ✅ GENERIC: Frontend sends generic 'value', backend maps to platform-specific 'email'
+      const value = req.body.value
 
-      if (!email) {
+      if (!value) {
         return res.status(400).json({
           success: false,
-          error: 'Email is required'
+          error: 'Value is required'
         })
       }
+
+      // Map generic 'value' to platform-specific 'email'
+      const email = value
 
       const result = await EmailRecipientService.addRecipient(email)
       if (result.success) {

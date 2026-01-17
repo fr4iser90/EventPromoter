@@ -106,7 +106,7 @@ function DynamicPanelWrapper({ platform }) {
         if (field.optionsSource) {
           try {
             const endpoint = field.optionsSource.endpoint.replace(':platformId', platformId)
-            const url = getApiUrl(endpoint.replace('/api/', ''))
+            const url = getApiUrl(endpoint)
             
             const response = await axios({
               method: field.optionsSource.method || 'GET',
@@ -146,6 +146,7 @@ function DynamicPanelWrapper({ platform }) {
             optionsMap[field.name] = transformedOptions
           } catch (err) {
             console.error(`Failed to load options for field ${field.name}:`, err)
+            optionsMap[field.name] = [] // Set empty array on error
           }
         }
       }
@@ -186,7 +187,7 @@ function DynamicPanelWrapper({ platform }) {
       }
       try {
         const endpoint = fieldDef.action.endpoint.replace(':platformId', platform)
-        const url = getApiUrl(endpoint.replace('/api/', ''))
+        const url = getApiUrl(endpoint)
         
         // Build request body from bodyMapping
         let body = {}

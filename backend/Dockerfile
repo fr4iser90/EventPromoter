@@ -55,6 +55,19 @@ COPY --from=builder /app/backend/dist ./backend/dist
 # Copy config directory (needed at runtime)
 COPY --from=builder /app/config ./config
 
+# Copy platform data directories (needed at runtime for recipient/subreddit data etc.)
+# These are not compiled by TypeScript, so we copy from source
+# Copy all platforms/src temporarily to extract data directories
+COPY --from=builder /app/backend/src/platforms ./backend/src/platforms
+# Copy all data directories for all platforms dynamically
+RUN mkdir -p /app/backend/dist/platforms && \
+    find /app/backend/src/platforms -type d -name "data" | while read dir; do \
+      platform=$(echo "$dir" | sed 's|.*/platforms/\([^/]*\)/data|\1|'); \
+      mkdir -p "/app/backend/dist/platforms/$platform" && \
+      cp -r "$dir" "/app/backend/dist/platforms/$platform/data"; \
+    done && \
+    rm -rf /app/backend/src
+
 WORKDIR /app/backend
 
 # Expose port
