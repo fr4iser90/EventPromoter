@@ -8,18 +8,22 @@ export class ConfigController {
   static async getConfig(req: Request, res: Response) {
     try {
       const { name } = req.params
-      console.log(`🌐 API Request: GET /api/config/${name}`)
+      if (process.env.DEBUG_API_REQUESTS === 'true') {
+        console.log(`🌐 API Request: GET /api/config/${name}`)
+      }
       const config = await ConfigService.getConfig(name)
 
       if (config) {
-        console.log(`✅ Sending ${name} config:`, JSON.stringify(config).substring(0, 100) + '...')
+        if (process.env.DEBUG_API_REQUESTS === 'true') {
+          console.log(`✅ Sending ${name} config`)
+        }
         res.json(config)
       } else {
-        console.log(`❌ Config ${name} not found`)
+        console.warn(`⚠️ Config ${name} not found`)
         res.status(404).json({ error: 'Configuration not found' })
       }
     } catch (error) {
-      console.error('Error getting config:', error)
+      console.error('❌ Error getting config:', error)
       res.status(500).json({ error: 'Failed to load configuration' })
     }
   }
@@ -28,18 +32,22 @@ export class ConfigController {
     try {
       const { name } = req.params
       const config = req.body
-      console.log(`💾 API Request: POST /api/config/${name}`, JSON.stringify(config).substring(0, 100) + '...')
+      if (process.env.DEBUG_API_REQUESTS === 'true') {
+        console.log(`💾 API Request: POST /api/config/${name}`)
+      }
       const success = await ConfigService.saveConfig(name, config)
 
       if (success) {
-        console.log(`✅ Config ${name} saved successfully`)
+        if (process.env.DEBUG_API_REQUESTS === 'true') {
+          console.log(`✅ Config ${name} saved successfully`)
+        }
         res.json({ success: true })
       } else {
-        console.log(`❌ Failed to save config ${name}`)
+        console.error(`❌ Failed to save config ${name}`)
         res.status(500).json({ error: 'Failed to save configuration' })
       }
     } catch (error) {
-      console.error('Error saving config:', error)
+      console.error('❌ Error saving config:', error)
       res.status(500).json({ error: 'Failed to save configuration' })
     }
   }
@@ -94,7 +102,9 @@ export class ConfigController {
   // Get available event ID patterns
   static async getEventIdPatterns(req: Request, res: Response) {
     try {
-      console.log('🌐 API Request: GET /api/config/event-id-patterns')
+      if (process.env.DEBUG_API_REQUESTS === 'true') {
+        console.log('🌐 API Request: GET /api/config/event-id-patterns')
+      }
 
       const currentPattern = await EventService.getCurrentPattern()
       const patterns = Object.values(EVENT_ID_PATTERNS)
@@ -118,7 +128,7 @@ export class ConfigController {
         descriptions
       })
     } catch (error) {
-      console.error('Error getting event ID patterns:', error)
+      console.error('❌ Error getting event ID patterns:', error)
       res.status(500).json({ error: 'Failed to get event ID patterns' })
     }
   }
@@ -127,14 +137,18 @@ export class ConfigController {
   static async setEventIdPattern(req: Request, res: Response) {
     try {
       const { pattern } = req.body
-      console.log(`💾 API Request: POST /api/config/event-id-pattern`, { pattern })
+      if (process.env.DEBUG_API_REQUESTS === 'true') {
+        console.log(`💾 API Request: POST /api/config/event-id-pattern`, { pattern })
+      }
 
       await EventService.setCurrentPattern(pattern)
 
-      console.log('✅ Event ID pattern updated successfully')
+      if (process.env.DEBUG_API_REQUESTS === 'true') {
+        console.log('✅ Event ID pattern updated successfully')
+      }
       res.json({ success: true, pattern })
     } catch (error: any) {
-      console.error('Error setting event ID pattern:', error)
+      console.error('❌ Error setting event ID pattern:', error)
       res.status(400).json({ error: error.message || 'Failed to set event ID pattern' })
     }
   }

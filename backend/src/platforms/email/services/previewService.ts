@@ -7,6 +7,7 @@
  */
 
 import { EmailService } from './emailService.js'
+import { markdownToHtml, isMarkdown } from '../../../utils/markdownRenderer.js'
 
 export async function renderEmailPreview(
   service: EmailService,
@@ -150,21 +151,28 @@ export async function renderEmailPreview(
   }
 
   // Body content: Render from bodyText (structured field)
-  // bodyText can be plain text OR HTML fragment (from templates - already extracted)
+  // bodyText can be plain text, Markdown, OR HTML fragment (from templates - already extracted)
   if (processedContent.bodyText) {
     const bodyText = processedContent.bodyText
-    // Check if it's HTML (contains tags) or plain text
-    if (typeof bodyText === 'string' && bodyText.includes('<') && bodyText.includes('>')) {
-      // HTML fragment - use directly (already extracted from template, no style tags)
-      html += `      ${bodyText}
+    if (typeof bodyText === 'string') {
+      // Check if it's HTML (contains tags)
+      if (bodyText.includes('<') && bodyText.includes('>')) {
+        // HTML fragment - use directly (already extracted from template, no style tags)
+        html += `      ${bodyText}
 `
-    } else {
-      // Plain text - convert to HTML
-      const bodyHtml = escapeHtml(bodyText)
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>')
-      html += `      <p>${bodyHtml}</p>
+      } else if (isMarkdown(bodyText)) {
+        // Markdown - convert to HTML
+        const markdownHtml = markdownToHtml(bodyText)
+        html += `      ${markdownHtml}
 `
+      } else {
+        // Plain text - convert to HTML with line breaks
+        const bodyHtml = escapeHtml(bodyText)
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>')
+        html += `      <p>${bodyHtml}</p>
+`
+      }
     }
   }
 

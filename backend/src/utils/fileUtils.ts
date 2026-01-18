@@ -12,14 +12,18 @@ export async function readConfig(filename: string): Promise<any> {
   try {
     const filePath = path.join(CONFIG_DIR, filename)
     const data = await fs.readFile(filePath, 'utf8')
-    console.log(`🔍 Reading config ${filename}:`, data.substring(0, 200) + (data.length > 200 ? '...' : ''))
+    if (process.env.DEBUG_CONFIG_ACCESS === 'true') {
+      console.log(`🔍 Reading config ${filename}:`, data.substring(0, 200) + (data.length > 200 ? '...' : ''))
+    }
     if (!data || data.trim() === '') {
       return null // Empty file
     }
     return JSON.parse(data)
   } catch (error: any) {
     if (error.code === 'ENOENT') {
-      console.log(`📁 Config ${filename} not found`)
+      if (process.env.DEBUG_CONFIG_ACCESS === 'true') {
+        console.log(`📁 Config ${filename} not found`)
+      }
       return null // File doesn't exist
     }
     if (error instanceof SyntaxError) {
@@ -34,7 +38,9 @@ export async function writeConfig(filename: string, data: any): Promise<boolean>
   try {
     const filePath = path.join(CONFIG_DIR, filename)
     const jsonString = JSON.stringify(data, null, 2)
-    console.log(`💾 Writing config ${filename}:`, jsonString.substring(0, 200) + (jsonString.length > 200 ? '...' : ''))
+    if (process.env.DEBUG_CONFIG_ACCESS === 'true') {
+      console.log(`💾 Writing config ${filename}:`, jsonString.substring(0, 200) + (jsonString.length > 200 ? '...' : ''))
+    }
     await fs.writeFile(filePath, jsonString)
     return true
   } catch (error) {

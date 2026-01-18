@@ -1,10 +1,12 @@
 /**
  * LinkedIn Platform Preview Renderer
  * 
- * Handles rendering of LinkedIn preview HTML
+ * Handles rendering of LinkedIn preview HTML with Markdown support
  * 
  * @module platforms/linkedin/preview
  */
+
+import { markdownToHtml, isMarkdown } from '../../utils/markdownRenderer.js'
 
 export async function renderLinkedInPreview(options: {
   content: Record<string, any>
@@ -23,6 +25,25 @@ export async function renderLinkedInPreview(options: {
   const cardBg = darkMode ? '#1d1d1d' : '#ffffff'
   const textColor = darkMode ? '#e9ecef' : '#000000'
   const fontFamily = schema.styling?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  
+  // Process text content - check if it's Markdown
+  let textContent = ''
+  if (content.text) {
+    if (isMarkdown(content.text)) {
+      // Render Markdown to HTML
+      textContent = markdownToHtml(content.text)
+    } else {
+      // Plain text - preserve line breaks
+      textContent = escapeHtml(content.text).replace(/\n/g, '<br>')
+    }
+  }
+
+  // Process link
+  let linkContent = ''
+  if (content.link) {
+    const linkUrl = content.link.startsWith('http') ? content.link : `https://${content.link}`
+    linkContent = `<a href="${escapeHtml(linkUrl)}" class="post-link" target="_blank" rel="noopener noreferrer">${escapeHtml(content.link)}</a>`
+  }
   
   let html = `<!DOCTYPE html>
 <html>
@@ -54,8 +75,27 @@ export async function renderLinkedInPreview(options: {
       font-size: 14px;
       line-height: 20px;
       margin-bottom: 12px;
-      white-space: pre-wrap;
       word-wrap: break-word;
+    }
+    .post-content p {
+      margin-bottom: 8px;
+    }
+    .post-content p:last-child {
+      margin-bottom: 0;
+    }
+    .post-content strong {
+      font-weight: 600;
+    }
+    .post-content em {
+      font-style: italic;
+    }
+    .post-content ul,
+    .post-content ol {
+      margin: 8px 0;
+      padding-left: 24px;
+    }
+    .post-content li {
+      margin: 4px 0;
     }
     .post-media {
       width: 100%;
@@ -79,9 +119,9 @@ export async function renderLinkedInPreview(options: {
 </head>
 <body>
   <div class="post-container">
-    ${content.text ? `<div class="post-content">${escapeHtml(content.text)}</div>` : ''}
-    ${content.image ? `<div class="post-media"><img src="${content.image}" alt="Post media" /></div>` : ''}
-    ${content.link ? `<div class="post-content"><a href="${content.link}" class="post-link">${escapeHtml(content.link)}</a></div>` : ''}
+    ${textContent ? `<div class="post-content">${textContent}</div>` : ''}
+    ${content.image ? `<div class="post-media"><img src="${escapeHtml(content.image)}" alt="Post media" /></div>` : ''}
+    ${linkContent ? `<div class="post-content">${linkContent}</div>` : ''}
   </div>
 </body>
 </html>`

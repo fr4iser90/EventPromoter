@@ -8,8 +8,6 @@ import routes from './routes/index.js'
 // Load environment variables
 dotenv.config()
 
-console.log('🚀 Starting EventPromoter Backend...')
-
 const app = express()
 const PORT = process.env.PORT || 4000
 

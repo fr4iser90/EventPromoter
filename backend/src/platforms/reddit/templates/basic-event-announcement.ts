@@ -8,12 +8,13 @@ export const basicEventAnnouncementTemplate: RedditTemplate = {
   template: {
     title: '[EVENT] {title} - {date}',
     text: `**Event Details:**
-- **Date:** {date}
-- **Time:** {time}
-- **Location:** {venue}, {city}
-- **Description:** {description}
 
-**Tickets/Info:** {link}
+📅 **Date:** {date}
+🕐 **Time:** {time}
+📍 **Location:** {venue}, {city}
+📝 **Description:** {description}
+
+🎫 **Tickets/Info:** {link}
 
 #Event #Nightlife`
   },

@@ -95,20 +95,54 @@ export class TemplateMappingService {
 
         // Only use exact matches - no fallback mappings
         if (fieldValue && typeof fieldValue === 'string') {
-          newContent[fieldName] = replaceTemplateVariables(fieldValue, templateVariables)
+          // Replace variables in the field value
+          const processedValue = replaceTemplateVariables(fieldValue, templateVariables)
+          newContent[fieldName] = processedValue
         }
       })
+      
+      // Special handling for platforms that use Markdown (Reddit, etc.)
+      // If template has 'text' field and it contains Markdown, preserve it
+      // The preview renderer will handle Markdown rendering
 
       // Extract body content from template HTML and set as bodyText (if html exists and bodyText not already set)
+      // This is specifically for Email platform which uses HTML templates
       if (templateContent.html && !newContent.bodyText) {
         const templateHtml = replaceTemplateVariables(templateContent.html, templateVariables)
-        // Extract body content from full HTML document (remove DOCTYPE, html, head, style tags)
+        
+        // Try to extract body content from full HTML document
         const bodyMatch = templateHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
         if (bodyMatch && bodyMatch[1]) {
           // Extract body content, remove style tags (preview has its own styles)
-          const bodyContent = bodyMatch[1].replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').trim()
+          let bodyContent = bodyMatch[1]
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove script tags
+            .trim()
+          
           // Set as bodyText (structured field) - preview will render it
           newContent.bodyText = bodyContent
+        } else {
+          // No <body> tag found - might be HTML fragment
+          // Check if it's a full HTML document or just a fragment
+          if (templateHtml.includes('<!DOCTYPE') || templateHtml.includes('<html')) {
+            // Full document but no body - extract from html tag or use as-is
+            const htmlMatch = templateHtml.match(/<html[^>]*>([\s\S]*?)<\/html>/i)
+            if (htmlMatch && htmlMatch[1]) {
+              let bodyContent = htmlMatch[1]
+                .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '') // Remove head
+                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags
+                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove script tags
+                .trim()
+              newContent.bodyText = bodyContent
+            }
+          } else {
+            // HTML fragment - use directly after cleaning
+            let bodyContent = templateHtml
+              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags
+              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove script tags
+              .trim()
+            newContent.bodyText = bodyContent
+          }
         }
       }
     }

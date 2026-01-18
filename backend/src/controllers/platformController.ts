@@ -71,11 +71,11 @@ export class PlatformController {
   // Initialize registry on first use
   private static async ensureRegistry() {
     try {
-      console.log('🔍 Getting platform registry instance...')
       const registry = getPlatformRegistry()
-      console.log(`📊 Registry initialized: ${registry.isInitialized()}`)
       if (!registry.isInitialized()) {
-        console.log('🔄 Initializing platform registry...')
+        if (process.env.DEBUG_PLATFORM_REGISTRY === 'true') {
+          console.log('🔄 Initializing platform registry...')
+        }
         await initializePlatformRegistry()
         console.log('✅ Platform registry initialized')
       }
@@ -88,20 +88,18 @@ export class PlatformController {
 
   // Get all available platforms with metadata
   static async getPlatforms(req: Request, res: Response) {
-    console.log('🌐 API Request: GET /api/platforms')
+    if (process.env.DEBUG_API_REQUESTS === 'true') {
+      console.log('🌐 API Request: GET /api/platforms')
+    }
     try {
-      console.log('📦 Getting platform registry...')
       const registry = await PlatformController.ensureRegistry()
-      console.log('✅ Registry obtained, checking initialization...')
       
       if (!registry.isInitialized()) {
         console.error('❌ Platform registry not initialized')
         throw new Error('Platform registry not initialized')
       }
 
-      console.log('📋 Getting all platforms from registry...')
       const allPlatforms = registry.getAllPlatforms()
-      console.log(`✅ Found ${allPlatforms.length} platforms`)
       
       const platforms = allPlatforms.map(platform => ({
         id: platform.metadata.id,
@@ -121,13 +119,15 @@ export class PlatformController {
         hasSchema: !!platform.schema
       }))
 
-      console.log(`✅ Sending ${platforms.length} platforms to client`)
+      if (process.env.DEBUG_API_REQUESTS === 'true') {
+        console.log(`✅ Sending ${platforms.length} platforms to client`)
+      }
       return res.json({
         success: true,
         platforms
       })
     } catch (error: any) {
-      console.error('Get platforms error:', error)
+      console.error('❌ Get platforms error:', error)
       res.status(500).json({
         error: 'Failed to get platforms',
         details: error.message

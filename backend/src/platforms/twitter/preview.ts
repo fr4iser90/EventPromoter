@@ -1,10 +1,12 @@
 /**
  * Twitter Platform Preview Renderer
  * 
- * Handles rendering of Twitter preview HTML
+ * Handles rendering of Twitter preview HTML with Markdown support
  * 
  * @module platforms/twitter/preview
  */
+
+import { markdownToHtml, isMarkdown } from '../../utils/markdownRenderer.js'
 
 export async function renderTwitterPreview(options: {
   content: Record<string, any>
@@ -23,6 +25,18 @@ export async function renderTwitterPreview(options: {
   const textColor = darkMode ? '#ffffff' : '#0f1419'
   const borderColor = darkMode ? '#2f3336' : '#eff3f4'
   const fontFamily = schema.styling?.fontFamily || 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  
+  // Process text content - check if it's Markdown
+  let textContent = ''
+  if (content.text) {
+    if (isMarkdown(content.text)) {
+      // Render Markdown to HTML (Twitter supports basic formatting)
+      textContent = markdownToHtml(content.text)
+    } else {
+      // Plain text - preserve line breaks
+      textContent = escapeHtml(content.text).replace(/\n/g, '<br>')
+    }
+  }
   
   let html = `<!DOCTYPE html>
 <html>
@@ -54,8 +68,26 @@ export async function renderTwitterPreview(options: {
       font-size: 15px;
       line-height: 20px;
       word-wrap: break-word;
-      white-space: pre-wrap;
       margin-bottom: 12px;
+    }
+    .tweet-content p {
+      margin-bottom: 4px;
+    }
+    .tweet-content p:last-child {
+      margin-bottom: 0;
+    }
+    .tweet-content strong {
+      font-weight: 700;
+    }
+    .tweet-content em {
+      font-style: italic;
+    }
+    .tweet-content a {
+      color: ${darkMode ? '#1d9bf0' : '#1d9bf0'};
+      text-decoration: none;
+    }
+    .tweet-content a:hover {
+      text-decoration: underline;
     }
     .tweet-media {
       width: 100%;
@@ -72,8 +104,8 @@ export async function renderTwitterPreview(options: {
 </head>
 <body>
   <div class="tweet-container">
-    <div class="tweet-content">${escapeHtml(content.text || '')}</div>
-    ${content.image ? `<div class="tweet-media"><img src="${content.image}" alt="Tweet media" /></div>` : ''}
+    ${textContent ? `<div class="tweet-content">${textContent}</div>` : ''}
+    ${content.image ? `<div class="tweet-media"><img src="${escapeHtml(content.image)}" alt="Tweet media" /></div>` : ''}
   </div>
 </body>
 </html>`

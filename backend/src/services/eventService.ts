@@ -59,7 +59,9 @@ export class EventService {
       const data = fs.readFileSync(eventFilePath, 'utf8')
       return JSON.parse(data)
     } catch (error) {
-      console.log(`Event data not found for ${eventId}`)
+      if (process.env.DEBUG_EVENT_ACCESS === 'true') {
+        console.warn(`⚠️ Event data not found for ${eventId}`)
+      }
       return null
     }
   }
