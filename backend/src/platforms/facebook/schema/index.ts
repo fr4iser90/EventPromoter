@@ -13,6 +13,7 @@ import { PlatformSchema } from '../../../types/platformSchema.js'
 import { facebookSettingsSchema } from './settings.js'
 import { facebookEditorSchema } from './editor.js'
 import { facebookPreviewSchema } from './preview.js'
+import { facebookPanelSchema } from './panel.js'
 
 /**
  * Complete Facebook Platform Schema
@@ -25,6 +26,7 @@ export const facebookSchema: PlatformSchema = {
   settings: facebookSettingsSchema,
   editor: facebookEditorSchema,
   preview: facebookPreviewSchema,
+  panel: facebookPanelSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

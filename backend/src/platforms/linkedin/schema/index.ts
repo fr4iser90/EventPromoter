@@ -13,6 +13,7 @@ import { PlatformSchema } from '../../../types/platformSchema.js'
 import { linkedinSettingsSchema } from './settings.js'
 import { linkedinEditorSchema } from './editor.js'
 import { linkedinPreviewSchema } from './preview.js'
+import { linkedinPanelSchema } from './panel.js'
 
 /**
  * Complete LinkedIn Platform Schema
@@ -25,6 +26,7 @@ export const linkedinSchema: PlatformSchema = {
   settings: linkedinSettingsSchema,
   editor: linkedinEditorSchema,
   preview: linkedinPreviewSchema,
+  panel: linkedinPanelSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

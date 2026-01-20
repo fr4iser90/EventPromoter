@@ -13,6 +13,7 @@ import { PlatformSchema } from '../../../types/platformSchema.js'
 import { twitterSettingsSchema } from './settings.js'
 import { twitterEditorSchema } from './editor.js'
 import { twitterPreviewSchema } from './preview.js'
+import { twitterPanelSchema } from './panel.js'
 
 /**
  * Complete Twitter Platform Schema
@@ -25,6 +26,7 @@ export const twitterSchema: PlatformSchema = {
   settings: twitterSettingsSchema,
   editor: twitterEditorSchema,
   preview: twitterPreviewSchema,
+  panel: twitterPanelSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

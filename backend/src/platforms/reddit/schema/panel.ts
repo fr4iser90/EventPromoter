@@ -13,38 +13,42 @@
 import { PanelSchema } from '../../../types/platformSchema.js'
 
 export const redditPanelSchema: PanelSchema = {
-  version: '1.0.0',
+  version: '2.0.0',
   title: 'Reddit Subreddits',
   description: 'Manage subreddits and groups for event posts',
   tabs: [
     {
-      id: 'subreddits',
+      id: 'targets',
       label: 'Subreddits',
-      sections: ['subreddit-list', 'add-subreddit']
+      sections: ['target-list', 'add-target', 'edit-target']
     },
     {
       id: 'groups',
       label: 'Gruppen',
       sections: ['group-management']
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      sections: ['subreddit-stats']
     }
   ],
   sections: [
     {
-      id: 'subreddit-list',
+      id: 'target-list',
       title: 'Subreddits',
       description: 'Verwaltung der Subreddits',
       fields: [
         {
-          name: 'subreddits',
-          type: 'multiselect',
-          label: 'Subreddits auswählen',
-          description: 'Wähle die Subreddits für diesen Post',
+          name: 'targets',
+          type: 'target-list',
+          label: 'Subreddits',
+          description: 'Liste aller Subreddits mit Custom Fields',
           required: false,
-          // ✅ GENERIC: Options come from backend API (already transformed)
           optionsSource: {
-            endpoint: 'platforms/:platformId/subreddits',
+            endpoint: 'platforms/:platformId/targets',
             method: 'GET',
-            responsePath: 'options' // Backend returns { success: true, options: [{ label, value }] }
+            responsePath: 'targets'
           },
           ui: {
             width: 12,
@@ -54,29 +58,28 @@ export const redditPanelSchema: PanelSchema = {
       ]
     },
     {
-      id: 'add-subreddit',
+      id: 'add-target',
       title: 'Neues Subreddit hinzufügen',
-      description: 'Füge ein neues Subreddit zur Liste hinzu',
+      description: 'Füge ein neues Subreddit mit optionalen Custom Fields hinzu',
       fields: [
         {
-          name: 'newSubreddit',
+          name: 'subreddit',
           type: 'text',
           label: 'Subreddit Name',
-          placeholder: 'z.B. electronicmusic oder r/electronicmusic',
-          required: false,
+          placeholder: 'z.B. electronicmusic',
+          required: true,
           validation: [
+            { type: 'required', message: 'Subreddit-Name ist erforderlich' },
             { 
               type: 'pattern', 
               value: '^[a-z0-9_]{3,21}$', 
               message: 'Subreddit-Name muss 3-21 Zeichen lang sein und nur Buchstaben, Zahlen und Unterstriche enthalten' 
             }
           ],
-          // ✅ GENERIC: Action to add subreddit via API
           action: {
-            endpoint: 'platforms/:platformId/subreddits',
+            endpoint: 'platforms/:platformId/targets',
             method: 'POST',
             trigger: 'submit',
-            bodyMapping: { subreddit: 'newSubreddit' },
             onSuccess: 'reload',
             reloadOptions: true
           },
@@ -84,13 +87,76 @@ export const redditPanelSchema: PanelSchema = {
             width: 12,
             order: 1
           }
+        },
+        {
+          name: 'description',
+          type: 'textarea',
+          label: 'Beschreibung',
+          placeholder: 'z.B. Community für elektronische Musik',
+          required: false,
+          validation: [
+            { type: 'maxLength', value: 500, message: 'Beschreibung darf maximal 500 Zeichen lang sein' }
+          ],
+          ui: {
+            width: 12,
+            order: 2
+          }
+        },
+        {
+          name: 'tags',
+          type: 'multiselect',
+          label: 'Tags',
+          required: false,
+          options: [
+            { label: 'Music', value: 'music' },
+            { label: 'Events', value: 'events' },
+            { label: 'Local', value: 'local' }
+          ],
+          ui: {
+            width: 12,
+            order: 3
+          }
+        },
+        {
+          name: 'active',
+          type: 'boolean',
+          label: 'Aktiv',
+          description: 'Aktiviere oder deaktiviere dieses Subreddit',
+          default: true,
+          ui: {
+            width: 6,
+            order: 4
+          }
         }
+      ]
+    },
+    {
+      id: 'edit-target',
+      title: 'Subreddit bearbeiten',
+      description: 'Bearbeite ein bestehendes Subreddit',
+      fields: [
+        {
+          name: 'selectedTarget',
+          type: 'select',
+          label: 'Subreddit auswählen',
+          required: true,
+          optionsSource: {
+            endpoint: 'platforms/:platformId/targets',
+            method: 'GET',
+            responsePath: 'options'
+          },
+          ui: {
+            width: 12,
+            order: 1
+          }
+        }
+        // Note: Custom fields werden dynamisch basierend auf targetSchema geladen
       ]
     },
     {
       id: 'group-management',
       title: 'Subreddit-Gruppen',
-      description: 'Verwaltung von Subreddit-Gruppen',
+      description: 'Verwaltung von Subreddit-Gruppen mit Target-IDs',
       fields: [
         {
           name: 'groupName',
@@ -104,14 +170,16 @@ export const redditPanelSchema: PanelSchema = {
           }
         },
         {
-          name: 'groupSubreddits',
-          type: 'textarea',
-          label: 'Subreddits (komma-getrennt)',
-          placeholder: 'electronicmusic, techno, house',
+          name: 'groupTargets',
+          type: 'multiselect',
+          label: 'Subreddits auswählen',
+          description: 'Wähle die Subreddits für diese Gruppe',
           required: false,
-          validation: [
-            { type: 'pattern', value: '^[^,]+(,[^,]+)*$', message: 'Komma-getrennte Subreddit-Namen erwartet' }
-          ],
+          optionsSource: {
+            endpoint: 'platforms/:platformId/targets',
+            method: 'GET',
+            responsePath: 'options'
+          },
           ui: {
             width: 12,
             order: 2
@@ -119,16 +187,15 @@ export const redditPanelSchema: PanelSchema = {
         },
         {
           name: 'createGroup',
-          type: 'text',
+          type: 'button',
           label: 'Gruppe erstellen',
-          // ✅ GENERIC: Action to create group via API
           action: {
-            endpoint: 'platforms/:platformId/subreddit-groups',
+            endpoint: 'platforms/:platformId/target-groups',
             method: 'POST',
             trigger: 'submit',
             bodyMapping: {
               groupName: 'groupName',
-              subreddits: 'groupSubreddits'
+              targetIds: 'groupTargets'
             },
             onSuccess: 'reload',
             reloadOptions: true
@@ -139,6 +206,69 @@ export const redditPanelSchema: PanelSchema = {
           }
         }
       ]
+    },
+    {
+      id: 'subreddit-stats',
+      title: 'Subreddit-Statistiken',
+      description: 'Zeige Statistiken für ein ausgewähltes Subreddit',
+      fields: [
+        {
+          name: 'selectedTarget',
+          type: 'select',
+          label: 'Subreddit auswählen',
+          required: false,
+          optionsSource: {
+            endpoint: 'platforms/:platformId/targets',
+            method: 'GET',
+            responsePath: 'options'
+          },
+          ui: {
+            width: 12,
+            order: 1
+          }
+        }
+        // Note: Stats werden als read-only Display gerendert (nicht als Field)
+      ]
     }
-  ]
+  ],
+  targetSchema: {
+    baseField: 'subreddit',
+    baseFieldLabel: 'Subreddit Name',
+    baseFieldValidation: [
+      { type: 'pattern', value: '^[a-z0-9_]{3,21}$', message: 'Invalid subreddit name' }
+    ],
+    customFields: [
+      {
+        name: 'description',
+        type: 'textarea',
+        label: 'Beschreibung',
+        required: false,
+        validation: [
+          { type: 'maxLength', value: 500, message: 'Description must be at most 500 characters' }
+        ],
+        ui: { width: 12, order: 1 }
+      },
+      {
+        name: 'tags',
+        type: 'multiselect',
+        label: 'Tags',
+        required: false,
+        options: [
+          { label: 'Music', value: 'music' },
+          { label: 'Events', value: 'events' },
+          { label: 'Local', value: 'local' }
+        ],
+        ui: { width: 12, order: 2 }
+      },
+      {
+        name: 'active',
+        type: 'boolean',
+        label: 'Aktiv',
+        required: false,
+        default: true,
+        ui: { width: 6, order: 3 }
+      }
+    ],
+    supportsGroups: true
+  }
 }

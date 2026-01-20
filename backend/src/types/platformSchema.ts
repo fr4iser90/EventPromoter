@@ -29,6 +29,8 @@ export type FieldType =
   | 'color'
   | 'range'
   | 'json'
+  | 'target-list'
+  | 'button'
 
 /**
  * Validation rule types
