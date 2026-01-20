@@ -5,6 +5,7 @@ import { readdir } from 'fs/promises'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { PlatformController, UserPreferencesController } from '../controllers/platformController.js'
+import { TargetController } from '../controllers/targetController.js'
 
 const router = Router()
 
@@ -48,6 +49,24 @@ router.post('/:platformId/preview', PlatformController.renderPreview)
 
 // Render multi-preview HTML (generic - any platform can implement)
 router.post('/:platformId/multi-preview', PlatformController.renderMultiPreview)
+
+// ✅ GENERIC: Target management routes (work for all platforms)
+// These routes must be defined BEFORE the dynamic platform routes to avoid conflicts
+router.get('/:platformId/targets', TargetController.getTargets)
+router.post('/:platformId/targets', TargetController.addTarget)
+router.get('/:platformId/targets/:targetId', TargetController.getTarget)
+router.put('/:platformId/targets/:targetId', TargetController.updateTarget)
+router.delete('/:platformId/targets/:targetId', TargetController.deleteTarget)
+
+// Group routes
+router.get('/:platformId/target-groups', TargetController.getGroups)
+router.post('/:platformId/target-groups', TargetController.createGroup)
+router.put('/:platformId/target-groups/:groupId', TargetController.updateGroup)
+router.delete('/:platformId/target-groups/:groupId', TargetController.deleteGroup)
+
+// Import/Export routes
+router.post('/:platformId/target-groups/import', TargetController.importGroups)
+router.get('/:platformId/target-groups/export', TargetController.exportGroups)
 
 // ✅ GENERIC: Dynamically load platform-specific routes
 // Scans platforms/ directory and loads routes.ts from each platform

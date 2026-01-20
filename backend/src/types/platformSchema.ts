@@ -113,6 +113,42 @@ export interface FieldDefinition {
     /** Custom component to render (overrides default) */
     component?: string
   }
+  // ✅ NEW: Environment Variable Support
+  /** Environment variable name or configuration */
+  envVar?: string | {
+    name: string
+    required?: boolean
+    default?: string
+    transform?: (value: string) => any
+  }
+  // ✅ NEW: Conditional Visibility (alternative to dependencies, more explicit)
+  /** Show field only when condition is met */
+  visibleWhen?: {
+    field: string
+    operator: 'equals' | 'notEquals' | 'exists' | 'notExists'
+    value?: any
+  }
+  // ✅ NEW: Field Dependencies
+  /** Fields this field depends on */
+  dependsOn?: string[]
+  // ✅ NEW: Field Help/Examples
+  /** Help text for this field */
+  help?: string
+  /** Example values for this field */
+  examples?: string[]
+  // ✅ NEW: Field Encryption
+  /** Whether field value should be encrypted (for passwords, API keys, etc.) */
+  encrypted?: boolean
+  // ✅ NEW: Field Masking
+  /** Mask value in UI (for sensitive data) */
+  mask?: boolean
+  // ✅ NEW: Field Autocomplete
+  /** Autocomplete configuration */
+  autocomplete?: {
+    source: 'api' | 'static'
+    endpoint?: string
+    options?: Array<{ label: string; value: any }>
+  }
 }
 
 /**
@@ -139,6 +175,42 @@ export interface SettingsSchema {
   }>
   /** Form-level validation */
   validate?: (data: Record<string, any>) => { isValid: boolean; errors: Record<string, string[]> }
+  // ✅ NEW: Environment Variable Mapping
+  /** Map field names to environment variable names */
+  envMapping?: {
+    [fieldName: string]: string | {
+      envVar: string
+      required?: boolean
+      default?: string
+      transform?: (value: string) => any
+    }
+  }
+  // ✅ NEW: Settings Categories
+  /** Settings categories for better organization */
+  categories?: Array<{
+    id: string
+    label: string
+    description?: string
+    fields: string[] // Field names in this category
+    icon?: string
+    order?: number
+  }>
+  // ✅ NEW: Settings Transformation
+  /** Transform settings before saving or after loading */
+  transform?: {
+    /** Transform settings before saving */
+    beforeSave?: (settings: Record<string, any>) => Record<string, any>
+    /** Transform settings after loading */
+    afterLoad?: (settings: Record<string, any>) => Record<string, any>
+  }
+  // ✅ NEW: Settings Dependencies
+  /** Field dependencies (e.g., show field only when another field has specific value) */
+  dependencies?: Array<{
+    field: string
+    dependsOn: string
+    condition: 'equals' | 'notEquals' | 'exists' | 'notExists'
+    value?: any
+  }>
 }
 
 /**
@@ -415,6 +487,38 @@ export interface PanelSection {
 }
 
 /**
+ * Target Schema Definition
+ * Defines the structure for platform targets (recipients, subreddits, users, etc.)
+ */
+export interface TargetSchema {
+  /** Base field name (e.g., 'email', 'subreddit', 'username') */
+  baseField: string
+  /** Base field label */
+  baseFieldLabel: string
+  /** Base field validation rules */
+  baseFieldValidation?: ValidationRule[]
+  /** Additional custom fields for personalization */
+  customFields?: FieldDefinition[]
+  /** Whether targets can be grouped */
+  supportsGroups?: boolean
+}
+
+/**
+ * Target Object Structure
+ */
+export interface Target {
+  /** Unique target identifier */
+  id: string
+  /** Metadata (optional additional data) */
+  metadata?: Record<string, any>
+  /** Timestamps */
+  createdAt?: string
+  updatedAt?: string
+  /** Base field value and custom fields (index signature for dynamic properties) */
+  [key: string]: any
+}
+
+/**
  * Panel schema
  * Defines the platform feature panel structure (NOT settings/credentials)
  */
@@ -433,6 +537,9 @@ export interface PanelSchema {
     label: string
     sections: string[] // Section IDs in this tab
   }>
+  // ✅ NEW: Target Schema for target management
+  /** Target schema for managing platform targets (recipients, subreddits, etc.) */
+  targetSchema?: TargetSchema
 }
 
 /**
