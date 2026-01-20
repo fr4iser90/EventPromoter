@@ -18,13 +18,18 @@ import {
   FormControlLabel,
   FormHelperText,
   Box,
-  Typography
+  Typography,
+  Button as MuiButton,
+  Alert
 } from '@mui/material'
+import TargetList from './TargetList'
+import { getApiUrl } from '../../../shared/utils/api'
+import axios from 'axios'
 
 /**
  * Render a single field based on schema definition
  */
-function renderField(field, value, onChange, error) {
+function renderField(field, value, onChange, error, platformId = null, formValues = {}) {
   const commonProps = {
     fullWidth: true,
     label: field.label,
@@ -136,6 +141,89 @@ function renderField(field, value, onChange, error) {
     case 'datetime':
       return <TextField key={field.name} {...commonProps} type="datetime-local" InputLabelProps={{ shrink: true }} />
 
+    case 'target-list':
+      return (
+        <Box key={field.name} sx={{ mb: 2 }}>
+          {platformId ? (
+            <TargetList
+              field={field}
+              value={value}
+              onChange={onChange}
+              platformId={platformId}
+              error={error}
+            />
+          ) : (
+            <Alert severity="warning">
+              Platform ID is required for target-list field
+            </Alert>
+          )}
+        </Box>
+      )
+
+    case 'button':
+      return (
+        <Box key={field.name} sx={{ mb: 2 }}>
+          <MuiButton
+            variant="contained"
+            fullWidth={field.ui?.width === 12}
+            onClick={async () => {
+              // Handle button action if defined
+              if (field.action && platformId) {
+                try {
+                  const endpoint = field.action.endpoint.replace(':platformId', platformId)
+                  const url = getApiUrl(endpoint)
+                  
+                  // Build request body from bodyMapping
+                  let body = {}
+                  if (field.action.bodyMapping) {
+                    Object.entries(field.action.bodyMapping).forEach(([key, source]) => {
+                      // Get value from formValues using source field name
+                      body[key] = formValues[source] || ''
+                    })
+                  } else {
+                    // Default: send all form values
+                    body = formValues
+                  }
+
+                  const response = await axios({
+                    method: field.action.method || 'POST',
+                    url,
+                    data: body
+                  })
+
+                  if (response.data.success) {
+                    // Handle onSuccess actions
+                    if (field.action.onSuccess === 'clear') {
+                      // Clear form values - would need callback
+                      if (onButtonAction) {
+                        onButtonAction('clear', field.name)
+                      }
+                    } else if (field.action.onSuccess === 'reload' || field.action.reloadOptions) {
+                      // Reload options - use callback from parent
+                      if (onButtonAction) {
+                        onButtonAction('reload')
+                      } else {
+                        // Fallback: reload page if no callback
+                        window.location.reload()
+                      }
+                    }
+                  }
+                } catch (err) {
+                  console.error(`Failed to execute button action:`, err)
+                  alert(`Error: ${err.message || 'Failed to execute action'}`)
+                }
+              }
+            }}
+            disabled={field.ui?.disabled}
+          >
+            {field.label}
+          </MuiButton>
+          {field.description && (
+            <FormHelperText>{field.description}</FormHelperText>
+          )}
+        </Box>
+      )
+
     default:
       return (
         <TextField
@@ -223,8 +311,10 @@ function validateField(field, value) {
  * @param {Function} props.onChange - Callback when field value changes (fieldName, value)
  * @param {Object} props.errors - Validation errors object { fieldName: errorMessage }
  * @param {Array} props.groups - Optional field groups from schema
+ * @param {String} props.platformId - Platform ID (for target-list fields)
+ * @param {Function} props.onButtonAction - Callback for button actions (for reload/clear)
  */
-function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, groups = [] }) {
+function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, groups = [], platformId = null, onButtonAction = null }) {
   // If groups are defined, render by groups
   if (groups && groups.length > 0) {
     return (
@@ -264,7 +354,9 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
                         field,
                         values[field.name],
                         onChange,
-                        errors[field.name]
+                        errors[field.name],
+                        platformId,
+                        values
                       )}
                     </Box>
                   )
@@ -300,7 +392,9 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
               field,
               values[field.name],
               onChange,
-              errors[field.name]
+              errors[field.name],
+              platformId,
+              values
             )}
           </Box>
         )

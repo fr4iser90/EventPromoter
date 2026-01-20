@@ -277,14 +277,6 @@ export const twitterPanelSchema: PanelSchema = {
         label: 'Beschreibung',
         required: false,
         ui: { width: 12, order: 2 }
-      },
-      {
-        name: 'active',
-        type: 'boolean',
-        label: 'Aktiv',
-        required: false,
-        default: true,
-        ui: { width: 6, order: 3 }
       }
     ],
     supportsGroups: false

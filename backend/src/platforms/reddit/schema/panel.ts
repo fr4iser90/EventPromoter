@@ -116,17 +116,6 @@ export const redditPanelSchema: PanelSchema = {
             width: 12,
             order: 3
           }
-        },
-        {
-          name: 'active',
-          type: 'boolean',
-          label: 'Aktiv',
-          description: 'Aktiviere oder deaktiviere dieses Subreddit',
-          default: true,
-          ui: {
-            width: 6,
-            order: 4
-          }
         }
       ]
     },

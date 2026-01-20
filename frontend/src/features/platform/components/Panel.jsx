@@ -313,6 +313,19 @@ function DynamicPanelWrapper({ platform }) {
                         values={values}
                         onChange={(fieldName, value) => handleFieldChange(section.id, fieldName, value)}
                         errors={{}}
+                        platformId={platform}
+                        onButtonAction={async (action, fieldName) => {
+                          if (action === 'reload') {
+                            await loadExistingValues(platform)
+                            // Clear form values after successful action
+                            setValues({})
+                          } else if (action === 'clear') {
+                            setValues(prev => ({
+                              ...prev,
+                              [fieldName]: ''
+                            }))
+                          }
+                        }}
                       />
                     </Box>
                   )

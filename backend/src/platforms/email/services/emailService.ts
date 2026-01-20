@@ -2,7 +2,7 @@
 
 import { EmailContent, EmailConfig } from '../types.js'
 import { EmailValidator } from '../validators/emailValidator.js'
-import { EmailRecipientService } from './recipientService.js'
+import { EmailTargetService } from './targetService.js'
 import { renderEmailPreview } from './previewService.js'
 import { EmailN8nService } from './n8nService.js'
 
@@ -133,62 +133,46 @@ export class EmailService {
     }
   }
 
-  // ✅ GENERIC: Recipient Management Methods (delegate to EmailRecipientService)
+  // Helper method to get target service
+  private targetService: EmailTargetService | null = null
+  
+  private getTargetService(): EmailTargetService {
+    if (!this.targetService) {
+      this.targetService = new EmailTargetService()
+    }
+    return this.targetService
+  }
   
   /**
-   * Get all recipients and groups
+   * Get all recipients and groups for publishing
    */
-  async getRecipients(): Promise<{ available: string[]; groups: Record<string, string[]>; selected?: string[] }> {
-    return await EmailRecipientService.getRecipients()
-  }
-
-  /**
-   * Add a new recipient
-   */
-  async addRecipient(email: string): Promise<{ success: boolean; error?: string }> {
-    return await EmailRecipientService.addRecipient(email)
-  }
-
-  /**
-   * Remove a recipient
-   */
-  async removeRecipient(email: string): Promise<{ success: boolean; error?: string }> {
-    return await EmailRecipientService.removeRecipient(email)
-  }
-
-  /**
-   * Create a recipient group
-   */
-  async createGroup(groupName: string, emails: string[]): Promise<{ success: boolean; error?: string }> {
-    return await EmailRecipientService.createGroup(groupName, emails)
-  }
-
-  /**
-   * Update a recipient group
-   */
-  async updateGroup(groupName: string, emails: string[]): Promise<{ success: boolean; error?: string }> {
-    return await EmailRecipientService.updateGroup(groupName, emails)
-  }
-
-  /**
-   * Delete a recipient group
-   */
-  async deleteGroup(groupName: string): Promise<{ success: boolean; error?: string }> {
-    return await EmailRecipientService.deleteGroup(groupName)
-  }
-
-  /**
-   * Import recipient groups
-   */
-  async importGroups(groups: Record<string, string[]>): Promise<{ success: boolean; error?: string }> {
-    return await EmailRecipientService.importGroups(groups)
-  }
-
-  /**
-   * Export recipient groups
-   */
-  async   exportGroups(): Promise<{ success: boolean; groups?: Record<string, string[]>; error?: string }> {
-    return await EmailRecipientService.exportGroups()
+  private async getRecipientsForPublishing(): Promise<{ available: string[]; groups: Record<string, string[]>; groupsData: Record<string, any> }> {
+    const service = this.getTargetService()
+    const targets = await service.getTargets()
+    const groups = await service.getGroups()
+    
+    const available = targets.map((t: any) => t.email)
+    
+    // Convert groups from { [groupId]: Group } to { [groupName]: [email] } or { [groupId]: [email] }
+    const groupEmails: Record<string, string[]> = {}
+    const targetMap = new Map(targets.map((t: any) => [t.id, t.email]))
+    
+    for (const group of Object.values(groups)) {
+      const emails = group.targetIds
+        .map((id: string) => targetMap.get(id))
+        .filter((email: string | undefined): email is string => email !== undefined)
+      if (emails.length > 0) {
+        // Support both group name and group ID as keys
+        groupEmails[group.name] = emails
+        groupEmails[group.id] = emails
+      }
+    }
+    
+    return {
+      available,
+      groups: groupEmails,
+      groupsData: groups // Full group objects for lookup
+    }
   }
 
   /**
@@ -485,9 +469,9 @@ export class EmailService {
     }> = []
 
     // Get all recipients and groups
-    const recipientData = await EmailRecipientService.getRecipients()
+    const recipientData = await this.getRecipientsForPublishing()
     const allRecipients = recipientData.available || []
-    const groups = recipientData.groups || {}
+    const groups = recipientData.groupsData || {} // Full Group objects: Record<string, Group>
 
     // Determine recipients based on mode
     if (recipients.mode === 'all') {
@@ -505,12 +489,29 @@ export class EmailService {
       })
     } else if (recipients.mode === 'groups' && recipients.groups && recipients.groups.length > 0) {
       // Send to each group with its assigned template
-      for (const groupName of recipients.groups) {
-        const groupEmails = groups[groupName] || []
+      for (const groupIdentifier of recipients.groups) {
+        // Find group by ID or name
+        let group = groups[groupIdentifier]
+        if (!group) {
+          group = Object.values(groups).find(g => g.name === groupIdentifier)
+        }
+        if (!group) continue
+
+        // Get emails for this group
+        const allTargets = await this.getTargetService().getTargets()
+        const targetMap = new Map(allTargets.map((t: any) => [t.id, t.email]))
+        const groupEmails = group.targetIds
+          .map((targetId: string) => targetMap.get(targetId))
+          .filter((email: string | undefined): email is string => email !== undefined)
+        
         if (groupEmails.length === 0) continue
 
         // Get template for this group (from mapping or default)
-        const templateId = recipients.templateMapping?.[groupName] || recipients.defaultTemplate
+        // Support both group ID and group name in templateMapping
+        const templateId = recipients.templateMapping?.[groupIdentifier] || 
+                          recipients.templateMapping?.[group.name] || 
+                          recipients.templateMapping?.[group.id] ||
+                          recipients.defaultTemplate
         
         // Build content with template
         const emailContent = await this.buildContentWithTemplate(content, templateId)
@@ -519,7 +520,7 @@ export class EmailService {
         // Send email
         const result = await publisher.publish(emailContent, files, hashtags)
         results.push({
-          group: groupName,
+          group: group.name,
           templateId,
           recipients: groupEmails,
           success: result.success,

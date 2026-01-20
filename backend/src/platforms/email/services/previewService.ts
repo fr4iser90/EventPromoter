@@ -248,11 +248,12 @@ export async function renderMultiPreview(
     dimensions?: { width: number; height: number }
   }> = []
 
-  // Get recipient data
-  const { EmailRecipientService } = await import('./recipientService.js')
-  const recipientData = await EmailRecipientService.getRecipients()
-  const allRecipients = recipientData.available || []
-  const groups = recipientData.groups || {}
+  // Get recipient data (using new TargetService)
+  const { EmailTargetService } = await import('./targetService.js')
+  const targetService = new EmailTargetService()
+  const targets = await targetService.getTargets()
+  const groups = await targetService.getGroups()
+  const allRecipients = targets.map(t => t.email)
 
   // Import template service
   const { TemplateService } = await import('../../../services/templateService.js')
@@ -285,11 +286,28 @@ export async function renderMultiPreview(
     })
   } else if (recipients.mode === 'groups' && recipients.groups && recipients.groups.length > 0) {
     // Preview for each group with its template
-    for (const groupName of recipients.groups) {
-      const groupEmails = groups[groupName] || []
+    for (const groupIdentifier of recipients.groups) {
+      // Find group by ID or name
+      let group: any = groups[groupIdentifier]
+      if (!group) {
+        const foundGroup = Object.values(groups).find(g => g.name === groupIdentifier || g.id === groupIdentifier)
+        if (!foundGroup) continue
+        group = foundGroup
+      }
+
+      // Get emails for this group
+      const targetMap = new Map(targets.map(t => [t.id, t.email]))
+      const groupEmails = group.targetIds
+        .map((targetId: string) => targetMap.get(targetId))
+        .filter((email: string | undefined): email is string => email !== undefined)
+      
       if (groupEmails.length === 0) continue
 
-      const templateId = recipients.templateMapping?.[groupName] || recipients.defaultTemplate
+      // Get template for this group (support both group ID and group name in templateMapping)
+      const templateId = recipients.templateMapping?.[groupIdentifier] || 
+                        recipients.templateMapping?.[group.name] || 
+                        recipients.templateMapping?.[group.id] ||
+                        recipients.defaultTemplate
       let previewContent = { ...content }
       
       if (templateId) {
@@ -307,7 +325,7 @@ export async function renderMultiPreview(
       })
 
       previews.push({
-        group: groupName,
+        group: group.name,
         templateId,
         recipients: groupEmails,
         html: preview.html,

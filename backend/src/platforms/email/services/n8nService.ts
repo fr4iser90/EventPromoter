@@ -8,32 +8,44 @@
 
 import { EmailContent } from '../types.js'
 import { EmailService } from './emailService.js'
-import { EmailRecipientService } from './recipientService.js'
+import { EmailTargetService } from './targetService.js'
 
 export class EmailN8nService {
   /**
    * Extract recipients from targets configuration
    * Helper function to convert targets (mode/groups/individual) to recipient email array
    */
-  private static async extractRecipientsFromTargets(targets: any): Promise<string[]> {
-    if (!targets) return []
+  private static async extractRecipientsFromTargets(targetsConfig: any): Promise<string[]> {
+    if (!targetsConfig) return []
 
-    const recipientData = await EmailRecipientService.getRecipients()
-    const allRecipients = recipientData.available || []
-    const groups = recipientData.groups || {}
+    const targetService = new EmailTargetService()
+    const allTargets = await targetService.getTargets()
+    const groups = await targetService.getGroups()
+    const allRecipients = allTargets.map((t: any) => t.email)
 
-    if (targets.mode === 'all') {
+    if (targetsConfig.mode === 'all') {
       return allRecipients
-    } else if (targets.mode === 'groups' && targets.groups && Array.isArray(targets.groups)) {
+    } else if (targetsConfig.mode === 'groups' && targetsConfig.groups && Array.isArray(targetsConfig.groups)) {
       // Collect all emails from selected groups
       const emails: string[] = []
-      for (const groupName of targets.groups) {
-        const groupEmails = groups[groupName] || []
+      for (const groupIdentifier of targetsConfig.groups) {
+        // Find group by ID or name
+        let group: any = groups[groupIdentifier]
+        if (!group) {
+          const foundGroup = Object.values(groups).find(g => g.name === groupIdentifier || g.id === groupIdentifier)
+          if (!foundGroup) continue
+          group = foundGroup
+        }
+        
+        // Convert target IDs to emails
+        const groupEmails = group.targetIds
+          .map((targetId: string) => allTargets.find((t: any) => t.id === targetId)?.email)
+          .filter((email: string | undefined): email is string => email !== undefined)
         emails.push(...groupEmails)
       }
       return [...new Set(emails)] // Remove duplicates
-    } else if (targets.mode === 'individual' && targets.individual && Array.isArray(targets.individual)) {
-      return targets.individual
+    } else if (targetsConfig.mode === 'individual' && targetsConfig.individual && Array.isArray(targetsConfig.individual)) {
+      return targetsConfig.individual
     }
 
     return []

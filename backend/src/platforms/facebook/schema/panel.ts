@@ -336,14 +336,6 @@ export const facebookPanelSchema: PanelSchema = {
           { label: 'Event', value: 'event' }
         ],
         ui: { width: 12, order: 3 }
-      },
-      {
-        name: 'active',
-        type: 'boolean',
-        label: 'Aktiv',
-        required: false,
-        default: true,
-        ui: { width: 6, order: 4 }
       }
     ],
     supportsGroups: false

@@ -1,0 +1,51 @@
+{
+  "targets": [
+    {
+      "id": "d5f93338-21bc-49b7-b91d-56b50fd1a2a8",
+      "email": "dj-events@club.com",
+      "createdAt": "2026-01-20T22:58:55.835Z"
+    },
+    {
+      "id": "000e59a3-ac14-48d6-bbc0-345efb9e74bc",
+      "email": "pa.boe90@gmail.com",
+      "createdAt": "2026-01-20T22:58:55.836Z"
+    },
+    {
+      "id": "9e1d4c1d-4012-46f8-83ee-c0dddf625f8a",
+      "email": "events@venue.de",
+      "createdAt": "2026-01-20T22:58:55.836Z"
+    },
+    {
+      "id": "a2ab961a-40dd-432a-987d-ef6f8caf24fa",
+      "email": "events@agency.com",
+      "createdAt": "2026-01-20T22:58:55.836Z"
+    }
+  ],
+  "groups": {
+    "1625b89d-a8d2-4c1a-8fd2-cef58712b728": {
+      "id": "1625b89d-a8d2-4c1a-8fd2-cef58712b728",
+      "name": "VIPs",
+      "targetIds": [
+        "d5f93338-21bc-49b7-b91d-56b50fd1a2a8",
+        "000e59a3-ac14-48d6-bbc0-345efb9e74bc"
+      ],
+      "createdAt": "2026-01-20T23:26:13.108Z"
+    },
+    "433e8462-6250-4034-8576-6de5d363b13e": {
+      "id": "433e8462-6250-4034-8576-6de5d363b13e",
+      "name": "Newsletter",
+      "targetIds": [
+        "9e1d4c1d-4012-46f8-83ee-c0dddf625f8a"
+      ],
+      "createdAt": "2026-01-20T23:26:13.108Z"
+    },
+    "ffc69c66-58e8-41f0-ae8b-50db5e1b384b": {
+      "id": "ffc69c66-58e8-41f0-ae8b-50db5e1b384b",
+      "name": "Agency",
+      "targetIds": [
+        "a2ab961a-40dd-432a-987d-ef6f8caf24fa"
+      ],
+      "createdAt": "2026-01-20T23:26:13.109Z"
+    }
+  }
+}

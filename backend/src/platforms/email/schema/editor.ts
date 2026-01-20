@@ -56,12 +56,28 @@ export const emailEditorSchema: EditorSchema = {
             source: 'recipients',
             required: false,
             visibleWhen: { field: 'mode', value: 'individual' }
+          },
+          defaultTemplate: {
+            fieldType: 'select',
+            label: 'Standard-Template',
+            description: 'Template das für alle Empfänger verwendet wird (falls keine Gruppen-Mapping vorhanden)',
+            source: 'templates',
+            required: false
+          },
+          templateMapping: {
+            fieldType: 'mapping',
+            label: 'Template-Zuordnung',
+            description: 'Weise jeder Gruppe ein spezifisches Template zu',
+            source: 'templates',
+            required: false,
+            visibleWhen: { field: 'mode', value: 'groups' }
           }
         },
         dataEndpoints: {
           modes: 'platforms/email/recipient-modes',
-          recipientGroups: 'platforms/email/recipient-groups',
-          recipients: 'platforms/email/recipients'
+          recipientGroups: 'platforms/email/target-groups',
+          recipients: 'platforms/email/targets',
+          templates: 'platforms/email/templates'
         }
       }
     },

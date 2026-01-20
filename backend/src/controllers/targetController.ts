@@ -9,7 +9,7 @@
 
 import { Request, Response } from 'express'
 import { BaseTargetService } from '../services/targetService.js'
-import { Target } from '../types/platformSchema.js'
+import { Target, Group } from '../types/platformSchema.js'
 
 export class TargetController {
   /**
@@ -214,9 +214,17 @@ export class TargetController {
 
       const groups = await service.getGroups()
 
+      // Transform groups to options array for multiselect components
+      // groups is { [groupId]: Group }
+      const options = Object.values(groups).map(group => ({
+        label: group.name,
+        value: group.id
+      }))
+
       return res.json({
         success: true,
-        groups
+        groups, // Full group objects
+        options // For multiselect components (CompositeRenderer expects this)
       })
     } catch (error: any) {
       console.error('Get groups error:', error)
@@ -277,14 +285,7 @@ export class TargetController {
   static async updateGroup(req: Request, res: Response) {
     try {
       const { platformId, groupId } = req.params
-      const { targetIds } = req.body
-
-      if (!targetIds || !Array.isArray(targetIds)) {
-        return res.status(400).json({
-          success: false,
-          error: 'targetIds array is required'
-        })
-      }
+      const { name, targetIds } = req.body
 
       const service = await TargetController.getTargetService(platformId)
 
@@ -295,7 +296,26 @@ export class TargetController {
         })
       }
 
-      const result = await service.updateGroup(groupId, targetIds)
+      const updates: { name?: string; targetIds?: string[] } = {}
+      if (name !== undefined) updates.name = name
+      if (targetIds !== undefined) {
+        if (!Array.isArray(targetIds)) {
+          return res.status(400).json({
+            success: false,
+            error: 'targetIds must be an array'
+          })
+        }
+        updates.targetIds = targetIds
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'At least one field (name or targetIds) must be provided'
+        })
+      }
+
+      const result = await service.updateGroup(groupId, updates)
 
       if (!result.success) {
         return res.status(400).json(result)
@@ -374,11 +394,22 @@ export class TargetController {
       const targets = await service.getTargets()
       const allTargetIds = new Set(targets.map(t => t.id))
 
-      for (const [groupName, targetIds] of Object.entries(groups)) {
+      for (const [groupId, group] of Object.entries(groups)) {
+        if (!group || typeof group !== 'object' || !('name' in group) || !('targetIds' in group)) {
+          return res.status(400).json({
+            success: false,
+            error: `Invalid group format for key ${groupId}. Expected Group object with id, name, and targetIds.`
+          })
+        }
+
+        const groupObj = group as Group
+        const groupName = groupObj.name
+        const targetIds = groupObj.targetIds
+
         if (!Array.isArray(targetIds)) {
           return res.status(400).json({
             success: false,
-            error: `Group ${groupName} must be an array of target IDs`
+            error: `Group ${groupName} must have an array of target IDs`
           })
         }
 
@@ -392,8 +423,9 @@ export class TargetController {
 
         // Create or update group
         const existingGroups = await service.getGroups()
-        if (existingGroups[groupName]) {
-          await service.updateGroup(groupName, targetIds)
+        const existingGroup = Object.values(existingGroups).find(g => g.name === groupName)
+        if (existingGroup) {
+          await service.updateGroup(existingGroup.id, { targetIds })
         } else {
           await service.createGroup(groupName, targetIds)
         }

@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from 'crypto'
-import { Target, TargetSchema, ValidationRule } from '../types/platformSchema.js'
+import { Target, Group, TargetSchema, ValidationRule } from '../types/platformSchema.js'
 import { readPlatformData, writePlatformData } from '../utils/platformDataUtils.js'
 
 /**
@@ -188,11 +188,12 @@ export abstract class BaseTargetService {
 
     // Remove from all groups
     const data = await this.readTargetData()
-    const groups = { ...(data?.groups || {}) }
+    const groups = await this.getGroups() // Get groups in new format
     
-    Object.keys(groups).forEach(groupName => {
-      groups[groupName] = groups[groupName].filter((id: string) => id !== targetId)
-    })
+    // Remove target from all groups
+    for (const group of Object.values(groups)) {
+      group.targetIds = group.targetIds.filter(id => id !== targetId)
+    }
 
     // Remove target
     targets.splice(targetIndex, 1)
@@ -209,26 +210,37 @@ export abstract class BaseTargetService {
   }
 
   /**
-   * Get all groups
+   * Generate a unique group ID
    */
-  async getGroups(): Promise<Record<string, string[]>> {
+  protected generateGroupId(): string {
+    return randomUUID()
+  }
+
+  /**
+   * Get all groups
+   * Returns groups as object with UUID keys: { [groupId]: Group }
+   */
+  async getGroups(): Promise<Record<string, Group>> {
     const data = await this.readTargetData()
-    return data?.groups || {}
+    const groups = data?.groups || {}
+    return groups as Record<string, Group>
   }
 
   /**
    * Create a new group
    */
-  async createGroup(groupName: string, targetIds: string[]): Promise<{ success: boolean; error?: string }> {
+  async createGroup(groupName: string, targetIds: string[]): Promise<{ success: boolean; group?: Group; error?: string }> {
     if (!groupName || typeof groupName !== 'string') {
       return { success: false, error: 'Group name is required' }
     }
 
     const data = await this.readTargetData()
-    const groups = data?.groups || {}
+    const groups = await this.getGroups() // Get groups in new format
 
-    if (groups[groupName]) {
-      return { success: false, error: 'Group already exists' }
+    // Check if group name already exists
+    const existingGroup = Object.values(groups).find(g => g.name === groupName)
+    if (existingGroup) {
+      return { success: false, error: 'Group name already exists' }
     }
 
     // Validate that all target IDs exist
@@ -238,7 +250,17 @@ export abstract class BaseTargetService {
       return { success: false, error: `Invalid target IDs: ${invalidIds.join(', ')}` }
     }
 
-    groups[groupName] = targetIds
+    // Create new group with UUID
+    const groupId = this.generateGroupId()
+    const newGroup: Group = {
+      id: groupId,
+      name: groupName,
+      targetIds,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    groups[groupId] = newGroup
 
     const updated = {
       ...data,
@@ -246,51 +268,83 @@ export abstract class BaseTargetService {
     }
 
     await this.writeTargetData(updated)
-    return { success: true }
+    return { success: true, group: newGroup }
   }
 
   /**
    * Update an existing group
+   * Can update by groupId or groupName (for backward compatibility)
    */
-  async updateGroup(groupName: string, targetIds: string[]): Promise<{ success: boolean; error?: string }> {
-    const data = await this.readTargetData()
-    const groups = data?.groups || {}
-
-    if (!groups[groupName]) {
+  async updateGroup(groupIdOrName: string, updates: { name?: string; targetIds?: string[] }): Promise<{ success: boolean; group?: Group; error?: string }> {
+    const groups = await this.getGroups()
+    
+    // Find group by ID or name
+    let group: Group | undefined = groups[groupIdOrName]
+    if (!group) {
+      group = Object.values(groups).find(g => g.name === groupIdOrName)
+    }
+    
+    if (!group) {
       return { success: false, error: 'Group not found' }
     }
 
-    // Validate that all target IDs exist
-    const targets = await this.getTargets()
-    const invalidIds = targetIds.filter(id => !targets.some(t => t.id === id))
-    if (invalidIds.length > 0) {
-      return { success: false, error: `Invalid target IDs: ${invalidIds.join(', ')}` }
+    // Validate target IDs if provided
+    if (updates.targetIds) {
+      const targets = await this.getTargets()
+      const invalidIds = updates.targetIds.filter(id => !targets.some(t => t.id === id))
+      if (invalidIds.length > 0) {
+        return { success: false, error: `Invalid target IDs: ${invalidIds.join(', ')}` }
+      }
     }
 
-    groups[groupName] = targetIds
+    // Check if new name conflicts with existing group
+    if (updates.name && updates.name !== group.name) {
+      const nameExists = Object.values(groups).some(g => g.id !== group!.id && g.name === updates.name)
+      if (nameExists) {
+        return { success: false, error: 'Group name already exists' }
+      }
+    }
 
+    // Update group
+    const updatedGroup: Group = {
+      ...group,
+      ...(updates.name && { name: updates.name }),
+      ...(updates.targetIds && { targetIds: updates.targetIds }),
+      updatedAt: new Date().toISOString()
+    }
+
+    groups[group.id] = updatedGroup
+
+    const data = await this.readTargetData()
     const updated = {
       ...data,
       groups
     }
 
     await this.writeTargetData(updated)
-    return { success: true }
+    return { success: true, group: updatedGroup }
   }
 
   /**
    * Delete a group
+   * Can delete by groupId or groupName (for backward compatibility)
    */
-  async deleteGroup(groupName: string): Promise<{ success: boolean; error?: string }> {
-    const data = await this.readTargetData()
-    const groups = { ...(data?.groups || {}) }
-
-    if (!groups[groupName]) {
+  async deleteGroup(groupIdOrName: string): Promise<{ success: boolean; error?: string }> {
+    const groups = await this.getGroups()
+    
+    // Find group by ID or name
+    let group: Group | undefined = groups[groupIdOrName]
+    if (!group) {
+      group = Object.values(groups).find(g => g.name === groupIdOrName)
+    }
+    
+    if (!group) {
       return { success: false, error: 'Group not found' }
     }
 
-    delete groups[groupName]
+    delete groups[group.id]
 
+    const data = await this.readTargetData()
     const updated = {
       ...data,
       groups
@@ -442,7 +496,7 @@ export abstract class BaseTargetService {
    * Read target data from file
    * Uses a custom data file name (targets.json) instead of the platform's default dataSource
    */
-  protected async readTargetData(): Promise<{ targets?: Target[]; groups?: Record<string, string[]> }> {
+  protected async readTargetData(): Promise<{ targets?: Target[]; groups?: Record<string, Group> }> {
     try {
       const fs = await import('fs/promises')
       const path = await import('path')
@@ -473,7 +527,7 @@ export abstract class BaseTargetService {
   /**
    * Write target data to file
    */
-  protected async writeTargetData(data: { targets?: Target[]; groups?: Record<string, string[]> }): Promise<boolean> {
+  protected async writeTargetData(data: { targets?: Target[]; groups?: Record<string, Group> }): Promise<boolean> {
     try {
       const fs = await import('fs/promises')
       const path = await import('path')

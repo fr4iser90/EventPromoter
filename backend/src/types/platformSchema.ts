@@ -521,6 +521,24 @@ export interface Target {
 }
 
 /**
+ * Group Object Structure
+ * Groups have UUIDs like targets for consistency
+ */
+export interface Group {
+  /** Unique group identifier (UUID) */
+  id: string
+  /** Group name (display name) */
+  name: string
+  /** Array of target IDs in this group */
+  targetIds: string[]
+  /** Timestamps */
+  createdAt?: string
+  updatedAt?: string
+  /** Optional metadata */
+  metadata?: Record<string, any>
+}
+
+/**
  * Panel schema
  * Defines the platform feature panel structure (NOT settings/credentials)
  */
