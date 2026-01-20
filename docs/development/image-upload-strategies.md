@@ -55,6 +55,15 @@ const formData = new FormData()
 formData.append('media', fileBuffer, file.name)
 ```
 
+**Email Beispiel (bereits implementiert):**
+```typescript
+// Email Publisher verwendet bereits file.path:
+const attachments = files.map(file => ({
+  filename: file.name || 'attachment',
+  path: file.path  // ✅ Direkt vom Filesystem, kein URL-Download nötig!
+}))
+```
+
 **Platform-Unterstützung:**
 - ✅ **Email**: **Bereits implementiert!** Verwendet `file.path` für Attachments (Nodemailer)
 - ✅ **Twitter**: Unterstützt Base64 (`media_data`) - bereits implementiert, aber kann auch File Upload
@@ -248,13 +257,13 @@ async publish(content: any, files: any[], hashtags: string[]): Promise<PostResul
 
 ## Migration Strategy
 
-### Phase 1: Publisher anpassen (Direkter Upload)
-1. ✅ **Email**: **Bereits implementiert!** Verwendet `file.path` für Attachments
-2. ✅ Twitter: Bereits Base64, kann bleiben oder zu FormData wechseln
-3. ✅ Instagram: Zu FormData/Base64 wechseln
-4. ✅ Facebook: Zu direktem File Upload wechseln
-5. ✅ LinkedIn: Zu Assets API File Upload wechseln
-6. ✅ Reddit: Zu direktem File Upload wechseln (wenn möglich)
+### Phase 1: Publisher anpassen (Direkter Upload) ✅ **ABGESCHLOSSEN**
+1. ✅ **Email**: **Implementiert!** Verwendet `file.path` für Attachments
+2. ✅ **Twitter**: **Implementiert!** Direkter File Upload (Base64 vom Filesystem)
+3. ✅ **Instagram**: **Implementiert!** Upload zu Facebook Photos, dann URL für Instagram
+4. ✅ **Facebook**: **Implementiert!** Direkter File Upload vom Filesystem
+5. ✅ **LinkedIn**: **Implementiert!** Direkter File Upload via Assets API
+6. ⚠️ **Reddit**: **Teilweise implementiert** - Reddit benötigt öffentliche URLs, verwendet `file.url` wenn verfügbar
 
 ### Phase 2: Email Editor erweitern (Attachments Block)
 - ✅ Email verwendet bereits direkten Upload für Attachments

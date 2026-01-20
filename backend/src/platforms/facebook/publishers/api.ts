@@ -8,6 +8,8 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import fs from 'fs'
+import path from 'path'
 
 export interface FacebookPublisher {
   publish(
@@ -58,8 +60,8 @@ export class FacebookApiPublisher implements FacebookPublisher {
       }
 
       // Upload photo if provided
-      if (files.length > 0 && files[0].url) {
-        return await this.postWithPhoto(credentials, message, files[0].url)
+      if (files.length > 0) {
+        return await this.postWithPhoto(credentials, message, files[0])
       }
 
       // Post text only
@@ -101,24 +103,47 @@ export class FacebookApiPublisher implements FacebookPublisher {
     }
   }
 
-  private async postWithPhoto(credentials: any, message: string, photoUrl: string): Promise<PostResult> {
-    // First, upload the photo
-    const photoResponse = await fetch(photoUrl)
-    if (!photoResponse.ok) {
-      throw new Error(`Failed to download photo: ${photoResponse.statusText}`)
+  private async postWithPhoto(credentials: any, message: string, file: any): Promise<PostResult> {
+    // Upload photo directly from filesystem
+    let photoPath: string
+    let fileName: string
+
+    if (file.path && fs.existsSync(file.path)) {
+      // Direct file upload from filesystem
+      photoPath = file.path
+      fileName = file.name || path.basename(file.path) || 'photo.jpg'
+    } else if (file.url) {
+      // Fallback: Download from URL to temp file (if path not available)
+      const tempDir = path.join(process.cwd(), 'temp', 'facebook-uploads')
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true })
+      }
+      const tempPath = path.join(tempDir, `${Date.now()}-${file.name || 'photo.jpg'}`)
+      
+      const photoResponse = await fetch(file.url)
+      if (!photoResponse.ok) {
+        throw new Error(`Failed to download photo: ${photoResponse.statusText}`)
+      }
+      const arrayBuffer = await photoResponse.arrayBuffer()
+      fs.writeFileSync(tempPath, Buffer.from(arrayBuffer))
+      photoPath = tempPath
+      fileName = file.name || 'photo.jpg'
+    } else {
+      throw new Error('File must have either path or url')
     }
 
-    const photoBlob = await photoResponse.blob()
+    // Upload to Facebook Photos using FormData with file stream
+    const FormData = (await import('form-data')).default
     const formData = new FormData()
     formData.append('message', message)
     formData.append('access_token', credentials.pageAccessToken)
-    formData.append('source', photoBlob, 'photo.jpg')
+    formData.append('source', fs.createReadStream(photoPath), fileName)
 
     const response = await fetch(
       `https://graph.facebook.com/v18.0/${credentials.pageId}/photos`,
       {
         method: 'POST',
-        body: formData
+        body: formData as any
       }
     )
 

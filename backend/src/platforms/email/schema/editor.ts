@@ -109,7 +109,7 @@ export const emailEditorSchema: EditorSchema = {
       type: 'image',
       id: 'headerImage',
       label: 'Header Image',
-      description: 'Main image displayed at the top of the email',
+      description: 'Main image displayed at the top of the email (embedded in HTML)',
       required: false,
       constraints: {
         maxItems: 1,
@@ -119,6 +119,27 @@ export const emailEditorSchema: EditorSchema = {
       ui: {
         icon: 'image',
         order: 2,
+        enabled: true
+      },
+      rendering: {
+        fieldType: 'file',
+        uploadEndpoint: 'platforms/:platformId/upload'
+      }
+    },
+    {
+      type: 'image',
+      id: 'attachments',
+      label: 'Anhänge',
+      description: 'Dateien die als Anhang zur Email hinzugefügt werden (z.B. PDF, Flyer, etc.)',
+      required: false,
+      constraints: {
+        maxItems: 10,
+        allowedFormats: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'xls', 'xlsx'],
+        maxFileSize: 10485760 // 10MB
+      },
+      ui: {
+        icon: 'attach_file',
+        order: 2.5,
         enabled: true
       },
       rendering: {

@@ -8,6 +8,8 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import fs from 'fs'
+import path from 'path'
 
 export interface LinkedInPublisher {
   publish(
@@ -78,8 +80,20 @@ export class LinkedInApiPublisher implements LinkedInPublisher {
         }
       }
 
-      // Add link if provided
-      if (content.link) {
+      // Add media if files provided
+      if (files.length > 0) {
+        try {
+          const assetUrn = await this.uploadMediaAsset(files[0], credentials)
+          payload.specificContent['com.linkedin.ugc.ShareContent'].shareMediaCategory = 'IMAGE'
+          payload.specificContent['com.linkedin.ugc.ShareContent'].media = [{
+            status: 'READY',
+            media: assetUrn
+          }]
+        } catch (error: any) {
+          console.warn('LinkedIn media upload failed, posting text only:', error.message)
+        }
+      } else if (content.link) {
+        // Add link if provided (fallback)
         payload.specificContent['com.linkedin.ugc.ShareContent'].shareMediaCategory = 'ARTICLE'
         payload.specificContent['com.linkedin.ugc.ShareContent'].media = [{
           status: 'READY',
@@ -119,6 +133,91 @@ export class LinkedInApiPublisher implements LinkedInPublisher {
         error: error.message || 'Failed to publish to LinkedIn via API'
       }
     }
+  }
+
+  /**
+   * Upload media asset to LinkedIn and return URN
+   * LinkedIn Assets API requires a two-step process:
+   * 1. Register upload (get upload URL)
+   * 2. Upload file to that URL
+   * 3. Get asset URN
+   */
+  private async uploadMediaAsset(file: any, credentials: any): Promise<string> {
+    // Read file from filesystem or download from URL
+    let fileBuffer: Buffer
+    let fileName: string
+    let fileSize: number
+
+    if (file.path && fs.existsSync(file.path)) {
+      // Direct file read from filesystem
+      fileBuffer = fs.readFileSync(file.path)
+      fileName = file.name || path.basename(file.path) || 'image.jpg'
+      fileSize = fs.statSync(file.path).size
+    } else if (file.url) {
+      // Fallback: Download from URL (if path not available)
+      const response = await fetch(file.url)
+      if (!response.ok) {
+        throw new Error(`Failed to download media: ${response.statusText}`)
+      }
+      const arrayBuffer = await response.arrayBuffer()
+      fileBuffer = Buffer.from(arrayBuffer)
+      fileName = file.name || 'image.jpg'
+      fileSize = fileBuffer.length
+    } else {
+      throw new Error('File must have either path or url')
+    }
+
+    // Determine author (profile or organization)
+    const authorId = credentials.organizationId 
+      ? `urn:li:organization:${credentials.organizationId}`
+      : `urn:li:person:${credentials.profileId}`
+
+    // Step 1: Register upload
+    const registerResponse = await fetch(
+      'https://api.linkedin.com/v2/assets?action=registerUpload',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${credentials.accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0'
+        },
+        body: JSON.stringify({
+          registerUploadRequest: {
+            recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
+            owner: authorId,
+            serviceRelationships: [{
+              relationshipType: 'OWNER',
+              identifier: 'urn:li:userGeneratedContent'
+            }]
+          }
+        })
+      }
+    )
+
+    if (!registerResponse.ok) {
+      const errorData = await registerResponse.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Failed to register upload with LinkedIn')
+    }
+
+    const registerData = await registerResponse.json()
+    const uploadUrl = registerData.value.uploadMechanism['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest'].uploadUrl
+    const assetUrn = registerData.value.asset
+
+    // Step 2: Upload file to LinkedIn
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type || 'image/jpeg'
+      },
+      body: fileBuffer
+    })
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to upload file to LinkedIn: ${uploadResponse.statusText}`)
+    }
+
+    return assetUrn
   }
 }
 

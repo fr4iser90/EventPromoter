@@ -8,6 +8,7 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import fs from 'fs'
 
 export interface TwitterPublisher {
   publish(
@@ -68,9 +69,9 @@ export class TwitterApiPublisher implements TwitterPublisher {
 
       // Upload media if provided
       let mediaId: string | undefined
-      if (files.length > 0 && files[0].url) {
+      if (files.length > 0) {
         try {
-          mediaId = await this.uploadMedia(files[0].url, credentials)
+          mediaId = await this.uploadMedia(files[0], credentials)
         } catch (error: any) {
           console.warn('Media upload failed, posting text only:', error.message)
         }
@@ -120,15 +121,26 @@ export class TwitterApiPublisher implements TwitterPublisher {
     }
   }
 
-  private async uploadMedia(mediaUrl: string, credentials: any): Promise<string> {
-    // Download media first
-    const mediaResponse = await fetch(mediaUrl)
-    if (!mediaResponse.ok) {
-      throw new Error(`Failed to download media: ${mediaResponse.statusText}`)
+  private async uploadMedia(file: any, credentials: any): Promise<string> {
+    // Read media directly from filesystem or download from URL
+    let mediaBuffer: Buffer
+
+    if (file.path && fs.existsSync(file.path)) {
+      // Direct file read from filesystem
+      mediaBuffer = fs.readFileSync(file.path)
+    } else if (file.url) {
+      // Fallback: Download from URL (if path not available)
+      const mediaResponse = await fetch(file.url)
+      if (!mediaResponse.ok) {
+        throw new Error(`Failed to download media: ${mediaResponse.statusText}`)
+      }
+      const arrayBuffer = await mediaResponse.arrayBuffer()
+      mediaBuffer = Buffer.from(arrayBuffer)
+    } else {
+      throw new Error('File must have either path or url')
     }
 
-    const mediaBuffer = await mediaResponse.arrayBuffer()
-    const base64Media = Buffer.from(mediaBuffer).toString('base64')
+    const base64Media = mediaBuffer.toString('base64')
 
     // Upload to Twitter
     const uploadResponse = await fetch('https://upload.twitter.com/1.1/media/upload.json', {
