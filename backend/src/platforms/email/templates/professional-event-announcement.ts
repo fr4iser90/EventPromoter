@@ -22,6 +22,7 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
     <div class="header">
       <h1>📅 {title}</h1>
     </div>
+    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
     <p>Dear Colleague,</p>
     <p>We are pleased to invite you to join us for an exciting professional event.</p>
     <p><strong>Event Details:</strong></p>
@@ -38,7 +39,7 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
 </body>
 </html>`
   },
-  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link'],
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link', 'img1'],
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z'
 };

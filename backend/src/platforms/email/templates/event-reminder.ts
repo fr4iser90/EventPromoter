@@ -26,6 +26,8 @@ export const eventReminderTemplate: EmailTemplate = {
       <p>{title} is tomorrow!</p>
     </div>
 
+    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+
     <div class="details">
       <h3>Your Event Details</h3>
       <p><strong>🎉 Event:</strong> {title}</p>
@@ -54,7 +56,7 @@ export const eventReminderTemplate: EmailTemplate = {
 </body>
 </html>`
   },
-  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'prepTips', 'link', 'contactLink', 'unsubscribeLink'],
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'prepTips', 'link', 'contactLink', 'unsubscribeLink', 'img1'],
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z'
 };

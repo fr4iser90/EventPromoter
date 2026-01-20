@@ -27,6 +27,8 @@ export const eventAnnouncementTemplate: EmailTemplate = {
       <p>You're invited to an amazing event!</p>
     </div>
 
+    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+
     <div class="event-details">
       <h2>Event Details</h2>
       <p><strong>📅 Date:</strong> {date}</p>
@@ -57,7 +59,7 @@ export const eventAnnouncementTemplate: EmailTemplate = {
 </body>
 </html>`
   },
-  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'ticketInfo', 'description', 'highlights', 'link', 'unsubscribeLink', 'website'],
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'ticketInfo', 'description', 'highlights', 'link', 'unsubscribeLink', 'website', 'img1'],
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z'
 };

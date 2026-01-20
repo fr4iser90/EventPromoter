@@ -72,6 +72,22 @@ The `PublishingService` automatically selects the appropriate publisher based on
 - Availability of publishers for each platform
 - Fallback logic (n8n → api → playwright)
 
+## Image Handling
+
+**WICHTIG**: Wie Bilder gehandhabt werden, hängt von der Platform ab:
+
+### Embedded Images (z.B. Email)
+- Bilder werden im Template-Text eingebettet: `<img src="{img1}">`
+- Template-Variable `{img1}` wird durch Bild-URL ersetzt
+- Publisher bettet Bilder direkt in Content ein
+
+### Separate Media Upload (z.B. Social Media)
+- Bilder werden separat über Platform-API hochgeladen
+- Template enthält **KEINE** Image-Placeholder
+- Publisher lädt Bilder separat hoch und verknüpft sie mit Post
+
+**Dokumentation**: Siehe `/docs/development/platform-image-handling.md` für detaillierte Platform-spezifische Anweisungen.
+
 ## Example
 
 ```typescript
@@ -80,6 +96,12 @@ import { PostResult } from '../../../types/index.js'
 
 export class TwitterApiPublisher {
   async publish(content: any, files: any[], hashtags: string[]): Promise<PostResult> {
+    // Upload media separately (if platform requires it)
+    let mediaId: string | undefined
+    if (files.length > 0) {
+      mediaId = await this.uploadMedia(files[0].url)
+    }
+    
     // Make API call to Twitter
     const response = await fetch('https://api.twitter.com/2/tweets', {
       method: 'POST',
@@ -88,7 +110,8 @@ export class TwitterApiPublisher {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        text: content.text
+        text: content.text,
+        media: mediaId ? { media_ids: [mediaId] } : undefined
       })
     })
     
@@ -98,6 +121,11 @@ export class TwitterApiPublisher {
       postId: data.data.id,
       url: `https://twitter.com/user/status/${data.data.id}`
     }
+  }
+  
+  private async uploadMedia(mediaUrl: string): Promise<string> {
+    // Platform-specific media upload logic
+    // Returns media ID to attach to post
   }
 }
 ```
