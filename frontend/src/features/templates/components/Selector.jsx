@@ -23,6 +23,7 @@ import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
 import CompositeRenderer from '../../schema/components/CompositeRenderer'
 import useStore from '../../../store'
 import { getTemplateVariables, replaceTemplateVariables } from '../../../shared/utils/templateUtils'
+import { getApiUrl } from '../../../shared/utils/api'
 
 const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx = {} }) => {
   // Use mode='preview' to get templates without <style> tags (backend removes them)
@@ -43,7 +44,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
     setAnchorEl(null)
   }
 
-  const handleTemplateSelect = (template) => {
+  const handleTemplateSelect = async (template) => {
     setSelectedTemplate(template)
     handleClose()
 
@@ -53,8 +54,41 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
     const previewText = templateContent.html || templateContent.text || ''
     const filledContent = replaceTemplateVariables(previewText, templateVariables)
     
-    setPreviewContent(filledContent)
-    setPreviewOpen(true)
+    // ✅ Use Backend Preview API for consistent rendering (same as Platform Preview)
+    // This ensures Markdown is rendered the same way everywhere
+    try {
+      // Create temporary content object for preview
+      const previewContentObj = templateContent.html 
+        ? { bodyText: filledContent } // HTML template
+        : { text: filledContent }      // Markdown/text template
+      
+      const response = await fetch(getApiUrl(`platforms/${platform}/preview?mode=desktop&darkMode=false`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: previewContentObj })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to render preview: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      if (!data.success || !data.html) {
+        throw new Error(data.error || 'Failed to render preview')
+      }
+      
+      // Use backend-rendered HTML
+      setPreviewContent(data.html)
+      setPreviewOpen(true)
+    } catch (error) {
+      console.error('Failed to render template preview:', error)
+      // Show error - no fallback
+      setPreviewContent(`<div style="padding: 20px; color: red;">
+        <strong>Error rendering preview:</strong><br/>
+        ${error.message || 'Failed to load preview from backend'}
+      </div>`)
+      setPreviewOpen(true)
+    }
   }
 
   // Check if platform has targets block in editor schema
@@ -181,41 +215,62 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
             Preview:
           </Typography>
 
-          <Box
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 1,
-              p: 2,
-              bgcolor: 'background.paper',
-              color: 'text.primary',
-              maxHeight: 400,
-              overflow: 'auto',
-              '& img': {
-                maxWidth: '100%',
-                height: 'auto',
-                display: 'block',
-                marginBottom: 1
-              },
-              '& a': {
-                color: 'primary.main'
-              },
-              // Generic override: ALL elements inherit colors (no platform-specific classes!)
-              '& *': {
-                color: 'inherit !important'
-              },
-              // Generic override: ALL backgrounds transparent (no platform-specific classes!)
-              '& *[style*="background"]': {
-                backgroundColor: 'transparent !important',
-                background: 'transparent !important'
-              },
-              // Override ALL style tags inside the HTML (generic - no platform knowledge!)
-              '& style': {
-                display: 'none !important'
-              }
-            }}
-            dangerouslySetInnerHTML={{ __html: previewContent }}
-          />
+          {/* Use iframe for backend-rendered HTML (consistent with Platform Preview) */}
+          {previewContent.includes('<!DOCTYPE html>') || previewContent.includes('<html>') ? (
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                overflow: 'hidden',
+                maxHeight: 400,
+                height: 400
+              }}
+            >
+              <iframe
+                srcDoc={previewContent}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none'
+                }}
+                title="Template Preview"
+              />
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                p: 2,
+                bgcolor: 'background.paper',
+                color: 'text.primary',
+                maxHeight: 400,
+                overflow: 'auto',
+                '& img': {
+                  maxWidth: '100%',
+                  height: 'auto',
+                  display: 'block',
+                  marginBottom: 1
+                },
+                '& a': {
+                  color: 'primary.main'
+                },
+                '& *': {
+                  color: 'inherit !important'
+                },
+                '& *[style*="background"]': {
+                  backgroundColor: 'transparent !important',
+                  background: 'transparent !important'
+                },
+                '& style': {
+                  display: 'none !important'
+                }
+              }}
+              dangerouslySetInnerHTML={{ __html: previewContent }}
+            />
+          )}
 
           {selectedTemplate && (
             <Box sx={{ mt: 2 }}>
