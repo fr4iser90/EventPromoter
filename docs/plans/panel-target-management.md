@@ -221,55 +221,132 @@ export class RedditTargetService extends BaseTargetService {
 ### 1.5 API Routes & Controllers
 
 #### Generische Target Routes
-**Datei:** `backend/src/routes/targets.ts` (NEU)
+**Datei:** `backend/src/routes/platforms.ts` (ERWEITERN)
 
+**⚠️ WICHTIG: Routen werden in `platforms.ts` integriert, nicht als separate Datei!**
+
+**Neue Routen (in `platforms.ts` hinzufügen):**
 ```typescript
-// Generic target routes that work for all platforms
-router.get('/platforms/:platformId/targets', TargetController.getTargets)
-router.post('/platforms/:platformId/targets', TargetController.addTarget)
-router.get('/platforms/:platformId/targets/:targetId', TargetController.getTarget)
-router.put('/platforms/:platformId/targets/:targetId', TargetController.updateTarget)
-router.delete('/platforms/:platformId/targets/:targetId', TargetController.deleteTarget)
+// Generic target routes (work for all platforms)
+router.get('/:platformId/targets', TargetController.getTargets)
+router.post('/:platformId/targets', TargetController.addTarget)
+router.get('/:platformId/targets/:targetId', TargetController.getTarget)
+router.put('/:platformId/targets/:targetId', TargetController.updateTarget)
+router.delete('/:platformId/targets/:targetId', TargetController.deleteTarget)
 
 // Group routes
-router.get('/platforms/:platformId/target-groups', TargetController.getGroups)
-router.post('/platforms/:platformId/target-groups', TargetController.createGroup)
-router.put('/platforms/:platformId/target-groups/:groupId', TargetController.updateGroup)
-router.delete('/platforms/:platformId/target-groups/:groupId', TargetController.deleteGroup)
+router.get('/:platformId/target-groups', TargetController.getGroups)
+router.post('/:platformId/target-groups', TargetController.createGroup)
+router.put('/:platformId/target-groups/:groupId', TargetController.updateGroup)
+router.delete('/:platformId/target-groups/:groupId', TargetController.deleteGroup)
+
+// Import/Export routes (optional, für alle Platforms)
+router.post('/:platformId/target-groups/import', TargetController.importGroups)
+router.get('/:platformId/target-groups/export', TargetController.exportGroups)
 ```
+
+**Alte Routen (WERDEN ENTFERNT):**
+
+**Email (alt - ENTFERNEN):**
+- ❌ `GET /platforms/email/recipients` → ✅ `GET /platforms/email/targets`
+- ❌ `POST /platforms/email/recipients` → ✅ `POST /platforms/email/targets`
+- ❌ `DELETE /platforms/email/recipients/:email` → ✅ `DELETE /platforms/email/targets/:targetId`
+- ❌ `GET /platforms/email/recipient-groups` → ✅ `GET /platforms/email/target-groups`
+- ❌ `POST /platforms/email/recipient-groups` → ✅ `POST /platforms/email/target-groups`
+- ❌ `PUT /platforms/email/recipient-groups/:groupName` → ✅ `PUT /platforms/email/target-groups/:groupId`
+- ❌ `DELETE /platforms/email/recipient-groups/:groupName` → ✅ `DELETE /platforms/email/target-groups/:groupId`
+- ❌ `POST /platforms/email/recipient-groups/import` → ✅ `POST /platforms/email/target-groups/import`
+- ❌ `GET /platforms/email/recipient-groups/export` → ✅ `GET /platforms/email/target-groups/export`
+
+**Reddit (alt - ENTFERNEN):**
+- ❌ `GET /platforms/reddit/subreddits` → ✅ `GET /platforms/reddit/targets`
+- ❌ `POST /platforms/reddit/subreddits` → ✅ `POST /platforms/reddit/targets`
+- ❌ `DELETE /platforms/reddit/subreddits/:subreddit` → ✅ `DELETE /platforms/reddit/targets/:targetId`
+- ❌ `GET /platforms/reddit/subreddit-groups` → ✅ `GET /platforms/reddit/target-groups`
+- ❌ `POST /platforms/reddit/subreddit-groups` → ✅ `POST /platforms/reddit/target-groups`
+- ❌ `PUT /platforms/reddit/subreddit-groups/:groupName` → ✅ `PUT /platforms/reddit/target-groups/:groupId`
+- ❌ `DELETE /platforms/reddit/subreddit-groups/:groupName` → ✅ `DELETE /platforms/reddit/target-groups/:groupId`
+- ❌ `POST /platforms/reddit/subreddit-groups/import` → ✅ `POST /platforms/reddit/target-groups/import`
+- ❌ `GET /platforms/reddit/subreddit-groups/export` → ✅ `GET /platforms/reddit/target-groups/export`
+
+**⚠️ WICHTIG: Keine Backward Compatibility!**
+- Alte Routen werden direkt entfernt
+- Frontend muss parallel migriert werden
+- Keine Legacy-Support oder Wrapper-Funktionen
+- Alles wird korrekt umgestellt, keine halben Lösungen
 
 **Tasks:**
 - [ ] `TargetController` erstellen
-- [ ] Generic Routes definieren
+- [ ] Generic Routes in `platforms.ts` hinzufügen (VOR den dynamischen Platform-Routes!)
+- [ ] **Alte Routen in `email/api/routes.ts` ENTFERNEN** (nicht deprecated, direkt löschen!)
+- [ ] **Alte Routen in `reddit/routes.ts` ENTFERNEN** (nicht deprecated, direkt löschen!)
+- [ ] **Alte Controller-Methoden ENTFERNEN** (`EmailController.getRecipients`, etc.)
 - [ ] Platform-spezifische Services dynamisch laden
-- [ ] Response-Format standardisieren
+- [ ] Response-Format standardisieren (targets + options für multiselect)
+- [ ] Import/Export-Endpoints implementieren
 
 #### Target Controller
 **Datei:** `backend/src/controllers/targetController.ts` (NEU)
 
 ```typescript
 export class TargetController {
+  // Target CRUD
   static async getTargets(req: Request, res: Response)
   static async getTarget(req: Request, res: Response)
   static async addTarget(req: Request, res: Response)
   static async updateTarget(req: Request, res: Response)
   static async deleteTarget(req: Request, res: Response)
   
+  // Group management
   static async getGroups(req: Request, res: Response)
   static async createGroup(req: Request, res: Response)
   static async updateGroup(req: Request, res: Response)
   static async deleteGroup(req: Request, res: Response)
+  
+  // Import/Export
+  static async importGroups(req: Request, res: Response)
+  static async exportGroups(req: Request, res: Response)
   
   // Helper: Get platform-specific target service
   private static async getTargetService(platformId: string): Promise<BaseTargetService>
 }
 ```
 
+**Response-Format (standardisiert):**
+```typescript
+// GET /platforms/:platformId/targets
+{
+  success: true,
+  targets: Target[],  // Full target objects with custom fields
+  options: Array<{ label: string, value: string }>,  // For multiselect components
+  groups: Record<string, string[]>  // Group name -> target IDs
+}
+
+// GET /platforms/:platformId/targets/:targetId
+{
+  success: true,
+  target: Target
+}
+
+// POST /platforms/:platformId/targets
+{
+  success: true,
+  target: Target
+}
+
+// GET /platforms/:platformId/target-groups
+{
+  success: true,
+  groups: Record<string, string[]>  // Group name -> target IDs
+}
+```
+
 **Tasks:**
 - [ ] Controller-Methoden implementieren
-- [ ] Platform-Service-Discovery
-- [ ] Error Handling
+- [ ] Platform-Service-Discovery (dynamisch laden aus `platforms/{platformId}/services/targetService.ts`)
+- [ ] Error Handling (404 für nicht-existierende Platforms/Targets)
 - [ ] Response-Formatierung (targets + options für multiselect)
+- [ ] Import/Export-Endpoints (JSON-Format)
 
 ---
 
@@ -361,26 +438,40 @@ export class TargetController {
 
 ## Implementierungsreihenfolge
 
-1. **Backend Types** (Phase 1.1)
-2. **Base Target Service** (Phase 1.2)
-3. **Platform Services** (Phase 1.3)
-4. **Panel Schema Erweiterung** (Phase 1.4)
-5. **API Routes & Controller** (Phase 1.5)
-6. **Frontend Target List Renderer** (Phase 2.1)
-7. **Schema Renderer Erweiterung** (Phase 2.2)
-8. **Panel Component Updates** (Phase 2.3)
-9. **Migration** (Phase 1.6, 3.3)
-10. **Testing** (Phase 3)
+### Phase 1: Backend Foundation
+1. **Backend Types** (Phase 1.1) - `TargetSchema`, `Target` Interface
+2. **Base Target Service** (Phase 1.2) - Abstract class mit generischen Methoden
+3. **Platform Services** (Phase 1.3) - `EmailTargetService`, `RedditTargetService`
+4. **Panel Schema Erweiterung** (Phase 1.4) - `targetSchema` in Panel-Schemas
+5. **API Routes & Controller** (Phase 1.5) - Neue generische Routen + Controller
+6. **Migration** (Phase 1.6) - Daten-Migration (Strings → Objects)
+
+### Phase 2: Frontend (parallel zu Backend)
+7. **Frontend Target List Renderer** (Phase 2.1) - Neue Component für Target-Liste
+8. **Schema Renderer Erweiterung** (Phase 2.2) - `target-list` field type
+9. **Panel Component Updates** (Phase 2.3) - Custom Fields in Forms
+10. **Frontend API-Calls umstellen** - Alle API-Calls auf neue Routen umstellen
+
+### Phase 3: Cleanup
+11. **Alte Routen ENTFERNEN** - `email/api/routes.ts` und `reddit/routes.ts` bereinigen
+12. **Alte Controller-Methoden ENTFERNEN** - `EmailController`, `RedditController` bereinigen
+13. **Alte Services ENTFERNEN** - `EmailRecipientService`, `RedditSubredditService` entfernen (wenn nicht mehr benötigt)
+
+### Phase 4: Testing
+14. **Testing** (Phase 3) - Unit, Integration, E2E Tests
 
 ---
 
 ## Offene Fragen / Entscheidungen
 
-- [ ] Wo wird `targetSchema` gespeichert? (Panel-Schema oder separate Datei?)
-- [ ] Wie werden Custom Fields validiert? (Schema-basiert?)
-- [ ] Sollen alte Daten automatisch migriert werden oder manuell?
-- [ ] Wie werden Target-IDs generiert? (UUID, Timestamp, etc.)
-- [ ] Sollen Targets in Datenbank oder JSON-Dateien gespeichert werden?
+- [x] **Wo wird `targetSchema` gespeichert?** → Panel-Schema (`panel.ts`), als `targetSchema` Property
+- [x] **Wie werden Custom Fields validiert?** → Schema-basiert, über `targetSchema.customFields` mit Validation Rules
+- [x] **Sollen alte Daten automatisch migriert werden?** → Ja, automatisch beim ersten Zugriff (siehe Phase 1.6)
+- [x] **Wie werden Target-IDs generiert?** → UUID v4 (`crypto.randomUUID()`)
+- [x] **Sollen Targets in Datenbank oder JSON-Dateien gespeichert werden?** → JSON-Dateien (wie bisher), in `platforms/{platformId}/data/targets.json`
+- [x] **Wie werden alte Routen behandelt?** → Direkt entfernen, keine Backward Compatibility, keine Legacy-Support
+- [x] **Routen-Struktur?** → In `platforms.ts` integriert, nicht als separate Datei
+- [ ] **Sollen Import/Export für alle Platforms unterstützt werden?** → Ja, als generische Endpoints
 
 ---
 
@@ -390,7 +481,6 @@ export class TargetController {
 - ✅ Targets können bearbeitet werden
 - ✅ Gruppen verwenden Target-IDs statt Strings
 - ✅ Gleiche Struktur für alle Platforms
-- [ ] Backward Compatibility gewährleistet
 - [ ] Migration funktioniert
 - [ ] Frontend zeigt Targets mit Custom Fields
 - [ ] Personalisierung in Templates möglich
