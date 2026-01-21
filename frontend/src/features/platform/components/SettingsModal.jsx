@@ -83,8 +83,10 @@ function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.settings) {
-          // Extract values from settings (may need to adjust based on actual API response)
-          setValues(data.settings.config || {})
+          // ✅ SECURITY: Load masked values from backend (secrets are already masked)
+          // values contains masked secrets (e.g., "abcd****xyz") that should not be changed
+          // unless user explicitly enters a new value
+          setValues(data.settings.values || {})
         }
       }
     } catch (err) {

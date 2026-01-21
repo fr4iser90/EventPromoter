@@ -51,9 +51,23 @@ export class ConfigService {
     return value
   }
 
-  // ✅ GENERIC: Platform settings from environment variables
+  // ✅ GENERIC: Platform settings from stored config or environment variables
   // Settings come from platform schema, not hardcoded patterns
-  static getPlatformSettings(platform: string): Record<string, any> {
+  static async getPlatformSettings(platform: string): Promise<Record<string, any>> {
+    // ✅ SECURITY: First try to load from stored config file (user-saved settings)
+    try {
+      const configName = `platform-${platform}-settings`
+      const storedConfig = await this.getConfig(configName)
+      if (storedConfig && typeof storedConfig === 'object') {
+        // ✅ SECURITY: Decrypt encrypted secrets before returning
+        const { decryptSecrets } = await import('../utils/secretsManager.js')
+        return decryptSecrets(storedConfig)
+      }
+    } catch (error) {
+      // Config file doesn't exist yet, continue to env vars
+    }
+
+    // Fallback: Load from environment variables
     const settings: Record<string, any> = {}
     const prefix = platform.toUpperCase()
 

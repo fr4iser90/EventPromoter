@@ -351,8 +351,13 @@ export class PlatformController {
       // ✅ GENERIC: Get settings from platform schema
       const settingsConfig = platform.schema?.settings
 
-      // Get actual values from environment variables (but don't expose secrets)
-      const envSettings = ConfigService.getPlatformSettings(platformId)
+      // Get actual values from environment variables or stored config
+      const envSettings = await ConfigService.getPlatformSettings(platformId)
+      
+      // ✅ SECURITY: Mask all secrets before sending to frontend
+      const { maskSecrets } = await import('../utils/secretsManager.js')
+      const maskedSettings = maskSecrets(envSettings)
+      
       const hasCredentials = Object.keys(envSettings).length > 0
 
       res.json({
@@ -360,8 +365,8 @@ export class PlatformController {
         platform: platformId,
         settings: {
           config: settingsConfig,
+          values: maskedSettings, // ✅ Only masked values sent to frontend
           hasCredentials,
-          // Don't expose actual secret values, just indicate if they're set
           configured: hasCredentials
         }
       })
@@ -396,14 +401,62 @@ export class PlatformController {
         })
       }
 
-      // Here you would typically validate and save settings
-      // For now, just return success (settings are stored in .env manually)
-      console.log(`Platform ${platformId} settings update requested:`, Object.keys(settings || {}))
+      // ✅ SECURITY: Get settings schema for validation
+      const settingsSchema = platform.schema?.settings
+      if (!settingsSchema) {
+        return res.status(400).json({
+          error: 'Settings schema not available for this platform'
+        })
+      }
+
+      // ✅ SECURITY: Validate settings before saving
+      const { validateSettingsValues } = await import('../utils/settingsValidator.js')
+      const validation = validateSettingsValues(settingsSchema, settings || {})
+      
+      if (!validation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          errors: validation.errors
+        })
+      }
+
+      // ✅ SECURITY: Get existing settings and merge with new ones (preserve masked values)
+      const existingSettings = await ConfigService.getPlatformSettings(platformId)
+      const { mergeSettings, extractChangedValues } = await import('../utils/secretsManager.js')
+      
+      // Merge settings (handles masked values correctly)
+      const mergedSettings = mergeSettings(existingSettings, settings || {})
+      
+      // Extract only actually changed values (not masked)
+      const changedValues = extractChangedValues(existingSettings, settings || {})
+      
+      // ✅ SECURITY: Encrypt sensitive fields before saving
+      const { encryptSecrets } = await import('../utils/secretsManager.js')
+      const encryptedSettings = await encryptSecrets(mergedSettings)
+      
+      // ✅ SECURITY: Save only changed values to config file (encrypted)
+      // Note: Secrets are encrypted using AES-256-GCM before storage
+      if (Object.keys(changedValues).length > 0) {
+        // Save to platform-specific config file
+        const configName = `platform-${platformId}-settings`
+        const success = await ConfigService.saveConfig(configName, encryptedSettings)
+        
+        if (!success) {
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to save settings'
+          })
+        }
+        
+        console.log(`✅ Platform ${platformId} settings saved (${Object.keys(changedValues).length} fields changed)`)
+      }
 
       res.json({
         success: true,
         message: `Settings for ${platformId} updated successfully`,
-        platform: platformId
+        platform: platformId,
+        fieldsUpdated: Object.keys(changedValues).length
       })
     } catch (error: any) {
       console.error('Update platform settings error:', error)

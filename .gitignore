@@ -153,6 +153,8 @@ config/credentials/
 config/secrets/
 credentials.json
 keys.json
+.secrets-key
+config/.secrets-key
 
 # Database files
 *.db
