@@ -18,14 +18,118 @@ import {
   Button,
   Typography,
   Box,
-  CircularProgress
+  CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import CloseIcon from '@mui/icons-material/Close'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { getApiUrl } from '../../utils/api'
 import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
+
+/**
+ * Markdown component with Accordion support for details/summary blocks
+ * Processes markdown content and converts HTML details/summary to Material-UI Accordions
+ */
+function MarkdownWithAccordions({ content }) {
+  // Simple regex to find details/summary blocks (non-greedy to handle multiple blocks)
+  const detailsRegex = /<details>\s*<summary>(.*?)<\/summary>\s*([\s\S]*?)<\/details>/g
+  
+  const parts = []
+  const accordions = []
+  let lastIndex = 0
+  let match
+  let accordionIndex = 0
+
+  // Find all details blocks
+  while ((match = detailsRegex.exec(content)) !== null) {
+    // Add content before this accordion
+    if (match.index > lastIndex) {
+      parts.push({
+        type: 'markdown',
+        content: content.substring(lastIndex, match.index)
+      })
+    }
+    
+    // Extract summary and content
+    const summaryText = match[1].replace(/<[^>]+>/g, '').trim()
+    const detailsContent = match[2]
+    
+    accordions.push({
+      id: accordionIndex++,
+      summary: summaryText,
+      content: detailsContent
+    })
+    
+    parts.push({
+      type: 'accordion',
+      id: accordionIndex - 1
+    })
+    
+    lastIndex = match.index + match[0].length
+  }
+  
+  // Add remaining content after last accordion
+  if (lastIndex < content.length) {
+    parts.push({
+      type: 'markdown',
+      content: content.substring(lastIndex)
+    })
+  }
+  
+  // If no accordions found, render everything as markdown
+  if (accordions.length === 0) {
+    return (
+      <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+        {content}
+      </ReactMarkdown>
+    )
+  }
+
+  // Render parts in order
+  return (
+    <Box>
+      {parts.map((part, index) => {
+        if (part.type === 'accordion') {
+          const accordion = accordions[part.id]
+          return (
+            <Accordion key={`accordion-${part.id}`} sx={{ mb: 2, boxShadow: 1 }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  {accordion.summary}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ 
+                  '& p': { mb: 1 }, 
+                  '& pre': { mb: 1 },
+                  '& code': { bgcolor: 'action.hover', px: 0.5, borderRadius: 0.5 },
+                  '& ul': { pl: 2, mb: 1 },
+                  '& ol': { pl: 2, mb: 1 }
+                }}>
+                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                    {accordion.content}
+                  </ReactMarkdown>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          )
+        } else {
+          return (
+            <ReactMarkdown key={`markdown-${index}`} rehypePlugins={[rehypeRaw]}>
+              {part.content}
+            </ReactMarkdown>
+          )
+        }
+      })}
+    </Box>
+  )
+}
 
 /**
  * HelperIcon Component
@@ -91,45 +195,86 @@ function HelperIcon({ helperId, platformId, context, size = 'small' }) {
     
     return (
       <>
-        <Tooltip title={tooltipText}>
-          <IconButton
-            size={size}
-            onClick={helper ? () => setOpen(true) : loadHelper}
-            disabled={loading}
-            sx={{ 
-              color: 'text.secondary',
-              '&:hover': { color: 'primary.main' }
-            }}
-          >
-            {loading ? (
-              <CircularProgress size={16} />
-            ) : (
-              <HelpOutlineIcon fontSize="inherit" />
-            )}
-          </IconButton>
-        </Tooltip>
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+          sx={{ display: 'inline-flex' }}
+        >
+          <Tooltip title={tooltipText}>
+            <IconButton
+              size={size}
+              onClick={(e) => {
+                e.stopPropagation() // Prevent event bubbling to parent
+                if (helper) {
+                  setOpen(true)
+                } else {
+                  loadHelper()
+                }
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              disabled={loading}
+              sx={{ 
+                color: 'text.secondary',
+                '&:hover': { color: 'primary.main' }
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={16} />
+              ) : (
+                <HelpOutlineIcon fontSize="inherit" />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Box>
         
         {/* Optional: Dialog auch für tooltip-Modus (wenn title vorhanden) */}
         {open && helper && helper.title && (
-          <Dialog open={open} onClose={handleClose} maxWidth="sm">
-            <DialogTitle>
+          <Dialog 
+            open={open} 
+            onClose={handleClose} 
+            maxWidth="sm"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <DialogTitle
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               {helper.title[lang] || helper.title.en || 'Help'}
               <IconButton
-                onClick={handleClose}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClose()
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
                 sx={{ position: 'absolute', right: 8, top: 8 }}
               >
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent>
+            <DialogContent
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               <Typography variant="body1">
                 {typeof helper.content === 'string'
                   ? (helper.content[lang] || helper.content.en || helper.content)
                   : (helper.content?.[lang] || helper.content?.en || '')}
               </Typography>
             </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Close</Button>
+            <DialogActions
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClose()
+                }}
+              >
+                Close
+              </Button>
             </DialogActions>
           </Dialog>
         )}
@@ -143,36 +288,64 @@ function HelperIcon({ helperId, platformId, context, size = 'small' }) {
     
     return (
       <>
-        <Tooltip title={tooltipText}>
-          <IconButton
-            size={size}
-            onClick={loadHelper}
-            disabled={loading}
-            sx={{ 
-              color: 'text.secondary',
-              '&:hover': { color: 'primary.main' }
-            }}
-          >
-            {loading ? (
-              <CircularProgress size={16} />
-            ) : (
-              <HelpOutlineIcon fontSize="inherit" />
-            )}
-          </IconButton>
-        </Tooltip>
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+          sx={{ display: 'inline-flex' }}
+        >
+          <Tooltip title={tooltipText}>
+            <IconButton
+              size={size}
+              onClick={(e) => {
+                e.stopPropagation() // Prevent event bubbling to parent
+                loadHelper()
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              disabled={loading}
+              sx={{ 
+                color: 'text.secondary',
+                '&:hover': { color: 'primary.main' }
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={16} />
+              ) : (
+                <HelpOutlineIcon fontSize="inherit" />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Box>
 
         {open && helper && (
-          <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            <DialogTitle>
+          <Dialog 
+            open={open} 
+            onClose={handleClose} 
+            maxWidth="md" 
+            fullWidth
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <DialogTitle
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               {helper.title?.[lang] || helper.title?.en || 'Help'}
               <IconButton
-                onClick={handleClose}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClose()
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
                 sx={{ position: 'absolute', right: 8, top: 8 }}
               >
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent>
+            <DialogContent
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               {helper.type === 'markdown' ? (
                 <Box sx={{ 
                   '& p': { mb: 2 }, 
@@ -182,13 +355,20 @@ function HelperIcon({ helperId, platformId, context, size = 'small' }) {
                   '& h2': { mt: 3, mb: 1, fontSize: '1.25rem' },
                   '& h3': { mt: 2, mb: 1, fontSize: '1.1rem' },
                   '& code': { bgcolor: 'action.hover', px: 0.5, borderRadius: 0.5 },
-                  '& pre': { bgcolor: 'action.hover', p: 2, borderRadius: 1, overflow: 'auto' }
+                  '& pre': { bgcolor: 'action.hover', p: 2, borderRadius: 1, overflow: 'auto' },
+                  '& details': { mb: 2 },
+                  '& summary': { 
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    mb: 1,
+                    '&:hover': { color: 'primary.main' }
+                  }
                 }}>
-                  <ReactMarkdown>
-                    {typeof helper.content === 'string' 
+                  <MarkdownWithAccordions
+                    content={typeof helper.content === 'string' 
                       ? helper.content 
                       : (helper.content?.[lang] || helper.content?.en || '')}
-                  </ReactMarkdown>
+                  />
                 </Box>
               ) : helper.type === 'structured' ? (
                 <Box>
@@ -204,8 +384,18 @@ function HelperIcon({ helperId, platformId, context, size = 'small' }) {
                 </Typography>
               )}
             </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Close</Button>
+            <DialogActions
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClose()
+                }}
+              >
+                Close
+              </Button>
             </DialogActions>
           </Dialog>
         )}
@@ -224,7 +414,11 @@ function HelperIcon({ helperId, platformId, context, size = 'small' }) {
         </Typography>
         <IconButton
           size={size}
-          onClick={loadHelper}
+          onClick={(e) => {
+            e.stopPropagation() // Prevent event bubbling to parent
+            loadHelper()
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
           disabled={loading}
           sx={{ 
             color: 'text.secondary',
@@ -243,23 +437,34 @@ function HelperIcon({ helperId, platformId, context, size = 'small' }) {
 
   // Fallback: Show icon without helper (will load on click)
   return (
-    <Tooltip title="Click for help">
-      <IconButton
-        size={size}
-        onClick={loadHelper}
-        disabled={loading}
-        sx={{ 
-          color: 'text.secondary',
-          '&:hover': { color: 'primary.main' }
-        }}
-      >
-        {loading ? (
-          <CircularProgress size={16} />
-        ) : (
-          <HelpOutlineIcon fontSize="inherit" />
-        )}
-      </IconButton>
-    </Tooltip>
+    <Box
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+      sx={{ display: 'inline-flex' }}
+    >
+      <Tooltip title="Click for help">
+        <IconButton
+          size={size}
+          onClick={(e) => {
+            e.stopPropagation() // Prevent event bubbling to parent
+            loadHelper()
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          disabled={loading}
+          sx={{ 
+            color: 'text.secondary',
+            '&:hover': { color: 'primary.main' }
+          }}
+        >
+          {loading ? (
+            <CircularProgress size={16} />
+          ) : (
+            <HelpOutlineIcon fontSize="inherit" />
+          )}
+        </IconButton>
+      </Tooltip>
+    </Box>
   )
 }
 

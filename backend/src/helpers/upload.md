@@ -27,7 +27,8 @@ Sie können optionale Info-Dateien hochladen:
 - `info.md` oder `info.txt`: Zusätzliche Informationen zum Event
 - Diese werden beim Parsen berücksichtigt
 
-### Beispiel: info.md (Markdown-Format)
+<details>
+<summary><strong>Beispiel: info.md (Markdown-Format)</strong></summary>
 
 ```markdown
 ---
@@ -56,7 +57,10 @@ description: |
 - **Einlass:** 21:30 Uhr
 ```
 
-### Beispiel: info.txt (Text-Format)
+</details>
+
+<details>
+<summary><strong>Beispiel: info.txt (Text-Format)</strong></summary>
 
 ```
 TITLE: Depeche Mode Party Sounds of the Universe
@@ -82,7 +86,10 @@ ADDITIONAL INFO:
 - Einlass: 21:30 Uhr
 ```
 
-### Unterstützte Felder
+</details>
+
+<details>
+<summary><strong>Unterstützte Felder</strong></summary>
 
 **Pflichtfelder:**
 - `title` / `TITLE`: Event-Titel
@@ -98,6 +105,8 @@ ADDITIONAL INFO:
 - `lineup` / `LINEUP`: Künstler/Lineup (kommagetrennt oder als Liste)
 - `genre` / `GENRE`: Musikrichtung/Genre
 - `description` / `DESCRIPTION`: Beschreibung des Events
+
+</details>
 
 ## Tipps
 - Verwenden Sie aussagekräftige Dateinamen
