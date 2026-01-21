@@ -365,7 +365,7 @@ export class EmailService {
           target: preview.group,
           templateId: templateEntry.templateId || preview.templateId,
           metadata: {
-            recipients: preview.recipients
+            targets: preview.targets
           },
           html: preview.html,
           dimensions: preview.dimensions

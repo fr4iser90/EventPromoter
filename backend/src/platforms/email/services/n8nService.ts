@@ -45,7 +45,11 @@ export class EmailN8nService {
       }
       return [...new Set(emails)] // Remove duplicates
     } else if (targetsConfig.mode === 'individual' && targetsConfig.individual && Array.isArray(targetsConfig.individual)) {
-      return targetsConfig.individual
+      const targetMap = new Map(allTargets.map((t: any) => [t.id, t.email]))
+      const individualEmails: string[] = targetsConfig.individual
+        .map((targetId: string) => targetMap.get(targetId))
+        .filter((email: string | undefined): email is string => email !== undefined)
+      return [...new Set(individualEmails)]
     }
 
     return []
@@ -60,12 +64,28 @@ export class EmailN8nService {
     if (content._templates && Array.isArray(content._templates) && content._templates.length > 0) {
       // Transform each template+targets combination to a separate email
       const emails: any[] = []
+      const sentRecipients = new Set<string>()
 
       for (const templateEntry of content._templates) {
         const recipients = await this.extractRecipientsFromTargets(templateEntry.targets)
         
         if (recipients.length === 0) {
           console.warn(`No recipients found for template ${templateEntry.templateId}, skipping`)
+          continue
+        }
+        
+        // Filter out recipients that have already received an email
+        const uniqueRecipients = recipients.filter(email => {
+          if (sentRecipients.has(email)) {
+            console.warn(`Recipient ${email} already received an email, skipping duplicate`)
+            return false
+          }
+          sentRecipients.add(email)
+          return true
+        })
+        
+        if (uniqueRecipients.length === 0) {
+          console.warn(`All recipients for template ${templateEntry.templateId} already received emails, skipping`)
           continue
         }
 
@@ -86,7 +106,7 @@ export class EmailN8nService {
         const emailPayload: any = {
           subject: content.subject || 'No Subject',
           html: html,
-          recipients: recipients.join(', '),
+          recipients: uniqueRecipients.join(', '),
           templateId: templateEntry.templateId,
           templateName: templateEntry.templateName
         }

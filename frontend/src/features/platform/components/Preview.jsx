@@ -21,7 +21,8 @@ import {
   Alert,
   useTheme,
   Tabs,
-  Tab
+  Tab,
+  Tooltip
 } from '@mui/material'
 import { usePlatformMetadata } from '../hooks/usePlatformSchema'
 import { getApiUrl } from '../../../shared/utils/api'
@@ -176,28 +177,79 @@ function PlatformPreview({ platform, content, isActive }) {
               sx={{ borderBottom: 1, borderColor: 'divider' }}
             >
               {multiPreviews.map((preview, index) => {
-                const recipientCount = preview.metadata?.recipients?.length || preview.recipients?.length || 0
-                const groupName = preview.group || preview.target || 'Alle'
+                const targets = preview.metadata?.targets || preview.targets || []
+                const targetCount = targets.length
+                const groupName =
+                  preview.group ||
+                  preview.target ||
+                  (targetCount === 0 ? 'Keine Targets' : 'Individual')
+                
+                // Build tooltip content
+                const tooltipContent = (
+                  <Box>
+                    {targetCount === 0 ? (
+                      <Typography variant="body2">Keine Targets ausgewählt</Typography>
+                    ) : null}
+                    {preview.group ? (
+                      <>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                          Gruppe: {groupName}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          Targets in Gruppe ({targetCount}):
+                        </Typography>
+                      </>
+                    ) : (
+                      targetCount > 0 ? (
+                        <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          Targets ({targetCount}):
+                        </Typography>
+                      ) : null
+                    )}
+                    {targetCount > 0 ? (
+                      <Box component="ul" sx={{ m: 0, pl: 2, maxHeight: '200px', overflow: 'auto' }}>
+                        {targets.map((target, targetIndex) => (
+                          <li key={targetIndex}>
+                            <Typography variant="caption">{target}</Typography>
+                          </li>
+                        ))}
+                      </Box>
+                    ) : null}
+                    {preview.templateId && (
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                        Template: {preview.templateId}
+                      </Typography>
+                    )}
+                  </Box>
+                )
                 
                 return (
-                  <Tab
+                  <Tooltip
                     key={index}
-                    label={
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                          {groupName}
-                        </Typography>
-                        {preview.templateId && (
-                          <Typography variant="caption" color="text.secondary">
-                            {preview.templateId}
+                    title={tooltipContent}
+                    arrow
+                    placement="top"
+                  >
+                    <Tab
+                      label={
+                        <Box sx={{ textAlign: 'center' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                            {groupName}
                           </Typography>
-                        )}
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          {recipientCount} Empfänger
-                        </Typography>
-                      </Box>
-                    }
-                  />
+                          {preview.templateId && (
+                            <Typography variant="caption" color="text.secondary">
+                              {preview.templateId}
+                            </Typography>
+                          )}
+                          {targetCount > 0 ? (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              {targetCount} Targets
+                            </Typography>
+                          ) : null}
+                        </Box>
+                      }
+                    />
+                  </Tooltip>
                 )
               })}
             </Tabs>

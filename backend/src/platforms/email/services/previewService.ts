@@ -279,7 +279,7 @@ export async function renderMultiPreview(
 ): Promise<Array<{
   group?: string
   templateId?: string
-  recipients: string[]
+  targets?: string[]
   html: string
   dimensions?: { width: number; height: number }
 }>> {
@@ -287,7 +287,7 @@ export async function renderMultiPreview(
   const previews: Array<{
     group?: string
     templateId?: string
-    recipients: string[]
+    targets?: string[]
     html: string
     dimensions?: { width: number; height: number }
   }> = []
@@ -301,6 +301,10 @@ export async function renderMultiPreview(
 
   // Import template service
   const { TemplateService } = await import('../../../services/templateService.js')
+
+  if (!recipients.mode) {
+    return previews
+  }
 
   if (recipients.mode === 'all') {
     // Single preview for all recipients
@@ -323,7 +327,7 @@ export async function renderMultiPreview(
     })
 
     previews.push({
-      recipients: allRecipients,
+      targets: allRecipients,
       templateId,
       html: preview.html,
       dimensions: preview.dimensions
@@ -371,7 +375,7 @@ export async function renderMultiPreview(
       previews.push({
         group: group.name,
         templateId,
-        recipients: groupEmails,
+        targets: groupEmails,
         html: preview.html,
         dimensions: preview.dimensions
       })
@@ -404,7 +408,7 @@ export async function renderMultiPreview(
     })
 
     previews.push({
-      recipients: individualEmails,
+      targets: individualEmails,
       templateId,
       html: preview.html,
       dimensions: preview.dimensions
