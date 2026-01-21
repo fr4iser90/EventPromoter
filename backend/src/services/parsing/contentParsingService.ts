@@ -663,7 +663,7 @@ export class ContentExtractionService {
 
   // Load platform content from separate files
   static async loadPlatformContent(eventId: string): Promise<Record<string, any> | null> {
-    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
+    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platforms')
 
     if (!fs.existsSync(platformContentDir)) {
       return null
@@ -696,6 +696,9 @@ export class ContentExtractionService {
             console.debug(`No content processing for platform ${platform} on load:`, error?.message || 'Unknown error')
           }
           
+          // ✅ Resolve target names for _templates array (if present)
+          content = await ContentExtractionService.resolveTargetNamesInContent(platform, content)
+          
           platformContent[platform] = content
         } catch (error) {
           console.warn(`Failed to load platform content for ${platform}:`, error)
@@ -710,7 +713,7 @@ export class ContentExtractionService {
 
   // Save platform content to separate file
   static async savePlatformContent(eventId: string, platform: string, content: any): Promise<void> {
-    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platform-content')
+    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platforms')
     const platformFile = path.join(platformContentDir, `${platform}.json`)
 
     // Ensure directory exists
@@ -794,6 +797,75 @@ export class ContentExtractionService {
     } catch (error) {
       console.error(`Failed to parse file ${file.name}:`, error)
       throw error
+    }
+  }
+
+  /**
+   * Resolve target names for _templates array in content
+   * Adds groupNames and targetNames to targets objects for display
+   */
+  static async resolveTargetNamesInContent(platform: string, content: any): Promise<any> {
+    if (!content || !content._templates || !Array.isArray(content._templates)) {
+      return content
+    }
+
+    try {
+      // Get target service for this platform
+      const { TargetController } = await import('../../controllers/targetController.js')
+      
+      // Get target service instance
+      const service = await TargetController.getTargetService(platform)
+      if (!service) {
+        return content // No target service - return content as-is
+      }
+
+      // Load targets and groups
+      const targets = await service.getTargets()
+      const groups = await service.getGroups()
+
+      // Create mapping: ID -> name
+      const targetNameMap: Record<string, string> = {}
+      targets.forEach((target: any) => {
+        const baseField = service.getBaseField()
+        targetNameMap[target.id] = target.name || target[baseField] || target.id
+      })
+
+      const groupNameMap: Record<string, string> = {}
+      Object.values(groups).forEach((group: any) => {
+        groupNameMap[group.id] = group.name || group.id
+      })
+
+      // Resolve names for each template entry
+      const resolvedTemplates = content._templates.map((templateEntry: any) => {
+        if (!templateEntry.targets) {
+          return templateEntry
+        }
+
+        const targetsWithNames = { ...templateEntry.targets }
+        
+        // Resolve group names
+        if (templateEntry.targets.groups && Array.isArray(templateEntry.targets.groups)) {
+          targetsWithNames.groupNames = templateEntry.targets.groups.map((id: string) => groupNameMap[id] || id)
+        }
+        
+        // Resolve target names
+        if (templateEntry.targets.individual && Array.isArray(templateEntry.targets.individual)) {
+          targetsWithNames.targetNames = templateEntry.targets.individual.map((id: string) => targetNameMap[id] || id)
+        }
+
+        return {
+          ...templateEntry,
+          targets: targetsWithNames
+        }
+      })
+
+      return {
+        ...content,
+        _templates: resolvedTemplates
+      }
+    } catch (error) {
+      console.warn(`Failed to resolve target names for platform ${platform}:`, error)
+      return content // Return content as-is if resolution fails
     }
   }
 }

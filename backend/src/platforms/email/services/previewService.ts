@@ -270,7 +270,7 @@ export async function renderMultiPreview(
       groups?: string[]
       templateMapping?: Record<string, string>
       defaultTemplate?: string
-      individuals?: string[]
+      individual?: string[]
     }
     schema: any
     mode?: string
@@ -376,8 +376,16 @@ export async function renderMultiPreview(
         dimensions: preview.dimensions
       })
     }
-  } else if (recipients.mode === 'individual' && recipients.individuals && recipients.individuals.length > 0) {
-    // Single preview for individuals
+  } else if (recipients.mode === 'individual' && recipients.individual && recipients.individual.length > 0) {
+    const targetMap = new Map(targets.map(t => [t.id, t.email]))
+    const individualEmails = recipients.individual
+      .map((targetId: string) => targetMap.get(targetId))
+      .filter((email: string | undefined): email is string => email !== undefined)
+    
+    if (individualEmails.length === 0) {
+      return previews
+    }
+    
     const templateId = recipients.defaultTemplate
     let previewContent = { ...content }
     
@@ -396,7 +404,7 @@ export async function renderMultiPreview(
     })
 
     previews.push({
-      recipients: recipients.individuals,
+      recipients: individualEmails,
       templateId,
       html: preview.html,
       dimensions: preview.dimensions

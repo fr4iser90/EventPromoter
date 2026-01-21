@@ -481,7 +481,7 @@ export class TargetController {
    * Helper: Get platform-specific target service
    * Dynamically loads the service from platforms/{platformId}/services/targetService.ts
    */
-  private static async getTargetService(platformId: string): Promise<BaseTargetService | null> {
+  static async getTargetService(platformId: string): Promise<BaseTargetService | null> {
     try {
       // Try to import platform-specific target service
       const serviceModule = await import(`../platforms/${platformId}/services/targetService.js`)

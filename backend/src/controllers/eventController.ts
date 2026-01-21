@@ -117,7 +117,7 @@ export class EventController {
       }
 
       // Load platform content for this event
-      const platformContent = await EventService.getEventPlatformContent(eventId) || {}
+      const platformContent = await EventService.getAllPlatformContent(eventId) || {}
 
       // Get all files for this event
       const files = await EventService.getEventFiles(eventId) || []
@@ -165,7 +165,7 @@ export class EventController {
   static async getEventPlatformContent(req: Request, res: Response) {
     try {
       const { eventId } = req.params
-      const platformContent = await EventService.getEventPlatformContent(eventId)
+      const platformContent = await EventService.getAllPlatformContent(eventId)
       res.json({ platformContent })
     } catch (error) {
       console.error('Error getting event platform content:', error)

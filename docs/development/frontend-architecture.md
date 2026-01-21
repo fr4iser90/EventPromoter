@@ -155,7 +155,7 @@ body[data-mui-color-scheme="dark"] {
 - ✅ **Events:** `events/{eventId}/event.json`
 - ✅ **Configs:** `config/app.json`, `config/hashtags.json`
 - ✅ **Parsed Data:** `events/{eventId}/parsed-data.json`
-- ✅ **Platform Content:** `events/{eventId}/platform-content/{platform}.json`
+- ✅ **Platform Content:** `events/{eventId}/platforms/{platform}.json`
 - ✅ **Files:** `events/{eventId}/files/`
 
 **Der Store ist nur ein Zwischenspeicher!**

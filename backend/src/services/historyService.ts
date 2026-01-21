@@ -68,7 +68,7 @@ export class HistoryService {
     }
 
     // Load platform content to determine used platforms
-    const platformContentDir = path.join(eventDir, 'platform-content')
+    const platformContentDir = path.join(eventDir, 'platforms')
     let platforms: string[] = []
     if (fs.existsSync(platformContentDir)) {
       platforms = fs.readdirSync(platformContentDir)

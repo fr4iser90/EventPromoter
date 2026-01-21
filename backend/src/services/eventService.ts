@@ -193,9 +193,13 @@ export class EventService {
 
   static async getPlatformContent(eventId: string, platform: string): Promise<any | null> {
     const platformFilePath = path.join(process.cwd(), 'events', eventId, 'platforms', `${platform}.json`)
+    
     try {
       const data = fs.readFileSync(platformFilePath, 'utf8')
-      return JSON.parse(data)
+      const content = JSON.parse(data)
+      
+      // ✅ Resolve target names for _templates array (if present)
+      return await this.resolveTargetNamesInContent(platform, content)
     } catch (error) {
       // Platform content doesn't exist yet
       return null
@@ -226,10 +230,7 @@ export class EventService {
     return platformContent
   }
 
-  // Legacy compatibility methods for platform content
-  static async getEventPlatformContent(eventId: string): Promise<Record<string, any>> {
-    return await this.getAllPlatformContent(eventId)
-  }
+
 
   static async saveEventPlatformContent(eventId: string, platformContent: Record<string, any>): Promise<boolean> {
     let allSuccess = true
@@ -542,7 +543,7 @@ export class EventService {
     }
 
     // Load platform content
-    const platformContentDir = path.join(eventDir, 'platform-content')
+    const platformContentDir = path.join(eventDir, 'platforms')
     let platformContent: Record<string, any> = {}
     if (fs.existsSync(platformContentDir)) {
       const platformFiles = fs.readdirSync(platformContentDir)
@@ -566,6 +567,9 @@ export class EventService {
               // Platform service not available - use content as-is
               console.debug(`No content processing for platform ${platform} on load:`, error?.message || 'Unknown error')
             }
+            
+            // ✅ Resolve target names for _templates array (if present)
+            content = await this.resolveTargetNamesInContent(platform, content)
             
             platformContent[platform] = content
           } catch (error) {
@@ -611,4 +615,73 @@ export class EventService {
     return mimeTypes[ext || ''] || 'application/octet-stream'
   }
 
+  /**
+   * Resolve target names for _templates array in content
+   * Adds groupNames and targetNames to targets objects for display
+   */
+  private static async resolveTargetNamesInContent(platform: string, content: any): Promise<any> {
+    if (!content || !content._templates || !Array.isArray(content._templates)) {
+      return content
+    }
+
+    try {
+      // Get target service for this platform
+      const { TargetController } = await import('../controllers/targetController.js')
+      
+      // Get target service instance
+      const service = await TargetController.getTargetService(platform)
+      if (!service) {
+        return content // No target service - return content as-is
+      }
+
+      // Load targets and groups
+      const targets = await service.getTargets()
+      const groups = await service.getGroups()
+
+      // Create mapping: ID -> name
+      const targetNameMap: Record<string, string> = {}
+      targets.forEach((target: any) => {
+        const baseField = service.getBaseField()
+        // Use name custom field if available, otherwise use baseField (e.g., email), otherwise use ID
+        targetNameMap[target.id] = target.name || target[baseField] || target.id
+      })
+
+      const groupNameMap: Record<string, string> = {}
+      Object.values(groups).forEach((group: any) => {
+        groupNameMap[group.id] = group.name || group.id
+      })
+
+      // Resolve names for each template entry
+      const resolvedTemplates = content._templates.map((templateEntry: any) => {
+        if (!templateEntry.targets) {
+          return templateEntry
+        }
+
+        const targetsWithNames = { ...templateEntry.targets }
+        
+        // Resolve group names
+        if (templateEntry.targets.groups && Array.isArray(templateEntry.targets.groups)) {
+          targetsWithNames.groupNames = templateEntry.targets.groups.map((id: string) => groupNameMap[id] || id)
+        }
+        
+        // Resolve target names
+        if (templateEntry.targets.individual && Array.isArray(templateEntry.targets.individual)) {
+          targetsWithNames.targetNames = templateEntry.targets.individual.map((id: string) => targetNameMap[id] || id)
+        }
+
+        return {
+          ...templateEntry,
+          targets: targetsWithNames
+        }
+      })
+
+      return {
+        ...content,
+        _templates: resolvedTemplates
+      }
+    } catch (error) {
+      console.warn(`Failed to resolve target names for platform ${platform}:`, error)
+      return content // Return content as-is if resolution fails
+    }
+  }
 }

@@ -58,6 +58,19 @@ export class EmailTargetService extends BaseTargetService {
             { type: 'pattern', value: '^[\\d\\s\\+\\-\\(\\)]+$', message: 'Invalid phone number format' }
           ],
           ui: { width: 12, order: 5 }
+        },
+        {
+          name: 'locale',
+          type: 'select',
+          label: 'Sprache',
+          required: false,
+          options: [
+            { value: 'en', label: '🇺🇸 English' },
+            { value: 'de', label: '🇩🇪 Deutsch' },
+            { value: 'es', label: '🇪🇸 Español' }
+          ],
+          ui: { width: 6, order: 6 },
+          description: 'Sprache für E-Mails an diesen Empfänger'
         }
       ],
       supportsGroups: true

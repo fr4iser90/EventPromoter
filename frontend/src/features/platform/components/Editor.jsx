@@ -404,7 +404,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         
         if (!targetsBlock || templates.length === 0) return null
 
-        // Helper to format targets summary
+        // Helper to format targets summary - uses names from backend if available
         const formatTargetsSummary = (targets) => {
           if (!targets || Object.keys(targets).length === 0) return 'No targets'
           
@@ -413,10 +413,16 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
             return 'All targets'
           } else if (mode === 'groups') {
             const groups = targets.groups || []
-            return `${groups.length} group(s): ${groups.join(', ')}`
+            // Use groupNames if available (resolved by backend), otherwise use IDs
+            const groupNames = targets.groupNames || groups
+            return `${groups.length} group(s): ${groupNames.join(', ')}`
           } else if (mode === 'individual') {
             const individuals = targets.individual || []
-            return `${individuals.length} single: ${individuals.slice(0, 3).join(', ')}${individuals.length > 3 ? '...' : ''}`
+            // Use targetNames if available (resolved by backend), otherwise use IDs
+            const targetNames = targets.targetNames || individuals
+            const displayNames = targetNames.slice(0, 3)
+            const remaining = targetNames.length > 3 ? '...' : ''
+            return `${individuals.length} single: ${displayNames.join(', ')}${remaining}`
           }
           return 'Targets configured'
         }

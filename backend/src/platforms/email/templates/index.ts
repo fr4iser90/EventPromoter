@@ -15,6 +15,18 @@ export interface EmailTemplate {
     subject: string
     html: string
   }
+  translations?: {
+    de?: {
+      subject: string
+      html: string
+    }
+    es?: {
+      subject: string
+      html: string
+    }
+  }
+  /** Optional default locale for this template (overrides user language preference) */
+  defaultLocale?: 'en' | 'de' | 'es'
   category: string
   variables: string[]
   createdAt?: string
@@ -27,6 +39,7 @@ import { professionalEventAnnouncementTemplate } from './professional-event-anno
 import { eventAnnouncementTemplate } from './event-announcement.js'
 import { lastMinuteTicketsTemplate } from './last-minute-tickets.js'
 import { eventReminderTemplate } from './event-reminder.js'
+import { personalInvitationTemplate } from './personal-invitation.js'
 
 // Export individual templates
 export { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
@@ -34,6 +47,7 @@ export { professionalEventAnnouncementTemplate } from './professional-event-anno
 export { eventAnnouncementTemplate } from './event-announcement.js'
 export { lastMinuteTicketsTemplate } from './last-minute-tickets.js'
 export { eventReminderTemplate } from './event-reminder.js'
+export { personalInvitationTemplate } from './personal-invitation.js'
 
 // Main templates array
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
@@ -41,7 +55,8 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   professionalEventAnnouncementTemplate,
   eventAnnouncementTemplate,
   lastMinuteTicketsTemplate,
-  eventReminderTemplate
+  eventReminderTemplate,
+  personalInvitationTemplate
 ]
 
 // Template utility functions
@@ -53,9 +68,23 @@ export function getTemplateById(id: string): EmailTemplate | undefined {
   return EMAIL_TEMPLATES.find(template => template.id === id)
 }
 
-export function renderTemplate(template: EmailTemplate, variables: Record<string, string>): { subject: string, html: string } {
-  let subject = template.template.subject
-  let html = template.template.html
+export function renderTemplate(
+  template: EmailTemplate, 
+  variables: Record<string, string>,
+  locale?: 'en' | 'de' | 'es'
+): { subject: string, html: string } {
+  // If locale not provided, use template default or 'en'
+  const resolvedLocale = locale || template.defaultLocale || 'en'
+  
+  // Get template content based on locale
+  let templateContent = template.template
+  
+  if (resolvedLocale !== 'en' && template.translations?.[resolvedLocale]) {
+    templateContent = template.translations[resolvedLocale]
+  }
+
+  let subject = templateContent.subject
+  let html = templateContent.html
 
   // Replace variables
   for (const [key, value] of Object.entries(variables)) {
@@ -73,4 +102,75 @@ export function createUnsubscribeLink(userId: string, emailId: string): string {
 
 export function createEventLink(eventId: string): string {
   return `https://yourapp.com/events/${eventId}`
+}
+
+/**
+ * Extract locale from target or group
+ * 
+ * @param targetOrGroup - Target or Group object
+ * @returns Locale if found, undefined otherwise
+ */
+export function extractLocaleFromTargetOrGroup(targetOrGroup: any): 'en' | 'de' | 'es' | undefined {
+  if (!targetOrGroup) return undefined
+
+  // Check direct locale field
+  if (targetOrGroup.locale && ['en', 'de', 'es'].includes(targetOrGroup.locale)) {
+    return targetOrGroup.locale
+  }
+
+  // Check metadata.locale
+  if (targetOrGroup.metadata?.locale && ['en', 'de', 'es'].includes(targetOrGroup.metadata.locale)) {
+    return targetOrGroup.metadata.locale
+  }
+
+  return undefined
+}
+
+/**
+ * Resolve locale for email template rendering
+ * Priority: emailLocale > targetLocale > groupLocale > template.defaultLocale > userLanguage > 'en'
+ * 
+ * @param options - Locale resolution options
+ * @returns Resolved locale
+ */
+export function resolveTemplateLocale(options: {
+  emailLocale?: 'en' | 'de' | 'es'
+  targetLocale?: 'en' | 'de' | 'es'
+  groupLocale?: 'en' | 'de' | 'es'
+  template?: EmailTemplate
+  userLanguage?: string
+}): 'en' | 'de' | 'es' {
+  const { emailLocale, targetLocale, groupLocale, template, userLanguage } = options
+
+  // Priority 1: Email-level locale (highest priority)
+  if (emailLocale && ['en', 'de', 'es'].includes(emailLocale)) {
+    return emailLocale
+  }
+
+  // Priority 2: Target-level locale
+  if (targetLocale && ['en', 'de', 'es'].includes(targetLocale)) {
+    return targetLocale
+  }
+
+  // Priority 3: Group-level locale
+  if (groupLocale && ['en', 'de', 'es'].includes(groupLocale)) {
+    return groupLocale
+  }
+
+  // Priority 4: Template default locale
+  if (template?.defaultLocale && ['en', 'de', 'es'].includes(template.defaultLocale)) {
+    return template.defaultLocale
+  }
+
+  // Priority 5: User language preference
+  if (userLanguage) {
+    // Normalize language code (e.g., 'de-DE' -> 'de', 'en-US' -> 'en')
+    const normalized = userLanguage.toLowerCase().split('-')[0]
+    if (['en', 'de', 'es'].includes(normalized)) {
+      return normalized as 'en' | 'de' | 'es'
+    }
+  }
+
+  // Default: English
+  return 'en'
 }
