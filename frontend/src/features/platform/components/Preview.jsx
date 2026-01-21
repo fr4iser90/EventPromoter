@@ -41,6 +41,9 @@ function PlatformPreview({ platform, content, isActive }) {
 
   // ✅ GENERIC: Fetch preview HTML from backend
   // Backend decides if multi-preview is needed based on content
+  // Use JSON.stringify to detect deep changes in content object
+  const contentKey = content ? JSON.stringify(content) : null
+  
   useEffect(() => {
     if (!platform || !content) {
       setPreviewHtml(null)
@@ -120,7 +123,7 @@ function PlatformPreview({ platform, content, isActive }) {
     }
 
     fetchPreview()
-  }, [platform, content, theme.palette.mode])
+  }, [platform, contentKey, theme.palette.mode])
 
   // Use platform metadata from backend - NO HARDCODED VALUES
   const platformColor = platformData?.color || platformData?.metadata?.color || '#666'
@@ -172,26 +175,31 @@ function PlatformPreview({ platform, content, isActive }) {
               scrollable="auto"
               sx={{ borderBottom: 1, borderColor: 'divider' }}
             >
-              {multiPreviews.map((preview, index) => (
-                <Tab
-                  key={index}
-                  label={
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                        {preview.group || 'Alle'}
-                      </Typography>
-                      {preview.templateId && (
-                        <Typography variant="caption" color="text.secondary">
-                          {preview.templateId}
+              {multiPreviews.map((preview, index) => {
+                const recipientCount = preview.metadata?.recipients?.length || preview.recipients?.length || 0
+                const groupName = preview.group || preview.target || 'Alle'
+                
+                return (
+                  <Tab
+                    key={index}
+                    label={
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {groupName}
                         </Typography>
-                      )}
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        {preview.recipients?.length || 0} Empfänger
-                      </Typography>
-                    </Box>
-                  }
-                />
-              ))}
+                        {preview.templateId && (
+                          <Typography variant="caption" color="text.secondary">
+                            {preview.templateId}
+                          </Typography>
+                        )}
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {recipientCount} Empfänger
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                )
+              })}
             </Tabs>
             {multiPreviews[activeTab] && (
               <Box

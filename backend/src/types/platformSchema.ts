@@ -151,6 +151,9 @@ export interface FieldDefinition {
     endpoint?: string
     options?: Array<{ label: string; value: any }>
   }
+  // ✅ NEW: Helper System
+  /** Helper ID for displaying help information */
+  helper?: string
 }
 
 /**
@@ -328,6 +331,9 @@ export interface ContentBlock {
     /** For 'custom' strategy: Endpoints for loading data */
     endpoints?: Record<string, string>
   }
+  // ✅ NEW: Helper System
+  /** Helper ID for displaying help information */
+  helper?: string
 }
 
 /**

@@ -23,6 +23,7 @@ import {
   Alert
 } from '@mui/material'
 import TargetList from './TargetList'
+import HelperIcon from '../../../shared/components/ui/HelperIcon'
 import { getApiUrl } from '../../../shared/utils/api'
 import axios from 'axios'
 
@@ -350,6 +351,19 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
                         minWidth: '200px'
                       }}
                     >
+                      {field.helper && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                            {field.label}
+                          </Typography>
+                          <HelperIcon 
+                            helperId={field.helper}
+                            platformId={platformId}
+                            context={`field.${field.name}`}
+                            size="small"
+                          />
+                        </Box>
+                      )}
                       {renderField(
                         field,
                         values[field.name],
@@ -388,6 +402,19 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
               width: field.ui?.width ? `${(field.ui.width / 12) * 100}%` : '100%'
             }}
           >
+            {field.helper && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                  {field.label}
+                </Typography>
+                <HelperIcon 
+                  helperId={field.helper}
+                  platformId={platformId}
+                  context={`field.${field.name}`}
+                  size="small"
+                />
+              </Box>
+            )}
             {renderField(
               field,
               values[field.name],

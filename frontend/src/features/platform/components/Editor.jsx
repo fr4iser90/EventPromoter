@@ -466,81 +466,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         )
       })()}
 
-      {/* ✅ Editor Blocks: Render blocks from schema */}
-      {/* Show targets block if NO template is active (for direct editing) */}
-      {/* Show other blocks ONLY if NO template is active */}
-      {editorBlocks.length > 0 && (() => {
-        const sortedBlocks = [...editorBlocks]
-          .filter(block => {
-            // ✅ RENDER targets block if NO template is active (for direct editing)
-            // Only hide it if template is active (then show summary instead)
-            if (block.type === 'targets' && activeTemplate) return false
-            // Hide other blocks if template is active
-            if (activeTemplate) return false
-            // Show if enabled
-            return block.ui?.enabled !== false
-          })
-          .sort((a, b) => (a.ui?.order || 999) - (b.ui?.order || 999))
-
-        if (sortedBlocks.length === 0) return null
-
-        return (
-          <Box sx={{ mt: 2, mb: 2 }}>
-            {sortedBlocks.map((block) => {
-              const blockValue = content?.[block.id]
-              const rendering = block.rendering || {}
-              const strategy = rendering.strategy || 'schema'
-
-              // Schema strategy: render as single field
-              if (strategy === 'schema') {
-                return (
-                  <Box key={block.id} sx={{ mb: 2 }}>
-                    <SchemaRenderer
-                      fields={[{
-                        name: block.id,
-                        type: rendering.fieldType || 'text',
-                        label: block.label,
-                        description: block.description,
-                        required: block.required,
-                        placeholder: rendering.placeholder,
-                        default: rendering.default,
-                        options: [] // Will be loaded via optionsSource if needed
-                      }]}
-                      values={{ [block.id]: blockValue || rendering.default || '' }}
-                      onChange={(fieldName, value) => onChange(block.id, value)}
-                      errors={{}}
-                    />
-                  </Box>
-                )
-              }
-
-              // Composite strategy: render multiple fields
-              if (strategy === 'composite') {
-                return (
-                  <CompositeRenderer
-                    key={block.id}
-                    block={block}
-                    value={blockValue}
-                    onChange={(value) => onChange(block.id, value)}
-                    platform={platform}
-                  />
-                )
-              }
-
-              // Custom strategy: not implemented yet
-              if (strategy === 'custom') {
-                return (
-                  <Alert key={block.id} severity="warning" sx={{ mb: 2 }}>
-                    Custom component "{rendering.component}" not yet implemented
-                  </Alert>
-                )
-              }
-
-              return null
-            })}
-          </Box>
-        )
-      })()}
+      {/* ✅ Editor Blocks: REMOVED - All content is managed through templates */}
 
       {/* ✅ Template Variables: Show template variables as separate fields */}
       {activeTemplate && (() => {
@@ -577,6 +503,9 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
               // Hide auto-filled variables if checkbox is checked
               if (hideAutoFilled && isAutoFilled && !isDisabled) return null
               
+              // Check if this is an image variable
+              const isImageVar = /^(img|image)\d*$/i.test(varName) || varName === 'image'
+              
               return (
                 <Box key={varName} sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
@@ -598,27 +527,90 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                       </IconButton>
                     )}
                   </Box>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={varValue}
-                    disabled={isDisabled}
-                    onChange={(e) => {
-                      // Allow manual editing if not auto-filled
-                      if (!isAutoFilled) {
-                        onChange(`_var_${varName}`, e.target.value)
-                      }
-                    }}
-                    sx={{
-                      '& .MuiInputBase-root': {
-                        bgcolor: isDisabled ? 'action.disabledBackground' : 'background.paper',
-                        opacity: isDisabled ? 0.6 : 1
-                      }
-                    }}
-                    InputProps={{
-                      readOnly: isAutoFilled && !isDisabled
-                    }}
-                  />
+                  
+                  {isImageVar ? (
+                    // Image selector dropdown
+                    <FormControl fullWidth size="small" disabled={isDisabled}>
+                      <Select
+                        value={varValue || ''}
+                        onChange={(e) => {
+                          if (!isAutoFilled) {
+                            onChange(`_var_${varName}`, e.target.value)
+                          }
+                        }}
+                        renderValue={(selected) => {
+                          if (!selected) return 'No image selected'
+                          const selectedFile = availableImages.find(img => {
+                            const imgUrl = getFileUrl(img.url)
+                            return imgUrl === selected || img.url === selected || img.url === getFileUrl(selected)
+                          })
+                          if (selectedFile) {
+                            return (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Avatar
+                                  src={getFileUrl(selectedFile.url)}
+                                  alt={selectedFile.name}
+                                  variant="rounded"
+                                  sx={{ width: 24, height: 24 }}
+                                />
+                                <Typography variant="body2">{selectedFile.name}</Typography>
+                              </Box>
+                            )
+                          }
+                          return 'Selected image'
+                        }}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            bgcolor: isDisabled ? 'action.disabledBackground' : 'background.paper',
+                            opacity: isDisabled ? 0.6 : 1
+                          }
+                        }}
+                      >
+                        <MenuItem value="">
+                          <em>No image</em>
+                        </MenuItem>
+                        {availableImages.map((file, index) => {
+                          const fileUrl = getFileUrl(file.url)
+                          return (
+                            <MenuItem key={index} value={fileUrl}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Avatar
+                                  src={fileUrl}
+                                  alt={file.name}
+                                  variant="rounded"
+                                  sx={{ width: 40, height: 40 }}
+                                />
+                                <Typography variant="body2">{file.name}</Typography>
+                              </Box>
+                            </MenuItem>
+                          )
+                        })}
+                      </Select>
+                    </FormControl>
+                  ) : (
+                    // Text field for non-image variables
+                    <TextField
+                      fullWidth
+                      size="small"
+                      value={varValue}
+                      disabled={isDisabled}
+                      onChange={(e) => {
+                        // Allow manual editing if not auto-filled
+                        if (!isAutoFilled) {
+                          onChange(`_var_${varName}`, e.target.value)
+                        }
+                      }}
+                      sx={{
+                        '& .MuiInputBase-root': {
+                          bgcolor: isDisabled ? 'action.disabledBackground' : 'background.paper',
+                          opacity: isDisabled ? 0.6 : 1
+                        }
+                      }}
+                      InputProps={{
+                        readOnly: isAutoFilled && !isDisabled
+                      }}
+                    />
+                  )}
                 </Box>
               )
             })}

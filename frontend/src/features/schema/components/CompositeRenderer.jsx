@@ -215,11 +215,14 @@ function CompositeRenderer({ block, value, onChange, platform }) {
 
   return (
     <Paper sx={{ p: 2, mb: 2, bgcolor: 'background.default' }}>
-      <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-        {block.label || 'Composite Block'}
-      </Typography>
+      {/* Block label and description - only show if not already shown by fields */}
+      {block.label && !schema.mode && (
+        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+          {block.label}
+        </Typography>
+      )}
       
-      {block.description && (
+      {block.description && !schema.mode && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {block.description}
         </Typography>
@@ -271,9 +274,12 @@ function CompositeRenderer({ block, value, onChange, platform }) {
 
             return (
               <Box key={field.name} sx={{ mb: 2 }}>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
-                  {field.label}
-                </Typography>
+                {/* Only show label if it's not the same as block label */}
+                {field.label !== block.label && (
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+                    {field.label}
+                  </Typography>
+                )}
                 {field.description && (
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
                     {field.description}

@@ -207,11 +207,15 @@ export class EmailService {
 
     // Header Image
     if (content.headerImage) {
-      const imageUrl = content.headerImage.startsWith('http') 
-        ? content.headerImage 
-        : content.headerImage.startsWith('/')
-          ? `http://localhost:4000${content.headerImage}`
-          : content.headerImage
+      let imageUrl = content.headerImage
+      
+      // For actual email sending, use absolute URLs (not base64)
+      // Preview uses base64, but actual emails need accessible URLs
+      if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+        const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 4000}`
+        imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+      }
+      
       html += `
     <img src="${imageUrl}" alt="Event Image" class="header-image" />`
     }
@@ -332,8 +336,49 @@ export class EmailService {
     // Import email-specific multi-preview renderer
     const { renderMultiPreview } = await import('./previewService.js')
     
-    // ✅ EMAIL-SPECIFIC: Extract recipients from content (backend knows about email structure)
-    // This is the ONLY place where we know about "recipients" - it's email-specific
+    // ✅ EMAIL-SPECIFIC: Extract recipients from content._templates (NEW FORMAT)
+    // Check for _templates array first (new format with targets per template)
+    if (options.content._templates && Array.isArray(options.content._templates) && options.content._templates.length > 0) {
+      // Generate previews for each template+targets combination
+      const previews: Array<{
+        target?: string
+        templateId?: string
+        metadata?: Record<string, any>
+        html: string
+        dimensions?: { width: number; height: number }
+      }> = []
+
+      for (const templateEntry of options.content._templates) {
+        if (!templateEntry.targets) continue
+
+        // Use email-specific renderMultiPreview for this template+targets combination
+        const templatePreviews = await renderMultiPreview(this, {
+          content: { ...options.content, _templateId: templateEntry.templateId },
+          recipients: templateEntry.targets,
+          schema: options.schema,
+          mode: options.mode || 'desktop',
+          darkMode: options.darkMode
+        })
+
+        // Add templateId to each preview
+        previews.push(...templatePreviews.map(preview => ({
+          target: preview.group,
+          templateId: templateEntry.templateId || preview.templateId,
+          metadata: {
+            recipients: preview.recipients
+          },
+          html: preview.html,
+          dimensions: preview.dimensions
+        })))
+      }
+
+      return previews.length > 0 ? previews : [{
+        html: '<p>No preview available</p>',
+        dimensions: { width: 600, height: 400 }
+      }]
+    }
+    
+    // ✅ LEGACY FORMAT: Extract recipients from content.recipients or options.targets
     const recipients = options.targets || options.content.recipients
     
     // Check if multi-preview is needed (email-specific logic)

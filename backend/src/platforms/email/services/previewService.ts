@@ -141,12 +141,56 @@ export async function renderEmailPreview(
   
   // Hero slot (headerImage)
   if (processedContent.headerImage) {
-    const imageUrl = processedContent.headerImage.startsWith('http') 
-      ? processedContent.headerImage 
-      : processedContent.headerImage.startsWith('/')
-        ? `http://localhost:4000${processedContent.headerImage}`
-        : processedContent.headerImage
-    html += `      <img src="${imageUrl}" alt="Event Image" />
+    let imageUrl = processedContent.headerImage
+    
+    // If relative URL (/files/...), convert to base64 for preview
+    // This ensures images work in iframe preview without external requests
+    if (imageUrl.startsWith('/files/')) {
+      try {
+        const fs = await import('fs')
+        const path = await import('path')
+        const { fileURLToPath } = await import('url')
+        const { dirname } = await import('path')
+        
+        const __filename = fileURLToPath(import.meta.url)
+        const __dirname = dirname(__filename)
+        
+        // Parse /files/{eventId}/{filename}
+        const parts = imageUrl.replace('/files/', '').split('/')
+        if (parts.length >= 2) {
+          const eventId = parts[0]
+          const filename = parts.slice(1).join('/')
+          const filePath = path.join(process.cwd(), 'events', eventId, 'files', filename)
+          
+          if (fs.existsSync(filePath)) {
+            const imageBuffer = fs.readFileSync(filePath)
+            const base64 = imageBuffer.toString('base64')
+            
+            // Detect MIME type from file extension or buffer
+            const ext = path.extname(filename).toLowerCase()
+            let mimeType = 'image/jpeg'
+            if (ext === '.png') mimeType = 'image/png'
+            else if (ext === '.gif') mimeType = 'image/gif'
+            else if (ext === '.webp') mimeType = 'image/webp'
+            else if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) mimeType = 'image/jpeg'
+            else if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50) mimeType = 'image/png'
+            
+            imageUrl = `data:${mimeType};base64,${base64}`
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load image for preview, using original URL:', error)
+        // Fallback: Try to use BASE_URL from environment
+        const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 4000}`
+        imageUrl = `${baseUrl}${imageUrl}`
+      }
+    } else if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+      // Relative URL without /files/ prefix - try BASE_URL
+      const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 4000}`
+      imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+    }
+    
+    html += `      <img src="${imageUrl}" alt="Event Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
 `
   }
 

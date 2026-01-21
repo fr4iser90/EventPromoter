@@ -205,12 +205,13 @@ export class LinkedInApiPublisher implements LinkedInPublisher {
     const assetUrn = registerData.value.asset
 
     // Step 2: Upload file to LinkedIn
+    // Convert Buffer to Uint8Array for fetch() compatibility
     const uploadResponse = await fetch(uploadUrl, {
       method: 'PUT',
       headers: {
         'Content-Type': file.type || 'image/jpeg'
       },
-      body: fileBuffer
+      body: new Uint8Array(fileBuffer)
     })
 
     if (!uploadResponse.ok) {

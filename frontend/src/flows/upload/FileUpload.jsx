@@ -23,6 +23,7 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import HelperIcon from '../../shared/components/ui/HelperIcon'
 import useStore, { WORKFLOW_STATES } from '../../store'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -159,9 +160,16 @@ function FileUpload() {
         }}
         onClick={() => setFileUploadExpanded(!fileUploadExpanded)}
       >
-        <Typography variant="h6">
-          📁 File Upload
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h6">
+            📁 File Upload
+          </Typography>
+          <HelperIcon 
+            helperId="upload"
+            context="upload"
+            size="small"
+          />
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {!fileUploadExpanded && uploadedFileRefs.length > 0 && (
@@ -203,9 +211,16 @@ function FileUpload() {
         <Typography variant="body2" color="text.secondary">
           or click to browse files
         </Typography>
-        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-          Supported: JPG, PNG, GIF, WebP images, PDF documents, TXT, MD text files (max 10MB each)
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 1 }}>
+          <Typography variant="caption">
+            Supported: JPG, PNG, GIF, WebP images, PDF documents, TXT, MD text files (max 10MB each)
+          </Typography>
+          <HelperIcon 
+            helperId="upload.formats"
+            context="upload.formats"
+            size="small"
+          />
+        </Box>
 
         {/* Folder selection button */}
         <Box sx={{ mt: 2 }}>

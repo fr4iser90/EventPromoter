@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "helpers": {
+    "upload": {
+      "type": "markdown",
+      "displayMode": "dialog",
+      "file": "upload.md",
+      "title": {
+        "de": "Datei-Upload Hilfe",
+        "en": "File Upload Help",
+        "es": "Ayuda de carga de archivos"
+      },
+      "short": {
+        "de": "Informationen zu unterstützten Dateiformaten und Upload-Methoden",
+        "en": "Information about supported file formats and upload methods",
+        "es": "Información sobre formatos de archivo compatibles y métodos de carga"
+      },
+      "contexts": ["upload", "file-upload", "dropzone"]
+    },
+    "upload.formats": {
+      "type": "text",
+      "displayMode": "tooltip",
+      "content": {
+        "de": "Unterstützte Formate: JPG, PNG, GIF, WebP (Bilder), PDF, TXT, MD (Dokumente)",
+        "en": "Supported formats: JPG, PNG, GIF, WebP (images), PDF, TXT, MD (documents)",
+        "es": "Formatos compatibles: JPG, PNG, GIF, WebP (imágenes), PDF, TXT, MD (documentos)"
+      },
+      "contexts": ["upload", "formats"]
+    },
+    "upload.info-files": {
+      "type": "text",
+      "displayMode": "tooltip",
+      "content": {
+        "de": "Sie können optionale info.md oder info.txt Dateien hochladen, die beim Parsen berücksichtigt werden.",
+        "en": "You can upload optional info.md or info.txt files that will be considered during parsing.",
+        "es": "Puede cargar archivos opcionales info.md o info.txt que se considerarán durante el análisis."
+      },
+      "contexts": ["upload", "info-files"]
+    }
+  }
+}
