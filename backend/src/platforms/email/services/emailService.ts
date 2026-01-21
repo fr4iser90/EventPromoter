@@ -378,43 +378,12 @@ export class EmailService {
       }]
     }
     
-    // ✅ LEGACY FORMAT: Extract recipients from content.recipients or options.targets
-    const recipients = options.targets || options.content.recipients
-    
-    // Check if multi-preview is needed (email-specific logic)
-    const needsMultiPreview = recipients && (
-      (recipients.mode === 'groups' && recipients.groups && recipients.groups.length > 1) ||
-      (recipients.mode === 'all')
-    )
-    
-    if (!needsMultiPreview) {
-      // Return single preview if multi-preview not needed
-      const singlePreview = await this.renderPreview(options)
-      return [{
-        html: singlePreview.html,
-        dimensions: singlePreview.dimensions
-      }]
-    }
-
-    // Use email-specific renderMultiPreview
-    const previews = await renderMultiPreview(this, {
-      content: options.content,
-      recipients,
-      schema: options.schema,
-      mode: options.mode || 'desktop',
-      darkMode: options.darkMode
-    })
-
-    // Transform to generic format
-    return previews.map(preview => ({
-      target: preview.group,
-      templateId: preview.templateId,
-      metadata: {
-        recipients: preview.recipients
-      },
-      html: preview.html,
-      dimensions: preview.dimensions
-    }))
+    // No _templates found - return single preview
+    const singlePreview = await this.renderPreview(options)
+    return [{
+      html: singlePreview.html,
+      dimensions: singlePreview.dimensions
+    }]
   }
 
   /**

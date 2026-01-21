@@ -499,10 +499,12 @@ export class TargetController {
       // Instantiate service
       return new ServiceClass()
     } catch (error: any) {
-      if (error.code === 'MODULE_NOT_FOUND') {
-        console.warn(`Target service not found for platform: ${platformId}`)
+      // Handle module not found errors (expected for platforms without target services)
+      if (error.code === 'MODULE_NOT_FOUND' || error.code === 'ERR_MODULE_NOT_FOUND') {
+        // Silently return null - this is expected for platforms that don't support targets
         return null
       }
+      // Only log unexpected errors
       console.error(`Error loading target service for ${platformId}:`, error)
       return null
     }
