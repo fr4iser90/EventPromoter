@@ -13,6 +13,7 @@
 import { PanelSchema } from '../../../types/platformSchema.js'
 
 export const twitterPanelSchema: PanelSchema = {
+  id: 'twitter-panel-schema',
   version: '1.0.0',
   title: 'Twitter Accounts & Hashtags',
   description: 'Manage Twitter accounts and hashtags for event posts',

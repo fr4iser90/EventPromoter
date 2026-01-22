@@ -4,9 +4,15 @@ import helmet from 'helmet'
 import { corsMiddleware } from './middleware/cors.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import routes from './routes/index.js'
+import { SchemaRegistry } from './services/schemaRegistry.js'
 
 // Load environment variables
 dotenv.config()
+
+const schemaRegistry = SchemaRegistry.getInstance();
+// Load all schemas into the registry at application start
+schemaRegistry.loadAllSchemas();
+
 
 const app = express()
 const PORT = process.env.PORT || 4000

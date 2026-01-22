@@ -1,11 +1,12 @@
 // ✅ GENERIC: Platform routes - Platform metadata and configuration
 // NO platform-specific routes here! All platform-specific routes belong in platforms/{platform}/routes.ts
-import { Router } from 'express'
+import { Router, Request, Response } from 'express'
 import { readdir } from 'fs/promises'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { PlatformController, UserPreferencesController } from '../controllers/platformController.js'
 import { TargetController } from '../controllers/targetController.js'
+import { SchemaController } from '../controllers/schemaController.js'
 
 const router = Router()
 
@@ -30,7 +31,6 @@ router.patch('/preferences', UserPreferencesController.updatePreferences)
 router.get('/:platformId', PlatformController.getPlatform)
 
 // Get platform schema
-router.get('/:platformId/schema', PlatformController.getPlatformSchema)
 
 // Get platform translations
 router.get('/:platformId/i18n/:lang', PlatformController.getPlatformTranslations)
@@ -49,6 +49,9 @@ router.post('/:platformId/preview', PlatformController.renderPreview)
 
 // Render multi-preview HTML (generic - any platform can implement)
 router.post('/:platformId/multi-preview', PlatformController.renderMultiPreview)
+
+// Get specific form schemas for edit modals (e.g., recipient edit schema)
+router.get('/:platformId/schemas/:schemaId', SchemaController.getSchema)
 
 // ✅ GENERIC: Target management routes (work for all platforms)
 // These routes must be defined BEFORE the dynamic platform routes to avoid conflicts

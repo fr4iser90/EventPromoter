@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
+  Box,
   Table,
   TableBody,
   TableCell,
@@ -8,51 +9,59 @@ import {
   TableRow,
   Paper,
   Typography,
-  Box,
-  Link,
+  Alert,
+  CircularProgress,
   Button,
   TextField,
-  CircularProgress,
-} from '@mui/material';
-import EditModal from '../../../shared/components/EditModal.jsx'; // Import the generic EditModal
+  Link,
+  Dialog, // Keep Dialog for Delete Confirmation
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material'
+import { getApiUrl } from '../../../shared/utils/api'
+import axios from 'axios'
+import EditModal from '../../../shared/components/EditModal.jsx'
 
-const TargetList = ({ data, platformId, title, description, fields, onUpdate }) => {
-  const [targets, setTargets] = useState([]);
-  const [filteredTargets, setFilteredTargets] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [currentEditItem, setCurrentEditItem] = useState(null);
-  const [currentAction, setCurrentAction] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+function GroupList({ data, platformId, title, description, fields, onUpdate }) {
+  const [groups, setGroups] = useState([])
+  const [filteredGroups, setFilteredGroups] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [errorState, setErrorState] = useState(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [currentEditItem, setCurrentEditItem] = useState(null)
+  const [currentAction, setCurrentAction] = useState(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [selectedForDelete, setSelectedForDelete] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (data && Array.isArray(data.targets)) {
-      setTargets(data.targets);
-      setFilteredTargets(data.targets);
+    if (data && Array.isArray(data.groups)) {
+      setGroups(data.groups);
+      setFilteredGroups(data.groups);
       setLoading(false);
-    } else if (data && data.targets) { // Handle case where targets is an object
-      const targetsArray = Object.values(data.targets);
-      setTargets(targetsArray);
-      setFilteredTargets(targetsArray);
+    } else if (data && data.groups) { // Handle case where groups is an object
+      const groupsArray = Object.values(data.groups);
+      setGroups(groupsArray);
+      setFilteredGroups(groupsArray);
       setLoading(false);
     } else if (data === null) {
       setLoading(false);
-      setTargets([]);
-      setFilteredTargets([]);
+      setGroups([]);
+      setFilteredGroups([]);
     } else if (!data) {
       setLoading(true);
     }
   }, [data]);
 
   useEffect(() => {
-    const results = targets.filter(target =>
-      Object.values(target).some(value =>
+    const results = groups.filter(group =>
+      Object.values(group).some(value =>
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
-    setFilteredTargets(results);
-  }, [searchTerm, targets]);
+    setFilteredGroups(results);
+  }, [searchTerm, groups]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -71,15 +80,30 @@ const TargetList = ({ data, platformId, title, description, fields, onUpdate }) 
   };
 
   const handleSaveSuccess = () => {
-    onUpdate && onUpdate(); // Trigger a reload of targets in the parent component
+    onUpdate && onUpdate(); // Trigger a reload of groups in the parent component
   };
+
+  const confirmDelete = async () => {
+    if (!selectedForDelete || !platformId) return
+
+    try {
+      const endpoint = `platforms/${platformId}/target-groups/${selectedForDelete.id}`
+      const url = getApiUrl(endpoint)
+
+      await axios.delete(url)
+
+      onUpdate && onUpdate(); // Trigger a reload of groups
+      setDeleteDialogOpen(false)
+      setSelectedForDelete(null)
+    } catch (err) {
+      console.error('Failed to delete group:', err)
+      setErrorState(err.message || 'Failed to delete group')
+    }
+  }
 
   const renderField = (field) => {
     switch (field.type) {
-      case 'text':
-      case 'email':
-      case 'tel':
-      case 'target-list': // Added target-list type
+      case 'target-list': // Changed from 'list' to 'target-list'
         if (field.ui?.renderAsTable) {
           const columns = field.ui.tableColumns || [];
           return (
@@ -101,29 +125,29 @@ const TargetList = ({ data, platformId, title, description, fields, onUpdate }) 
                         <CircularProgress size={24} />
                       </TableCell>
                     </TableRow>
-                  ) : filteredTargets.length === 0 ? (
+                  ) : filteredGroups.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={columns.length} align="center">
                         <Typography variant="body2" color="textSecondary">
-                          No recipients available. Add a new recipient.
+                          No groups available. Add a new group.
                         </Typography>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredTargets.map((row) => (
+                    filteredGroups.map((row) => (
                       <TableRow key={row.id}>
                         {columns.map((column) => (
                           <TableCell key={column.id}>
-                            {column.clickable && row[column.id] ? (
+                            {column.clickable && row[column.id] !== undefined && column.action ? (
                               <Link
                                 component="button"
                                 variant="body2"
                                 onClick={() => handleEdit(row, column.action)}
                               >
-                                {row[column.id]}
+                                {column.id === 'memberCount' ? `${row[column.id]} members` : row[column.id]}
                               </Link>
                             ) : (
-                              row[column.id]
+                              column.id === 'memberCount' ? `${row[column.id]} members` : row[column.id]
                             )}
                           </TableCell>
                         ))}
@@ -141,9 +165,9 @@ const TargetList = ({ data, platformId, title, description, fields, onUpdate }) 
     }
   };
 
-  const searchField = fields.find(f => f.id === 'recipientSearch');
-  const newRecipientButton = fields.find(f => f.id === 'newRecipientButton');
-  const targetsField = fields.find(f => f.id === 'targets');
+  const searchField = fields.find(f => f.id === 'groupSearch');
+  const newGroupButton = fields.find(f => f.id === 'newGroupButton');
+  const groupsOverviewField = fields.find(f => f.id === 'groupsOverview');
 
   return (
     <Box sx={{ p: 2 }}>
@@ -162,18 +186,18 @@ const TargetList = ({ data, platformId, title, description, fields, onUpdate }) 
             placeholder={searchField.label}
           />
         )}
-        {newRecipientButton && (
+        {newGroupButton && (
           <Button
-            variant={newRecipientButton.ui?.variant || 'contained'}
-            color={newRecipientButton.ui?.color || 'primary'}
-            onClick={() => handleEdit({}, newRecipientButton.action)}
+            variant={newGroupButton.ui?.variant || 'contained'}
+            color={newGroupButton.ui?.color || 'primary'}
+            onClick={() => handleEdit({}, newGroupButton.action)}
           >
-            {newRecipientButton.label}
+            {newGroupButton.label}
           </Button>
         )}
       </Box>
 
-      {targetsField && renderField(targetsField)}
+      {groupsOverviewField && renderField(groupsOverviewField)}
 
       {editModalOpen && currentEditItem && currentAction && (
         <EditModal
@@ -188,8 +212,25 @@ const TargetList = ({ data, platformId, title, description, fields, onUpdate }) 
           onSaveSuccess={handleSaveSuccess}
         />
       )}
-    </Box>
-  );
-};
 
-export default TargetList;
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete Group</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete <strong>{selectedForDelete ? selectedForDelete.name : ''}</strong>?
+            This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  )
+}
+
+export default GroupList;

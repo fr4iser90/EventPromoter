@@ -31,6 +31,8 @@ export type FieldType =
   | 'json'
   | 'target-list'
   | 'button'
+  | 'email'
+  | 'tel'
 
 /**
  * Validation rule types
@@ -44,6 +46,20 @@ export interface ValidationRule {
   message?: string
   /** Custom validation function (for 'custom' type) */
   validator?: (value: any) => boolean | string
+}
+
+export interface ActionSchema {
+  id: string;
+  type?: 'open-edit-modal' | 'custom' | 'submit' | 'button';
+  schemaId?: string;
+  dataEndpoint?: string;
+  saveEndpoint?: string;
+  endpoint?: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  trigger?: 'change' | 'submit' | 'blur' | 'click';
+  onSuccess?: 'reload' | 'clear' | 'refresh' | 'none';
+  // Allow any other properties that might be needed
+  [key: string]: any;
 }
 
 /**
@@ -64,6 +80,8 @@ export interface FieldDefinition {
   default?: any
   /** Whether field is required */
   required?: boolean
+  /** Whether field is read-only */
+  readOnly?: boolean;
   /** Validation rules */
   validation?: ValidationRule[]
   /** Field options (for select, multiselect, radio) */
@@ -78,6 +96,10 @@ export interface FieldDefinition {
     responsePath?: string
     /** Transform function for mapping items to {label, value} */
     transform?: 'custom' | ((item: any) => { label: string; value: any })
+    /** Key for the label in the options data */
+    labelPath?: string;
+    /** Key for the value in the options data */
+    valuePath?: string;
   }
   /** Field action (triggered on value change or submit) */
   action?: {
@@ -114,6 +136,16 @@ export interface FieldDefinition {
     disabled?: boolean
     /** Custom component to render (overrides default) */
     component?: string
+    /** Whether to render as a table (for 'target-list' type) */
+    renderAsTable?: boolean
+    /** Column definitions for table rendering */
+    tableColumns?: Array<{
+      id: string;
+      label: string;
+      clickable?: boolean;
+      type?: 'text' | 'number' | 'date' | 'boolean';
+      action?: ActionSchema;
+    }>;
   }
   // ✅ NEW: Environment Variable Support
   /** Environment variable name or configuration */
@@ -549,8 +581,10 @@ export interface Group {
  * Defines the platform feature panel structure (NOT settings/credentials)
  */
 export interface PanelSchema {
+  /** Unique schema identifier */
+  id: string;
   /** Schema version */
-  version: string
+  version: string;
   /** Panel title */
   title: string
   /** Panel description */
@@ -704,4 +738,3 @@ export function isSchemaVersionCompatible(version: string, minVersion: string): 
   if (v.minor < min.minor) return false
   return v.patch >= min.patch
 }
-

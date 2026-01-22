@@ -256,12 +256,11 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       // Update all fields at once
       const updatedContent = { ...content, ...mappedContent }
 
-      // ✅ Save targets value if provided (from template modal)
-      if (targetsValue) {
-        const targetsBlock = editorSchema?.blocks?.find(block => block.type === 'targets')
-        if (targetsBlock) {
-          updatedContent[targetsBlock.id] = targetsValue
-        }
+      // ✅ Save targets value if provided (from template modal), or use default 'all'
+      const targetsBlock = editorSchema?.blocks?.find(block => block.type === 'targets')
+      if (targetsBlock) {
+        // Use provided targetsValue, or default to 'all' if nothing selected
+        updatedContent[targetsBlock.id] = targetsValue || { mode: 'all' }
       }
 
       // ✅ Add to _templates array (multiple templates with targets)
@@ -410,7 +409,9 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
           
           const mode = targets.mode || 'all'
           if (mode === 'all') {
-            return 'All targets'
+            // For 'all' mode, show resolved target names from backend
+            const names = targets.targetNames || []
+            return `All recipients: ${names.join(', ')}`
           } else if (mode === 'groups') {
             const groups = targets.groups || []
             // Use groupNames if available (resolved by backend), otherwise use IDs

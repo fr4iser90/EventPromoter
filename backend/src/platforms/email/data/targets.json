@@ -2,7 +2,7 @@
   "targets": [
     {
       "id": "d5f93338-21bc-49b7-b91d-56b50fd1a2a8",
-      "email": "dj-events@club.com",
+      "email": "test.test@holio.com",
       "createdAt": "2026-01-20T22:58:55.835Z"
     },
     {
@@ -12,12 +12,12 @@
     },
     {
       "id": "9e1d4c1d-4012-46f8-83ee-c0dddf625f8a",
-      "email": "events@venue.de",
+      "email": "test.test@ji5.de",
       "createdAt": "2026-01-20T22:58:55.836Z"
     },
     {
       "id": "a2ab961a-40dd-432a-987d-ef6f8caf24fa",
-      "email": "events@agency.com",
+      "email": "test.test@ji6.com",
       "createdAt": "2026-01-20T22:58:55.836Z"
     }
   ],

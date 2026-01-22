@@ -38,8 +38,7 @@ export const emailEditorSchema: EditorSchema = {
             fieldType: 'select',
             label: 'Auswahl-Modus',
             description: 'Wähle wie Empfänger ausgewählt werden sollen',
-            source: 'modes',
-            default: 'all'
+            source: 'modes'
           },
           groups: {
             fieldType: 'multiselect',

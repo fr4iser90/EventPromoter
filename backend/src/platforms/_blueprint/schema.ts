@@ -59,8 +59,8 @@ export const platformIdSchema: PlatformSchema = {
     mode: 'simple',
     blocks: [
       {
+        id: 'text-content',
         type: 'text',
-        id: 'text',
         label: 'Content',
         description: 'Your content text',
         required: true,
@@ -83,8 +83,8 @@ export const platformIdSchema: PlatformSchema = {
         }
       },
       {
+        id: 'image-content',
         type: 'image',
-        id: 'images',
         label: 'Images',
         description: 'Upload images',
         required: false,

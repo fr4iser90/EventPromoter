@@ -13,6 +13,7 @@
 import { PanelSchema } from '../../../types/platformSchema.js'
 
 export const redditPanelSchema: PanelSchema = {
+  id: 'reddit-panel-schema',
   version: '2.0.0',
   title: 'Reddit Subreddits',
   description: 'Manage subreddits and groups for event posts',

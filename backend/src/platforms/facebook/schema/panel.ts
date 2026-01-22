@@ -13,6 +13,7 @@
 import { PanelSchema } from '../../../types/platformSchema.js'
 
 export const facebookPanelSchema: PanelSchema = {
+  id: 'facebook-panel-schema',
   version: '1.0.0',
   title: 'Facebook Pages, Groups & Events',
   description: 'Manage Facebook pages, groups, and events for event posts',

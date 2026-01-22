@@ -625,18 +625,21 @@ export class EventService {
     }
 
     try {
+      console.log('[DEBUG] Resolving target names for platform:', platform)
       // Get target service for this platform
       const { TargetController } = await import('../controllers/targetController.js')
-      
+
       // Get target service instance
       const service = await TargetController.getTargetService(platform)
       if (!service) {
+        console.log('[DEBUG] No target service found for platform:', platform)
         return content // No target service - return content as-is
       }
 
       // Load targets and groups
       const targets = await service.getTargets()
       const groups = await service.getGroups()
+      console.log('[DEBUG] Loaded targets:', targets.length, 'groups:', Object.keys(groups).length)
 
       // Create mapping: ID -> name
       const targetNameMap: Record<string, string> = {}
@@ -665,7 +668,14 @@ export class EventService {
         }
         
         // Resolve target names
-        if (templateEntry.targets.individual && Array.isArray(templateEntry.targets.individual)) {
+        if (templateEntry.targets.mode === 'all') {
+          // For 'all' mode, include ALL available targets
+          targetsWithNames.targetNames = targets.map((target: any) => {
+            const baseField = service.getBaseField()
+            const name = target.name || target[baseField] || target.id
+            return name
+          })
+        } else if (templateEntry.targets.individual && Array.isArray(templateEntry.targets.individual)) {
           targetsWithNames.targetNames = templateEntry.targets.individual.map((id: string) => targetNameMap[id] || id)
         }
 

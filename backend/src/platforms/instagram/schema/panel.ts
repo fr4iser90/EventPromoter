@@ -13,6 +13,7 @@
 import { PanelSchema } from '../../../types/platformSchema.js'
 
 export const instagramPanelSchema: PanelSchema = {
+  id: 'instagram-panel-schema',
   version: '1.0.0',
   title: 'Instagram Accounts, Hashtags & Locations',
   description: 'Manage Instagram accounts, hashtags, and locations for event posts',

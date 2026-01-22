@@ -13,6 +13,7 @@
 import { PanelSchema } from '../../../types/platformSchema.js'
 
 export const linkedinPanelSchema: PanelSchema = {
+  id: 'linkedin-panel-schema',
   version: '1.0.0',
   title: 'LinkedIn Connections & Pages',
   description: 'Manage LinkedIn connections, company pages, and groups',
