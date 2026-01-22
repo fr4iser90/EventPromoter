@@ -10,7 +10,7 @@
  * @module platforms/twitter/schema/panel
  */
 
-import { PanelSchema } from '../../../types/platformSchema.js'
+import { PanelSchema } from '@/types/schema'
 
 export const twitterPanelSchema: PanelSchema = {
   id: 'twitter-panel-schema',

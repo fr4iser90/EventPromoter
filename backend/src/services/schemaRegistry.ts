@@ -1,5 +1,4 @@
-import { FormSchema } from '../types/formSchema.js';
-import { PanelSchema } from '../types/platformSchema.js';
+import { FormSchema, PanelSchema } from '@/types/schema';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readdir } from 'fs/promises';

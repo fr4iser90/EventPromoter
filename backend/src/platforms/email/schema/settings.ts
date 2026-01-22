@@ -6,7 +6,7 @@
  * @module platforms/email/schema/settings
  */
 
-import { SettingsSchema } from '../../../types/platformSchema.js'
+import { SettingsSchema } from '@/types/schema'
 
 export const emailSettingsSchema: SettingsSchema = {
   version: '1.0.0',

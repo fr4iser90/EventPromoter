@@ -1,5 +1,4 @@
-import { FormSchema } from '../types/formSchema.js';
-import { PanelSchema } from '../types/platformSchema.js';
+import { FormSchema, PanelSchema } from '@/types/schema';
 
 export class SchemaValidator {
   public static findUnresolvedTemplates(obj: any, found = new Set<string>()): Set<string> {

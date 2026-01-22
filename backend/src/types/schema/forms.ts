@@ -1,9 +1,16 @@
-import { FieldDefinition, PanelSection, ActionSchema } from './platformSchema.js';
-
 /**
- * Form schema
- * Defines the form structure for generic data entry and editing
+ * Form Schema Definitions
+ * Defines the form structure for generic data entry and editing.
  */
+
+import { FieldDefinition, ActionSchema } from './primitives.js';
+
+export interface FormSection {
+  id: string;
+  title: string;
+  fields: string[]; // Referenziert Feld-Namen
+}
+
 export interface FormSchema {
   /** Unique schema identifier */
   id: string;
@@ -18,7 +25,7 @@ export interface FormSchema {
   /** Form actions (e.g., Save, Cancel) */
   actions?: ActionSchema[];
   /** Field groups/sections (optional, for complex forms) */
-  sections?: PanelSection[];
+  sections?: FormSection[];
   /** Form-level validation */
   validate?: (data: Record<string, any>) => { isValid: boolean; errors: Record<string, string[]> };
   // Allow any other properties that might be needed

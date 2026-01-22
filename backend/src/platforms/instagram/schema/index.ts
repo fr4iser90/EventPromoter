@@ -9,11 +9,11 @@
  * @module platforms/instagram/schema
  */
 
-import { PlatformSchema } from '../../../types/platformSchema.js'
-import { instagramSettingsSchema } from './settings.js'
-import { instagramEditorSchema } from './editor.js'
-import { instagramPreviewSchema } from './preview.js'
-import { instagramPanelSchema } from './panel.js'
+import { PlatformSchema } from '@/types/schema'
+import { instagramSettingsSchema } from './settings'
+import { instagramEditorSchema } from './editor'
+import { instagramPreviewSchema } from './preview'
+import { instagramPanelSchema } from './panel'
 
 /**
  * Complete Instagram Platform Schema

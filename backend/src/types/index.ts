@@ -261,5 +261,4 @@ export interface PlatformSettingsUpdate {
 
 // Export new platform architecture types
 export * from './platformModule.js'
-export * from './platformSchema.js'
 export * from './validationErrors.js'

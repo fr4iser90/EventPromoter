@@ -10,7 +10,7 @@
  * @module platforms/linkedin/schema/panel
  */
 
-import { PanelSchema } from '../../../types/platformSchema.js'
+import { PanelSchema } from '@/types/schema'
 
 export const linkedinPanelSchema: PanelSchema = {
   id: 'linkedin-panel-schema',

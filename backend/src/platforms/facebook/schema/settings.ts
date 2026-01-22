@@ -6,7 +6,7 @@
  * @module platforms/facebook/schema/settings
  */
 
-import { SettingsSchema } from '../../../types/platformSchema.js'
+import { SettingsSchema } from '@/types/schema'
 
 export const facebookSettingsSchema: SettingsSchema = {
   version: '1.0.0',

@@ -3,7 +3,7 @@
 
 import { Template } from '../types/templateTypes.js'
 import { ParsedEventData } from '../types/index.js'
-import { ContentBlock } from '../types/platformSchema.js'
+import { ContentBlock } from '@/types/schema'
 import { getTemplateVariables, replaceTemplateVariables } from './parsing/templateVariables.js'
 import { PlatformManager } from './platformManager.js'
 import { getPlatformRegistry, initializePlatformRegistry } from './platformRegistry.js'

@@ -6,7 +6,7 @@
  * @module platforms/PLATFORM_ID/schema
  */
 
-import { PlatformSchema } from '../../types/platformSchema.js'
+import { PlatformSchema } from '@/types/schema'
 
 export const platformIdSchema: PlatformSchema = {
   version: '1.0.0',

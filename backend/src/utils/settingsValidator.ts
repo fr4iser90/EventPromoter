@@ -7,7 +7,7 @@
  * @module utils/settingsValidator
  */
 
-import { SettingsSchema, FieldDefinition, ValidationRule } from '../types/platformSchema.js'
+import { SettingsSchema, FieldDefinition, ValidationRule } from '@/types/schema'
 
 /**
  * Validation result
@@ -33,7 +33,7 @@ export function validateSettingsValues(
 
     // Check required
     if (field.required && (value === undefined || value === null || value === '')) {
-      const requiredRule = field.validation?.find(r => r.type === 'required')
+      const requiredRule = field.validation?.find((r: ValidationRule) => r.type === 'required')
       fieldErrors.push(requiredRule?.message || `${field.label} is required`)
     }
 

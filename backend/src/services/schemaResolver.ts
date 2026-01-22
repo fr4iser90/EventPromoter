@@ -1,5 +1,4 @@
-import { FormSchema } from '../types/formSchema.js';
-import { PanelSchema } from '../types/platformSchema.js';
+import { FormSchema, PanelSchema } from '@/types/schema';
 import { SchemaContext } from '../controllers/schemaController.js';
 
 // Helper to recursively resolve template strings (e.g., :platformId, :userId)

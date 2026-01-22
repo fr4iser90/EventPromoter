@@ -1,4 +1,4 @@
-import { FormSchema } from '../../../types/formSchema.js';
+import { FormSchema } from '@/types/schema';
 
 const emailGroupEditSchema: FormSchema = {
   id: 'email-group-edit-schema',

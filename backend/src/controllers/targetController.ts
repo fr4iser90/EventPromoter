@@ -9,7 +9,7 @@
 
 import { Request, Response } from 'express'
 import { BaseTargetService } from '../services/targetService.js'
-import { Target, Group } from '../types/platformSchema.js'
+import { Target, Group } from '@/types/schema'
 
 export class TargetController {
   /**

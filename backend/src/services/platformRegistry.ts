@@ -10,7 +10,7 @@
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { PlatformModule, PlatformMetadata, PlatformCapabilities } from '../types/platformModule.js'
-import { PlatformSchema } from '../types/platformSchema.js'
+import { PlatformSchema } from '@/types/schema'
 import { discoverPlatforms, discoverPlatform, scanPlatformDirectories, DiscoveryConfig } from '../utils/platformDiscovery.js'
 import { validatePlatformSchema } from '../utils/schemaValidator.js'
 import { PlatformValidationError, PlatformDiscoveryError } from '../types/validationErrors.js'

@@ -11,7 +11,7 @@
  * @module services/previewRenderer
  */
 
-import { PreviewSchema, PreviewSlot } from '../types/platformSchema.js'
+import { PreviewSchema, PreviewSlot } from '@/types/schema'
 import { PlatformManager } from './platformManager.js'
 
 export interface PreviewRenderOptions {

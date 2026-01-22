@@ -6,7 +6,7 @@
  * @module platforms/linkedin/schema/editor
  */
 
-import { EditorSchema } from '../../../types/platformSchema.js'
+import { EditorSchema } from '@/types/schema'
 
 export const linkedinEditorSchema: EditorSchema = {
   version: '1.0.0',

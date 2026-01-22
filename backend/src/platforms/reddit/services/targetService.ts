@@ -8,7 +8,7 @@
  */
 
 import { BaseTargetService } from '../../../services/targetService.js'
-import { TargetSchema } from '../../../types/platformSchema.js'
+import { TargetSchema } from '@/types/schema'
 
 export class RedditTargetService extends BaseTargetService {
   constructor() {

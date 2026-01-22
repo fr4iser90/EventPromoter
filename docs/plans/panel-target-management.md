@@ -107,7 +107,7 @@ export abstract class BaseTargetService {
 
 ```typescript
 import { BaseTargetService } from '../../../../services/targetService.js'
-import { TargetSchema } from '../../../../types/platformSchema.js'
+import { TargetSchema } from '../@/types/schema'
 
 export class EmailTargetService extends BaseTargetService {
   constructor() {

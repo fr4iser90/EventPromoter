@@ -9,11 +9,11 @@
  * @module platforms/linkedin/schema
  */
 
-import { PlatformSchema } from '../../../types/platformSchema.js'
-import { linkedinSettingsSchema } from './settings.js'
-import { linkedinEditorSchema } from './editor.js'
-import { linkedinPreviewSchema } from './preview.js'
-import { linkedinPanelSchema } from './panel.js'
+import { PlatformSchema } from '@/types/schema'
+import { linkedinSettingsSchema } from './settings'
+import { linkedinEditorSchema } from './editor'
+import { linkedinPreviewSchema } from './preview'
+import { linkedinPanelSchema } from './panel'
 
 /**
  * Complete LinkedIn Platform Schema

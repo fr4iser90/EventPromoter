@@ -1,8 +1,5 @@
 import { Request, Response } from 'express'
-import { FormSchema } from '../types/formSchema.js'
-import { PanelSchema } from '../types/platformSchema.js'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
+import { FormSchema, PanelSchema } from '@/types/schema';
 import { SchemaRegistry } from '../services/schemaRegistry.js'
 import { SchemaResolver } from '../services/schemaResolver.js'
 import { SchemaValidator } from '../services/schemaValidator.js'

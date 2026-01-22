@@ -10,7 +10,7 @@
  * @module platforms/email/schema/panel
  */
 
-import { PanelSchema } from '../../../types/platformSchema.js'
+import { PanelSchema } from '@/types/schema'
 
 export const emailPanelSchema: PanelSchema = {
   id: 'email-panel-schema',

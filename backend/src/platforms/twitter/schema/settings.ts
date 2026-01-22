@@ -6,7 +6,7 @@
  * @module platforms/twitter/schema/settings
  */
 
-import { SettingsSchema } from '../../../types/platformSchema.js'
+import { SettingsSchema } from '@/types/schema'
 
 export const twitterSettingsSchema: SettingsSchema = {
   version: '1.0.0',

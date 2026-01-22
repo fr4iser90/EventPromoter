@@ -16,7 +16,7 @@ import {
   ValidationRule,
   isPlatformSchema,
   isSchemaVersionCompatible
-} from '../types/platformSchema.js'
+} from '@/types/schema'
 import {
   SchemaValidationError,
   FieldValidationError,

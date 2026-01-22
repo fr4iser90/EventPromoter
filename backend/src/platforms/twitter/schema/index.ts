@@ -9,11 +9,11 @@
  * @module platforms/twitter/schema
  */
 
-import { PlatformSchema } from '../../../types/platformSchema.js'
-import { twitterSettingsSchema } from './settings.js'
-import { twitterEditorSchema } from './editor.js'
-import { twitterPreviewSchema } from './preview.js'
-import { twitterPanelSchema } from './panel.js'
+import { PlatformSchema } from '@/types/schema'
+import { twitterSettingsSchema } from './settings'
+import { twitterEditorSchema } from './editor'
+import { twitterPreviewSchema } from './preview'
+import { twitterPanelSchema } from './panel'
 
 /**
  * Complete Twitter Platform Schema

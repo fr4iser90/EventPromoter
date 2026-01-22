@@ -10,7 +10,7 @@
  * @module platforms/reddit/schema/panel
  */
 
-import { PanelSchema } from '../../../types/platformSchema.js'
+import { PanelSchema } from '@/types/schema'
 
 export const redditPanelSchema: PanelSchema = {
   id: 'reddit-panel-schema',

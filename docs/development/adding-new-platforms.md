@@ -23,7 +23,7 @@ Create `schema.ts` with your platform's UI schema:
 
 ```typescript
 // backend/src/platforms/myplatform/schema.ts
-import { PlatformSchema } from '../../types/platformSchema.js'
+import { PlatformSchema } from '@/types/schema'
 
 export const myPlatformSchema: PlatformSchema = {
   version: '1.0.0',

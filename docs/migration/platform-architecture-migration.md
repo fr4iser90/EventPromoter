@@ -36,7 +36,7 @@ For each platform, create a schema file:
 
 ```typescript
 // backend/src/platforms/[platform]/schema.ts
-import { PlatformSchema } from '../../types/platformSchema.js'
+import { PlatformSchema } from '@/types/schema'
 
 export const [platform]Schema: PlatformSchema = {
   version: '1.0.0',

@@ -8,7 +8,7 @@
  */
 
 import { PlatformPlugin, PlatformParser, PlatformService, ContentValidator, ContentTemplates, PlatformConfig } from './index.js'
-import { PlatformSchema } from './platformSchema.js'
+import { PlatformSchema } from '@/types/schema'
 
 /**
  * Platform metadata information

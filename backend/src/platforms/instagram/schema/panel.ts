@@ -10,7 +10,7 @@
  * @module platforms/instagram/schema/panel
  */
 
-import { PanelSchema } from '../../../types/platformSchema.js'
+import { PanelSchema } from '@/types/schema'
 
 export const instagramPanelSchema: PanelSchema = {
   id: 'instagram-panel-schema',
