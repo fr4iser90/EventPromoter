@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
   const [currentAction, setCurrentAction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const theme = useTheme();
 
   const searchField = allFields?.find(f => f.name === 'recipientSearch');
   const newRecipientButton = allFields?.find(f => f.name === 'newRecipientButton');
@@ -80,12 +82,20 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
         if (field.ui?.renderAsTable) {
           const columns = field.ui.tableColumns || [];
           return (
-            <TableContainer component={Paper} elevation={1} sx={{ mt: 2 }}>
-              <Table size="small">
+            <TableContainer component={Paper} sx={{
+              mt: 2,
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: theme.shape.borderRadius,
+              boxShadow: theme.shadows[1],
+            }}>
+              <Table size="small" sx={{ borderCollapse: 'collapse' }}>
                 <TableHead>
                   <TableRow>
                     {columns.map((column) => (
-                      <TableCell key={column.id} style={{ width: column.width || 'auto' }}>
+                      <TableCell key={column.id} sx={{
+                        width: column.width || 'auto',
+                        border: `1px solid ${theme.palette.divider}`,
+                      }}>
                         {column.label}
                       </TableCell>
                     ))}
@@ -94,13 +104,13 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={columns.length} align="center">
+                      <TableCell colSpan={columns.length} align="center" sx={{ border: `1px solid ${theme.palette.divider}` }}>
                         <CircularProgress size={24} />
                       </TableCell>
                     </TableRow>
                   ) : filteredTargets.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={columns.length} align="center">
+                      <TableCell colSpan={columns.length} align="center" sx={{ border: `1px solid ${theme.palette.divider}` }}>
                         <Typography variant="body2" color="textSecondary">
                           No recipients available. Add a new recipient.
                         </Typography>
@@ -110,7 +120,7 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
                     filteredTargets.map((row) => (
                       <TableRow key={row.id}>
                         {columns.map((column) => (
-                          <TableCell key={column.id}>
+                          <TableCell key={column.id} sx={{ border: `1px solid ${theme.palette.divider}` }}>
                             {column.clickable && row[column.id] ? (
                               <Link
                                 component="button"
