@@ -30,7 +30,7 @@ import axios from 'axios'
 /**
  * Render a single field based on schema definition
  */
-function renderField(field, value, onChange, error, platformId = null, formValues = {}) {
+function renderField(field, value, onChange, error, platformId = null, formValues = {}, allFields = []) {
   const commonProps = {
     fullWidth: true,
     label: field.label,
@@ -148,10 +148,9 @@ function renderField(field, value, onChange, error, platformId = null, formValue
           {platformId ? (
             <TargetList
               field={field}
-              value={value}
-              onChange={onChange}
               platformId={platformId}
-              error={error}
+              onUpdate={onChange}
+              allFields={allFields} // Das neu hinzugefügte allFields-Prop
             />
           ) : (
             <Alert severity="warning">
@@ -370,7 +369,8 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
                         onChange,
                         errors[field.name],
                         platformId,
-                        values
+                        values,
+                        fields // Übergabe des gesamten fields-Arrays
                       )}
                     </Box>
                   )
@@ -421,7 +421,8 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
               onChange,
               errors[field.name],
               platformId,
-              values
+              values,
+              fields // Übergabe des gesamten fields-Arrays
             )}
           </Box>
         )

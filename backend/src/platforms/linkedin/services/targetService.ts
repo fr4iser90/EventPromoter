@@ -1,31 +1,31 @@
 import { BaseTargetService } from '@/services/targetService'
 import { Target, Group } from '@/types/schema'
-import { redditPanelSchema } from '../schema/panel.js' // Import the panel schema
+import { linkedinPanelSchema } from '../schema/panel.js' // Import the panel schema
 
 /**
- * Reddit Target Service
+ * LinkedIn Target Service
  * 
- * This service provides target management for the Reddit platform.
+ * This service provides target management for the LinkedIn platform.
  * It extends the BaseTargetService to provide platform-specific implementations
- * for fetching and managing targets (e.g., subreddits, users).
+ * for fetching and managing targets (e.g., LinkedIn connections, pages, groups).
  * 
- * Currently, it returns empty arrays as target management for Reddit
+ * Currently, it returns empty arrays as target management for LinkedIn
  * is not yet fully implemented.
  */
-export class RedditTargetService extends BaseTargetService {
+export class LinkedinTargetService extends BaseTargetService {
   constructor() {
-    super('reddit', redditPanelSchema.targetSchema!)
+    super('linkedin', linkedinPanelSchema.targetSchema!)
   }
 
   /**
-   * Get the base field name for Reddit targets (e.g., 'subreddit').
+   * Get the base field name for LinkedIn targets (e.g., 'profileUrl').
    */
   getBaseField(): string {
     return this.targetSchema.baseField
   }
 
   /**
-   * Validate the base field value for Reddit targets.
+   * Validate the base field value for LinkedIn targets.
    * @param value The value to validate.
    * @returns True if the value is valid, false otherwise.
    */
@@ -35,7 +35,7 @@ export class RedditTargetService extends BaseTargetService {
       if (rule.type === 'required' && (!value || value.trim() === '')) {
         return false
       }
-      if (rule.type === 'pattern' && typeof value === 'string' && !new RegExp(rule.value as string).test(value)) {
+      if (rule.type === 'url' && typeof value === 'string' && !/^https?:\/\/.+/.test(value)) {
         return false
       }
     }
@@ -43,12 +43,12 @@ export class RedditTargetService extends BaseTargetService {
   }
 
   async getTargets(type?: string): Promise<Target[]> {
-    // TODO: Implement actual fetching of Reddit targets based on type
+    // TODO: Implement actual fetching of LinkedIn targets based on type
     return []
   }
 
   async getGroups(): Promise<Group[]> {
-    // TODO: Implement actual fetching of Reddit groups
+    // TODO: Implement actual fetching of LinkedIn groups
     return []
   }
 }

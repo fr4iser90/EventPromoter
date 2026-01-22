@@ -336,12 +336,8 @@ export async function renderMultiPreview(
     // Preview for each group with its template
     for (const groupIdentifier of recipients.groups) {
       // Find group by ID or name
-      let group: any = groups[groupIdentifier]
-      if (!group) {
-        const foundGroup = Object.values(groups).find(g => g.name === groupIdentifier || g.id === groupIdentifier)
-        if (!foundGroup) continue
-        group = foundGroup
-      }
+      const group = groups.find(g => g.name === groupIdentifier || g.id === groupIdentifier)
+      if (!group) continue
 
       // Get emails for this group
       const targetMap = new Map(targets.map(t => [t.id, t.email]))

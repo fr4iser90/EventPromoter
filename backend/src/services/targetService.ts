@@ -50,9 +50,30 @@ export abstract class BaseTargetService {
   /**
    * Get all targets
    */
-  async getTargets(): Promise<Target[]> {
-    const data = await this.readTargetData()
-    return data?.targets || []
+  async getTargets(type?: string): Promise<Target[]> {
+    const data = await this.readTargetData();
+    let targets = data?.targets || [];
+
+    if (type) {
+      // Implement filtering logic based on the 'type' parameter
+      // This is a generic filtering, subclasses can override for specific logic
+      if (this.targetSchema.baseField === type) {
+        // If the requested type matches the base field, return all targets
+        // as the base field usually represents the primary 'account' type
+        return targets;
+      } else if (this.targetSchema.customFields) {
+        // Check if a custom field matches the requested type
+        const typeField = this.targetSchema.customFields.find(f => f.name === type);
+        if (typeField) {
+          // If a custom field represents the type, filter targets where this field is true/exists
+          return targets.filter(target => target[type] === true || target[type] !== undefined);
+        }
+      }
+      // Fallback: if no specific filtering rule, return empty array
+      return [];
+    }
+
+    return targets;
   }
 
   /**
@@ -188,10 +209,10 @@ export abstract class BaseTargetService {
 
     // Remove from all groups
     const data = await this.readTargetData()
-    const groups = await this.getGroups() // Get groups in new format
+    const currentGroups = data?.groups || {} as Record<string, Group>
     
     // Remove target from all groups
-    for (const group of Object.values(groups)) {
+    for (const group of Object.values(currentGroups)) {
       group.targetIds = group.targetIds.filter(id => id !== targetId)
     }
 
@@ -202,7 +223,7 @@ export abstract class BaseTargetService {
     const updated = {
       ...data,
       targets,
-      groups
+      groups: currentGroups
     }
 
     await this.writeTargetData(updated)
@@ -220,10 +241,22 @@ export abstract class BaseTargetService {
    * Get all groups
    * Returns groups as object with UUID keys: { [groupId]: Group }
    */
-  async getGroups(): Promise<Record<string, Group>> {
+  async getGroups(): Promise<(Group & { memberCount?: number })[]> {
     const data = await this.readTargetData()
     const groups = data?.groups || {}
-    return groups as Record<string, Group>
+
+    // Calculate memberCount for each group
+    for (const groupId in groups) {
+      if (Object.prototype.hasOwnProperty.call(groups, groupId)) {
+        const group = groups[groupId];
+        group.memberCount = group.targetIds ? group.targetIds.length : 0;
+      }
+    }
+    
+    return Object.values(groups).map(group => ({
+      ...group,
+      memberCount: group.targetIds ? group.targetIds.length : 0,
+    })) as (Group & { memberCount?: number })[];
   }
 
   /**
@@ -235,10 +268,10 @@ export abstract class BaseTargetService {
     }
 
     const data = await this.readTargetData()
-    const groups = await this.getGroups() // Get groups in new format
+    const currentGroups = data?.groups || {} as Record<string, Group>
 
     // Check if group name already exists
-    const existingGroup = Object.values(groups).find(g => g.name === groupName)
+    const existingGroup = Object.values(currentGroups).find(g => g.name === groupName)
     if (existingGroup) {
       return { success: false, error: 'Group name already exists' }
     }
@@ -260,11 +293,11 @@ export abstract class BaseTargetService {
       updatedAt: new Date().toISOString()
     }
 
-    groups[groupId] = newGroup
+    currentGroups[groupId] = newGroup
 
     const updated = {
       ...data,
-      groups
+      groups: currentGroups
     }
 
     await this.writeTargetData(updated)
@@ -276,12 +309,13 @@ export abstract class BaseTargetService {
    * Can update by groupId or groupName (for backward compatibility)
    */
   async updateGroup(groupIdOrName: string, updates: { name?: string; targetIds?: string[] }): Promise<{ success: boolean; group?: Group; error?: string }> {
-    const groups = await this.getGroups()
-    
+    const data = await this.readTargetData()
+    const currentGroups = data?.groups || {} as Record<string, Group>
+
     // Find group by ID or name
-    let group: Group | undefined = groups[groupIdOrName]
+    let group: Group | undefined = currentGroups[groupIdOrName]
     if (!group) {
-      group = Object.values(groups).find(g => g.name === groupIdOrName)
+      group = Object.values(currentGroups).find(g => g.name === groupIdOrName)
     }
     
     if (!group) {
@@ -299,7 +333,7 @@ export abstract class BaseTargetService {
 
     // Check if new name conflicts with existing group
     if (updates.name && updates.name !== group.name) {
-      const nameExists = Object.values(groups).some(g => g.id !== group!.id && g.name === updates.name)
+      const nameExists = Object.values(currentGroups).some(g => g.id !== group!.id && g.name === updates.name)
       if (nameExists) {
         return { success: false, error: 'Group name already exists' }
       }
@@ -313,12 +347,11 @@ export abstract class BaseTargetService {
       updatedAt: new Date().toISOString()
     }
 
-    groups[group.id] = updatedGroup
+    currentGroups[group.id] = updatedGroup
 
-    const data = await this.readTargetData()
     const updated = {
       ...data,
-      groups
+      groups: currentGroups
     }
 
     await this.writeTargetData(updated)
@@ -330,24 +363,24 @@ export abstract class BaseTargetService {
    * Can delete by groupId or groupName (for backward compatibility)
    */
   async deleteGroup(groupIdOrName: string): Promise<{ success: boolean; error?: string }> {
-    const groups = await this.getGroups()
+    const data = await this.readTargetData()
+    const currentGroups = data?.groups || {} as Record<string, Group>
     
     // Find group by ID or name
-    let group: Group | undefined = groups[groupIdOrName]
+    let group: Group | undefined = currentGroups[groupIdOrName]
     if (!group) {
-      group = Object.values(groups).find(g => g.name === groupIdOrName)
+      group = Object.values(currentGroups).find(g => g.name === groupIdOrName)
     }
     
     if (!group) {
       return { success: false, error: 'Group not found' }
     }
 
-    delete groups[group.id]
+    delete currentGroups[group.id]
 
-    const data = await this.readTargetData()
     const updated = {
       ...data,
-      groups
+      groups: currentGroups
     }
 
     await this.writeTargetData(updated)

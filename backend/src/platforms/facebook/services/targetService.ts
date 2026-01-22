@@ -1,36 +1,35 @@
 import { BaseTargetService } from '@/services/targetService'
 import { Target, Group } from '@/types/schema'
-import { redditPanelSchema } from '../schema/panel.js' // Import the panel schema
+import { facebookPanelSchema } from '../schema/panel.js' // Import the panel schema
 
 /**
- * Reddit Target Service
+ * Facebook Target Service
  * 
- * This service provides target management for the Reddit platform.
+ * This service provides target management for the Facebook platform.
  * It extends the BaseTargetService to provide platform-specific implementations
- * for fetching and managing targets (e.g., subreddits, users).
+ * for fetching and managing targets (e.g., Facebook Pages, Groups, Users).
  * 
- * Currently, it returns empty arrays as target management for Reddit
+ * Currently, it returns empty arrays as target management for Facebook
  * is not yet fully implemented.
  */
-export class RedditTargetService extends BaseTargetService {
+export class FacebookTargetService extends BaseTargetService {
   constructor() {
-    super('reddit', redditPanelSchema.targetSchema!)
+    super('facebook', facebookPanelSchema.targetSchema!)
   }
 
   /**
-   * Get the base field name for Reddit targets (e.g., 'subreddit').
+   * Get the base field name for Facebook targets (e.g., 'pageId').
    */
   getBaseField(): string {
     return this.targetSchema.baseField
   }
 
   /**
-   * Validate the base field value for Reddit targets.
+   * Validate the base field value for Facebook targets.
    * @param value The value to validate.
    * @returns True if the value is valid, false otherwise.
    */
   validateBaseField(value: string): boolean {
-    // Implement validation based on targetSchema.baseFieldValidation rules
     for (const rule of this.targetSchema.baseFieldValidation || []) {
       if (rule.type === 'required' && (!value || value.trim() === '')) {
         return false
@@ -43,12 +42,12 @@ export class RedditTargetService extends BaseTargetService {
   }
 
   async getTargets(type?: string): Promise<Target[]> {
-    // TODO: Implement actual fetching of Reddit targets based on type
+    // TODO: Implement actual fetching of Facebook targets based on type
     return []
   }
 
   async getGroups(): Promise<Group[]> {
-    // TODO: Implement actual fetching of Reddit groups
+    // TODO: Implement actual fetching of Facebook groups
     return []
   }
 }

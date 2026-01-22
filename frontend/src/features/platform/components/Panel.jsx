@@ -313,6 +313,7 @@ function DynamicPanelWrapper({ platform }) {
                         values={values}
                         onChange={(fieldName, value) => handleFieldChange(section.id, fieldName, value)}
                         errors={{}}
+                        platformId={platform}
                       />
                     </Box>
                   )

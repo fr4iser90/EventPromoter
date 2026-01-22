@@ -41,6 +41,9 @@ router.get('/:platformId/i18n', PlatformController.getPlatformLanguages)
 // Get platform settings configuration
 router.get('/:platformId/settings', PlatformController.getPlatformSettings)
 
+// Get platform schema
+router.get('/:platformId/schema', SchemaController.getPlatformSchema)
+
 // Update platform settings
 router.put('/:platformId/settings', PlatformController.updatePlatformSettings)
 

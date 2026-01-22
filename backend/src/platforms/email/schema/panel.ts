@@ -120,9 +120,8 @@ export const emailPanelSchema: PanelSchema = {
           label: 'Group Name',
           description: 'Overview of all email groups and their member counts.',
           optionsSource: {
-            endpoint: 'platforms/:platformId/targets',
+            endpoint: 'platforms/:platformId/target-groups',
             method: 'GET',
-            responsePath: 'groups'
           },
           ui: {
             width: 12,
@@ -130,7 +129,7 @@ export const emailPanelSchema: PanelSchema = {
             renderAsTable: true,
             tableColumns: [
               {
-                id: 'groupName',
+                id: 'name',
                 label: 'Group Name',
                 clickable: true,
                       action: {
@@ -146,13 +145,7 @@ export const emailPanelSchema: PanelSchema = {
               {
                 id: 'memberCount',
                 label: 'Members',
-                type: 'number',
-                clickable: true,
-                        action: {
-                          id: 'group-members-action',
-                          endpoint: 'platforms/:platformId/target-groups/:id/members',
-                          method: 'GET',
-                        }
+                type: 'number'
               }
             ]
           }

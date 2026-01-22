@@ -18,18 +18,19 @@ export class TargetController {
    */
   static async getTargets(req: Request, res: Response) {
     try {
-      const { platformId } = req.params
-      const service = await TargetController.getTargetService(platformId)
+      const { platformId } = req.params;
+      const { type } = req.query; // Extract the 'type' query parameter
+      const service = await TargetController.getTargetService(platformId);
 
       if (!service) {
         return res.status(404).json({
           success: false,
           error: `Target service not found for platform: ${platformId}`
-        })
+        });
       }
 
-      const targets = await service.getTargets()
-      const groups = await service.getGroups()
+      const targets = await service.getTargets(type as string | undefined); // Pass type to service
+      const groups = await service.getGroups();
 
       // Transform targets to options format for multiselect components
       const baseField = service.getBaseField()

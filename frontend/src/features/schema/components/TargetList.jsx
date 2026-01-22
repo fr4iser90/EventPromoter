@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import EditModal from '../../../shared/components/EditModal.jsx'; // Import the generic EditModal
 
-const TargetList = ({ data, platformId, title, description, fields, onUpdate }) => {
+const TargetList = ({ field, platformId, onUpdate, allFields }) => {
   const [targets, setTargets] = useState([]);
   const [filteredTargets, setFilteredTargets] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,24 +26,21 @@ const TargetList = ({ data, platformId, title, description, fields, onUpdate }) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const searchField = allFields?.find(f => f.name === 'recipientSearch');
+  const newRecipientButton = allFields?.find(f => f.name === 'newRecipientButton');
+  const targetsField = field; // Das 'field'-Prop ist das target-list-Feld
+
   useEffect(() => {
-    if (data && Array.isArray(data.targets)) {
-      setTargets(data.targets);
-      setFilteredTargets(data.targets);
+    if (field.options) {
+      setTargets(field.options);
+      setFilteredTargets(field.options);
       setLoading(false);
-    } else if (data && data.targets) { // Handle case where targets is an object
-      const targetsArray = Object.values(data.targets);
-      setTargets(targetsArray);
-      setFilteredTargets(targetsArray);
-      setLoading(false);
-    } else if (data === null) {
+    } else {
       setLoading(false);
       setTargets([]);
       setFilteredTargets([]);
-    } else if (!data) {
-      setLoading(true);
     }
-  }, [data]);
+  }, [field.options]);
 
   useEffect(() => {
     const results = targets.filter(target =>
@@ -141,14 +138,10 @@ const TargetList = ({ data, platformId, title, description, fields, onUpdate }) 
     }
   };
 
-  const searchField = fields.find(f => f.id === 'recipientSearch');
-  const newRecipientButton = fields.find(f => f.id === 'newRecipientButton');
-  const targetsField = fields.find(f => f.id === 'targets');
-
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>{title}</Typography>
-      {description && <Typography variant="body2" color="textSecondary" gutterBottom>{description}</Typography>}
+      <Typography variant="h6" gutterBottom>{field.label}</Typography>
+      {field.description && <Typography variant="body2" color="textSecondary" gutterBottom>{field.description}</Typography>}
 
       <Box display="flex" alignItems="center" mb={2}>
         {searchField && (

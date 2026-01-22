@@ -3,6 +3,7 @@ import { FormSchema, PanelSchema } from '@/types/schema';
 import { SchemaRegistry } from '../services/schemaRegistry.js'
 import { SchemaResolver } from '../services/schemaResolver.js'
 import { SchemaValidator } from '../services/schemaValidator.js'
+import { getPlatformRegistry } from '../services/platformRegistry.js'
 
 // Define the generic SchemaContext type
 export type SchemaContext = {
@@ -12,6 +13,39 @@ export type SchemaContext = {
 
 
 export class SchemaController {
+
+  /**
+   * Get the complete platform schema for a given platform
+   * GET /api/platforms/:platformId/schema
+   */
+  static async getPlatformSchema(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params;
+      const platformRegistry = getPlatformRegistry();
+      const platformSchema = platformRegistry.getPlatformSchema(platformId);
+
+      if (!platformSchema) {
+        return res.status(404).json({
+          success: false,
+          error: `Platform schema not found for platform: ${platformId}`
+        });
+      }
+
+      // No enrichment for the top-level platform schema, as it's a structural definition
+      return res.json({
+        success: true,
+        schema: platformSchema
+      });
+    } catch (error: any) {
+      console.error('Get platform schema error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get platform schema',
+        details: error.message
+      });
+    }
+  }
+
   /**
    * Get a schema for a specific platform and schema ID
    * GET /api/platforms/:platformId/schemas/:schemaId

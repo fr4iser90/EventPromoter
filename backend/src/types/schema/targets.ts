@@ -48,6 +48,8 @@ export interface Group {
   name: string;
   /** Array of target IDs in this group */
   targetIds: string[];
+  /** Number of members in this group (calculated backend) */
+  memberCount?: number;
   /** Timestamps */
   createdAt?: string;
   updatedAt?: string;

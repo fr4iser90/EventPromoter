@@ -12,7 +12,9 @@
     "rootDir": "./src",
     "resolveJsonModule": true,
     "paths": {
-      "@/types/schema": ["./src/types/schema"]
+      "@/types/schema": ["./src/types/schema"],
+      "@/types/*": ["./src/types/*"],
+      "@/services/*": ["./src/services/*"]
     }
   },
   "include": [
