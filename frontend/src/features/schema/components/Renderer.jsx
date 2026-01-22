@@ -31,6 +31,7 @@ import axios from 'axios'
  * Render a single field based on schema definition
  */
 function renderField(field, value, onChange, error, platformId = null, formValues = {}, allFields = []) {
+  console.log(`Rendering field: ${field.name}, current value: ${value}, disabled: ${field.ui?.disabled}, readOnly: ${field.readOnly}`);
   const commonProps = {
     fullWidth: true,
     label: field.label,
@@ -40,7 +41,8 @@ function renderField(field, value, onChange, error, platformId = null, formValue
     helperText: error || field.description,
     value: value || field.default || '',
     onChange: (e) => onChange(field.name, e.target.value),
-    disabled: field.ui?.disabled
+    disabled: field.ui?.disabled,
+    readOnly: field.readOnly // Ensure readOnly is passed
   }
 
   switch (field.type) {

@@ -60,9 +60,12 @@ const EditModal = ({
           if (!itemData.success) {
             throw new Error(itemData.error || 'Unknown error fetching data');
           }
+          console.log("EditModal: Fetched itemData:", itemData); // Debugging log
           setFormData(itemData.target || itemData.group || {}); // Assuming 'target' or 'group' key
+          console.log("EditModal: formData set with initial data:", itemData.target || itemData.group || {}); // Debugging log
         } else {
           setFormData({}); // For new items, start with empty form data
+          console.log("EditModal: formData initialized to empty."); // Debugging log
         }
       } catch (err) {
         console.error('Error fetching schema or data:', err);
@@ -75,10 +78,13 @@ const EditModal = ({
     fetchSchemaAndData();
   }, [open, platformId, schemaId, itemId, dataEndpoint]);
 
-  const handleFormChange = (newFormData) => {
-    setFormData(newFormData);
-  };
-
+  const handleFormChange = useCallback((fieldName, value) => {
+    setFormData(prevFormData => {
+      const updatedFormData = { ...prevFormData, [fieldName]: value };
+      console.log(`EditModal: handleFormChange - Field: ${fieldName}, Value: ${value}, Updated formData:`, updatedFormData); // Debugging log
+      return updatedFormData;
+    });
+  }, []);
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);

@@ -8,7 +8,11 @@
     {
       "id": "000e59a3-ac14-48d6-bbc0-345efb9e74bc",
       "email": "pa.boe90@gmail.com",
-      "createdAt": "2026-01-20T22:58:55.836Z"
+      "createdAt": "2026-01-20T22:58:55.836Z",
+      "firstName": "Patrick",
+      "lastName": "Böhme",
+      "updatedAt": "2026-01-22T21:05:53.162Z",
+      "company": "Test"
     },
     {
       "id": "9e1d4c1d-4012-46f8-83ee-c0dddf625f8a",
