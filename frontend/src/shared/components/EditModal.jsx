@@ -42,9 +42,11 @@ const EditModal = ({
           throw new Error(`Failed to fetch schema: ${schemaResponse.statusText}`);
         }
         const schemaData = await schemaResponse.json();
+        console.log('EditModal: Fetched schemaData', schemaData);
         if (!schemaData.success) {
           throw new Error(schemaData.error || 'Unknown error fetching schema');
         }
+        console.log('EditModal: Setting schema state with', schemaData.schema);
         setSchema(schemaData.schema);
 
         // If itemId and dataEndpoint are provided, fetch existing data
@@ -125,9 +127,10 @@ const EditModal = ({
         )}
         {!loading && !error && schema && (
           <SchemaRenderer
-            schema={schema}
-            formData={formData}
-            onFormChange={handleFormChange}
+            fields={schema.fields} // Correctly pass the fields array
+            groups={schema.groups || []} // Pass groups if available
+            values={formData}
+            onChange={handleFormChange}
             platformId={platformId}
           />
         )}

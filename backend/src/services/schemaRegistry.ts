@@ -25,6 +25,11 @@ export class SchemaRegistry {
     console.log('Loading all schemas into registry...');
     const currentDirname = dirname(fileURLToPath(import.meta.url));
     const platformsDirPath = join(currentDirname, '../platforms');
+    console.log(`Scanning for platforms in: ${platformsDirPath}`);
+
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const fileExtension = isDevelopment ? '.ts' : '.js';
+    console.log(`Schema loading mode: ${isDevelopment ? 'Development (.ts)' : 'Production (.js)'}`);
 
     try {
       const platformDirs = await readdir(platformsDirPath, { withFileTypes: true });
@@ -32,13 +37,15 @@ export class SchemaRegistry {
         if (platformDir.isDirectory()) {
           const platformId = platformDir.name;
           const schemaDirPath = join(platformsDirPath, platformId, 'schema');
+          console.log(`  Scanning schema directory for platform ${platformId}: ${schemaDirPath}`);
           
           try {
             const schemaFiles = await readdir(schemaDirPath, { withFileTypes: true });
             for (const schemaFile of schemaFiles) {
-              if (schemaFile.isFile() && schemaFile.name.endsWith('.js')) {
-                const schemaId = schemaFile.name.replace('.js', '');
+              if (schemaFile.isFile() && schemaFile.name.endsWith(fileExtension)) {
+                const schemaId = schemaFile.name.replace(fileExtension, '');
                 const schemaPath = join(schemaDirPath, schemaFile.name);
+                console.log(`    Attempting to import schema file: ${schemaPath} with ID: ${schemaId}`);
                 
                 try {
                   const schemaModule = await import(schemaPath);
