@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,6 +9,8 @@ import {
   Typography,
   Box,
 } from '@mui/material';
+import { getApiUrl } from '../../shared/utils/api';
+import { resolveSchemaEndpoint } from '../../shared/utils/urlUtils';
 import SchemaRenderer from '../../features/schema/components/Renderer.jsx';
 
 const EditModal = ({
@@ -35,7 +37,7 @@ const EditModal = ({
       setError(null);
       try {
         // Fetch the form schema
-        const schemaResponse = await fetch(`/api/platforms/${platformId}/schemas/${schemaId}`);
+        const schemaResponse = await fetch(getApiUrl(`platforms/${platformId}/schemas/${schemaId}`));
         if (!schemaResponse.ok) {
           throw new Error(`Failed to fetch schema: ${schemaResponse.statusText}`);
         }
@@ -47,7 +49,8 @@ const EditModal = ({
 
         // If itemId and dataEndpoint are provided, fetch existing data
         if (itemId && dataEndpoint) {
-          const dataResponse = await fetch(dataEndpoint.replace(':id', itemId));
+          const resolvedDataEndpoint = resolveSchemaEndpoint(dataEndpoint, platformId, itemId);
+          const dataResponse = await fetch(getApiUrl(resolvedDataEndpoint));
           if (!dataResponse.ok) {
             throw new Error(`Failed to fetch data: ${dataResponse.statusText}`);
           }
@@ -78,7 +81,8 @@ const EditModal = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(saveEndpoint.replace(':id', itemId), {
+      const resolvedSaveEndpoint = resolveSchemaEndpoint(saveEndpoint, platformId, itemId);
+      const response = await fetch(getApiUrl(resolvedSaveEndpoint), {
         method,
         headers: {
           'Content-Type': 'application/json',

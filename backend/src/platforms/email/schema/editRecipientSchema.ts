@@ -1,7 +1,7 @@
 import { FormSchema } from '@/types/schema'
 
 const emailRecipientEditSchema: FormSchema = {
-  id: 'email-recipient-edit-schema',
+  id: 'editRecipientSchema',
   title: 'Edit Email Recipient',
   description: 'Edit an existing email recipient.',
   fields: [

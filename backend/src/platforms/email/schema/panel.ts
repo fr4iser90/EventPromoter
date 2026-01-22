@@ -70,7 +70,7 @@ export const emailPanelSchema: PanelSchema = {
                         action: {
                           id: 'email-edit-action',
                           type: 'open-edit-modal',
-                          schemaId: 'email-recipient-edit-schema',
+                          schemaId: 'editRecipientSchema',
                           dataEndpoint: 'platforms/:platformId/targets/:id',
                           saveEndpoint: 'platforms/:platformId/targets/:id',
                           method: 'PUT',
@@ -122,6 +122,7 @@ export const emailPanelSchema: PanelSchema = {
           optionsSource: {
             endpoint: 'platforms/:platformId/target-groups',
             method: 'GET',
+            responsePath: 'groups',
           },
           ui: {
             width: 12,
@@ -135,7 +136,7 @@ export const emailPanelSchema: PanelSchema = {
                       action: {
                           id: 'group-edit-action',
                           type: 'open-edit-modal',
-                          schemaId: 'email-group-edit-schema',
+                          schemaId: 'editGroupSchema',
                           dataEndpoint: 'platforms/:platformId/target-groups/:id',
                           saveEndpoint: 'platforms/:platformId/target-groups/:id',
                           method: 'PUT',

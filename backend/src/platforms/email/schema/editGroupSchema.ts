@@ -1,7 +1,7 @@
 import { FormSchema } from '@/types/schema';
 
 const emailGroupEditSchema: FormSchema = {
-  id: 'email-group-edit-schema',
+  id: 'editGroupSchema',
   title: 'Edit Email Group',
   description: 'Edit an existing email group.',
   fields: [
@@ -33,7 +33,7 @@ const emailGroupEditSchema: FormSchema = {
         method: 'GET',
         responsePath: 'targets',
         labelPath: 'email',
-        valuePath: 'name',
+        valuePath: 'id',
       },
       ui: {
         width: 12,
