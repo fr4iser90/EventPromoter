@@ -29,7 +29,6 @@ import FileUpload from '../flows/upload/FileUpload'
 import { Container as ContentEditor } from '../features/platform'
 import { DataPreview as Preview } from '../features/event'
 import { Selector as PlatformSelector } from '../features/platform'
-import { Panel as DynamicPanelWrapper } from '../features/platform'
 import SettingsModal from '../shared/components/ui/Dialog/Settings'
 import DuplicateDialog from '../shared/components/ui/Dialog/Duplicate'
 import useStore, { WORKFLOW_STATES } from '../store'
@@ -133,33 +132,6 @@ function HomePage() {
     reset()
   }
 
-  // Create panel arrays for left and right sidebars - GENERIC, loads from backend
-  const leftPanels = []
-  const rightPanels = []
-
-  // Dynamically create panels for selected platforms - no hardcoded platform logic
-  safeSelectedPlatforms.forEach((platformId, index) => {
-    const panelComponent = <DynamicPanelWrapper key={platformId} platform={platformId} />
-    // Distribute panels between left and right (alternating)
-    if (index % 2 === 0) {
-      leftPanels.push({ key: platformId, component: panelComponent })
-    } else {
-      rightPanels.push({ key: platformId, component: panelComponent })
-    }
-  })
-
-  // Debug: Log panel creation (only in development mode to reduce console noise)
-  if (process.env.NODE_ENV === 'development' && safeSelectedPlatforms.length > 0) {
-    console.log('[App] Selected platforms:', safeSelectedPlatforms)
-    console.log('[App] Left panels:', leftPanels.length)
-    console.log('[App] Right panels:', rightPanels.length)
-  }
-
-  // Check if panels should be shown
-  const hasLeftPanels = leftPanels.length > 0
-  const hasRightPanels = rightPanels.length > 0
-  const hasAnyPanels = hasLeftPanels || hasRightPanels
-
   // Toggle dark mode
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
@@ -260,60 +232,19 @@ function HomePage() {
         />
       </Box>
 
-      {/* Layout Container - Always 1/3, 1/3, 1/3 */}
+      {/* Layout Container - Full Width */}
       <Box sx={{
         display: 'flex',
         minHeight: '100vh',
         pt: 8 // Account for fixed header
       }}>
-        {/* Linke Sidebar - Always 1/3 */}
-        <Box sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          p: 2,
-          borderRight: 1,
-          borderColor: 'divider',
-          overflow: 'auto'
-        }}>
-          {hasLeftPanels ? (
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              gap: 2,
-              alignItems: 'flex-start'
-            }}>
-              {leftPanels.map(panel => (
-                <Box key={panel.key} sx={{ flex: '1 1 auto', minWidth: 0 }}>
-                  {panel.component}
-                </Box>
-              ))}
-            </Box>
-          ) : (
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: 'text.secondary'
-            }}>
-              <Typography variant="body2">
-                Panels können beliebig breit werden
-              </Typography>
-            </Box>
-          )}
-        </Box>
-
-        {/* Main Content - Stable 1/3 */}
+        {/* Main Content - Takes full width */}
         <Box sx={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           px: 2,
           py: 2,
-          borderRight: 1,
-          borderColor: 'divider'
         }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h6" component="h2" color="text.secondary">
@@ -321,7 +252,7 @@ function HomePage() {
             </Typography>
           </Box>
 
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
+          <Box sx={{ flex: 1, overflow: 'auto', maxWidth: '1200px', mx: 'auto', width: '100%' }}>
             <Box sx={{ mb: 4, display: 'flex', gap: 3 }}>
               <Box sx={{ flex: 1 }}>
                 <FileUpload />
@@ -451,43 +382,6 @@ function HomePage() {
               </Box>
             </Box>
           </Box>
-        </Box>
-
-        {/* Rechte Sidebar - Always 1/3 */}
-        <Box sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          p: 2,
-          overflow: 'auto'
-        }}>
-          {hasRightPanels ? (
-            <Box sx={{
-              display: 'flex',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              gap: 2,
-              alignItems: 'flex-start'
-            }}>
-              {rightPanels.map(panel => (
-                <Box key={panel.key} sx={{ flex: '1 1 auto', minWidth: 0 }}>
-                  {panel.component}
-                </Box>
-              ))}
-            </Box>
-          ) : (
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: 'text.secondary'
-            }}>
-              <Typography variant="body2">
-                Panels können beliebig breit werden
-              </Typography>
-            </Box>
-          )}
         </Box>
       </Box>
 

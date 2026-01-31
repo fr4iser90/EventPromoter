@@ -4,6 +4,7 @@ const emailGroupEditSchema: FormSchema = {
   id: 'editGroupSchema',
   title: 'Edit Email Group',
   description: 'Edit an existing email group.',
+  endpoint: 'platforms/:platformId/target-groups/:id',
   fields: [
       {
         name: 'id',

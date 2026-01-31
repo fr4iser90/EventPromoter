@@ -1,7 +1,7 @@
-import { FormSchema, PanelSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema';
 import { SchemaContext } from '../controllers/schemaController.js';
 
-// Helper to recursively resolve template strings (e.g., :platformId, :userId)
+// Helper to recursively resolve template strings (e.g., :platformId, :id)
 const resolveTemplatesDeep = (obj: any, context: SchemaContext): any => {
   if (typeof obj === 'string') {
     return obj.replace(/:([a-zA-Z0-9_]+)/g, (_, key) => {
@@ -27,14 +27,11 @@ const resolveTemplatesDeep = (obj: any, context: SchemaContext): any => {
 // Apply Field-Type Enrichments
 const applyFieldTypeEnrichments = (obj: any) => {
   if (typeof obj === 'object' && obj !== null) {
-    if (obj.optionsSource && !obj.optionsSource.valuePath) {
-      if (obj.type === 'target-list' || obj.type === 'multiselect') {
-        obj.optionsSource.valuePath = 'id';
-      }
+    // Set backend-driven defaults if missing
+    if (obj.optionsSource && !obj.optionsSource.responsePath) {
+      obj.optionsSource.responsePath = 'targets';
     }
-    if (obj.type === 'email' && !obj.validation) {
-        obj.validation = [{ type: 'pattern', value: '^[\S@]+@[\S@]+\\.[\S@]+$', message: 'Invalid email format' }];
-    }
+
     if (obj.type === 'checkbox' && obj.default === undefined) {
         obj.default = false;
     }
@@ -47,9 +44,9 @@ const applyFieldTypeEnrichments = (obj: any) => {
 };
 
 export class SchemaResolver {
-  public static resolveAndEnrich(schema: FormSchema | PanelSchema, context: SchemaContext): FormSchema | PanelSchema {
+  public static resolveAndEnrich(schema: FormSchema | SettingsSchema, context: SchemaContext): FormSchema | SettingsSchema {
     // Create a deep clone to avoid mutating the original schema object
-    const clonedSchema: FormSchema | PanelSchema = JSON.parse(JSON.stringify(schema));
+    const clonedSchema: FormSchema | SettingsSchema = JSON.parse(JSON.stringify(schema));
 
     // Apply generic template resolution
     const resolvedSchema = resolveTemplatesDeep(clonedSchema, context);

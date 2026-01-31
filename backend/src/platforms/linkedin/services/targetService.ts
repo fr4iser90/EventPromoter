@@ -1,6 +1,6 @@
-import { BaseTargetService } from '@/services/targetService'
+import { BaseTargetService } from '../../../services/targetService.js'
 import { Target, Group } from '@/types/schema'
-import { linkedinPanelSchema } from '../schema/panel.js' // Import the panel schema
+import { linkedinSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**
  * LinkedIn Target Service
@@ -14,7 +14,7 @@ import { linkedinPanelSchema } from '../schema/panel.js' // Import the panel sch
  */
 export class LinkedinTargetService extends BaseTargetService {
   constructor() {
-    super('linkedin', linkedinPanelSchema.targetSchema!)
+    super('linkedin', linkedinSettingsSchema.targetSchema!)
   }
 
   /**

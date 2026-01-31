@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { FormSchema, PanelSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema';
 import { SchemaRegistry } from '../services/schemaRegistry.js'
 import { SchemaResolver } from '../services/schemaResolver.js'
 import { SchemaValidator } from '../services/schemaValidator.js'
@@ -55,7 +55,7 @@ export class SchemaController {
       const { platformId, schemaId } = req.params
       
       const schemaRegistry = SchemaRegistry.getInstance();
-      const schema: FormSchema | PanelSchema | undefined = schemaRegistry.getSchema(platformId, schemaId);
+      const schema: FormSchema | SettingsSchema | undefined = schemaRegistry.getSchema(platformId, schemaId);
 
       if (!schema) {
         return res.status(404).json({
@@ -67,9 +67,7 @@ export class SchemaController {
       // Define the context for enrichment
       const schemaContext: SchemaContext = {
         platformId: platformId,
-        // Add other context variables here as needed, e.g., userId, locale
-        // userId: req.user.id,
-        // locale: req.headers['accept-language']
+        id: (req.query.id as string) || (req.params.id as string), // Support id from query or params
       };
 
       // Enrich schema with platform-specific data and resolved templates
@@ -92,7 +90,7 @@ export class SchemaController {
     }
   }
 
-  static enrichSchema(schema: FormSchema | PanelSchema, context: SchemaContext): FormSchema | PanelSchema {
+  static enrichSchema(schema: FormSchema | SettingsSchema, context: SchemaContext): FormSchema | SettingsSchema {
     return SchemaResolver.resolveAndEnrich(schema, context);
   }
 }

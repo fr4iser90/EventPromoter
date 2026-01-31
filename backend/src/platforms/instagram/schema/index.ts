@@ -2,18 +2,19 @@
  * Instagram Platform Schema
  * 
  * Main schema export that combines all schema parts:
- * - Settings (API credentials)
+ * - Credentials (API credentials)
  * - Editor (content blocks and features)
  * - Preview (preview modes and content mapping)
+ * - Settings (feature panels and account management)
  * 
  * @module platforms/instagram/schema
  */
 
 import { PlatformSchema } from '@/types/schema'
-import { instagramSettingsSchema } from './settings'
+import { instagramCredentialsSchema } from './credentials'
 import { instagramEditorSchema } from './editor'
 import { instagramPreviewSchema } from './preview'
-import { instagramPanelSchema } from './panel'
+import { instagramSettingsSchema } from './settings'
 
 /**
  * Complete Instagram Platform Schema
@@ -23,10 +24,10 @@ import { instagramPanelSchema } from './panel'
  */
 export const instagramSchema: PlatformSchema = {
   version: '1.0.0',
-  settings: instagramSettingsSchema,
+  credentials: instagramCredentialsSchema,
   editor: instagramEditorSchema,
   preview: instagramPreviewSchema,
-  panel: instagramPanelSchema,
+  settings: instagramSettingsSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

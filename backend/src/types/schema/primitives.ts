@@ -142,6 +142,8 @@ export interface FieldDefinition {
       type?: 'text' | 'number' | 'date' | 'boolean';
       action?: ActionSchema;
     }>;
+    /** Whether this field acts as a filter for another field (e.g., a search box for a table) */
+    isFilterFor?: string;
   };
   // ✅ NEW: Environment Variable Support
   /** Environment variable name or configuration */

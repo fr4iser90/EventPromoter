@@ -1,6 +1,6 @@
-import { BaseTargetService } from '@/services/targetService'
+import { BaseTargetService } from '../../../services/targetService.js'
 import { Target, Group } from '@/types/schema'
-import { redditPanelSchema } from '../schema/panel.js' // Import the panel schema
+import { redditSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**
  * Reddit Target Service
@@ -14,7 +14,7 @@ import { redditPanelSchema } from '../schema/panel.js' // Import the panel schem
  */
 export class RedditTargetService extends BaseTargetService {
   constructor() {
-    super('reddit', redditPanelSchema.targetSchema!)
+    super('reddit', redditSettingsSchema.targetSchema!)
   }
 
   /**

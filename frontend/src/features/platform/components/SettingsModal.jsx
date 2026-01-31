@@ -1,15 +1,14 @@
 /**
- * Schema Settings Panel Component
+ * Platform Settings Modal Component
  * 
- * Generic settings panel that renders platform settings based on schema.
- * Loads settings schema from API and uses SchemaRenderer for form rendering.
+ * Generic settings modal that renders platform settings and credentials based on schema.
+ * Contains two tabs: "Settings" (formerly Panel) and "Credentials".
  * 
- * @module components/SchemaSettingsPanel/SchemaSettingsPanel
+ * @module features/platform/components/SettingsModal
  */
 
 import React, { useState, useEffect } from 'react'
 import {
-  Paper,
   Typography,
   Box,
   Button,
@@ -18,139 +17,109 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Tabs,
+  Tab
 } from '@mui/material'
-import SchemaRenderer, { validateSchema } from '../../schema/components/Renderer'
+import SettingsIcon from '@mui/icons-material/Settings'
+import KeyIcon from '@mui/icons-material/VpnKey'
+import SchemaRenderer from '../../schema/components/Renderer'
 import { getApiUrl } from '../../../shared/utils/api'
 
-function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
+function SettingsModal({ platformId, open, onClose, onSave }) {
+  const [activeTab, setActiveTab] = useState(0)
   const [schema, setSchema] = useState(null)
-  const [values, setValues] = useState({})
-  const [errors, setErrors] = useState({})
+  const [credentialsValues, setCredentialsValues] = useState({})
+  const [settingsValues, setSettingsValues] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
 
-  // Load schema when platform changes
+  // Load schema and data when platform changes or modal opens
   useEffect(() => {
     if (!platformId || !open) return
 
-    const loadSchema = async () => {
+    const loadData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Try to load schema from new endpoint
+        // Load schema
         const schemaResponse = await fetch(getApiUrl(`platforms/${platformId}/schema`))
-        if (schemaResponse.ok) {
-          const schemaData = await schemaResponse.json()
-          if (schemaData.success && schemaData.schema?.settings) {
-            setSchema(schemaData.schema.settings)
-            // Load existing settings values
-            await loadExistingSettings(platformId)
-            return
+        if (!schemaResponse.ok) throw new Error('Failed to load schema')
+        const schemaData = await schemaResponse.json()
+        
+        // Load enriched settings schema if available
+        let enrichedSettings = schemaData.schema.settings
+        if (enrichedSettings) {
+          const settingsResponse = await fetch(getApiUrl(`platforms/${platformId}/schemas/settings`))
+          if (settingsResponse.ok) {
+            const settingsData = await settingsResponse.json()
+            if (settingsData.success) {
+              enrichedSettings = settingsData.schema
+            }
           }
         }
 
-        // Fallback: try to load from platform endpoint
-        const platformResponse = await fetch(getApiUrl(`platforms/${platformId}`))
-        if (platformResponse.ok) {
-          const platformData = await platformResponse.json()
-          if (platformData.success && platformData.platform?.schema?.settings) {
-            setSchema(platformData.platform.schema.settings)
-            await loadExistingSettings(platformId)
-            return
+        // Load enriched credentials schema if available
+        let enrichedCredentials = schemaData.schema.credentials
+        if (enrichedCredentials) {
+          const credsSchemaResponse = await fetch(getApiUrl(`platforms/${platformId}/schemas/credentials`))
+          if (credsSchemaResponse.ok) {
+            const credsSchemaData = await credsSchemaResponse.json()
+            if (credsSchemaData.success) {
+              enrichedCredentials = credsSchemaData.schema
+            }
           }
         }
 
-        // If no schema available, show error
-        setError('Settings schema not available for this platform')
+        setSchema({
+          ...schemaData.schema,
+          settings: enrichedSettings,
+          credentials: enrichedCredentials
+        })
+
+        // Load credentials values
+        const credsResponse = await fetch(getApiUrl(`platforms/${platformId}/settings`))
+        if (credsResponse.ok) {
+          const credsData = await credsResponse.json()
+          if (credsData.success && credsData.settings) {
+            setCredentialsValues(credsData.settings.values || {})
+          }
+        }
       } catch (err) {
-        console.error('Failed to load settings schema:', err)
+        console.error('Failed to load platform data:', err)
         setError(err.message)
       } finally {
         setLoading(false)
       }
     }
 
-    loadSchema()
+    loadData()
   }, [platformId, open])
 
-  // Load existing settings
-  const loadExistingSettings = async (platformId) => {
-    try {
-      const response = await fetch(getApiUrl(`platforms/${platformId}/settings`))
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && data.settings) {
-          // ✅ SECURITY: Load masked values from backend (secrets are already masked)
-          // values contains masked secrets (e.g., "abcd****xyz") that should not be changed
-          // unless user explicitly enters a new value
-          setValues(data.settings.values || {})
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load existing settings:', err)
-      // Continue with empty values
-    }
-  }
-
-  // Handle field value change
-  const handleFieldChange = (fieldName, value) => {
-    setValues(prev => ({
-      ...prev,
-      [fieldName]: value
-    }))
-    // Clear error for this field
-    if (errors[fieldName]) {
-      setErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[fieldName]
-        return newErrors
-      })
-    }
-  }
-
-  // Handle form submission
   const handleSave = async () => {
-    if (!schema) return
-
-    // Validate all fields
-    const validation = validateSchema(schema.fields, values)
-    if (!validation.isValid) {
-      setErrors(validation.errors)
-      return
-    }
-
     try {
       setSaving(true)
       setError(null)
 
-      // Save settings via API
+      // Save credentials (only tab 1 for now, as tab 0 targets are usually saved via individual actions)
       const response = await fetch(getApiUrl(`platforms/${platformId}/settings`), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ settings: values })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: credentialsValues })
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to save settings: ${response.status}`)
+        const data = await response.json()
+        if (data.errors) setErrors(data.errors)
+        throw new Error(data.error || 'Failed to save credentials')
       }
 
-      const data = await response.json()
-      if (data.success) {
-        // Call onSave callback if provided
-        if (onSave) {
-          onSave(platformId, values)
-        }
-        onClose()
-      } else {
-        throw new Error(data.error || 'Failed to save settings')
-      }
+      if (onSave) onSave(platformId, credentialsValues)
+      onClose()
     } catch (err) {
-      console.error('Failed to save settings:', err)
       setError(err.message)
     } finally {
       setSaving(false)
@@ -161,55 +130,78 @@ function SchemaSettingsPanel({ platformId, open, onClose, onSave }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        {schema?.title || `${platformId} Settings`}
+      <DialogTitle sx={{ pb: 0 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <SettingsIcon color="primary" />
+          <Typography variant="h6">
+            {platformId?.charAt(0).toUpperCase() + platformId?.slice(1)} Configuration
+          </Typography>
+        </Box>
+        <Tabs 
+          value={activeTab} 
+          onChange={(e, v) => setActiveTab(v)}
+          sx={{ borderBottom: 1, borderColor: 'divider' }}
+        >
+          <Tab icon={<SettingsIcon />} label="Settings" iconPosition="start" />
+          <Tab icon={<KeyIcon />} label="Credentials" iconPosition="start" />
+        </Tabs>
       </DialogTitle>
-      <DialogContent>
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
-          </Box>
-        )}
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        {schema && !loading && (
+      <DialogContent sx={{ mt: 2 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box>
+        ) : error ? (
+          <Alert severity="error">{error}</Alert>
+        ) : (
           <Box>
-            {schema.description && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {schema.description}
-              </Typography>
+            {activeTab === 0 && (
+              <Box>
+                {schema?.settings ? (
+                  schema.settings.sections.map(section => (
+                    <Box key={section.id} sx={{ mb: 3 }}>
+                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                        {section.title}
+                      </Typography>
+                      <SchemaRenderer
+                        fields={section.fields}
+                        values={settingsValues}
+                        onChange={(f, v) => setSettingsValues(prev => ({ ...prev, [f]: v }))}
+                        platformId={platformId}
+                      />
+                    </Box>
+                  ))
+                ) : (
+                  <Alert severity="info">No settings available for this platform.</Alert>
+                )}
+              </Box>
             )}
-
-            <SchemaRenderer
-              fields={schema.fields}
-              values={values}
-              onChange={handleFieldChange}
-              errors={errors}
-              groups={schema.groups}
-            />
+            {activeTab === 1 && (
+              <Box>
+                {schema?.credentials ? (
+                  <SchemaRenderer
+                    fields={schema.credentials.fields}
+                    values={credentialsValues}
+                    onChange={(f, v) => setCredentialsValues(prev => ({ ...prev, [f]: v }))}
+                    errors={errors}
+                    groups={schema.credentials.groups}
+                  />
+                ) : (
+                  <Alert severity="info">No credentials available for this platform.</Alert>
+                )}
+              </Box>
+            )}
           </Box>
         )}
       </DialogContent>
+
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={loading || saving || !schema}
-        >
-          {saving ? <CircularProgress size={20} /> : 'Save'}
+        <Button onClick={onClose} disabled={saving}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained" disabled={loading || saving}>
+          {saving ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
     </Dialog>
   )
 }
 
-export default SchemaSettingsPanel
-
+export default SettingsModal

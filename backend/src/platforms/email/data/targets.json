@@ -11,8 +11,9 @@
       "createdAt": "2026-01-20T22:58:55.836Z",
       "firstName": "Patrick",
       "lastName": "Böhme",
-      "updatedAt": "2026-01-22T21:05:53.162Z",
-      "company": "Test"
+      "updatedAt": "2026-01-31T15:56:34.862Z",
+      "company": "Test",
+      "birthday": "1990-12-14"
     },
     {
       "id": "9e1d4c1d-4012-46f8-83ee-c0dddf625f8a",

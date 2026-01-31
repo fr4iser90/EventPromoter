@@ -30,7 +30,7 @@ import axios from 'axios'
 /**
  * Render a single field based on schema definition
  */
-function renderField(field, value, onChange, error, platformId = null, formValues = {}, allFields = []) {
+function renderField(field, value, onChange, error, platformId = null, formValues = {}, allFields = [], onButtonAction = null) {
   const commonProps = {
     fullWidth: true,
     label: field.label,
@@ -150,8 +150,8 @@ function renderField(field, value, onChange, error, platformId = null, formValue
             <TargetList
               field={field}
               platformId={platformId}
-              onUpdate={onChange}
-              allFields={allFields} // Das neu hinzugefügte allFields-Prop
+              onUpdate={() => onButtonAction && onButtonAction('reload')} // Trigger reload on update
+              allFields={allFields}
             />
           ) : (
             <Alert severity="warning">
@@ -171,8 +171,7 @@ function renderField(field, value, onChange, error, platformId = null, formValue
               // Handle button action if defined
               if (field.action && platformId) {
                 try {
-                  const endpoint = field.action.endpoint.replace(':platformId', platformId)
-                  const url = getApiUrl(endpoint)
+                  const url = getApiUrl(field.action.endpoint)
                   
                   // Build request body from bodyMapping
                   let body = {}
@@ -195,16 +194,13 @@ function renderField(field, value, onChange, error, platformId = null, formValue
                   if (response.data.success) {
                     // Handle onSuccess actions
                     if (field.action.onSuccess === 'clear') {
-                      // Clear form values - would need callback
                       if (onButtonAction) {
                         onButtonAction('clear', field.name)
                       }
                     } else if (field.action.onSuccess === 'reload' || field.action.reloadOptions) {
-                      // Reload options - use callback from parent
                       if (onButtonAction) {
                         onButtonAction('reload')
                       } else {
-                        // Fallback: reload page if no callback
                         window.location.reload()
                       }
                     }
@@ -371,7 +367,8 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
                         errors[field.name],
                         platformId,
                         values,
-                        fields // Übergabe des gesamten fields-Arrays
+                        fields,
+                        onButtonAction
                       )}
                     </Box>
                   )
@@ -423,7 +420,8 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
               errors[field.name],
               platformId,
               values,
-              fields // Übergabe des gesamten fields-Arrays
+              fields,
+              onButtonAction
             )}
           </Box>
         )

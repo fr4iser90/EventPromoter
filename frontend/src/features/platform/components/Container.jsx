@@ -12,21 +12,25 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  IconButton
 } from '@mui/material'
 import {
-  AutoAwesome as TemplateIcon
+  AutoAwesome as TemplateIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material'
 import Editor from './Editor'
 import Preview from './Preview'
 import BulkApplier from '../../templates/components/BulkApplier'
 import { usePlatforms } from '../hooks/usePlatformSchema'
 import { useTemplateCategories } from '../../templates/hooks/useTemplateCategories'
-import config from '../../../config'
+import SettingsModal from './SettingsModal'
 
 function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentChange, disabled = false }) {
   const [activeTab, setActiveTab] = useState(0)
   const [bulkApplierOpen, setBulkApplierOpen] = useState(false)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [currentPlatformForSettings, setCurrentPlatformForSettings] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('')
   const { platforms, loading, error } = usePlatforms()
   const { categories, loading: categoriesLoading } = useTemplateCategories()
@@ -135,6 +139,11 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
     setBulkApplierOpen(true)
   }
 
+  const handleOpenSettings = (platformId) => {
+    setCurrentPlatformForSettings(platformId)
+    setSettingsModalOpen(true)
+  }
+
   return (
     <Paper sx={{ p: 0 }}>
       {/* Tabs Header with Bulk Apply Button */}
@@ -156,6 +165,27 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <span>{info.icon}</span>
                       <span>{info.name}</span>
+                      <Box
+                        component="span"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenSettings(platformId)
+                        }}
+                        sx={{ 
+                          ml: 0.5, 
+                          p: 0.5, 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            color: 'primary.main',
+                            bgcolor: 'action.hover',
+                            borderRadius: '50%'
+                          }
+                        }}
+                      >
+                        <SettingsIcon fontSize="inherit" />
+                      </Box>
                     </Box>
                   }
                   sx={{
@@ -212,6 +242,13 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
         selectedPlatforms={availablePlatforms}
         platformContent={platformContent}
         onApply={handleBulkApply}
+      />
+
+      {/* Platform Settings Modal */}
+      <SettingsModal
+        platformId={currentPlatformForSettings}
+        open={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
       />
     </Paper>
   )

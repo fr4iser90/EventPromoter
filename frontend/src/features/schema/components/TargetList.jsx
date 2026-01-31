@@ -14,8 +14,11 @@ import {
   Button,
   TextField,
   CircularProgress,
+  Alert,
 } from '@mui/material';
-import EditModal from '../../../shared/components/EditModal.jsx'; // Import the generic EditModal
+import EditModal from '../../../shared/components/EditModal.jsx';
+import { getApiUrl } from '../../../shared/utils/api';
+import axios from 'axios';
 
 const TargetList = ({ field, platformId, onUpdate, allFields }) => {
   const [targets, setTargets] = useState([]);
@@ -28,21 +31,43 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
   const [error, setError] = useState(null);
   const theme = useTheme();
 
-  const searchField = allFields?.find(f => f.name === 'recipientSearch');
-  const newRecipientButton = allFields?.find(f => f.name === 'newRecipientButton');
-  const targetsField = field; // Das 'field'-Prop ist das target-list-Feld
+  // Schema-driven: Find the search field and new button for this specific list
+  const searchField = allFields?.find(f => f.ui?.isFilterFor === field.name);
+  const newButton = allFields?.find(f => f.type === 'button' && f.action?.endpoint?.includes(field.name === 'targets' ? 'targets' : 'target-groups'));
+  
+  const targetsField = field;
+
+  const fetchData = async () => {
+    if (!field.optionsSource || !platformId) {
+      if (field.options) {
+        setTargets(field.options);
+        setFilteredTargets(field.options);
+      }
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const url = getApiUrl(field.optionsSource.endpoint);
+      const response = await axios.get(url);
+      
+      const data = response.data[field.optionsSource.responsePath];
+      
+      setTargets(data);
+      setFilteredTargets(data);
+    } catch (err) {
+      console.error('Failed to fetch targets:', err);
+      setError('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (field.options) {
-      setTargets(field.options);
-      setFilteredTargets(field.options);
-      setLoading(false);
-    } else {
-      setLoading(false);
-      setTargets([]);
-      setFilteredTargets([]);
-    }
-  }, [field.options]);
+    fetchData();
+  }, [field.optionsSource, platformId]);
 
   useEffect(() => {
     const results = targets.filter(target =>
@@ -70,90 +95,97 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
   };
 
   const handleSaveSuccess = () => {
-    onUpdate && onUpdate(); // Trigger a reload of targets in the parent component
+    fetchData();
+    onUpdate && onUpdate();
   };
 
-  const renderField = (field) => {
-    switch (field.type) {
-      case 'text':
-      case 'email':
-      case 'tel':
-      case 'target-list': // Added target-list type
-        if (field.ui?.renderAsTable) {
-          const columns = field.ui.tableColumns || [];
-          return (
-            <TableContainer component={Paper} sx={{
-              mt: 2,
-              border: `1px solid ${theme.palette.divider}`,
-              borderRadius: theme.shape.borderRadius,
-              boxShadow: theme.shadows[1],
-            }}>
-              <Table size="small" sx={{ borderCollapse: 'collapse' }}>
-                <TableHead>
-                  <TableRow>
-                    {columns.map((column) => (
-                      <TableCell key={column.id} sx={{
-                        width: column.width || 'auto',
-                        border: `1px solid ${theme.palette.divider}`,
-                      }}>
-                        {column.label}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} align="center" sx={{ border: `1px solid ${theme.palette.divider}` }}>
-                        <CircularProgress size={24} />
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredTargets.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} align="center" sx={{ border: `1px solid ${theme.palette.divider}` }}>
-                        <Typography variant="body2" color="textSecondary">
-                          No recipients available. Add a new recipient.
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredTargets.map((row) => (
-                      <TableRow key={row.id}>
-                        {columns.map((column) => (
-                          <TableCell key={column.id} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-                            {column.clickable && row[column.id] ? (
-                              <Link
-                                component="button"
-                                variant="body2"
-                                onClick={() => handleEdit(row, column.action)}
-                              >
-                                {row[column.id]}
-                              </Link>
-                            ) : (
-                              row[column.id]
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          );
-        }
-        return null; // Should not happen for table fields
-      default:
-        return null;
-    }
+  const renderTable = () => {
+    if (!field.ui?.renderAsTable) return null;
+    
+    const columns = field.ui.tableColumns || [];
+    return (
+      <TableContainer component={Paper} sx={{
+        mt: 2,
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: theme.shape.borderRadius,
+        boxShadow: theme.shadows[1],
+      }}>
+        <Table size="small" sx={{ borderCollapse: 'collapse' }}>
+          <TableHead>
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell key={column.id} sx={{
+                  width: column.width || 'auto',
+                  border: `1px solid ${theme.palette.divider}`,
+                  fontWeight: 'bold',
+                  bgcolor: 'action.hover'
+                }}>
+                  {column.label}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center" sx={{ p: 3 }}>
+                  <CircularProgress size={24} />
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center" sx={{ p: 2 }}>
+                  <Alert severity="error">{error}</Alert>
+                </TableCell>
+              </TableRow>
+            ) : filteredTargets.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center" sx={{ p: 3 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    No items found.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredTargets.map((row) => (
+                <TableRow key={row.id} hover>
+                  {columns.map((column) => (
+                    <TableCell key={column.id} sx={{ border: `1px solid ${theme.palette.divider}` }}>
+                      {column.clickable && row[column.id] ? (
+                        <Link
+                          component="button"
+                          variant="body2"
+                          onClick={() => handleEdit(row, column.action)}
+                          sx={{ textAlign: 'left' }}
+                        >
+                          {row[column.id]}
+                        </Link>
+                      ) : (
+                        row[column.id]
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>{field.label}</Typography>
-      {field.description && <Typography variant="body2" color="textSecondary" gutterBottom>{field.description}</Typography>}
+    <Box sx={{ mb: 4 }}>
+      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+        {field.label}
+      </Typography>
+      {field.description && (
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+          {field.description}
+        </Typography>
+      )}
 
-      <Box display="flex" alignItems="center" mb={2}>
+      <Box display="flex" alignItems="center" gap={1} mb={2}>
         {searchField && (
           <TextField
             label={searchField.label}
@@ -161,30 +193,31 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
             size="small"
             value={searchTerm}
             onChange={handleSearchChange}
-            sx={{ flexGrow: 1, mr: 1 }}
-            placeholder={searchField.label}
+            sx={{ flexGrow: 1 }}
+            placeholder={searchField.placeholder}
           />
         )}
-        {newRecipientButton && (
+        {newButton && (
           <Button
-            variant={newRecipientButton.ui?.variant || 'contained'}
-            color={newRecipientButton.ui?.color || 'primary'}
-            onClick={() => handleEdit({}, newRecipientButton.action)}
+            variant="contained"
+            color="primary"
+            onClick={() => handleEdit({}, newButton.action)}
+            size="medium"
           >
-            {newRecipientButton.label}
+            {newButton.label}
           </Button>
         )}
       </Box>
 
-      {targetsField && renderField(targetsField)}
+      {renderTable()}
 
-      {editModalOpen && currentEditItem && currentAction && (
+      {editModalOpen && currentAction && (
         <EditModal
           open={editModalOpen}
           onClose={handleCloseEditModal}
           platformId={platformId}
           schemaId={currentAction.schemaId}
-          itemId={currentEditItem.id}
+          itemId={currentEditItem?.id}
           dataEndpoint={currentAction.dataEndpoint}
           saveEndpoint={currentAction.saveEndpoint}
           method={currentAction.method}

@@ -1,6 +1,6 @@
-import { BaseTargetService } from '@/services/targetService'
+import { BaseTargetService } from '../../../services/targetService.js'
 import { Target, Group } from '@/types/schema'
-import { instagramPanelSchema } from '../schema/panel.js' // Import the panel schema
+import { instagramSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**
  * Instagram Target Service
@@ -14,7 +14,7 @@ import { instagramPanelSchema } from '../schema/panel.js' // Import the panel sc
  */
 export class InstagramTargetService extends BaseTargetService {
   constructor() {
-    super('instagram', instagramPanelSchema.targetSchema!)
+    super('instagram', instagramSettingsSchema.targetSchema!)
   }
 
   /**

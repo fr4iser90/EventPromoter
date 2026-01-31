@@ -1,6 +1,6 @@
-import { BaseTargetService } from '@/services/targetService'
+import { BaseTargetService } from '../../../services/targetService.js'
 import { Target, Group } from '@/types/schema'
-import { facebookPanelSchema } from '../schema/panel.js' // Import the panel schema
+import { facebookSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**
  * Facebook Target Service
@@ -14,7 +14,7 @@ import { facebookPanelSchema } from '../schema/panel.js' // Import the panel sch
  */
 export class FacebookTargetService extends BaseTargetService {
   constructor() {
-    super('facebook', facebookPanelSchema.targetSchema!)
+    super('facebook', facebookSettingsSchema.targetSchema!)
   }
 
   /**

@@ -1,76 +1,183 @@
-# Roadmap: Sichtbares Hybrid-Modell für Anhänge
+# Analyse & Planung: Platform UI/UX Refactoring (Modal-driven Settings)
 
-## 1. Architektur-Leitsatz
-> "Globale Wirkung braucht explizite Zustimmung."
+## 1. Zielsetzung
+Das Frontend wird auf ein Full-Width Layout umgestellt. Die plattformspezifischen Sidebars (Panels) werden entfernt und stattdessen in das bestehende `SettingsModal` integriert. Dieses Modal erhält Tabs **im Header**, um zwischen "Ziele & Optionen" (ehemals Panel) und "Zugangsdaten" (ehemals Settings) zu wechseln. Im Backend werden lediglich die Schema-Keys umbenannt, die Struktur bleibt identisch.
 
-## 2. Datenmodell & Security Layer
+## 2. Schema Refactoring (Backend - NUR RENAME)
+Umbenennung der Keys in der `PlatformSchema` und den zugehörigen Typen. Die interne Struktur der Objekte bleibt zu 100% erhalten. JSDoc-Kommentare dürfen NIEMALS gelöscht werden.
+- `settings` (alt) -> **`credentials`** (Zugangsdaten/API)
+- `panel` (alt) -> **`settings`** (Ziele/Optionen/Gruppen)
 
-### File-Referenz (Zentrale Wahrheit)
-```typescript
-interface UploadedFileRef {
-  id: string;
-  filename: string;
-  type: string;
-  visibility: "internal" | "public"; // Default: internal
-  tags?: string[];
-}
-```
+### 2.1 Backend Änderungen (Strikte Vorgabe)
+1.  **Typen:** `backend/src/types/schema/`
+    - `SettingsSchema` Interface umbenennen zu `CredentialsSchema`.
+    - `PanelSchema` Interface umbenennen zu `SettingsSchema`.
+    - **Wichtig:** Keine neuen Interfaces erfinden. Struktur 1:1 kopieren.
+2.  **Validator:** `backend/src/utils/schemaValidator.ts` auf neue Keys anpassen.
+3.  **Controller:** `PlatformController.ts` nutzt `credentials` und `settings`.
+4.  **Plattformen:** In allen `index.ts` der Plattformen die Keys umbenennen. **JSDoc-Header müssen exakt so bleiben wie sie sind.**
 
-### Content-Struktur (Plattform-Level)
-```typescript
-{
-  globalFiles: string[]; // IDs von public Files
-  _templates: [
-    {
-      id: string,
-      templateId: string,
-      targets: any,
-      specificFiles: string[] // IDs (internal oder public)
-    }
-  ]
-}
-```
+## 3. Frontend Refactoring (UI/UX)
+
+### 3.1 Layout (Full-Width)
+- **HomePage.jsx:** Entfernen der Sidebar-Komponenten (`LeftPanel`, `RightPanel`). Der Hauptinhalt nutzt die volle Breite (`maxWidth: 1200px`).
+
+### 3.2 Das neue tab-basierte Modal (Design)
+Die Tabs befinden sich **oben im Header** des Modals (MUI DialogTitle Bereich). Der Inhalt ist scrollbar.
 
 ---
 
-## 3. Implementierungs-Phasen
+## 4. Detaillierte Modal-Visualisierungen (Plattform-spezifisch)
 
-### Phase 1: Schema-Erweiterung (File Store) [Prio 1]
-* **Ziel:** Visibility-Status einführen.
-* **Tasks:**
-  * Update `backend/src/types/index.ts` (oder wo FileRefs definiert sind).
-  * Backend-Logik beim Upload: Setze Default auf `internal`.
-  * Migration: Alle bestehenden Dateien initial auf `internal` setzen.
+### 4.1 EMAIL MODAL
+```text
++-----------------------------------------------------------+
+| [Email Icon] Email Configuration                        X |
++-----------------------------------------------------------+
+|  [ Settings Icon ] Settings          [ Key Icon ] Credentials |
++-----------------------------------------------------------+
+|                                                           |
+|  TAB: SETTINGS (ehemals Panel)                            |
+|  -------------------------------------------------------  |
+|  [ SEARCH: Search recipients... ]        [ + NEW RECIPIENT ] |
+|  +-------------------------------------------------------+|
+|  | Email Address       | First Name | Last Name | B-Day  ||
+|  +---------------------+------------+-----------+--------+|
+|  | info@event.de       | Max        | Musterm.  | 01.01. ||
+|  | test@web.de         | Erika      | Schmidt   | 05.05. ||
+|  +-------------------------------------------------------+|
+|                                                           |
+|  [ SEARCH: Search groups...     ]        [ + NEW GROUP     ] |
+|  +-------------------------------------------------------+|
+|  | Group Name          | Members                         ||
+|  +---------------------+---------------------------------+|
+|  | Newsletter-All      | 150                             ||
+|  | VIP-Guests          | 12                              ||
+|  +-------------------------------------------------------+|
+|                                                           |
++-----------------------------------------------------------+
+|                                      [ Cancel ] [ Save ]  |
++-----------------------------------------------------------+
+```
 
-### Phase 2: Backend-Publisher (Merge & Validation) [Prio 2]
-* **Ziel:** Deterministische Mail-Pakete schnüren.
-* **Logik:** `merge(global, specific) -> deduplicate`.
-* **Hard-Validation:**
-  * `globalFiles` enthält `internal` -> **Hard Error** (Publish blockiert).
-  * `specificFiles` enthält `internal` -> **OK**.
+### 4.2 TWITTER MODAL
+```text
++-----------------------------------------------------------+
+| [Twitter Icon] Twitter Configuration                    X |
++-----------------------------------------------------------+
+|  [ Settings Icon ] Settings          [ Key Icon ] Credentials |
++-----------------------------------------------------------+
+|                                                           |
+|  TAB: SETTINGS                                            |
+|  -------------------------------------------------------  |
+|  TWITTER-ACCOUNTS                                         |
+|  +-------------------------------------------------------+|
+|  | Account (@username) | Display Name | Status           ||
+|  +---------------------+--------------+------------------+|
+|  | @EventPromo_DE      | Event Promo  | [Active]         ||
+|  +-------------------------------------------------------+|
+|  [ + ADD NEW ACCOUNT (Username Input)                  ]  |
+|                                                           |
+|  HASHTAGS                                                 |
+|  +-------------------------------------------------------+|
+|  | Hashtag             | Description                     ||
+|  +---------------------+---------------------------------+|
+|  | #techno             | Techno Events                   ||
+|  | #leipzig            | Local Leipzig                   ||
+|  +-------------------------------------------------------+|
+|  [ + ADD NEW HASHTAG                                   ]  |
+|                                                           |
++-----------------------------------------------------------+
+|                                      [ Cancel ] [ Save ]  |
++-----------------------------------------------------------+
+```
 
-### Phase 3: Datenmodell-Update (Editor & Store)
-* **Ziel:** Trennung von `globalFiles` und `specificFiles` im Frontend-Store.
-* **Tasks:**
-  * Reducer-Logik für `ADD_GLOBAL_FILE` und `ADD_SPECIFIC_FILE`.
-  * Synchronisation mit dem Backend-Schema.
+### 4.3 REDDIT MODAL
+```text
++-----------------------------------------------------------+
+| [Reddit Icon] Reddit Configuration                     X |
++-----------------------------------------------------------+
+|  [ Settings Icon ] Settings          [ Key Icon ] Credentials |
++-----------------------------------------------------------+
+|                                                           |
+|  TAB: SETTINGS                                            |
+|  -------------------------------------------------------  |
+|  SUBREDDITS                                               |
+|  +-------------------------------------------------------+|
+|  | Subreddit           | Subscribers | Description       ||
+|  +---------------------+-------------+-------------------+|
+|  | r/electronicmusic   | 2.5M        | Electronic Music  ||
+|  | r/leipzig           | 45k         | Leipzig Local     ||
+|  +-------------------------------------------------------+|
+|  [ + ADD SUBREDDIT (Name Input)                        ]  |
+|                                                           |
+|  SUBREDDIT-GRUPPEN                                        |
+|  [ Group Name Input... ]  [ Multi-Select Subreddits... ]  |
+|  [ BUTTON: CREATE GROUP                                ]  |
+|                                                           |
++-----------------------------------------------------------+
+|                                      [ Cancel ] [ Save ]  |
++-----------------------------------------------------------+
+```
 
-### Phase 4: UI-Umbau (Template-Modal)
-* **Ziel:** Die "Summenanzeige" (Standard vs. Spezifisch).
-* **UX:**
-  * Standard-Files: Checkbox an, disabled, Tooltip: "Global gesetzt".
-  * Spezifische Files: Checkboxen für alle anderen kompatiblen Dateien.
+### 4.4 INSTAGRAM MODAL
+```text
++-----------------------------------------------------------+
+| [Insta Icon] Instagram Configuration                   X |
++-----------------------------------------------------------+
+|  [ Settings Icon ] Settings          [ Key Icon ] Credentials |
++-----------------------------------------------------------+
+|                                                           |
+|  TAB: SETTINGS                                            |
+|  -------------------------------------------------------  |
+|  INSTAGRAM-ACCOUNTS                                       |
+|  +-------------------------------------------------------+|
+|  | Account (@user)     | Display Name | Status           ||
+|  +---------------------+--------------+------------------+|
+|  | @event_insta        | My Event     | [Active]         ||
+|  +-------------------------------------------------------+|
+|                                                           |
+|  LOCATIONS                                                |
+|  +-------------------------------------------------------+|
+|  | Location Name       | Address                         ||
+|  +---------------------+---------------------------------+|
+|  | Werk 2              | Kochstraße 132, Leipzig         ||
+|  | Distillery          | Kurt-Eisner-Str. 108            ||
+|  +-------------------------------------------------------+|
+|  [ + ADD LOCATION (Name & ID Input)                    ]  |
+|                                                           |
++-----------------------------------------------------------+
+|                                      [ Cancel ] [ Save ]  |
++-----------------------------------------------------------+
+```
 
-### Phase 5: UI-Umbau (Globaler Block)
-* **Ziel:** Filterung und Warn-Mechanik.
-* **UX:**
-  * Zeige nur `public` Dateien standardmäßig.
-  * Drag & Drop einer `internal` Datei öffnet den "Bewusst-Machen"-Dialog: *"Datei als public markieren und global anhängen?"*
+### 4.5 ALLGEMEIN: TAB CREDENTIALS
+*(Beispiel Email)*
+```text
++-----------------------------------------------------------+
+| [Icon] Plattform Konfiguration                          X |
++-----------------------------------------------------------+
+|  [ Settings Icon ] Settings          [ Key Icon ] Credentials |
++-----------------------------------------------------------+
+|                                                           |
+|  TAB: CREDENTIALS                                         |
+|  -------------------------------------------------------  |
+|  SMTP CONFIGURATION                                       |
+|  SMTP Host: [ smtp.gmail.com                           ]  |
+|  Port:      [ 587                                      ]  |
+|  Username:  [ user@gmail.com                           ]  |
+|  Password:  [ ****************                         ]  |
+|  From Name: [ My Event Service                         ]  |
+|                                                           |
++-----------------------------------------------------------+
+|                                      [ Cancel ] [ Save ]  |
++-----------------------------------------------------------+
+```
 
----
-
-## 4. Edge-Cases & Absicherung
-* **Status-Änderung:** Was passiert, wenn eine Datei in `globalFiles` liegt und später auf `internal` gesetzt wird?
-  * *Lösung:* Backend-Validation beim Publish fängt das ab (Hard Error). UI zeigt im Editor ein Warn-Icon am Block.
-* **Mehrfache Nennung:** Datei ist global UND spezifisch gewählt?
-  * *Lösung:* Eindeutige Liste durch `dedupeById` beim Mergen.
+## 5. Integrations-Checkliste
+- [ ] Backend: Typen umbenennen (Struktur 1:1 beibehalten)
+- [ ] Backend: Validator aktualisieren (nur Key-Rename)
+- [ ] Backend: Plattform-Schemas (index.ts) anpassen (**JSDoc erhalten!**)
+- [ ] Frontend: HomePage Sidebars entfernen (Full-Width Layout)
+- [ ] Frontend: SettingsModal auf Header-Tabs umstellen
+- [ ] Frontend: Zahnrad-Icon in Container.jsx integrieren, um Modal zu öffnen

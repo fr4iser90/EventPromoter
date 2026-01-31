@@ -36,8 +36,9 @@ const EditModal = ({
       setLoading(true);
       setError(null);
       try {
-        // Fetch the form schema
-        const schemaResponse = await fetch(getApiUrl(`platforms/${platformId}/schemas/${schemaId}`));
+        // Fetch the form schema with itemId as query param for resolution
+        const schemaUrl = getApiUrl(`platforms/${platformId}/schemas/${schemaId}${itemId ? `?id=${itemId}` : ''}`);
+        const schemaResponse = await fetch(schemaUrl);
         if (!schemaResponse.ok) {
           throw new Error(`Failed to fetch schema: ${schemaResponse.statusText}`);
         }
@@ -47,12 +48,14 @@ const EditModal = ({
           throw new Error(schemaData.error || 'Unknown error fetching schema');
         }
         console.log('EditModal: Setting schema state with', schemaData.schema);
-        setSchema(schemaData.schema);
+        const loadedSchema = schemaData.schema;
+        setSchema(loadedSchema);
 
-        // If itemId and dataEndpoint are provided, fetch existing data
-        if (itemId && dataEndpoint) {
-          const resolvedDataEndpoint = resolveSchemaEndpoint(dataEndpoint, platformId, itemId);
-          const dataResponse = await fetch(getApiUrl(resolvedDataEndpoint));
+        // If itemId and endpoint are provided in the schema, fetch existing data
+        if (itemId && loadedSchema.endpoint) {
+          const url = getApiUrl(loadedSchema.endpoint);
+          console.log('EditModal: Fetching data from resolved URL:', url);
+          const dataResponse = await fetch(url);
           if (!dataResponse.ok) {
             throw new Error(`Failed to fetch data: ${dataResponse.statusText}`);
           }
@@ -89,8 +92,9 @@ const EditModal = ({
     setLoading(true);
     setError(null);
     try {
-      const resolvedSaveEndpoint = resolveSchemaEndpoint(saveEndpoint, platformId, itemId);
-      const response = await fetch(getApiUrl(resolvedSaveEndpoint), {
+      // Use endpoint from the loaded (and backend-resolved) schema
+      const url = getApiUrl(schema.endpoint);
+      const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',

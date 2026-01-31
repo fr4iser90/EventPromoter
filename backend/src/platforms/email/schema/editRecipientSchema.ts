@@ -4,6 +4,7 @@ const emailRecipientEditSchema: FormSchema = {
   id: 'editRecipientSchema',
   title: 'Edit Email Recipient',
   description: 'Edit an existing email recipient.',
+  endpoint: 'platforms/:platformId/targets/:id',
   fields: [
     {
       name: 'id',

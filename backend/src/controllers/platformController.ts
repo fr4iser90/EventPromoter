@@ -349,6 +349,7 @@ export class PlatformController {
       }
 
       // ✅ GENERIC: Get settings from platform schema
+      const credentialsConfig = platform.schema?.credentials
       const settingsConfig = platform.schema?.settings
 
       // Get actual values from environment variables or stored config
@@ -364,7 +365,8 @@ export class PlatformController {
         success: true,
         platform: platformId,
         settings: {
-          config: settingsConfig,
+          credentialsConfig, // ✅ New key
+          config: settingsConfig, // ✅ Renamed from panel
           values: maskedSettings, // ✅ Only masked values sent to frontend
           hasCredentials,
           configured: hasCredentials
@@ -402,16 +404,16 @@ export class PlatformController {
       }
 
       // ✅ SECURITY: Get settings schema for validation
-      const settingsSchema = platform.schema?.settings
-      if (!settingsSchema) {
+      const credentialsSchema = platform.schema?.credentials
+      if (!credentialsSchema) {
         return res.status(400).json({
-          error: 'Settings schema not available for this platform'
+          error: 'Credentials schema not available for this platform'
         })
       }
 
       // ✅ SECURITY: Validate settings before saving
       const { validateSettingsValues } = await import('../utils/settingsValidator.js')
-      const validation = validateSettingsValues(settingsSchema, settings || {})
+      const validation = validateSettingsValues(credentialsSchema, settings || {})
       
       if (!validation.isValid) {
         return res.status(400).json({

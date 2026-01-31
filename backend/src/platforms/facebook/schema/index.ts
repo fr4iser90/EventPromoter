@@ -2,18 +2,19 @@
  * Facebook Platform Schema
  * 
  * Main schema export that combines all schema parts:
- * - Settings (API credentials)
+ * - Credentials (API credentials)
  * - Editor (content blocks and features)
  * - Preview (preview modes and content mapping)
+ * - Settings (feature panels and account management)
  * 
  * @module platforms/facebook/schema
  */
 
 import { PlatformSchema } from '@/types/schema'
-import { facebookSettingsSchema } from './settings'
+import { facebookCredentialsSchema } from './credentials'
 import { facebookEditorSchema } from './editor'
 import { facebookPreviewSchema } from './preview'
-import { facebookPanelSchema } from './panel'
+import { facebookSettingsSchema } from './settings'
 
 /**
  * Complete Facebook Platform Schema
@@ -23,10 +24,10 @@ import { facebookPanelSchema } from './panel'
  */
 export const facebookSchema: PlatformSchema = {
   version: '1.0.0',
-  settings: facebookSettingsSchema,
+  credentials: facebookCredentialsSchema,
   editor: facebookEditorSchema,
   preview: facebookPreviewSchema,
-  panel: facebookPanelSchema,
+  settings: facebookSettingsSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

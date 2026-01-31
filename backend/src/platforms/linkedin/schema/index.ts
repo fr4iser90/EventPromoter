@@ -2,18 +2,19 @@
  * LinkedIn Platform Schema
  * 
  * Main schema export that combines all schema parts:
- * - Settings (API credentials)
+ * - Credentials (API credentials)
  * - Editor (content blocks and features)
  * - Preview (preview modes and content mapping)
+ * - Settings (feature panels and account management)
  * 
  * @module platforms/linkedin/schema
  */
 
 import { PlatformSchema } from '@/types/schema'
-import { linkedinSettingsSchema } from './settings'
+import { linkedinCredentialsSchema } from './credentials'
 import { linkedinEditorSchema } from './editor'
 import { linkedinPreviewSchema } from './preview'
-import { linkedinPanelSchema } from './panel'
+import { linkedinSettingsSchema } from './settings'
 
 /**
  * Complete LinkedIn Platform Schema
@@ -23,10 +24,10 @@ import { linkedinPanelSchema } from './panel'
  */
 export const linkedinSchema: PlatformSchema = {
   version: '1.0.0',
-  settings: linkedinSettingsSchema,
+  credentials: linkedinCredentialsSchema,
   editor: linkedinEditorSchema,
   preview: linkedinPreviewSchema,
-  panel: linkedinPanelSchema,
+  settings: linkedinSettingsSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

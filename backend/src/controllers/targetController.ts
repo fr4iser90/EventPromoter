@@ -31,6 +31,7 @@ export class TargetController {
 
       const targets = await service.getTargets(type as string | undefined); // Pass type to service
       const groups = await service.getGroups();
+      const groupsArray = Array.isArray(groups) ? groups : Object.values(groups);
 
       // Transform targets to options format for multiselect components
       const baseField = service.getBaseField()
@@ -43,7 +44,7 @@ export class TargetController {
         success: true,
         targets,
         options, // For multiselect components
-        groups
+        groups: groupsArray
       })
     } catch (error: any) {
       console.error('Get targets error:', error)
@@ -214,18 +215,18 @@ export class TargetController {
       }
 
       const groups = await service.getGroups()
+      const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
 
       // Transform groups to options array for multiselect components
-      // groups is { [groupId]: Group }
-      const options = Object.values(groups).map(group => ({
+      const options = groupsArray.map((group: any) => ({
         label: group.name,
         value: group.id
       }))
 
       return res.json({
         success: true,
-        groups, // Full group objects
-        options // For multiselect components (CompositeRenderer expects this)
+        groups: groupsArray, // Full group objects
+        options // For multiselect components
       })
     } catch (error: any) {
       console.error('Get groups error:', error)
@@ -463,10 +464,11 @@ export class TargetController {
       }
 
       const groups = await service.getGroups()
+      const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
 
       return res.json({
         success: true,
-        groups
+        groups: groupsArray
       })
     } catch (error: any) {
       console.error('Export groups error:', error)

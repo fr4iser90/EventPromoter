@@ -2,21 +2,21 @@
  * Email Platform Schema
  * 
  * Main schema export that combines all schema parts:
- * - Settings (SMTP configuration)
+ * - Credentials (SMTP configuration)
  * - Editor (content blocks and features)
  * - Preview (preview modes and content mapping)
- * - Panel (feature panels and recipient management)
+ * - Settings (feature panels and recipient management)
  * - Template (template structure and variables)
  * 
  * @module platforms/email/schema
  */
 
 import { PlatformSchema } from '@/types/schema'
-import { emailSettingsSchema } from './settings'
+import { emailCredentialsSchema } from './credentials'
 import { emailEditorSchema } from './editor'
 import { emailPreviewSchema } from './preview'
 import { emailTemplateSchema } from './template'
-import { emailPanelSchema } from './panel'
+import { emailSettingsSchema } from './settings'
 
 /**
  * Complete Email Platform Schema
@@ -26,10 +26,10 @@ import { emailPanelSchema } from './panel'
  */
 export const emailSchema: PlatformSchema = {
   version: '1.0.0',
-  settings: emailSettingsSchema,
+  credentials: emailCredentialsSchema,
   editor: emailEditorSchema,
   preview: emailPreviewSchema,
-  panel: emailPanelSchema,
+  settings: emailSettingsSchema,
   template: emailTemplateSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:53:50.000Z',

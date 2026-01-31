@@ -10,9 +10,9 @@ import { PlatformSchema } from '@/types/schema'
 
 export const platformIdSchema: PlatformSchema = {
   version: '1.0.0',
-  settings: {
+  credentials: {
     version: '1.0.0',
-    title: 'PLATFORM_DISPLAY_NAME Settings',
+    title: 'PLATFORM_DISPLAY_NAME Credentials',
     description: 'Configure PLATFORM_DISPLAY_NAME API credentials',
     fields: [
       {
@@ -49,6 +49,19 @@ export const platformIdSchema: PlatformSchema = {
         description: 'Configure your API credentials',
         fields: ['apiKey', 'apiSecret'],
         collapsible: false
+      }
+    ]
+  },
+  settings: {
+    id: 'blueprint-settings',
+    version: '1.0.0',
+    title: 'PLATFORM_DISPLAY_NAME Settings',
+    description: 'Configure PLATFORM_DISPLAY_NAME settings',
+    sections: [
+      {
+        id: 'general',
+        title: 'General Settings',
+        fields: []
       }
     ]
   },

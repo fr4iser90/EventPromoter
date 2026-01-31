@@ -5,7 +5,7 @@
 
 export * from './primitives';
 export * from './forms';
-export * from './panel';
+export * from './credentials';
 export * from './settings';
 export * from './editor';
 export * from './preview';

@@ -2,18 +2,19 @@
  * Reddit Platform Schema
  * 
  * Main schema export that combines all schema parts:
- * - Settings (API credentials)
+ * - Credentials (API credentials)
  * - Editor (content blocks and features)
  * - Preview (preview modes and content mapping)
+ * - Settings (feature panels and account management)
  * 
  * @module platforms/reddit/schema
  */
 
 import { PlatformSchema } from '@/types/schema'
-import { redditSettingsSchema } from './settings'
+import { redditCredentialsSchema } from './credentials'
 import { redditEditorSchema } from './editor'
 import { redditPreviewSchema } from './preview'
-import { redditPanelSchema } from './panel'
+import { redditSettingsSchema } from './settings'
 
 /**
  * Complete Reddit Platform Schema
@@ -23,10 +24,10 @@ import { redditPanelSchema } from './panel'
  */
 export const redditSchema: PlatformSchema = {
   version: '1.0.0',
-  settings: redditSettingsSchema,
+  credentials: redditCredentialsSchema,
   editor: redditEditorSchema,
   preview: redditPreviewSchema,
-  panel: redditPanelSchema,
+  settings: redditSettingsSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

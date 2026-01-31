@@ -2,18 +2,19 @@
  * Twitter Platform Schema
  * 
  * Main schema export that combines all schema parts:
- * - Settings (API credentials)
+ * - Credentials (API credentials)
  * - Editor (content blocks and features)
  * - Preview (preview modes and content mapping)
+ * - Settings (feature panels and account management)
  * 
  * @module platforms/twitter/schema
  */
 
 import { PlatformSchema } from '@/types/schema'
-import { twitterSettingsSchema } from './settings'
+import { twitterCredentialsSchema } from './credentials'
 import { twitterEditorSchema } from './editor'
 import { twitterPreviewSchema } from './preview'
-import { twitterPanelSchema } from './panel'
+import { twitterSettingsSchema } from './settings'
 
 /**
  * Complete Twitter Platform Schema
@@ -23,10 +24,10 @@ import { twitterPanelSchema } from './panel'
  */
 export const twitterSchema: PlatformSchema = {
   version: '1.0.0',
-  settings: twitterSettingsSchema,
+  credentials: twitterCredentialsSchema,
   editor: twitterEditorSchema,
   preview: twitterPreviewSchema,
-  panel: twitterPanelSchema,
+  settings: twitterSettingsSchema,
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',

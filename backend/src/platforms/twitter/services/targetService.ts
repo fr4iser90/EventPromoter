@@ -1,6 +1,6 @@
-import { BaseTargetService } from '@/services/targetService'
+import { BaseTargetService } from '../../../services/targetService.js'
 import { Target, Group } from '@/types/schema'
-import { twitterPanelSchema } from '../schema/panel.js' // Import the panel schema
+import { twitterSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**
  * Twitter Target Service
@@ -14,7 +14,7 @@ import { twitterPanelSchema } from '../schema/panel.js' // Import the panel sche
  */
 export class TwitterTargetService extends BaseTargetService {
   constructor() {
-    super('twitter', twitterPanelSchema.targetSchema!)
+    super('twitter', twitterSettingsSchema.targetSchema!)
   }
 
   /**

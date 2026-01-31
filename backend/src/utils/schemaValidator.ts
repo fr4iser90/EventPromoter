@@ -8,6 +8,7 @@
 
 import {
   PlatformSchema,
+  CredentialsSchema,
   SettingsSchema,
   EditorSchema,
   PreviewSchema,
@@ -52,6 +53,81 @@ export function validateSchemaStructure(schema: any): schema is PlatformSchema {
 }
 
 /**
+ * Validate credentials schema
+ */
+export function validateCredentialsSchema(credentials: any): credentials is CredentialsSchema {
+  const errors: Array<{ field: string; message: string; rule?: string }> = []
+
+  if (!credentials || typeof credentials !== 'object') {
+    throw new SchemaValidationError(
+      'Credentials schema must be an object',
+      'credentials',
+      [{ field: 'credentials', message: 'Credentials schema is required' }]
+    )
+  }
+
+  if (!credentials.version || typeof credentials.version !== 'string') {
+    errors.push({ field: 'credentials.version', message: 'Version is required and must be a string' })
+  }
+
+  if (!credentials.title || typeof credentials.title !== 'string') {
+    errors.push({ field: 'credentials.title', message: 'Title is required and must be a string' })
+  }
+
+  if (!Array.isArray(credentials.fields)) {
+    errors.push({ field: 'credentials.fields', message: 'Fields must be an array' })
+  } else {
+    // Validate each field
+    credentials.fields.forEach((field: any, index: number) => {
+      try {
+        validateFieldDefinition(field)
+      } catch (error) {
+        if (error instanceof FieldValidationError) {
+          errors.push({
+            field: `credentials.fields[${index}].${error.field}`,
+            message: error.message,
+            rule: error.rule
+          })
+        } else {
+          errors.push({
+            field: `credentials.fields[${index}]`,
+            message: error instanceof Error ? error.message : 'Invalid field definition'
+          })
+        }
+      }
+    })
+  }
+
+  // Validate groups if present
+  if (credentials.groups && Array.isArray(credentials.groups)) {
+    credentials.groups.forEach((group: any, index: number) => {
+      if (!group.id || typeof group.id !== 'string') {
+        errors.push({
+          field: `credentials.groups[${index}].id`,
+          message: 'Group ID is required and must be a string'
+        })
+      }
+      if (!Array.isArray(group.fields)) {
+        errors.push({
+          field: `credentials.groups[${index}].fields`,
+          message: 'Group fields must be an array'
+        })
+      }
+    })
+  }
+
+  if (errors.length > 0) {
+    throw new SchemaValidationError(
+      'Credentials schema validation failed',
+      'credentials',
+      errors
+    )
+  }
+
+  return true
+}
+
+/**
  * Validate settings schema
  */
 export function validateSettingsSchema(settings: any): settings is SettingsSchema {
@@ -73,43 +149,37 @@ export function validateSettingsSchema(settings: any): settings is SettingsSchem
     errors.push({ field: 'settings.title', message: 'Title is required and must be a string' })
   }
 
-  if (!Array.isArray(settings.fields)) {
-    errors.push({ field: 'settings.fields', message: 'Fields must be an array' })
+  if (!Array.isArray(settings.sections)) {
+    errors.push({ field: 'settings.sections', message: 'Sections must be an array' })
   } else {
-    // Validate each field
-    settings.fields.forEach((field: any, index: number) => {
-      try {
-        validateFieldDefinition(field)
-      } catch (error) {
-        if (error instanceof FieldValidationError) {
-          errors.push({
-            field: `settings.fields[${index}].${error.field}`,
-            message: error.message,
-            rule: error.rule
-          })
-        } else {
-          errors.push({
-            field: `settings.fields[${index}]`,
-            message: error instanceof Error ? error.message : 'Invalid field definition'
-          })
-        }
+    // Validate each section
+    settings.sections.forEach((section: any, index: number) => {
+      if (!section.id || typeof section.id !== 'string') {
+        errors.push({ field: `settings.sections[${index}].id`, message: 'Section ID is required' })
       }
-    })
-  }
-
-  // Validate groups if present
-  if (settings.groups && Array.isArray(settings.groups)) {
-    settings.groups.forEach((group: any, index: number) => {
-      if (!group.id || typeof group.id !== 'string') {
-        errors.push({
-          field: `settings.groups[${index}].id`,
-          message: 'Group ID is required and must be a string'
-        })
+      if (!section.title || typeof section.title !== 'string') {
+        errors.push({ field: `settings.sections[${index}].title`, message: 'Section title is required' })
       }
-      if (!Array.isArray(group.fields)) {
-        errors.push({
-          field: `settings.groups[${index}].fields`,
-          message: 'Group fields must be an array'
+      if (!Array.isArray(section.fields)) {
+        errors.push({ field: `settings.sections[${index}].fields`, message: 'Section fields must be an array' })
+      } else {
+        section.fields.forEach((field: any, fieldIndex: number) => {
+          try {
+            validateFieldDefinition(field)
+          } catch (error) {
+            if (error instanceof FieldValidationError) {
+              errors.push({
+                field: `settings.sections[${index}].fields[${fieldIndex}].${error.field}`,
+                message: error.message,
+                rule: error.rule
+              })
+            } else {
+              errors.push({
+                field: `settings.sections[${index}].fields[${fieldIndex}]`,
+                message: error instanceof Error ? error.message : 'Invalid field definition'
+              })
+            }
+          }
         })
       }
     })
@@ -150,7 +220,7 @@ export function validateFieldDefinition(field: any): field is FieldDefinition {
   const validTypes = [
     'text', 'textarea', 'number', 'password', 'url', 'date', 'time',
     'datetime', 'boolean', 'select', 'multiselect', 'radio', 'checkbox',
-    'file', 'image', 'color', 'range', 'json'
+    'file', 'image', 'color', 'range', 'json', 'target-list', 'button'
   ]
   if (!validTypes.includes(field.type)) {
     throw new FieldValidationError(
@@ -162,27 +232,30 @@ export function validateFieldDefinition(field: any): field is FieldDefinition {
 
   // Validate options for select/multiselect/radio
   if (['select', 'multiselect', 'radio'].includes(field.type)) {
-    if (!Array.isArray(field.options) || field.options.length === 0) {
+    // If field has optionsSource, options are not required during static validation
+    if (!field.optionsSource && (!Array.isArray(field.options) || field.options.length === 0)) {
       throw new FieldValidationError(
-        `Field type ${field.type} requires options array with at least one option`,
+        `Field type ${field.type} requires options array with at least one option (or optionsSource)`,
         'options',
         'options_required'
       )
     }
-    field.options.forEach((option: any, index: number) => {
-      if (!option.label || typeof option.label !== 'string') {
-        throw new FieldValidationError(
-          `Option[${index}] label is required and must be a string`,
-          `options[${index}].label`
-        )
-      }
-      if (option.value === undefined || option.value === null) {
-        throw new FieldValidationError(
-          `Option[${index}] value is required`,
-          `options[${index}].value`
-        )
-      }
-    })
+    if (field.options) {
+      field.options.forEach((option: any, index: number) => {
+        if (!option.label || typeof option.label !== 'string') {
+          throw new FieldValidationError(
+            `Option[${index}] label is required and must be a string`,
+            `options[${index}].label`
+          )
+        }
+        if (option.value === undefined || option.value === null) {
+          throw new FieldValidationError(
+            `Option[${index}] value is required`,
+            `options[${index}].value`
+          )
+        }
+      })
+    }
   }
 
   // Validate validation rules
@@ -417,17 +490,35 @@ export function validatePlatformSchema(schema: any): schema is PlatformSchema {
     }
   }
 
+  // Validate credentials
+  if (schema.credentials) {
+    try {
+      validateCredentialsSchema(schema.credentials)
+    } catch (error) {
+      if (error instanceof SchemaValidationError && error.errors) {
+        errors.push(...error.errors)
+      } else {
+        errors.push({
+          field: 'credentials',
+          message: error instanceof Error ? error.message : 'Credentials validation failed'
+        })
+      }
+    }
+  }
+
   // Validate settings
-  try {
-    validateSettingsSchema(schema.settings)
-  } catch (error) {
-    if (error instanceof SchemaValidationError && error.errors) {
-      errors.push(...error.errors)
-    } else {
-      errors.push({
-        field: 'settings',
-        message: error instanceof Error ? error.message : 'Settings validation failed'
-      })
+  if (schema.settings) {
+    try {
+      validateSettingsSchema(schema.settings)
+    } catch (error) {
+      if (error instanceof SchemaValidationError && error.errors) {
+        errors.push(...error.errors)
+      } else {
+        errors.push({
+          field: 'settings',
+          message: error instanceof Error ? error.message : 'Settings validation failed'
+        })
+      }
     }
   }
 

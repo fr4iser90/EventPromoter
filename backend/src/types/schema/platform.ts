@@ -3,27 +3,27 @@
  * Defines the complete structure for a platform's schema, combining all sub-schemas.
  */
 
-import { SettingsSchema } from './settings';
+import { CredentialsSchema } from './credentials';
 import { EditorSchema } from './editor';
 import { PreviewSchema } from './preview';
-import { PanelSchema } from './panel';
+import { SettingsSchema } from './settings';
 import { TemplateSchema } from './template';
 
 /**
  * Complete platform schema
- * Combines settings, editor, preview, panel, and template schemas
+ * Combines credentials, editor, preview, settings, and template schemas
  */
 export interface PlatformSchema {
   /** Schema version */
   version: string;
-  /** Settings schema (for credentials/API keys - shown in modal) */
-  settings: SettingsSchema;
+  /** Credentials schema (for API keys/auth - shown in modal) */
+  credentials: CredentialsSchema;
   /** Editor schema (for content editing) */
   editor: EditorSchema;
   /** Preview schema (for content preview) */
   preview: PreviewSchema;
-  /** Panel schema (for platform features/options - shown in sidebar) */
-  panel?: PanelSchema;
+  /** Settings schema (for platform features/options - shown in modal) */
+  settings?: SettingsSchema;
   /** Template schema (for template management) */
   template?: TemplateSchema;
   /** Schema metadata */
@@ -45,8 +45,8 @@ export function isPlatformSchema(obj: any): obj is PlatformSchema {
     obj &&
     typeof obj === 'object' &&
     typeof obj.version === 'string' &&
-    obj.settings &&
-    typeof obj.settings === 'object' &&
+    obj.credentials &&
+    typeof obj.credentials === 'object' &&
     obj.editor &&
     typeof obj.editor === 'object' &&
     obj.preview &&

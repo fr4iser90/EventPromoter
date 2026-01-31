@@ -1,4 +1,4 @@
-import { FormSchema, PanelSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema';
 
 export class SchemaValidator {
   public static findUnresolvedTemplates(obj: any, found = new Set<string>()): Set<string> {
@@ -13,7 +13,7 @@ export class SchemaValidator {
     return found;
   }
 
-  public static validate(schema: FormSchema | PanelSchema): void {
+  public static validate(schema: FormSchema | SettingsSchema): void {
     const unresolved = SchemaValidator.findUnresolvedTemplates(schema);
     if (unresolved.size > 0) {
       const unresolvedList = Array.from(unresolved).join(', ');

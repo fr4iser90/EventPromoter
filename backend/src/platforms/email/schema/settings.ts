@@ -1,7 +1,11 @@
 /**
- * Email Platform Settings Schema
+ * Email Settings Schema
  * 
- * Settings configuration for the Email platform (SMTP, credentials, etc.)
+ * Defines the settings structure for email platform features (formerly Panel).
+ * This is NOT for credentials (those are in credentials.ts).
+ * 
+ * Uses schema-driven fields that are rendered by SchemaRenderer.
+ * All data comes from backend API endpoints.
  * 
  * @module platforms/email/schema/settings
  */
@@ -9,104 +13,198 @@
 import { SettingsSchema } from '@/types/schema'
 
 export const emailSettingsSchema: SettingsSchema = {
-  version: '1.0.0',
-  title: 'Email Platform Settings',
-  description: 'Configure SMTP settings for email platform',
-  fields: [
+  id: 'email-settings-schema',
+  version: '2.0.0',
+  title: 'Management of Email Recipients and Groups',
+  description: 'Management of Email Recipients and Groups',
+  sections: [
     {
-      name: 'host',
-      type: 'text',
-      label: 'SMTP Host',
-      placeholder: 'smtp.gmail.com',
-      required: true,
-      validation: [
-        { type: 'required', message: 'SMTP host is required' },
-        { type: 'pattern', value: '^[a-zA-Z0-9.-]+$', message: 'Invalid hostname format' }
-      ],
-      ui: {
-        width: 12,
-        order: 1
-      }
+      id: 'target-list',
+      title: 'Management of Your Email Recipients',
+      description: 'Management of Your Email Recipients',
+      fields: [
+        {
+          name: 'recipientSearch',
+          type: 'text',
+          label: 'Search recipients...',
+          placeholder: 'Search recipients...',
+          ui: {
+            width: 9,
+            order: 1,
+            isFilterFor: 'targets' // Link search to table
+          }
+        },
+        {
+          name: 'newRecipientButton',
+          type: 'button',
+          label: '+ New Recipient',
+          action: {
+            endpoint: 'platforms/:platformId/targets',
+            method: 'POST',
+            onSuccess: 'reload'
+          },
+          ui: {
+            width: 3,
+            order: 2,
+          }
+        },
+        {
+          name: 'targets',
+          type: 'target-list',
+          label: 'Email Address',
+          description: 'Overview of all email recipients with details.',
+          required: false,
+          optionsSource: {
+            endpoint: 'platforms/:platformId/targets',
+            method: 'GET',
+            responsePath: 'targets'
+          },
+          ui: {
+            width: 12,
+            order: 3,
+            renderAsTable: true,
+            tableColumns: [
+              {
+                id: 'email',
+                label: 'Email Address',
+                clickable: true,
+                        action: {
+                          id: 'email-edit-action',
+                          type: 'open-edit-modal',
+                          schemaId: 'editRecipientSchema',
+                          dataEndpoint: 'platforms/:platformId/targets/:id',
+                          saveEndpoint: 'platforms/:platformId/targets/:id',
+                          method: 'PUT',
+                          onSuccess: 'reload'
+                        }
+              },
+              { id: 'firstName', label: 'First Name' },
+              { id: 'lastName', label: 'Last Name' },
+              { id: 'birthday', label: 'Birthday', type: 'date' }
+            ]
+          }
+        }
+      ]
     },
     {
-      name: 'port',
-      type: 'number',
-      label: 'Port',
-      placeholder: '587',
-      default: 587,
-      required: true,
-      validation: [
-        { type: 'required', message: 'Port is required' },
-        { type: 'min', value: 1, message: 'Port must be at least 1' },
-        { type: 'max', value: 65535, message: 'Port must be at most 65535' }
-      ],
-      ui: {
-        width: 6,
-        order: 2
-      }
+      id: 'group-management',
+      title: 'Management of Your Email Groups',
+      description: 'Management of Your Email Groups',
+      fields: [
+        {
+          name: 'groupSearch',
+          type: 'text',
+          label: 'Search groups...',
+          placeholder: 'Search groups...',
+          ui: {
+            width: 9,
+            order: 1,
+            isFilterFor: 'groupsOverview' // Link search to table
+          }
+        },
+        {
+          name: 'newGroupButton',
+          type: 'button',
+          label: '+ New Group',
+          action: {
+            endpoint: 'platforms/:platformId/target-groups',
+            method: 'POST',
+            onSuccess: 'reload'
+          },
+          ui: {
+            width: 3,
+            order: 2,
+          }
+        },
+        {
+          name: 'groupsOverview',
+          type: 'target-list',
+          label: 'Group Name',
+          description: 'Overview of all email groups and their member counts.',
+          optionsSource: {
+            endpoint: 'platforms/:platformId/target-groups',
+            method: 'GET',
+            responsePath: 'groups',
+          },
+          ui: {
+            width: 12,
+            order: 3,
+            renderAsTable: true,
+            tableColumns: [
+              {
+                id: 'name',
+                label: 'Group Name',
+                clickable: true,
+                      action: {
+                          id: 'group-edit-action',
+                          type: 'open-edit-modal',
+                          schemaId: 'editGroupSchema',
+                          dataEndpoint: 'platforms/:platformId/target-groups/:id',
+                          saveEndpoint: 'platforms/:platformId/target-groups/:id',
+                          method: 'PUT',
+                          onSuccess: 'reload'
+                        }
+              },
+              {
+                id: 'memberCount',
+                label: 'Members',
+                type: 'number'
+              }
+            ]
+          }
+        }
+      ]
     },
-    {
-      name: 'username',
-      type: 'text',
-      label: 'Username',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Username is required' },
-        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
-      ],
-      ui: {
-        width: 12,
-        order: 3
-      }
-    },
-    {
-      name: 'password',
-      type: 'password',
-      label: 'Password',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Password is required' },
-        { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' }
-      ],
-      ui: {
-        width: 12,
-        order: 4
-      }
-    },
-    {
-      name: 'fromEmail',
-      type: 'text',
-      label: 'From Email',
-      required: true,
-      validation: [
-        { type: 'required', message: 'From email is required' },
-        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
-      ],
-      ui: {
-        width: 12,
-        order: 5
-      }
-    },
-    {
-      name: 'fromName',
-      type: 'text',
-      label: 'From Name',
-      placeholder: 'Your Name',
-      required: false,
-      ui: {
-        width: 12,
-        order: 6
-      }
-    }
   ],
-  groups: [
-    {
-      id: 'smtp',
-      title: 'SMTP Configuration',
-      description: 'Configure your SMTP server settings',
-      fields: ['host', 'port', 'username', 'password', 'fromEmail', 'fromName'],
-      collapsible: false
-    }
-  ]
+  targetSchema: {
+    baseField: 'email',
+    baseFieldLabel: 'Email-Adresse',
+    baseFieldValidation: [
+      { type: 'required', message: 'Email is required' },
+      { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
+    ],
+    customFields: [
+      {
+        name: 'name',
+        type: 'text',
+        label: 'Name',
+        required: false,
+        ui: { width: 12, order: 1 }
+      },
+      {
+        name: 'birthday',
+        type: 'date',
+        label: 'Geburtstag',
+        required: false,
+        ui: { width: 6, order: 2 }
+      },
+      {
+        name: 'company',
+        type: 'text',
+        label: 'Firma',
+        required: false,
+        ui: { width: 12, order: 3 }
+      },
+      {
+        name: 'phone',
+        type: 'text',
+        label: 'Telefon',
+        required: false,
+        ui: { width: 12, order: 4 }
+      },
+      {
+        name: 'tags',
+        type: 'multiselect',
+        label: 'Tags',
+        required: false,
+        optionsSource: {
+          endpoint: 'platforms/:platformId/tags',
+          method: 'GET',
+          responsePath: 'tags'
+        },
+        ui: { width: 12, order: 5 }
+      }
+    ],
+    supportsGroups: true
+  }
 }
-

@@ -1,10 +1,10 @@
-import { FormSchema, PanelSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readdir } from 'fs/promises';
 
 interface SchemaCacheEntry {
-  schema: FormSchema | PanelSchema;
+  schema: FormSchema | SettingsSchema;
   path: string;
 }
 
@@ -48,8 +48,9 @@ export class SchemaRegistry {
                 console.debug(`    Attempting to import schema file: ${schemaPath} with ID: ${schemaId}`);
                 
                 try {
-                  const schemaModule = await import(schemaPath);
-                  const schema: FormSchema | PanelSchema = schemaModule.default;
+                  const schemaPathWithExt = schemaPath.endsWith(fileExtension) ? schemaPath : schemaPath + fileExtension;
+                  const schemaModule = await import(schemaPathWithExt);
+                  const schema: FormSchema | SettingsSchema = schemaModule.default || schemaModule[schemaId] || schemaModule[Object.keys(schemaModule)[0]];
 
                   if (schema) {
                     if (!this.cache.has(platformId)) {
@@ -78,7 +79,7 @@ export class SchemaRegistry {
     }
   }
 
-  public getSchema(platformId: string, schemaId: string): FormSchema | PanelSchema | undefined {
+  public getSchema(platformId: string, schemaId: string): FormSchema | SettingsSchema | undefined {
     return this.cache.get(platformId)?.get(schemaId)?.schema;
   }
 }

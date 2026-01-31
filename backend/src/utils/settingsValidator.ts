@@ -7,7 +7,7 @@
  * @module utils/settingsValidator
  */
 
-import { SettingsSchema, FieldDefinition, ValidationRule } from '@/types/schema'
+import { CredentialsSchema, FieldDefinition, ValidationRule } from '@/types/schema'
 
 /**
  * Validation result
@@ -18,10 +18,10 @@ export interface SettingsValidationResult {
 }
 
 /**
- * Validate settings values against schema
+ * Validate credentials values against schema
  */
 export function validateSettingsValues(
-  schema: SettingsSchema,
+  schema: CredentialsSchema,
   values: Record<string, any>
 ): SettingsValidationResult {
   const errors: Record<string, string[]> = {}
