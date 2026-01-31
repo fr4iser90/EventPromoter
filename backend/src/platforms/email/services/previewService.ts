@@ -143,9 +143,9 @@ export async function renderEmailPreview(
   if (processedContent.headerImage) {
     let imageUrl = processedContent.headerImage
     
-    // If relative URL (/files/...), convert to base64 for preview
+    // If relative URL (/api/files/...), convert to base64 for preview
     // This ensures images work in iframe preview without external requests
-    if (imageUrl.startsWith('/files/')) {
+    if (imageUrl.startsWith('/api/files/') || imageUrl.startsWith('/files/')) {
       try {
         const fs = await import('fs')
         const path = await import('path')
@@ -155,8 +155,11 @@ export async function renderEmailPreview(
         const __filename = fileURLToPath(import.meta.url)
         const __dirname = dirname(__filename)
         
-        // Parse /files/{eventId}/{filename}
-        const parts = imageUrl.replace('/files/', '').split('/')
+        // Parse /api/files/{eventId}/{filename} or /files/{eventId}/{filename}
+        const cleanUrl = imageUrl.startsWith('/api/files/') 
+          ? imageUrl.replace('/api/files/', '') 
+          : imageUrl.replace('/files/', '')
+        const parts = cleanUrl.split('/')
         if (parts.length >= 2) {
           const eventId = parts[0]
           const filename = parts.slice(1).join('/')

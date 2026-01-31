@@ -37,7 +37,7 @@ export class SchemaRegistry {
         if (platformDir.isDirectory()) {
           const platformId = platformDir.name;
           const schemaDirPath = join(platformsDirPath, platformId, 'schema');
-          console.log(`  Scanning schema directory for platform ${platformId}: ${schemaDirPath}`);
+          console.debug(`  Scanning schema directory for platform ${platformId}: ${schemaDirPath}`);
           
           try {
             const schemaFiles = await readdir(schemaDirPath, { withFileTypes: true });
@@ -45,7 +45,7 @@ export class SchemaRegistry {
               if (schemaFile.isFile() && schemaFile.name.endsWith(fileExtension)) {
                 const schemaId = schemaFile.name.replace(fileExtension, '');
                 const schemaPath = join(schemaDirPath, schemaFile.name);
-                console.log(`    Attempting to import schema file: ${schemaPath} with ID: ${schemaId}`);
+                console.debug(`    Attempting to import schema file: ${schemaPath} with ID: ${schemaId}`);
                 
                 try {
                   const schemaModule = await import(schemaPath);
@@ -56,9 +56,9 @@ export class SchemaRegistry {
                       this.cache.set(platformId, new Map());
                     }
                     this.cache.get(platformId)?.set(schemaId, { schema, path: schemaPath });
-                    console.log(`  Loaded schema: ${platformId}/${schemaId}`);
+                    console.info(`  Loaded schema: ${platformId}/${schemaId}`);
                   } else {
-                    console.warn(`  Schema ${platformId}/${schemaId} has no default export.`);
+                    console.info(`  Schema ${platformId}/${schemaId} has no default export.`);
                   }
                 } catch (importError: any) {
                   console.error(`  Error importing schema ${platformId}/${schemaId}:`, importError);
@@ -67,7 +67,7 @@ export class SchemaRegistry {
             }
           } catch (dirError: any) {
             if (dirError.code !== 'ENOENT') { // Ignore if schema directory doesn't exist
-              console.warn(`  Could not read schema directory for platform ${platformId}:`, dirError.message);
+              console.info(`  Could not read schema directory for platform ${platformId}:`, dirError.message);
             }
           }
         }

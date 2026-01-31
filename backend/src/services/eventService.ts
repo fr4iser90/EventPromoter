@@ -71,7 +71,6 @@ export class EventService {
     const eventDir = path.join(process.cwd(), 'events', eventId)
     const eventFilePath = path.join(eventDir, 'event.json')
 
-    // Ensure event directory exists
     if (!fs.existsSync(eventDir)) {
       fs.mkdirSync(eventDir, { recursive: true })
     }
@@ -280,12 +279,13 @@ export class EventService {
           id: fileId,
           name: fileName,
           filename: fileName,
-          url: `/files/${eventId}/${fileId}`,
+          url: `/api/files/${eventId}/${fileId}`,
           path: path.join('events', eventId, 'files', fileName),
           size: stats.size,
           type: this.getMimeType(fileName),
           uploadedAt: stats.mtime.toISOString(),
-          isImage: this.getMimeType(fileName).startsWith('image/')
+          isImage: this.getMimeType(fileName).startsWith('image/'),
+          visibility: 'internal'
         })
       }
     }
@@ -314,12 +314,13 @@ export class EventService {
           id: fileId,
           name: fileName,
           filename: fileName,
-          url: `/files/${eventId}/${fileId}`,
+          url: `/api/files/${eventId}/${fileId}`,
           path: path.join('events', eventId, 'files', fileName),
           size: stats.size,
           type: this.getMimeType(fileName),
           uploadedAt: stats.mtime.toISOString(),
-          isImage: this.getMimeType(fileName).startsWith('image/')
+          isImage: this.getMimeType(fileName).startsWith('image/'),
+          visibility: 'internal'
         })
       }
     }
@@ -523,7 +524,7 @@ export class EventService {
       return null
     }
 
-    console.log(`Loading event data for ${eventId}:`, {
+    console.debug(`Loading event data for ${eventId}:`, {
       hasSelectedPlatforms: !!eventData.selectedPlatforms,
       platformsCount: eventData.selectedPlatforms?.length || 0,
       platforms: eventData.selectedPlatforms || []
@@ -625,21 +626,21 @@ export class EventService {
     }
 
     try {
-      console.log('[DEBUG] Resolving target names for platform:', platform)
+      console.debug('[DEBUG] Resolving target names for platform:', platform)
       // Get target service for this platform
       const { TargetController } = await import('../controllers/targetController.js')
 
       // Get target service instance
       const service = await TargetController.getTargetService(platform)
       if (!service) {
-        console.log('[DEBUG] No target service found for platform:', platform)
+        console.debug('[DEBUG] No target service found for platform:', platform)
         return content // No target service - return content as-is
       }
 
       // Load targets and groups
       const targets = await service.getTargets()
       const groups = await service.getGroups()
-      console.log('[DEBUG] Loaded targets:', targets.length, 'groups:', Object.keys(groups).length)
+      console.debug('[DEBUG] Loaded targets:', targets.length, 'groups:', Object.keys(groups).length)
 
       // Create mapping: ID -> name
       const targetNameMap: Record<string, string> = {}

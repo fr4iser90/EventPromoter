@@ -219,6 +219,7 @@ export interface UploadedFile {
   type: string
   uploadedAt: string
   isImage: boolean
+  visibility: 'internal' | 'public'
   content?: string | null // Content for text files, null for binary files
 }
 

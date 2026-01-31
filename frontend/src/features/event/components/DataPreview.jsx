@@ -101,7 +101,8 @@ function Preview() {
       setTextContent('')
 
       try {
-        const response = await fetch(getApiUrl(`files/content/${currentEvent?.id}/${fileData.filename}`))
+        // Use the fileData.url directly as it's already the correct /api/files/... path
+        const response = await fetch(getApiUrl(fileData.url + '/content'))
         if (response.ok) {
           const data = await response.json()
           setTextContent(data.content || 'No content available')
@@ -116,7 +117,7 @@ function Preview() {
       }
     } else {
       // For non-text files (PDF, etc.), open in new tab
-      const fileUrl = getApiUrl(`files/${currentEvent?.id}/${fileData.filename}`)
+      const fileUrl = getFileUrl(fileData.url)
       window.open(fileUrl, '_blank')
     }
   }

@@ -11,21 +11,31 @@ import {
   DialogContent,
   DialogActions,
   Divider,
-  Alert
+  Alert,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Checkbox,
+  Tooltip
 } from '@mui/material'
 import {
   KeyboardArrowDown as ArrowDownIcon,
   Description as TemplateIcon,
-  Check as CheckIcon
+  Check as CheckIcon,
+  AttachFile as AttachFileIcon,
+  Lock as LockIcon,
+  Public as PublicIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../hooks/useTemplates'
 import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
 import CompositeRenderer from '../../schema/components/CompositeRenderer'
+import FileSelectionBlock from '../../platform/components/blocks/FileSelectionBlock'
 import useStore from '../../../store'
 import { getTemplateVariables, replaceTemplateVariables } from '../../../shared/utils/templateUtils'
 import { getApiUrl } from '../../../shared/utils/api'
 
-const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx = {} }) => {
+const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', globalFiles = [], sx = {} }) => {
   // Use mode='preview' to get templates without <style> tags (backend removes them)
   const { templates, loading, error } = useTemplates(platform, 'preview')
   const { schema } = usePlatformSchema(platform) // Load schema to check for targets block
@@ -35,6 +45,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
   const [targetsValue, setTargetsValue] = useState(null) // Store targets selection
+  const [specificFiles, setSpecificFiles] = useState([]) // NEW: Specific files for this run
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget)
@@ -97,13 +108,31 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
 
   const handleApplyTemplate = () => {
     if (selectedTemplate && onSelectTemplate) {
-      // Pass template, variables, and targets (if any) to parent
-      onSelectTemplate(selectedTemplate, null, targetsValue)
+      // Pass template, variables, targets, and specific files to parent
+      onSelectTemplate(selectedTemplate, null, targetsValue, specificFiles.map(f => f.id))
     }
     setPreviewOpen(false)
     setSelectedTemplate(null)
     setTargetsValue(null)
+    setSpecificFiles([])
   }
+
+  // Handle specific file toggle
+  const handleToggleSpecificFile = (file) => {
+    const isSelected = specificFiles.some(f => f.id === file.id);
+    if (isSelected) {
+      setSpecificFiles(specificFiles.filter(f => f.id !== file.id));
+    } else {
+      if (specificFiles.length >= 10) return;
+      setSpecificFiles([...specificFiles, { id: file.id, filename: file.filename }]);
+    }
+  };
+
+  // Helper: Is file standard (global)?
+  const isGlobalFile = (fileId) => {
+    // globalFiles is an array of IDs or objects depending on how it's stored
+    return globalFiles.some(gf => (typeof gf === 'string' ? gf === fileId : gf.id === fileId));
+  };
 
   // Group templates by category
   const groupedTemplates = templates.reduce((acc, template) => {
@@ -307,6 +336,72 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', sx 
                 onChange={setTargetsValue}
                 platform={platform}
               />
+            </Box>
+          )}
+
+          {/* ✅ NEW: Specific Files Selection (Modell C) */}
+          {platform === 'email' && (
+            <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  Anhänge für diesen Run
+                </Typography>
+              </Box>
+              
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Wählen Sie zusätzliche Anhänge für diese Gruppe aus. Standard-Anhänge sind bereits voreingestellt.
+              </Typography>
+
+              <List dense sx={{ bgcolor: 'background.default', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                {uploadedFileRefs.map((file) => {
+                  const isStandard = isGlobalFile(file.id);
+                  const isSelected = specificFiles.some(f => f.id === file.id);
+                  const isDisabled = isStandard;
+
+                  return (
+                    <MenuItem 
+                      key={file.id} 
+                      onClick={() => !isDisabled && handleToggleSpecificFile(file)}
+                      disabled={isDisabled}
+                      sx={{ opacity: isDisabled ? 0.7 : 1 }}
+                    >
+                      <ListItemIcon sx={{ minWidth: 40 }}>
+                        <Checkbox
+                          edge="start"
+                          checked={isStandard || isSelected}
+                          disabled={isDisabled}
+                          tabIndex={-1}
+                          disableRipple
+                        />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary={file.filename}
+                        secondary={isStandard ? 'Standard (Global)' : file.type}
+                        primaryTypographyProps={{ 
+                          variant: 'body2', 
+                          fontWeight: (isStandard || isSelected) ? 'bold' : 'normal' 
+                        }}
+                      />
+                      {file.visibility === 'public' ? (
+                        <Tooltip title="Öffentlich (Public)">
+                          <PublicIcon fontSize="small" color="success" sx={{ opacity: 0.6 }} />
+                        </Tooltip>
+                      ) : (
+                        <Tooltip title="Intern (Internal)">
+                          <LockIcon fontSize="small" color="action" sx={{ opacity: 0.6 }} />
+                        </Tooltip>
+                      )}
+                    </MenuItem>
+                  );
+                })}
+              </List>
+              
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Gesamt für diese Gruppe: {specificFiles.length + globalFiles.length} Anhänge
+                </Typography>
+              </Box>
             </Box>
           )}
         </DialogContent>

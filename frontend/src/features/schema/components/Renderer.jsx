@@ -31,7 +31,6 @@ import axios from 'axios'
  * Render a single field based on schema definition
  */
 function renderField(field, value, onChange, error, platformId = null, formValues = {}, allFields = []) {
-  console.log(`Rendering field: ${field.name}, current value: ${value}, disabled: ${field.ui?.disabled}, readOnly: ${field.readOnly}`);
   const commonProps = {
     fullWidth: true,
     label: field.label,

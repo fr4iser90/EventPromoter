@@ -35,7 +35,8 @@ i18n
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       lookupLocalStorage: 'i18nextLng',
-      caches: ['localStorage']
+      caches: ['localStorage'],
+      convertDetectedLanguage: (lng) => lng.split('-')[0]
     }
   })
 

@@ -322,7 +322,8 @@ export function validateContentBlock(block: any): block is ContentBlock {
   // Validate block type
   const validTypes = [
     'text', 'heading', 'paragraph', 'image', 'video', 'link',
-    'hashtag', 'mention', 'list', 'quote', 'code', 'custom', 'targets'
+    'hashtag', 'mention', 'list', 'quote', 'code', 'custom', 'targets',
+    'file_selection_input'
   ]
   if (!validTypes.includes(block.type)) {
     throw new FieldValidationError(

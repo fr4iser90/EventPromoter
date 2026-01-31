@@ -92,12 +92,12 @@ async function loadPlatformRoutes() {
           const routesModule = await import(`../platforms/${platformId}/routes.js`)
           if (routesModule.default) {
             router.use(`/${platformId}`, routesModule.default)
-            console.log(`✅ Loaded routes for platform: ${platformId}`)
+            console.debug(`✅ Loaded routes for platform: ${platformId}`)
           }
         } catch (error: any) {
           // Platform doesn't have routes.ts - that's OK, not all platforms need custom routes
           if (!error.message.includes('Cannot find module')) {
-            console.warn(`⚠️  Failed to load routes for ${platformId}:`, error.message)
+            console.info(`⚠️  Failed to load routes for ${platformId}:`, error.message)
           }
         }
       }

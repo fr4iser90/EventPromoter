@@ -40,12 +40,8 @@ export function getFileUrl(filePath) {
     return filePath
   }
   
-  // If relative path, prepend API URL
+  // Ensure relative path starts with /
   const cleanPath = filePath.startsWith('/') ? filePath : `/${filePath}`
-  
-  if (config.apiUrl.startsWith('/')) {
-    return `${config.apiUrl}${cleanPath}`
-  }
   
   return `${config.apiUrl}${cleanPath}`
 }

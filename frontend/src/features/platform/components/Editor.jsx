@@ -24,6 +24,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import DescriptionIcon from '@mui/icons-material/Description'
 import CloseIcon from '@mui/icons-material/Close'
+import AttachFileIcon from '@mui/icons-material/AttachFile'
+import FileSelectionBlock from './blocks/FileSelectionBlock'
 import { usePlatformSchema } from '../hooks/usePlatformSchema'
 import SchemaRenderer from '../../schema/components/Renderer'
 import CompositeRenderer from '../../schema/components/CompositeRenderer'
@@ -208,7 +210,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   }
 
   // Handle template selection - NOW USES BACKEND API
-  const handleTemplateSelect = async (template, filledContent, targetsValue = null) => {
+  const handleTemplateSelect = async (template, filledContent, targetsValue = null, specificFiles = []) => {
     try {
       // Store active template (for UI)
       setActiveTemplate(template)
@@ -270,6 +272,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         templateId: template.id,
         templateName: template.name || template.id,
         targets: targetsValue || null,
+        specificFiles: specificFiles, // NEW: Specific files for this run
         appliedAt: new Date().toISOString()
       }
       updatedContent._templates = [...existingTemplates, newTemplateEntry]
@@ -392,6 +395,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
           platform={platform}
           onSelectTemplate={handleTemplateSelect}
           currentContent={getCurrentContentString()}
+          globalFiles={content?.globalFiles || []}
           sx={{ ml: 'auto' }}
         />
       </Box>
@@ -450,9 +454,15 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                       {templateEntry.templateName || templateEntry.templateId}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                       Targets: {formatTargetsSummary(templateEntry.targets)}
                     </Typography>
+                    {(templateEntry.specificFiles?.length > 0 || (content?.globalFiles?.length > 0)) && (
+                      <Typography variant="caption" color="primary.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                        <AttachFileIcon sx={{ fontSize: '0.8rem' }} />
+                        {templateEntry.specificFiles?.length || 0} spezifisch, {content?.globalFiles?.length || 0} standard
+                      </Typography>
+                    )}
                   </Box>
                   <IconButton
                     size="small"
@@ -472,8 +482,6 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
           </Box>
         )
       })()}
-
-      {/* ✅ Editor Blocks: REMOVED - All content is managed through templates */}
 
       {/* ✅ Template Variables: Show template variables as separate fields */}
       {activeTemplate && (() => {
@@ -624,6 +632,22 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
           </Box>
         )
       })()}
+
+      {/* ✅ Editor Blocks (Generic) */}
+      {editorBlocks.map(block => {
+        if (block.type === 'file_selection_input') {
+          return (
+            <FileSelectionBlock
+              key={block.id || block.type}
+              block={block}
+              content={content}
+              onChange={onChange}
+              uploadedFileRefs={uploadedFileRefs}
+            />
+          );
+        }
+        return null;
+      })}
 
       {/* Template-based editing only - no editorBlocks */}
       {!activeTemplate && (

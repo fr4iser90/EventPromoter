@@ -11,9 +11,11 @@ import { ParsedEventData } from '../../types/index.js'
 import { VARIABLE_ALIASES, IMAGE_ALIASES } from './alias.js'
 
 export interface UploadedFileRef {
+  id?: string
   url: string
   type: string
   isImage?: boolean
+  visibility?: 'internal' | 'public'
 }
 
 /**

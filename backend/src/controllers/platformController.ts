@@ -74,10 +74,10 @@ export class PlatformController {
       const registry = getPlatformRegistry()
       if (!registry.isInitialized()) {
         if (process.env.DEBUG_PLATFORM_REGISTRY === 'true') {
-          console.log('🔄 Initializing platform registry...')
+          console.debug('🔄 Initializing platform registry...')
         }
         await initializePlatformRegistry()
-        console.log('✅ Platform registry initialized')
+        console.debug('✅ Platform registry initialized')
       }
       return registry
     } catch (error) {
@@ -89,7 +89,7 @@ export class PlatformController {
   // Get all available platforms with metadata
   static async getPlatforms(req: Request, res: Response) {
     if (process.env.DEBUG_API_REQUESTS === 'true') {
-      console.log('🌐 API Request: GET /api/platforms')
+      console.debug('🌐 API Request: GET /api/platforms')
     }
     try {
       const registry = await PlatformController.ensureRegistry()
@@ -120,7 +120,7 @@ export class PlatformController {
       }))
 
       if (process.env.DEBUG_API_REQUESTS === 'true') {
-        console.log(`✅ Sending ${platforms.length} platforms to client`)
+        console.debug(`✅ Sending ${platforms.length} platforms to client`)
       }
       return res.json({
         success: true,
@@ -449,7 +449,7 @@ export class PlatformController {
           })
         }
         
-        console.log(`✅ Platform ${platformId} settings saved (${Object.keys(changedValues).length} fields changed)`)
+        console.info(`✅ Platform ${platformId} settings saved (${Object.keys(changedValues).length} fields changed)`)
       }
 
       res.json({

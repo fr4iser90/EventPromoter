@@ -215,7 +215,8 @@ const useStore = create((set, get) => ({
   // Check if file exists on server
   checkFileExists: async (fileUrl) => {
     try {
-      const response = await axios.head(getApiUrl(fileUrl.replace('/api/files/', 'files/')))
+      // Use the URL directly as it already contains /api/files/ from the backend
+      const response = await axios.head(getApiUrl(fileUrl))
       return response.status === 200
     } catch (error) {
       return false
@@ -446,23 +447,30 @@ const useStore = create((set, get) => ({
 
   // Remove uploaded file
   removeUploadedFile: async (fileId) => {
+    // ... existing implementation
+  },
+
+  // Update file metadata (visibility, etc.)
+  updateFileMetadata: async (fileId, updates) => {
     try {
-      const eventId = get().currentEvent?.id || 'default'
-      const fileRef = get().uploadedFileRefs.find(f => f.id === fileId)
+      const state = get()
+      const eventId = state.currentEvent?.id || 'default'
+      const fileRef = state.uploadedFileRefs.find(f => f.id === fileId)
 
-      if (fileRef) {
-        // Delete from server
-        await axios.delete(getApiUrl(`files/${eventId}/${fileRef.filename}`))
+      if (!fileRef) return
+
+      const response = await axios.patch(getApiUrl(`files/${eventId}/${fileRef.filename}`), updates)
+
+      if (response.data.success) {
+        const updatedFile = response.data.file
+        const updatedRefs = state.uploadedFileRefs.map(f => f.id === fileId ? { ...f, ...updatedFile } : f)
+        set({ uploadedFileRefs: updatedRefs })
+        get().saveEventWorkspace()
+        console.log(`File metadata updated: ${fileId}`, updates)
       }
-
-      // Remove from local state
-      const updatedRefs = get().uploadedFileRefs.filter(f => f.id !== fileId)
-      set({ uploadedFileRefs: updatedRefs })
-      get().saveEventWorkspace()
-
     } catch (error) {
-      console.error('Remove file error:', error)
-      set({ error: 'Failed to remove file' })
+      console.error('Update file metadata error:', error)
+      set({ error: 'Failed to update file metadata' })
     }
   },
 

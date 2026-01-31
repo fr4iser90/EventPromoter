@@ -65,7 +65,7 @@ export const uploadMultiple = upload.array('files', 10)
 
 // Get file URL helper
 export const getFileUrl = (eventId: string, filename: string): string => {
-  return `/files/${eventId}/${filename}`
+  return `/api/files/${eventId}/${filename}`
 }
 
 // Get file path helper

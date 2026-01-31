@@ -126,25 +126,33 @@ export const emailEditorSchema: EditorSchema = {
       }
     },
     {
-      type: 'image',
-      id: 'attachments',
-      label: 'Anhänge',
-      description: 'Dateien die als Anhang zur Email hinzugefügt werden (z.B. PDF, Flyer, etc.)',
+      type: 'file_selection_input',
+      id: 'globalFiles',
+      label: 'Standard-Anhänge',
+      description: 'Diese Dateien werden JEDEM Template als Anhang beigefügt (z.B. Flyer, AGB).',
       required: false,
-      constraints: {
-        maxItems: 10,
-        allowedFormats: ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'xls', 'xlsx'],
-        maxFileSize: 10485760 // 10MB
+      settings: {
+        enableToggle: {
+          label: 'Standard-Anhänge mitschicken',
+          default: false
+        },
+        selectionLimit: {
+          max: 10,
+          message: 'Sie können maximal 10 Standard-Anhänge hinzufügen.'
+        },
+        fileFilter: {
+          allowedMimeTypes: ["application/pdf", "image/jpeg", "image/png", "image/gif", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/plain"],
+          allowedExtensions: ["pdf", "jpg", "jpeg", "png", "gif", "doc", "docx", "xls", "xlsx", "txt"],
+          noFilesMessage: 'Keine Dateien für Anhänge gefunden.'
+        },
+        selectFileLabel: 'Öffentliche Datei auswählen...',
+        selectedFilesLabel: 'Ausgewählte Standard-Anhänge:'
       },
       ui: {
         icon: 'attach_file',
         order: 2.5,
         enabled: true
       },
-      rendering: {
-        fieldType: 'file',
-        uploadEndpoint: 'platforms/:platformId/upload'
-      }
     },
     {
       type: 'paragraph',

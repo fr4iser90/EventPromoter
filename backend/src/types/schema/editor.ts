@@ -21,7 +21,29 @@ export type ContentBlockType =
   | 'quote'
   | 'code'
   | 'custom'
+  | 'file_selection_input'
   | 'targets'; // Generic block type for platform-specific targets (e.g., recipients for email, subreddits for reddit)
+
+/**
+ * Settings for file selection input block
+ */
+export interface FileSelectionSettings {
+  enableToggle?: {
+    label: string;
+    default: boolean;
+  };
+  selectionLimit?: {
+    max: number;
+    message: string;
+  };
+  fileFilter?: {
+    allowedMimeTypes: string[];
+    allowedExtensions: string[];
+    noFilesMessage: string;
+  };
+  selectFileLabel?: string;
+  selectedFilesLabel?: string;
+}
 
 /**
  * Content block definition
@@ -60,6 +82,8 @@ export interface ContentBlock {
   };
   /** Block validation rules */
   validation?: ValidationRule[];
+  /** Block specific settings */
+  settings?: FileSelectionSettings | Record<string, any>;
   /** Block UI configuration */
   ui?: {
     /** Icon identifier */

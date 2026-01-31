@@ -4,22 +4,17 @@ import { uploadSingle, uploadMultiple } from '../middleware/upload.js'
 
 const router = express.Router()
 
-// Upload single file
+// Upload routes
 router.post('/upload', uploadSingle, FileController.uploadFile)
-
-// Upload multiple files
 router.post('/upload-multiple', uploadMultiple, FileController.uploadFiles)
 
-// Get file by Event ID and filename
+// File serving route (THIS IS THE MAIN ONE)
 router.get('/:eventId/:filename', FileController.getFile)
 
-// Delete file
-router.delete('/:eventId/:filename', FileController.deleteFile)
-
-// List files for Event
+// Metadata & Listing
 router.get('/list/:eventId', FileController.listFiles)
-
-// Get file content (for text files)
-router.get('/content/:eventId/:filename', FileController.getFileContent)
+router.get('/:eventId/:filename/content', FileController.getFileContent)
+router.patch('/:eventId/:filename', FileController.updateFileMetadata)
+router.delete('/:eventId/:filename', FileController.deleteFile)
 
 export default router

@@ -24,11 +24,12 @@ export class FileController {
         id: path.parse(file.filename).name,
         name: file.originalname,
         filename: file.filename,
-        url: `/files/${eventId}/${file.filename}`,
+        url: `/api/files/${eventId}/${file.filename}`,
         path: file.path,
         size: file.size,
         type: file.mimetype,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        visibility: 'internal' as const
       }
 
       console.log('File uploaded:', fileInfo)
@@ -71,12 +72,13 @@ export class FileController {
           id: path.parse(file.filename).name,
           name: file.originalname,
           filename: file.filename,
-          url: `/files/temp/${file.filename}`,
+          url: `/api/files/temp/${file.filename}`,
           path: file.path,
           size: file.size,
           type: file.mimetype,
           uploadedAt: new Date().toISOString(),
-          isImage: file.mimetype.startsWith('image/')
+          isImage: file.mimetype.startsWith('image/'),
+          visibility: 'internal'
         }
 
         // Add content for text files
@@ -100,6 +102,7 @@ export class FileController {
       // Update event with final file references (keep content)
       event.uploadedFileRefs = finalFiles.map((finalFile, index) => ({
         ...finalFile,
+        url: `/api/files/${event.id}/${finalFile.filename}`, // Ensure correct API URL
         content: uploadedFileInfos[index].content // Preserve content
       }))
 
@@ -109,7 +112,7 @@ export class FileController {
 
       res.json({
         success: true,
-        files: finalFiles,
+        files: event.uploadedFileRefs,
         createdEvent: event,
         parsedData
       })
@@ -127,7 +130,10 @@ export class FileController {
     }
   }
 
-  // Serve file by Event ID and filename
+  /**
+   * Serve file by Event ID and filename
+   * Handles security headers and correct path mapping
+   */
   static async getFile(req: Request, res: Response) {
     try {
       const { eventId, filename } = req.params
@@ -136,16 +142,23 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
+      // getFilePath maps to events/EVENT_ID/files/FILENAME
       const filePath = getFilePath(eventId, filename)
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {
+        console.log(`[File Error] Not found: ${filePath}`);
         return res.status(404).json({ error: 'File not found' })
       }
 
-      // Set appropriate headers
+      // Security headers for cross-origin access
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+      // Set MIME type
       const ext = path.extname(filename).toLowerCase()
-      const mimeTypes: { [key: string]: string } = {
+      const mimeTypes: Record<string, string> = {
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
         '.png': 'image/png',
@@ -159,26 +172,25 @@ export class FileController {
       const contentType = mimeTypes[ext] || 'application/octet-stream'
       res.setHeader('Content-Type', contentType)
 
-      // Set CORP header for images to allow cross-origin access
-      if (contentType.startsWith('image/')) {
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
-      }
-
       // Stream the file
       const fileStream = fs.createReadStream(filePath)
       fileStream.pipe(res)
 
       fileStream.on('error', (error) => {
         console.error('File stream error:', error)
-        res.status(500).json({ error: 'Error reading file' })
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error reading file' })
+        }
       })
 
     } catch (error: any) {
       console.error('Get file error:', error)
-      res.status(500).json({
-        error: 'Failed to serve file',
-        message: error.message
-      })
+      if (!res.headersSent) {
+        res.status(500).json({
+          error: 'Failed to serve file',
+          message: error.message
+        })
+      }
     }
   }
 
@@ -193,25 +205,63 @@ export class FileController {
 
       const filePath = getFilePath(eventId, filename)
 
-      // Check if file exists
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: 'File not found' })
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
       }
 
-      // Delete file
-      fs.unlinkSync(filePath)
+      // Update event data
+      const event = await EventService.getEventData(eventId)
+      if (event) {
+        event.uploadedFileRefs = event.uploadedFileRefs.filter(f => f.filename !== filename)
+        await EventService.saveEventData(eventId, event)
+      }
 
-      console.log('File deleted:', filePath)
+      res.json({ success: true })
+    } catch (error: any) {
+      console.error('Delete file error:', error)
+      res.status(500).json({ error: 'Failed to delete file' })
+    }
+  }
+
+  // Update file metadata (visibility, etc.)
+  static async updateFileMetadata(req: Request, res: Response) {
+    try {
+      const { eventId, filename } = req.params
+      const { visibility } = req.body
+
+      if (!eventId || !filename) {
+        return res.status(400).json({ error: 'Event ID and filename required' })
+      }
+
+      // Load event
+      const event = await EventService.getEventData(eventId)
+      if (!event) {
+        return res.status(404).json({ error: 'Event not found' })
+      }
+
+      // Find file ref
+      const fileIndex = event.uploadedFileRefs.findIndex(f => f.filename === filename)
+      if (fileIndex === -1) {
+        return res.status(404).json({ error: 'File reference not found in event' })
+      }
+
+      // Update metadata
+      if (visibility) {
+        event.uploadedFileRefs[fileIndex].visibility = visibility
+      }
+
+      // Save event
+      await EventService.saveEventData(eventId, event)
 
       res.json({
         success: true,
-        message: 'File deleted successfully'
+        file: event.uploadedFileRefs[fileIndex]
       })
 
     } catch (error: any) {
-      console.error('Delete file error:', error)
+      console.error('Update file metadata error:', error)
       res.status(500).json({
-        error: 'Failed to delete file',
+        error: 'Failed to update file metadata',
         message: error.message
       })
     }
@@ -239,11 +289,12 @@ export class FileController {
         return {
           id: path.parse(filename).name,
           name: filename,
-          url: `/files/${eventId}/${filename}`,
+          url: `/api/files/${eventId}/${filename}`,
           path: filePath,
           size: stats.size,
           type: 'unknown', // Could be determined from extension
-          uploadedAt: stats.birthtime.toISOString()
+          uploadedAt: stats.birthtime.toISOString(),
+          visibility: 'internal' as const
         }
       })
 
