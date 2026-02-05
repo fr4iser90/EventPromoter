@@ -1,10 +1,11 @@
 import { EmailTemplate } from '../templates';
+import { TEMPLATE_CATEGORIES } from '@/shared/templateCategories.js';
 
 export const personalInvitationTemplate: EmailTemplate = {
   id: 'personal-invitation',
   name: 'Personal Invitation',
   description: 'A personal and friendly email template for inviting people to events using name tags',
-  category: 'invitation',
+  category: TEMPLATE_CATEGORIES.INVITATION,
   template: {
     subject: '🎉 You\'re invited: {name}',
     html: `<!DOCTYPE html>
@@ -84,6 +85,8 @@ export const personalInvitationTemplate: EmailTemplate = {
   },
   translations: {
     de: {
+      name: 'Persönliche Einladung',
+      description: 'Eine persönliche und freundliche E-Mail-Vorlage zum Einladen von Personen zu Events mit Namens-Tags',
       subject: '🎉 Du bist eingeladen: {name}',
       html: `<!DOCTYPE html>
 <html>
@@ -161,6 +164,8 @@ export const personalInvitationTemplate: EmailTemplate = {
 </html>`
     },
     es: {
+      name: 'Invitación Personal',
+      description: 'Una plantilla de correo electrónico personal y amigable para invitar personas a eventos usando etiquetas de nombre',
       subject: '🎉 Estás invitado: {name}',
       html: `<!DOCTYPE html>
 <html>
@@ -239,6 +244,7 @@ export const personalInvitationTemplate: EmailTemplate = {
     }
   },
   variables: ['name', 'title', 'eventTitle', 'date', 'time', 'venue', 'city', 'description', 'price', 'lineup', 'link', 'website', 'organizer', 'img1'],
+  requiredTargetFields: ['name'], // Requires name (firstName+lastName or name field) on targets
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()
 };

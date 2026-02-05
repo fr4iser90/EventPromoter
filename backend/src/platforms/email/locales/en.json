@@ -42,7 +42,23 @@
     "defaultTemplates": "Default templates",
     "customTemplates": "Custom templates",
     "defaultTemplatesNote": "cannot be modified but serve as examples.",
-    "customTemplatesNote": "can be fully edited and deleted."
+    "customTemplatesNote": "can be fully edited and deleted.",
+    "categories": {
+      "announcement": "Announcement",
+      "reminder": "Reminder",
+      "urgent": "Urgent",
+      "invitation": "Invitation",
+      "follow-up": "Follow-up",
+      "promotion": "Ticket Promotion",
+      "welcome": "Welcome Message",
+      "thank-you": "Thank You",
+      "music": "Music Focus",
+      "discussion": "Discussion",
+      "event": "Event",
+      "review": "Review",
+      "afterparty": "Afterparty",
+      "general": "General"
+    }
   },
   "event": {
     "untitled": "Untitled Event",
@@ -158,5 +174,8 @@
     "invalidJsonFormat": "Invalid JSON format",
     "failedToLoadFileContent": "Failed to load file content",
     "errorLoadingFileContent": "Error loading file content"
+  },
+  "metadata": {
+    "description": "Send event announcements via email with rich HTML content"
   }
 }

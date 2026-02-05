@@ -642,12 +642,12 @@ export class EventService {
       const groups = await service.getGroups()
       console.debug('[DEBUG] Loaded targets:', targets.length, 'groups:', Object.keys(groups).length)
 
-      // Create mapping: ID -> name
+      // Create mapping: ID -> display name (use baseField, e.g. email)
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
         const baseField = service.getBaseField()
-        // Use name custom field if available, otherwise use baseField (e.g., email), otherwise use ID
-        targetNameMap[target.id] = target.name || target[baseField] || target.id
+        // ✅ Always use baseField (e.g., email) for display, not target.name
+        targetNameMap[target.id] = target[baseField] || target.id
       })
 
       const groupNameMap: Record<string, string> = {}
@@ -673,8 +673,8 @@ export class EventService {
           // For 'all' mode, include ALL available targets
           targetsWithNames.targetNames = targets.map((target: any) => {
             const baseField = service.getBaseField()
-            const name = target.name || target[baseField] || target.id
-            return name
+            // ✅ Always use baseField (e.g., email) for display
+            return target[baseField] || target.id
           })
         } else if (templateEntry.targets.individual && Array.isArray(templateEntry.targets.individual)) {
           targetsWithNames.targetNames = templateEntry.targets.individual.map((id: string) => targetNameMap[id] || id)

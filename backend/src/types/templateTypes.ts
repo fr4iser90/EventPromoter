@@ -5,7 +5,7 @@ export interface Template {
   name: string
   description?: string
   platform: string
-  category: string
+  category: string // Category ID from TEMPLATE_CATEGORIES (shared/templateCategories.ts)
   template: Record<string, any> // Platform-specific structure (defined by platform schema)
   variables: string[]
   isDefault: boolean // true for hardcoded templates, false for custom user templates

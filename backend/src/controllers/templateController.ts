@@ -24,11 +24,41 @@ export class TemplateController {
       const { platform } = req.params
       const mode = (req.query.mode as TemplateMode) || 'raw'
       
+      // Get request language (from i18next middleware or default to 'en')
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+      
       // Service stays "dumb" - just loads templates
       const rawTemplates = await TemplateService.getAllTemplates(platform)
       
       // Resolver handles context-specific processing
-      const templates = resolveTemplates(rawTemplates, mode)
+      const resolvedTemplates = resolveTemplates(rawTemplates, mode)
+      
+      // Apply translations to template names and descriptions from template.translations
+      const templates = resolvedTemplates.map(template => {
+        let translatedName = template.name
+        let translatedDescription = template.description
+        
+        // Load from template.translations if available
+        if ((template as any).translations) {
+          const translations = (template as any).translations
+          if (validLang !== 'en' && translations[validLang]) {
+            translatedName = translations[validLang].name || translatedName
+            translatedDescription = translations[validLang].description || translatedDescription
+          } else if (translations.en) {
+            // Fallback to English if available
+            translatedName = translations.en.name || translatedName
+            translatedDescription = translations.en.description || translatedDescription
+          }
+        }
+        
+        return {
+          ...template,
+          name: translatedName,
+          description: translatedDescription
+        }
+      })
       
       const stats = await TemplateService.getTemplateStats(platform)
 
@@ -54,6 +84,12 @@ export class TemplateController {
   static async getTemplate(req: Request, res: Response) {
     try {
       const { platform, id } = req.params
+      
+      // Get request language (from i18next middleware or default to 'en')
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+      
       const template = await TemplateService.getTemplate(platform, id)
 
       if (!template) {
@@ -64,9 +100,29 @@ export class TemplateController {
         return
       }
 
+      // Apply translations from template.translations
+      let translatedName = template.name
+      let translatedDescription = template.description
+      
+      if ((template as any).translations) {
+        const translations = (template as any).translations
+        if (validLang !== 'en' && translations[validLang]) {
+          translatedName = translations[validLang].name || translatedName
+          translatedDescription = translations[validLang].description || translatedDescription
+        } else if (translations.en) {
+          // Fallback to English if available
+          translatedName = translations.en.name || translatedName
+          translatedDescription = translations.en.description || translatedDescription
+        }
+      }
+
       const response: TemplateResponse = {
         success: true,
-        template
+        template: {
+          ...template,
+          name: translatedName,
+          description: translatedDescription
+        }
       }
 
       res.json(response)
@@ -248,6 +304,11 @@ export class TemplateController {
   // GET /api/templates/categories - Get available template categories (dynamically from all platforms)
   static async getCategories(req: Request, res: Response) {
     try {
+      // Get request language (from i18next middleware or default to 'en')
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+
       // ✅ GENERIC: Load all platforms from registry
       const { getPlatformRegistry, initializePlatformRegistry } = await import('../services/platformRegistry.js')
       const registry = getPlatformRegistry()
@@ -258,7 +319,7 @@ export class TemplateController {
       const allPlatforms = registry.getAllPlatforms()
       const categorySet = new Set<string>()
 
-      // Collect categories from all platforms
+      // Collect category IDs from all platforms
       for (const platform of allPlatforms) {
         try {
           const platformId = platform.metadata?.id
@@ -279,30 +340,53 @@ export class TemplateController {
         }
       }
 
-      // Convert to response format with readable names
-      const categoryNameMap: Record<string, string> = {
-        'announcement': 'Event Announcement',
-        'promotion': 'Ticket Promotion',
-        'reminder': 'Event Reminder',
-        'urgent': 'Urgent Update',
-        'welcome': 'Welcome Message',
-        'thank-you': 'Thank You',
-        'music': 'Music Focus',
-        'discussion': 'Discussion',
-        'event': 'Event',
-        'review': 'Review',
-        'afterparty': 'Afterparty',
-        'general': 'General'
+      // Load translations from platform locale files
+      // Categories are shared across platforms, so we load translations from email platform
+      // (which has the most complete translations)
+      const { getPlatformTranslations } = await import('../utils/translationLoader.js')
+      const categoryTranslations = new Map<string, { en: string; de?: string; es?: string }>()
+
+      // Load all language translations from email platform (categories are shared)
+      const emailTranslations = {
+        en: await getPlatformTranslations('email', 'en'),
+        de: await getPlatformTranslations('email', 'de'),
+        es: await getPlatformTranslations('email', 'es')
       }
 
+      // Build translation map for each category
+      for (const categoryId of categorySet) {
+        const translationMap: { en: string; de?: string; es?: string } = {
+          en: emailTranslations.en?.templates?.categories?.[categoryId] || 
+              categoryId.charAt(0).toUpperCase() + categoryId.slice(1).replace(/-/g, ' '),
+          de: emailTranslations.de?.templates?.categories?.[categoryId],
+          es: emailTranslations.es?.templates?.categories?.[categoryId]
+        }
+        categoryTranslations.set(categoryId, translationMap)
+      }
+
+      // Convert to response format with translated names
       const categories: TemplateCategoriesResponse['categories'] = Array.from(categorySet)
         .sort()
-        .map(id => ({
-          id,
-          name: categoryNameMap[id] || id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' '),
-          description: `Templates in category: ${id}`,
-          platform: 'all'
-        }))
+        .map(id => {
+          const translations = categoryTranslations.get(id) || { en: id }
+          // Get translated name based on request language
+          let translatedName: string
+          if (validLang === 'de' && translations.de) {
+            translatedName = translations.de
+          } else if (validLang === 'es' && translations.es) {
+            translatedName = translations.es
+          } else {
+            // Fallback to English (always available)
+            translatedName = translations.en
+          }
+
+          return {
+            id,
+            name: translatedName,
+            description: `Templates in category: ${id}`,
+            platform: 'all'
+          }
+        })
 
       const response: TemplateCategoriesResponse = {
         success: true,
@@ -325,6 +409,11 @@ export class TemplateController {
     try {
       const { category } = req.params
       const platformsParam = req.query.platforms as string | undefined
+
+      // Get request language (from i18next middleware or default to 'en')
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
 
       // ✅ GENERIC: Load all platforms from registry
       const { getPlatformRegistry, initializePlatformRegistry } = await import('../services/platformRegistry.js')
@@ -353,16 +442,42 @@ export class TemplateController {
           
           // If multiple templates exist, return all of them
           if (categoryTemplates.length > 0) {
+            // Apply translations to template names
+            const translatedTemplates = categoryTemplates.map(t => {
+              let translatedName = t.name
+              if ((t as any).translations) {
+                const translations = (t as any).translations
+                if (validLang !== 'en' && translations[validLang]?.name) {
+                  translatedName = translations[validLang].name
+                } else if (translations.en?.name) {
+                  translatedName = translations.en.name
+                }
+              }
+              return {
+                id: t.id,
+                name: translatedName
+              }
+            })
+            
+            // Get translated name for first template
+            const firstTemplate = categoryTemplates[0]
+            let translatedFirstName = firstTemplate.name
+            if ((firstTemplate as any).translations) {
+              const translations = (firstTemplate as any).translations
+              if (validLang !== 'en' && translations[validLang]?.name) {
+                translatedFirstName = translations[validLang].name
+              } else if (translations.en?.name) {
+                translatedFirstName = translations.en.name
+              }
+            }
+            
             // Return first template as default, but include all available templates
             result.push({
               platformId,
-              templateId: categoryTemplates[0]?.id || null,
-              templateName: categoryTemplates[0]?.name || null,
+              templateId: firstTemplate.id || null,
+              templateName: translatedFirstName || null,
               hasTemplate: true,
-              availableTemplates: categoryTemplates.map(t => ({
-                id: t.id,
-                name: t.name
-              }))
+              availableTemplates: translatedTemplates
             })
           } else {
             result.push({
@@ -415,6 +530,89 @@ export class TemplateController {
           error: 'Template not found'
         })
         return
+      }
+
+      // ✅ Validate template requirements against targets (if targets provided)
+      if (mappingRequest.targets) {
+        const { TargetController } = await import('./targetController.js')
+        const service = await TargetController.getTargetService(platform)
+        
+        if (service) {
+          // Check if template requires specific target fields
+          const requiredFields = (template as any).requiredTargetFields || []
+          
+          if (requiredFields.length > 0) {
+            // Get all targets
+            const allTargets = await service.getTargets()
+            
+            // Check individual targets
+            if (mappingRequest.targets.mode === 'individual' && 
+                mappingRequest.targets.individual) {
+              const selectedTargets = allTargets.filter(t => 
+                mappingRequest.targets.individual.includes(t.id)
+              )
+              
+              const missing = selectedTargets.filter(target => {
+                return requiredFields.some(field => {
+                  // Check if field exists and has value
+                  if (field === 'name') {
+                    // name can be firstName+lastName or name field
+                    return !target.name && !(target.firstName && target.lastName)
+                  }
+                  return !target[field] || String(target[field]).trim() === ''
+                })
+              })
+              
+              if (missing.length > 0) {
+                const missingEmails = missing.map(t => t.email || t.id).join(', ')
+                return res.status(400).json({
+                  success: false,
+                  error: `Template requires target fields: ${requiredFields.join(', ')}`,
+                  details: `${missing.length} target(s) missing required fields: ${missingEmails}`,
+                  missingTargets: missing.map(t => ({ id: t.id, email: t.email }))
+                })
+              }
+            }
+            
+            // Check group targets
+            if (mappingRequest.targets.mode === 'groups' && 
+                mappingRequest.targets.groups) {
+              const groups = await service.getGroups()
+              const allTargets = await service.getTargets()
+              
+              for (const groupId of mappingRequest.targets.groups) {
+                const group = groups[groupId] || Object.values(groups).find(g => 
+                  g.id === groupId || g.name === groupId
+                )
+                
+                if (!group) continue
+                
+                const groupTargets = allTargets.filter(t => 
+                  group.targetIds.includes(t.id)
+                )
+                
+                const missing = groupTargets.filter(target => {
+                  return requiredFields.some(field => {
+                    if (field === 'name') {
+                      return !target.name && !(target.firstName && target.lastName)
+                    }
+                    return !target[field] || String(target[field]).trim() === ''
+                  })
+                })
+                
+                if (missing.length > 0) {
+                  const missingEmails = missing.map(t => t.email || t.id).join(', ')
+                  return res.status(400).json({
+                    success: false,
+                    error: `Template requires target fields: ${requiredFields.join(', ')}`,
+                    details: `Group "${group.name}" has ${missing.length} target(s) missing required fields: ${missingEmails}`,
+                    missingTargets: missing.map(t => ({ id: t.id, email: t.email }))
+                  })
+                }
+              }
+            }
+          }
+        }
       }
 
       // Map template to editor content

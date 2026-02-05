@@ -19,16 +19,22 @@ export interface EmailTemplate {
     de?: {
       subject: string
       html: string
+      name?: string
+      description?: string
     }
     es?: {
       subject: string
       html: string
+      name?: string
+      description?: string
     }
   }
   /** Optional default locale for this template (overrides user language preference) */
   defaultLocale?: 'en' | 'de' | 'es'
-  category: string
+  category: string // Category ID from TEMPLATE_CATEGORIES
   variables: string[]
+  /** Optional: Target fields that must exist on selected targets (e.g., ['name', 'firstName']) */
+  requiredTargetFields?: string[]
   createdAt?: string
   updatedAt?: string
 }

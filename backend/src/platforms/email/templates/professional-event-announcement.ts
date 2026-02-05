@@ -1,10 +1,11 @@
 import { EmailTemplate } from '../templates';
+import { TEMPLATE_CATEGORIES } from '@/shared/templateCategories.js';
 
 export const professionalEventAnnouncementTemplate: EmailTemplate = {
   id: 'professional-event-announcement',
   name: 'Professional Event Announcement',
   description: 'A professional email template with header styling for corporate events and networking',
-  category: 'announcement',
+  category: TEMPLATE_CATEGORIES.ANNOUNCEMENT,
   template: {
     subject: '📅 {title} - Professional Event Invitation',
     html: `<!DOCTYPE html>
@@ -41,6 +42,8 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
   },
   translations: {
     de: {
+      name: 'Professionelle Event-Ankündigung',
+      description: 'Eine professionelle E-Mail-Vorlage mit Header-Styling für Firmen-Events und Networking',
       subject: '📅 {title} - Professionelle Event-Einladung',
       html: `<!DOCTYPE html>
 <html>
@@ -75,6 +78,8 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
 </html>`
     },
     es: {
+      name: 'Anuncio de Evento Profesional',
+      description: 'Una plantilla de correo electrónico profesional con estilo de encabezado para eventos corporativos y networking',
       subject: '📅 {title} - Invitación a Evento Profesional',
       html: `<!DOCTYPE html>
 <html>

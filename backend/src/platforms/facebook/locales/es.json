@@ -1,25 +1,36 @@
 {
-  "form": {
-    "labels": {
-      "facebookPost": "Publicación de Facebook"
+  "editor": {
+    "title": "Editor de publicaciones de Facebook",
+    "description": "Crea y edita publicaciones de Facebook",
+    "text": {
+      "label": "Contenido de la publicación",
+      "description": "El contenido de tu publicación de Facebook",
+      "placeholder": "¿Qué estás pensando?",
+      "required": "El contenido de la publicación es obligatorio"
+    },
+    "image": {
+      "label": "Imagen",
+      "description": "Adjunto de imagen opcional"
+    },
+    "link": {
+      "label": "Enlace",
+      "description": "Enlace opcional para compartir"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Añade hashtags a tu publicación"
     }
   },
-  "platforms": {
-    "facebook": {
-      "title": "Publicación de Facebook",
-      "contentLabel": "Contenido de la Publicación",
-      "placeholder": "¿En qué estás pensando?",
-      "bestPractices": {
-        "title": "Consejos de Facebook:",
-        "points": [
-          "Las publicaciones con preguntas obtienen 100% más interacción",
-          "Usa 1-2 hashtags relevantes",
-          "Manténlo conversacional y auténtico"
-        ]
-      },
-      "footer": "Tu publicación se publicará en tu página de Facebook o perfil personal."
-    }
+  "errors": {
+    "text_required": "El texto de la publicación es obligatorio",
+    "post_too_long": "Publicación demasiado larga: {{count}}/{{max}} caracteres",
+    "invalid_link": "Formato de enlace no válido"
+  },
+  "warnings": {
+    "post_short": "La publicación es bastante corta; considera añadir más contenido para mejorar la interacción",
+    "no_link": "Considera añadir un enlace para atraer tráfico"
+  },
+  "metadata": {
+    "description": "Comparte eventos en Facebook con contenido enriquecido"
   }
 }
-
-

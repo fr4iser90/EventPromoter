@@ -1,0 +1,11 @@
+{
+  "errors": {
+    "missing_required_field": "Missing required field: {{field}}",
+    "invalid_date_format": "Invalid date format",
+    "invalid_time_format": "Invalid time format (use HH:MM)",
+    "at_least_one_file": "At least one file is required",
+    "file_too_large": "File {{name}} is too large ({{size}}MB > 10MB)",
+    "platform_not_found": "Platform '{{platform}}' not found",
+    "validation_error": "Validation error for {{platform}}: {{message}}"
+  }
+}

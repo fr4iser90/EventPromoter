@@ -66,5 +66,8 @@
   },
   "help": {
     "instagramCaption": "Bildunterschrift für Instagram-Post"
+  },
+  "metadata": {
+    "description": "Teile Events auf Instagram mit Bildern und Bildunterschriften"
   }
 }

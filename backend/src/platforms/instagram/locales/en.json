@@ -66,5 +66,8 @@
   },
   "help": {
     "instagramCaption": "Caption for Instagram post"
+  },
+  "metadata": {
+    "description": "Share events on Instagram with images and captions"
   }
 }

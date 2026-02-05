@@ -1,10 +1,11 @@
 import { EmailTemplate } from '../templates';
+import { TEMPLATE_CATEGORIES } from '@/shared/templateCategories.js';
 
 export const eventReminderTemplate: EmailTemplate = {
   id: 'event-reminder',
   name: 'Event Reminder',
   description: 'An email template for sending event reminders with preparation tips and event details',
-  category: 'reminder',
+  category: TEMPLATE_CATEGORIES.REMINDER,
   template: {
     subject: '📅 Reminder: {title} tomorrow at {venue}',
     html: `<!DOCTYPE html>
@@ -58,6 +59,8 @@ export const eventReminderTemplate: EmailTemplate = {
   },
   translations: {
     de: {
+      name: 'Event-Erinnerung',
+      description: 'Eine E-Mail-Vorlage zum Versenden von Event-Erinnerungen mit Vorbereitungstipps und Event-Details',
       subject: '📅 Erinnerung: {title} morgen in {venue}',
       html: `<!DOCTYPE html>
 <html>
@@ -109,6 +112,8 @@ export const eventReminderTemplate: EmailTemplate = {
 </html>`
     },
     es: {
+      name: 'Recordatorio de Evento',
+      description: 'Una plantilla de correo electrónico para enviar recordatorios de eventos con consejos de preparación y detalles del evento',
       subject: '📅 Recordatorio: {title} mañana en {venue}',
       html: `<!DOCTYPE html>
 <html>

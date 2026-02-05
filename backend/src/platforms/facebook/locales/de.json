@@ -1,25 +1,36 @@
 {
-  "form": {
-    "labels": {
-      "facebookPost": "Facebook-Beitrag"
+  "editor": {
+    "title": "Facebook Post Editor",
+    "description": "Erstelle und bearbeite Facebook-Posts",
+    "text": {
+      "label": "Post-Inhalt",
+      "description": "Dein Facebook-Post-Inhalt",
+      "placeholder": "Was machst du gerade?",
+      "required": "Post-Inhalt ist erforderlich"
+    },
+    "image": {
+      "label": "Bild",
+      "description": "Optionaler Bild-Anhang"
+    },
+    "link": {
+      "label": "Link",
+      "description": "Optionaler Link zum Teilen"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Füge Hashtags zu deinem Post hinzu"
     }
   },
-  "platforms": {
-    "facebook": {
-      "title": "Facebook-Beitrag",
-      "contentLabel": "Beitragsinhalt",
-      "placeholder": "Was denkst du?",
-      "bestPractices": {
-        "title": "Facebook Tipps:",
-        "points": [
-          "Beiträge mit Fragen bekommen 100% mehr Interaktion",
-          "Verwende 1-2 relevante Hashtags",
-          "Halte es unterhaltsam und authentisch"
-        ]
-      },
-      "footer": "Dein Beitrag wird auf deiner Facebook-Seite oder deinem persönlichen Profil veröffentlicht."
-    }
+  "errors": {
+    "text_required": "Post-Text ist erforderlich",
+    "post_too_long": "Post zu lang: {{count}}/{{max}} Zeichen",
+    "invalid_link": "Ungültiges Link-Format"
+  },
+  "warnings": {
+    "post_short": "Der Post ist recht kurz - überlege, mehr Inhalt für besseres Engagement hinzuzufügen",
+    "no_link": "Überlege, einen Link hinzuzufügen, um Traffic zu generieren"
+  },
+  "metadata": {
+    "description": "Teile Events auf Facebook mit reichhaltigem Inhalt"
   }
 }
-
-

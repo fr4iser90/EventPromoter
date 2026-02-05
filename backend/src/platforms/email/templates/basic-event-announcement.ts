@@ -1,10 +1,11 @@
 import { EmailTemplate } from '../templates';
+import { TEMPLATE_CATEGORIES } from '@/shared/templateCategories.js';
 
 export const basicEventAnnouncementTemplate: EmailTemplate = {
   id: 'basic-event-announcement',
   name: 'Basic Event Announcement',
   description: 'A simple and clean email template for announcing events with basic event details',
-  category: 'announcement',
+  category: TEMPLATE_CATEGORIES.ANNOUNCEMENT,
   template: {
     subject: '🎉 {title} - {date}',
     html: `<!DOCTYPE html>
@@ -31,6 +32,8 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
   },
   translations: {
     de: {
+      name: 'Einfache Event-Ankündigung',
+      description: 'Eine einfache und saubere E-Mail-Vorlage für Event-Ankündigungen mit grundlegenden Event-Details',
       subject: '🎉 {title} - {date}',
       html: `<!DOCTYPE html>
 <html>
@@ -55,6 +58,8 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
 </html>`
     },
     es: {
+      name: 'Anuncio de Evento Básico',
+      description: 'Una plantilla de correo electrónico simple y limpia para anunciar eventos con detalles básicos del evento',
       subject: '🎉 {title} - {date}',
       html: `<!DOCTYPE html>
 <html>

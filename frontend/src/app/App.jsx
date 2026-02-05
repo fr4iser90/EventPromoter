@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import '../i18n' // Initialize i18n
+import '../shared/utils/axiosConfig' // Initialize axios interceptors (language headers)
 import HomePage from '../pages/HomePage'
 import TemplatePage from '../pages/templates'
 import useStore from '../store'

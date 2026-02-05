@@ -1,10 +1,11 @@
 import { EmailTemplate } from '../templates';
+import { TEMPLATE_CATEGORIES } from '@/shared/templateCategories.js';
 
 export const lastMinuteTicketsTemplate: EmailTemplate = {
   id: 'last-minute-tickets',
   name: 'Last Minute Tickets',
   description: 'An urgent email template for last-minute ticket sales with countdown and special pricing',
-  category: 'urgent',
+  category: TEMPLATE_CATEGORIES.URGENT,
   template: {
     subject: '⏰ LAST CHANCE: {title} - Limited Tickets Available!',
     html: `<!DOCTYPE html>
@@ -67,6 +68,8 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
   },
   translations: {
     de: {
+      name: 'Last-Minute-Tickets',
+      description: 'Eine dringende E-Mail-Vorlage für Last-Minute-Ticketverkäufe mit Countdown und Sonderpreisen',
       subject: '⏰ LETZTE CHANCE: {title} - Begrenzte Tickets verfügbar!',
       html: `<!DOCTYPE html>
 <html>
@@ -127,6 +130,8 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
 </html>`
     },
     es: {
+      name: 'Entradas de Último Minuto',
+      description: 'Una plantilla de correo electrónico urgente para ventas de entradas de último minuto con cuenta regresiva y precios especiales',
       subject: '⏰ ÚLTIMA OPORTUNIDAD: {title} - ¡Entradas Limitadas Disponibles!',
       html: `<!DOCTYPE html>
 <html>

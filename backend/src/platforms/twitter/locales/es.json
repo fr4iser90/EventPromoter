@@ -25,5 +25,8 @@
   },
   "preview": {
     "twitter": "🐦 Vista Previa de Twitter/X"
+  },
+  "metadata": {
+    "description": "Comparte eventos en Twitter/X con publicaciones de caracteres limitados"
   }
 }

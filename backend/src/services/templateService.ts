@@ -101,7 +101,9 @@ export class TemplateService {
             variables: template.variables,
             isDefault: true,
             createdAt: template.createdAt,
-            updatedAt: template.updatedAt
+            updatedAt: template.updatedAt,
+            // Keep translations for later use in controller
+            translations: template.translations
           }
         }).filter((t: any): t is NonNullable<typeof t> => t !== null)
       } catch (importError) {
@@ -127,7 +129,9 @@ export class TemplateService {
               variables: template.variables,
               isDefault: true,
               createdAt: template.createdAt,
-              updatedAt: template.updatedAt
+              updatedAt: template.updatedAt,
+              // Keep translations for later use in controller
+              translations: template.translations
             }
           }).filter((t: any): t is NonNullable<typeof t> => t !== null)
         }

@@ -8,11 +8,24 @@
     "spanish": "🇪🇸 ES"
   },
   "workflow": {
-    "startHere": "Start here:",
-    "next": "Next:",
-    "publishContent": "🚀 Publish Content",
-    "saving": "💾 Saving...",
-    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+    "startHere": "Start hier:",
+    "next": "Weiter:",
+    "publishContent": "🚀 Inhalt veröffentlichen",
+    "saving": "💾 Speichern...",
+    "publishingToPlatforms": "Veröffentliche auf {{count}} Plattform{{plural}}...",
+    "uploadFiles": "📁 Dateien hochladen",
+    "uploadFilesDescription": "Beginne mit dem Hochladen deiner Event-Dateien",
+    "selectPlatforms": "🎯 Plattformen auswählen",
+    "selectPlatformsDescription": "Wähle, wo du deinen Inhalt veröffentlichen möchtest",
+    "createContent": "✏️ Inhalt erstellen",
+    "createContentDescription": "Erstelle plattformspezifische Inhalte",
+    "readyToPublish": "📤 Bereit zum Veröffentlichen",
+    "readyToPublishDescription": "Überprüfe und veröffentliche deinen Inhalt",
+    "publishing": "🚀 Veröffentlichen...",
+    "publishingDescription": "Sende Inhalt an Plattformen",
+    "published": "✅ Veröffentlicht!",
+    "publishedDescription": "Inhalt erfolgreich veröffentlicht",
+    "subtitle": "Lade Dateien hoch, erstelle Inhalte und veröffentliche auf mehreren Plattformen"
   },
   "status": {
     "ready": "Bereit",
@@ -74,7 +87,8 @@
     "dropInactive": "Dateien hier ziehen und ablegen",
     "hashtagsPlaceholder": "Hashtags durch Kommas getrennt eingeben (z.B., party, music, berlin)",
     "characters": "Zeichen",
-    "unknown": "Unbekannt"
+    "unknown": "Unbekannt",
+    "update": "Aktualisieren"
   },
   "fileUpload": {
     "title": "Dateien hochladen",
@@ -105,7 +119,33 @@
     "delete": "Vorlage löschen",
     "name": "Name",
     "description": "Beschreibung",
-    "platform": "Plattform"
+    "platform": "Plattform",
+    "newTemplate": "Neue Vorlage",
+    "noTemplates": "Noch keine Vorlagen",
+    "createFirstTemplate": "Erstelle deine erste Vorlage, um zu beginnen",
+    "createTemplate": "Vorlage erstellen",
+    "editTemplate": "Vorlage bearbeiten",
+    "templateName": "Vorlagenname",
+    "category": "Kategorie",
+    "loadingCategories": "Lade Kategorien...",
+    "availableVariables": "Verfügbare Variablen:",
+    "useTemplate": "Vorlage verwenden",
+    "default": "Standard",
+    "deleteConfirm": "Möchtest du diese Vorlage wirklich löschen?",
+    "filterByCategory": "Nach Kategorie filtern",
+    "applyTemplatesToAll": "Vorlagen auf alle Plattformen anwenden",
+    "overwriteExisting": "Vorhandenen Inhalt überschreiben",
+    "overwriteExistingDescription": "Wenn deaktiviert, werden Vorlagen nur auf Plattformen ohne vorhandenen Inhalt angewendet.",
+    "selectPlatforms": "Plattformen auswählen",
+    "selected": "ausgewählt",
+    "applyResults": "Anwendungsergebnisse:",
+    "applied": "Angewendet",
+    "skipped": "Übersprungen",
+    "errors": "Fehler",
+    "applying": "Wird angewendet...",
+    "applyToSelected": "Auf ausgewählte Plattformen anwenden",
+    "noTemplateAvailable": "Keine Vorlage verfügbar",
+    "noTemplateForCategory": "Keine Vorlage für diese Kategorie"
   },
   "settings": {
     "title": "Einstellungen",
@@ -136,6 +176,11 @@
   },
   "hashtags": {
     "title": "Hashtags"
+  },
+  "platform": {
+    "selection": "Plattform-Auswahl",
+    "enabled": "Plattform aktiviert",
+    "settings": "Einstellungen"
   },
   "registry": {
     "noPanelConfiguration": "Keine Panel-Konfiguration bereitgestellt",

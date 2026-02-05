@@ -25,5 +25,8 @@
   },
   "preview": {
     "twitter": "🐦 Twitter/X Vorschau"
+  },
+  "metadata": {
+    "description": "Teile Events auf Twitter/X mit zeichenbegrenzten Posts"
   }
 }

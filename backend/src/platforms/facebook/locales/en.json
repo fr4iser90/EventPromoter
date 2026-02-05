@@ -1,25 +1,36 @@
 {
-  "form": {
-    "labels": {
-      "facebookPost": "Facebook Post"
+  "editor": {
+    "title": "Facebook Post Editor",
+    "description": "Create and edit Facebook posts",
+    "text": {
+      "label": "Post Content",
+      "description": "Your Facebook post content",
+      "placeholder": "What's on your mind?",
+      "required": "Post content is required"
+    },
+    "image": {
+      "label": "Image",
+      "description": "Optional image attachment"
+    },
+    "link": {
+      "label": "Link",
+      "description": "Optional link to share"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Add hashtags to your post"
     }
   },
-  "platforms": {
-    "facebook": {
-      "title": "Facebook Post",
-      "contentLabel": "Post Content",
-      "placeholder": "What's on your mind?",
-      "bestPractices": {
-        "title": "Facebook Tips:",
-        "points": [
-          "Posts with questions get 100% more engagement",
-          "Use 1-2 relevant hashtags",
-          "Keep it conversational and authentic"
-        ]
-      },
-      "footer": "Your post will be published to your Facebook page or personal profile."
-    }
+  "errors": {
+    "text_required": "Post text is required",
+    "post_too_long": "Post too long: {{count}}/{{max}} characters",
+    "invalid_link": "Invalid link URL format"
+  },
+  "warnings": {
+    "post_short": "Post is quite short - consider adding more content for better engagement",
+    "no_link": "Consider adding a link to drive traffic"
+  },
+  "metadata": {
+    "description": "Share events on Facebook with rich content"
   }
 }
-
-

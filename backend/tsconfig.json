@@ -10,11 +10,13 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "baseUrl": ".",
     "resolveJsonModule": true,
     "paths": {
       "@/types/schema": ["./src/types/schema"],
       "@/types/*": ["./src/types/*"],
-      "@/services/*": ["./src/services/*"]
+      "@/services/*": ["./src/services/*"],
+      "@/shared/*": ["./src/shared/*"]
     }
   },
   "include": [

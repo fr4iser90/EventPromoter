@@ -42,7 +42,17 @@ const determineWorkflowState = (state) => {
 const useStore = create((set, get) => ({
 
   // Load event workspace from backend on init
+  // ✅ Idempotent: Guards against duplicate calls (StrictMode-safe)
   initialize: async () => {
+    const { initializing, initialized } = get()
+
+    // Guard: Skip if already initializing or already initialized
+    if (initializing || initialized) {
+      return
+    }
+
+    set({ initializing: true })
+
     try {
       console.log('Loading event workspace from backend...')
       await get().loadEventWorkspace()
@@ -58,8 +68,10 @@ const useStore = create((set, get) => ({
     // Load user preferences
     await get().loadUserPreferences()
 
-    // Load global configurations
+    // Load global configurations (has its own guard)
     await get().loadGlobalConfigs()
+
+    set({ initializing: false, initialized: true })
 
     // NOTE: selectedPlatforms are event-specific only, not loaded from user preferences
   },
@@ -147,21 +159,45 @@ const useStore = create((set, get) => ({
 
 
   // Load global configurations (separate from user preferences)
+  // ✅ Idempotent: Guards against duplicate calls (StrictMode-safe)
+  // ✅ Abort-safe: Handles request cancellation gracefully
+  // ✅ Timeout-safe: Prevents hanging requests
   loadGlobalConfigs: async () => {
+    const { globalConfigsLoading, globalHashtagConfig } = get()
+
+    // Guard: Skip if already loading or already loaded
+    if (globalConfigsLoading || globalHashtagConfig) {
+      return
+    }
+
+    set({ globalConfigsLoading: true })
+
     try {
-      const [hashtagConfig] = await Promise.all([
-        axios.get(getApiUrl('config/hashtags'))
-      ])
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
+      const hashtagConfig = await axios.get(
+        getApiUrl('config/hashtags'),
+        { signal: controller.signal }
+      )
+
+      clearTimeout(timeoutId)
 
       set({
-        globalHashtagConfig: hashtagConfig.data
+        globalHashtagConfig: hashtagConfig.data,
+        globalConfigsLoading: false
       })
 
       console.log('Global configs loaded:', {
         hashtags: hashtagConfig.data.available?.length || 0
       })
     } catch (error) {
-      console.warn('Failed to load global configs:', error)
+      set({ globalConfigsLoading: false })
+
+      // Ignore abort errors (expected in dev mode / StrictMode)
+      if (error.code !== 'ERR_CANCELED' && error.name !== 'CanceledError') {
+        console.warn('Failed to load global configs:', error)
+      }
     }
   },
 
@@ -354,6 +390,10 @@ const useStore = create((set, get) => ({
   publishing: false,
   published: false,
   autoSaving: false,
+  
+  // Initialization state (prevents duplicate initialization calls)
+  initializing: false,
+  initialized: false,
 
   // User preferences
   userPreferences: {
@@ -373,6 +413,7 @@ const useStore = create((set, get) => ({
 
   // Global configs loaded from backend
   globalHashtagConfig: null, // Global hashtag configuration from /config/hashtags.json
+  globalConfigsLoading: false, // Loading state for global configs (prevents duplicate requests)
 
   // Template management state
   templates: {},             // Templates per platform: { platform: [templates] }

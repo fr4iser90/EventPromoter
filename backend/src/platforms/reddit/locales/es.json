@@ -14,6 +14,9 @@
   },
   "preview": {
     "subreddit": "Subreddit"
+  },
+  "metadata": {
+    "description": "Comparte eventos en Reddit con publicaciones de texto e imágenes"
   }
 }
 

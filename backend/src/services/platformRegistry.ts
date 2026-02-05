@@ -14,6 +14,7 @@ import { PlatformSchema } from '@/types/schema'
 import { discoverPlatforms, discoverPlatform, scanPlatformDirectories, DiscoveryConfig } from '../utils/platformDiscovery.js'
 import { validatePlatformSchema } from '../utils/schemaValidator.js'
 import { PlatformValidationError, PlatformDiscoveryError } from '../types/validationErrors.js'
+import i18next from 'i18next'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -82,6 +83,23 @@ export class PlatformRegistry {
 
     // Register platform
     this.platforms.set(platform.metadata.id, platform)
+
+    // Register platform translations with i18next
+    this.registerTranslations(platform.metadata.id)
+  }
+
+  /**
+   * Register platform translations with i18next
+   */
+  private async registerTranslations(platformId: string): Promise<void> {
+    const { getPlatformTranslationsForLanguages } = await import('../utils/translationLoader.js')
+    const translations = await getPlatformTranslationsForLanguages(platformId)
+    
+    for (const [lang, resources] of Object.entries(translations)) {
+      if (resources && Object.keys(resources).length > 0) {
+        i18next.addResourceBundle(lang, platformId, resources, true, true)
+      }
+    }
   }
 
   /**

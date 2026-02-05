@@ -60,5 +60,8 @@
   },
   "help": {
     "linkedinPost": "Contenido profesional para publicación de LinkedIn"
+  },
+  "metadata": {
+    "description": "Comparte eventos en LinkedIn con contenido profesional"
   }
 }

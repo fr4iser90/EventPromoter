@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Typography,
@@ -32,6 +33,7 @@ import SchemaRenderer from '../../schema/components/Renderer'
 import config from '../../../config'
 
 const TemplateList = ({ platform, onSelectTemplate }) => {
+  const { t } = useTranslation()
   const { templates, categories, loading, error, createTemplate, updateTemplate, deleteTemplate } = useTemplates(platform)
   const { schema, loading: schemaLoading } = usePlatformSchema(platform)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -70,7 +72,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
 
   // Handle delete template
   const handleDelete = async (templateId) => {
-    if (window.confirm('Are you sure you want to delete this template?')) {
+    if (window.confirm(t('template.deleteConfirm', { defaultValue: 'Are you sure you want to delete this template?' }))) {
       await deleteTemplate(templateId)
     }
   }
@@ -140,6 +142,12 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
     return acc
   }, {})
 
+  // Create mapping from category ID to translated name
+  const categoryNameMap = categories.reduce((acc, cat) => {
+    acc[cat.id] = cat.name
+    return acc
+  }, {})
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={3}>
@@ -159,7 +167,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
           startIcon={<AddIcon />}
           onClick={handleCreate}
         >
-          New Template
+          {t('template.newTemplate')}
         </Button>
       </Box>
 
@@ -173,20 +181,20 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
         <Box textAlign="center" py={4}>
           <TemplateIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" color="text.secondary">
-            No templates yet
+            {t('template.noTemplates')}
           </Typography>
           <Typography variant="body2" color="text.secondary" mb={2}>
-            Create your first template to get started
+            {t('template.createFirstTemplate')}
           </Typography>
           <Button variant="outlined" startIcon={<AddIcon />} onClick={handleCreate}>
-            Create Template
+            {t('template.createTemplate')}
           </Button>
         </Box>
       ) : (
         Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
           <Box key={category} mb={3}>
-            <Typography variant="h6" sx={{ mb: 1, textTransform: 'capitalize' }}>
-              {category.replace('-', ' ')}
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              {categoryNameMap[category] || category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ')}
             </Typography>
             <List>
               {categoryTemplates.map((template) => (
@@ -205,7 +213,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                       <Box display="flex" alignItems="center" gap={1}>
                         <Typography variant="subtitle1">{template.name}</Typography>
                         {template.isDefault && (
-                          <Chip label="Default" size="small" color="primary" variant="outlined" />
+                          <Chip label={t('template.default')} size="small" color="primary" variant="outlined" />
                         )}
                       </Box>
                     }
@@ -224,7 +232,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                     <IconButton
                       edge="end"
                       onClick={() => onSelectTemplate && onSelectTemplate(template)}
-                      title="Use Template"
+                      title={t('template.useTemplate')}
                     >
                       ✓
                     </IconButton>
@@ -233,14 +241,14 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                         <IconButton
                           edge="end"
                           onClick={() => handleEdit(template)}
-                          title="Edit Template"
+                          title={t('template.editTemplate')}
                         >
                           <EditIcon />
                         </IconButton>
                         <IconButton
                           edge="end"
                           onClick={() => handleDelete(template.id)}
-                          title="Delete Template"
+                          title={t('template.delete')}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -258,13 +266,13 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
       {/* Create/Edit Template Dialog */}
       <Dialog open={dialogOpen} onClose={() => !saving && setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingTemplate ? 'Edit Template' : 'Create New Template'}
+          {editingTemplate ? t('template.editTemplate') : t('template.createTemplate')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
             <TextField
               fullWidth
-              label="Template Name"
+              label={t('template.templateName')}
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               sx={{ mb: 2 }}
@@ -273,7 +281,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
 
             <TextField
               fullWidth
-              label="Description"
+              label={t('template.description')}
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               sx={{ mb: 2 }}
@@ -284,7 +292,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
             <TextField
               select
               fullWidth
-              label="Category"
+              label={t('template.category')}
               value={formData.category}
               onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
               sx={{ mb: 2 }}
@@ -297,7 +305,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                   </MenuItem>
                 ))
               ) : (
-                <MenuItem disabled>Loading categories...</MenuItem>
+                <MenuItem disabled>{t('template.loadingCategories')}</MenuItem>
               )}
             </TextField>
 
@@ -341,7 +349,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
             {schema?.template?.variables && schema.template.variables.length > 0 && (
               <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
                 <Typography variant="caption" color="text.secondary" gutterBottom>
-                  Available variables:
+                  {t('template.availableVariables')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
                   {schema.template.variables.map((variable) => (
@@ -360,14 +368,14 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)} disabled={saving}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleSave}
             variant="contained"
             disabled={saving || !formData.name.trim() || !formData.category}
           >
-            {saving ? <CircularProgress size={20} /> : (editingTemplate ? 'Update' : 'Create')}
+            {saving ? <CircularProgress size={20} /> : (editingTemplate ? t('common.update', { defaultValue: 'Update' }) : t('template.create'))}
           </Button>
         </DialogActions>
       </Dialog>

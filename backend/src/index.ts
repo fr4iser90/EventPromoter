@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 import express from 'express'
 import { corsMiddleware } from './middleware/cors.js'
+import { i18nMiddleware } from './i18n/index.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import routes from './routes/index.js'
 import { SchemaRegistry } from './services/schemaRegistry.js'
@@ -19,8 +20,9 @@ console.log(`🚀 Starting EventPromoter Backend...`)
 console.log(`🚀 EventPromoter Backend running on http://localhost:${PORT}`)
 console.log(`📁 Config directory: ${process.cwd()}/config`)
 
-// 1. Global middleware (CORS)
+// 1. Global middleware (CORS, i18n)
 app.use(corsMiddleware)
+app.use(i18nMiddleware)
 
 // 2. Debug logging
 app.use((req, res, next) => {

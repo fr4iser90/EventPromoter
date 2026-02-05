@@ -10,22 +10,22 @@ import { EditorSchema } from '@/types/schema'
 
 export const facebookEditorSchema: EditorSchema = {
   version: '1.0.0',
-  title: 'Facebook Post Editor',
-  description: 'Create and edit Facebook posts',
+  title: 'facebook:editor.title',
+  description: 'facebook:editor.description',
   mode: 'rich',
   blocks: [
     {
       type: 'paragraph',
       id: 'text',
-      label: 'Post Content',
-      description: 'Your Facebook post content',
+      label: 'facebook:editor.text.label',
+      description: 'facebook:editor.text.description',
       required: true,
       constraints: {
         maxLength: 63206,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Post content is required' }
+        { type: 'required', message: 'facebook:editor.text.required' }
       ],
       ui: {
         icon: 'text',
@@ -34,14 +34,14 @@ export const facebookEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'What\'s on your mind?'
+        placeholder: 'facebook:editor.text.placeholder'
       }
     },
     {
       type: 'image',
       id: 'image',
-      label: 'Image',
-      description: 'Optional image attachment',
+      label: 'facebook:editor.image.label',
+      description: 'facebook:editor.image.description',
       required: false,
       constraints: {
         maxItems: 1,
@@ -57,8 +57,8 @@ export const facebookEditorSchema: EditorSchema = {
     {
       type: 'link',
       id: 'link',
-      label: 'Link',
-      description: 'Optional link to share',
+      label: 'facebook:editor.link.label',
+      description: 'facebook:editor.link.description',
       required: false,
       constraints: {
         maxItems: 1
@@ -72,8 +72,8 @@ export const facebookEditorSchema: EditorSchema = {
     {
       type: 'hashtag',
       id: 'hashtags',
-      label: 'Hashtags',
-      description: 'Add hashtags to your post',
+      label: 'facebook:editor.hashtags.label',
+      description: 'facebook:editor.hashtags.description',
       required: false,
       constraints: {
         maxItems: 30

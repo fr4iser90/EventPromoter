@@ -157,7 +157,7 @@ function PlatformSelector({ disabled = false }) {
     <>
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
-          🌐 Platform Selection
+          🌐 {t('platform.selection')}
         </Typography>
 
         <Grid container spacing={2}>
@@ -204,7 +204,7 @@ function PlatformSelector({ disabled = false }) {
                         variant="outlined"
                         sx={{ minWidth: 'auto' }}
                       >
-                        Settings
+                        {t('platform.settings')}
                       </Button>
                     </Box>
 
@@ -216,7 +216,7 @@ function PlatformSelector({ disabled = false }) {
 
                     {isSelected && (
                       <Typography variant="caption" color="text.secondary">
-                        Platform enabled
+                        {t('platform.enabled')}
                       </Typography>
                     )}
                   </CardContent>

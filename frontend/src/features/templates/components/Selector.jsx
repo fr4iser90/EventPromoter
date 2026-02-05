@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -17,7 +17,8 @@ import {
   ListItemIcon,
   ListItemText,
   Checkbox,
-  Tooltip
+  Tooltip,
+  useTheme
 } from '@mui/material'
 import {
   KeyboardArrowDown as ArrowDownIcon,
@@ -28,6 +29,7 @@ import {
   Public as PublicIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../hooks/useTemplates'
+import { useTemplateCategories } from '../hooks/useTemplateCategories'
 import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
 import CompositeRenderer from '../../schema/components/CompositeRenderer'
 import FileSelectionBlock from '../../platform/components/blocks/FileSelectionBlock'
@@ -38,8 +40,10 @@ import { getApiUrl } from '../../../shared/utils/api'
 const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', globalFiles = [], sx = {} }) => {
   // Use mode='preview' to get templates without <style> tags (backend removes them)
   const { templates, loading, error } = useTemplates(platform, 'preview')
+  const { categories } = useTemplateCategories()
   const { schema } = usePlatformSchema(platform) // Load schema to check for targets block
   const { parsedData, uploadedFileRefs } = useStore()
+  const theme = useTheme() // Get current theme for dark mode detection
   const [anchorEl, setAnchorEl] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -55,10 +59,8 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
     setAnchorEl(null)
   }
 
-  const handleTemplateSelect = async (template) => {
-    setSelectedTemplate(template)
-    handleClose()
-
+  // Function to load preview with current theme
+  const loadPreview = async (template) => {
     // Generate preview content using parsedData and uploadedFileRefs
     const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
     const templateContent = template.template || {}
@@ -67,13 +69,17 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
     
     // ✅ Use Backend Preview API for consistent rendering (same as Platform Preview)
     // This ensures Markdown is rendered the same way everywhere
+    // ✅ Follow app theme: Preview uses dark mode if app is in dark mode
     try {
       // Create temporary content object for preview
       const previewContentObj = templateContent.html 
         ? { bodyText: filledContent } // HTML template
         : { text: filledContent }      // Markdown/text template
       
-      const response = await fetch(getApiUrl(`platforms/${platform}/preview?mode=desktop&darkMode=false`), {
+      // Get dark mode from current theme (follows app theme)
+      const darkMode = theme.palette.mode === 'dark'
+      
+      const response = await fetch(getApiUrl(`platforms/${platform}/preview?mode=desktop&darkMode=${darkMode}`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: previewContentObj })
@@ -90,7 +96,6 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
       
       // Use backend-rendered HTML
       setPreviewContent(data.html)
-      setPreviewOpen(true)
     } catch (error) {
       console.error('Failed to render template preview:', error)
       // Show error - no fallback
@@ -98,9 +103,25 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         <strong>Error rendering preview:</strong><br/>
         ${error.message || 'Failed to load preview from backend'}
       </div>`)
-      setPreviewOpen(true)
     }
   }
+
+  const handleTemplateSelect = async (template) => {
+    setSelectedTemplate(template)
+    handleClose()
+    await loadPreview(template)
+    setPreviewOpen(true)
+  }
+
+  // ✅ Reload preview when theme changes (if modal is open)
+  // Note: We only reload if modal is open and template is selected
+  // This ensures preview follows app theme changes
+  useEffect(() => {
+    if (previewOpen && selectedTemplate) {
+      loadPreview(selectedTemplate)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme.palette.mode]) // Reload when theme changes (only dependency needed)
 
   // Check if platform has targets block in editor schema
   const editorSchema = schema?.editor
@@ -189,13 +210,18 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
               </Typography>
             </MenuItem>
           ) : (
-            Object.entries(groupedTemplates).map(([category, categoryTemplates]) => [
-              <Box key={`header-${category}`} sx={{ px: 2, py: 1, bgcolor: 'background.default' }}>
-                <Typography variant="subtitle2" sx={{ textTransform: 'capitalize' }}>
-                  {category.replace('-', ' ')}
-                </Typography>
-              </Box>,
-              ...categoryTemplates.map((template) => (
+            Object.entries(groupedTemplates).map(([category, categoryTemplates]) => {
+              // Get translated category name from categories array
+              const categoryInfo = categories?.find(cat => cat.id === category)
+              const categoryName = categoryInfo?.name || category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ')
+              
+              return [
+                <Box key={`header-${category}`} sx={{ px: 2, py: 1, bgcolor: 'background.default' }}>
+                  <Typography variant="subtitle2">
+                    {categoryName}
+                  </Typography>
+                </Box>,
+                ...categoryTemplates.map((template) => (
                 <MenuItem
                   key={template.id}
                   onClick={() => handleTemplateSelect(template)}
@@ -220,7 +246,8 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                 </MenuItem>
               )),
               Object.keys(groupedTemplates).length > 1 && <Divider key={`divider-${category}`} />
-            ])
+            ]
+            })
           )}
         </Menu>
       </Box>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogTitle,
@@ -48,6 +49,7 @@ function BulkTemplateApplier({
   platformContent = {}, 
   onApply 
 }) {
+  const { t } = useTranslation()
   const { categories = [], loading: categoriesLoading } = useTemplateCategories()
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedPlatformsForApply, setSelectedPlatformsForApply] = useState(
@@ -282,18 +284,18 @@ function BulkTemplateApplier({
       fullWidth
     >
       <DialogTitle>
-        🎯 Apply Templates to All Platforms
+        🎯 {t('template.applyTemplatesToAll')}
       </DialogTitle>
       
       <DialogContent>
         {/* Category Selection */}
         <Box sx={{ mb: 3 }}>
           <FormControl fullWidth>
-            <InputLabel>Filter by Category</InputLabel>
+            <InputLabel>{t('template.filterByCategory')}</InputLabel>
             <Select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              label="Filter by Category"
+              label={t('template.filterByCategory')}
               disabled={categoriesLoading || applying}
             >
               {(categories || []).map(cat => (
@@ -315,10 +317,10 @@ function BulkTemplateApplier({
                 disabled={applying}
               />
             }
-            label="Overwrite existing content"
+            label={t('template.overwriteExisting')}
           />
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
-            If unchecked, templates will only be applied to platforms with no existing content.
+            {t('template.overwriteExistingDescription')}
           </Typography>
         </Box>
 
@@ -328,7 +330,7 @@ function BulkTemplateApplier({
         {selectedCategory && (
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Select Platforms ({selectedPlatformsForApply.size} selected)
+              {t('template.selectPlatforms')} ({selectedPlatformsForApply.size} {t('template.selected')})
             </Typography>
             
             {templatesLoading ? (
@@ -399,13 +401,13 @@ function BulkTemplateApplier({
                             </FormControl>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
-                              No template available
+                              {t('template.noTemplateAvailable', { defaultValue: 'No template available' })}
                             </Typography>
                           )}
                         </Box>
                       ) : (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          No template for this category
+                          {t('template.noTemplateForCategory', { defaultValue: 'No template for this category' })}
                         </Typography>
                       )}
                     </ListItem>
@@ -420,18 +422,18 @@ function BulkTemplateApplier({
         {applyResults && (
           <Box sx={{ mt: 3 }}>
             <Alert severity="success" sx={{ mb: 2 }}>
-              <Typography variant="subtitle2">Apply Results:</Typography>
+              <Typography variant="subtitle2">{t('template.applyResults')}</Typography>
               <Typography variant="body2">
-                ✅ Applied: {applyResults.applied.length}
+                ✅ {t('template.applied')}: {applyResults.applied.length}
               </Typography>
               {applyResults.skipped.length > 0 && (
                 <Typography variant="body2">
-                  ⏭️ Skipped: {applyResults.skipped.length}
+                  ⏭️ {t('template.skipped')}: {applyResults.skipped.length}
                 </Typography>
               )}
               {applyResults.errors.length > 0 && (
                 <Typography variant="body2" color="error">
-                  ❌ Errors: {applyResults.errors.length}
+                  ❌ {t('template.errors')}: {applyResults.errors.length}
                 </Typography>
               )}
             </Alert>
@@ -441,7 +443,7 @@ function BulkTemplateApplier({
 
       <DialogActions>
         <Button onClick={handleClose} disabled={applying}>
-          {applyResults ? 'Close' : 'Cancel'}
+          {applyResults ? t('common.close') : t('common.cancel')}
         </Button>
         <Button
           onClick={handleApply}
@@ -451,10 +453,10 @@ function BulkTemplateApplier({
           {applying ? (
             <>
               <CircularProgress size={16} sx={{ mr: 1 }} />
-              Applying...
+              {t('template.applying')}
             </>
           ) : (
-            'Apply to Selected Platforms'
+            t('template.applyToSelected')
           )}
         </Button>
       </DialogActions>

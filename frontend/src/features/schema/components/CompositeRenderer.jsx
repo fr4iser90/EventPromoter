@@ -141,6 +141,54 @@ function CompositeRenderer({ block, value, onChange, platform }) {
     loadData()
   }, [platform, JSON.stringify(dataEndpoints), reloadTrigger]) // Reload when trigger changes
 
+  // ✅ UX: Initialize default values after data is loaded
+  // Set mode to 'all' if not set, and auto-select template if only one available
+  useEffect(() => {
+    if (loading || !data || Object.keys(data).length === 0) return
+    
+    // Don't override if value prop is explicitly set (from parent)
+    if (value !== undefined && value !== null && Object.keys(value).length > 0) {
+      return
+    }
+    
+    const currentValues = compositeValues || {}
+    
+    // Only initialize if mode is not set
+    if (!currentValues.mode) {
+      const initialValues = { ...currentValues }
+      
+      // Set default mode to 'all' if not set
+      const modeField = schema.mode
+      if (modeField?.default) {
+        initialValues.mode = modeField.default
+      } else {
+        // Fallback: use first available mode option (prefer 'all')
+        const modes = data.modes || []
+        if (modes.length > 0) {
+          const allMode = modes.find(m => (m.value || m) === 'all')
+          const firstMode = allMode || modes[0]
+          initialValues.mode = firstMode?.value || firstMode
+        }
+      }
+      
+      // Smart Default: Auto-select template if only one available
+      if (!initialValues.defaultTemplate) {
+        const templates = data.templates || []
+        if (templates.length === 1) {
+          const singleTemplate = templates[0]
+          initialValues.defaultTemplate = singleTemplate.value || singleTemplate.id || singleTemplate
+        }
+      }
+      
+      // Only update if we actually changed something
+      if (JSON.stringify(initialValues) !== JSON.stringify(currentValues)) {
+        setCompositeValues(initialValues)
+        onChange(initialValues)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, loading]) // Run after data is loaded
+
   // Sync compositeValues with value prop (when value changes from outside, e.g., template applied)
   useEffect(() => {
     if (value !== undefined && value !== null) {

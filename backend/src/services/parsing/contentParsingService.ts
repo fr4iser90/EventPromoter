@@ -823,11 +823,12 @@ export class ContentExtractionService {
       const targets = await service.getTargets()
       const groups = await service.getGroups()
 
-      // Create mapping: ID -> name
+      // Create mapping: ID -> display name (use baseField, e.g. email)
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
         const baseField = service.getBaseField()
-        targetNameMap[target.id] = target.name || target[baseField] || target.id
+        // ✅ Always use baseField (e.g., email) for display, not target.name
+        targetNameMap[target.id] = target[baseField] || target.id
       })
 
       const groupNameMap: Record<string, string> = {}

@@ -96,21 +96,21 @@ function HomePage() {
   const getWorkflowStepInfo = () => {
     switch (workflowState) {
       case WORKFLOW_STATES.INITIAL:
-        return { label: '📁 Upload Files', description: 'Start by uploading your event files' }
+        return { label: t('workflow.uploadFiles'), description: t('workflow.uploadFilesDescription') }
       case WORKFLOW_STATES.FILES_UPLOADED:
-        return { label: '🎯 Select Platforms', description: 'Choose where to publish your content' }
+        return { label: t('workflow.selectPlatforms'), description: t('workflow.selectPlatformsDescription') }
       case WORKFLOW_STATES.EVENT_READY:
-        return { label: '🎯 Select Platforms', description: 'Choose where to publish your content' }
+        return { label: t('workflow.selectPlatforms'), description: t('workflow.selectPlatformsDescription') }
       case WORKFLOW_STATES.PLATFORMS_SELECTED:
-        return { label: '✏️ Create Content', description: 'Write platform-specific content' }
+        return { label: t('workflow.createContent'), description: t('workflow.createContentDescription') }
       case WORKFLOW_STATES.CONTENT_READY:
-        return { label: '📤 Ready to Publish', description: 'Review and publish your content' }
+        return { label: t('workflow.readyToPublish'), description: t('workflow.readyToPublishDescription') }
       case WORKFLOW_STATES.PUBLISHING:
-        return { label: '🚀 Publishing...', description: 'Sending content to platforms' }
+        return { label: t('workflow.publishing'), description: t('workflow.publishingDescription') }
       case WORKFLOW_STATES.PUBLISHED:
-        return { label: '✅ Published!', description: 'Content successfully published' }
+        return { label: t('workflow.published'), description: t('workflow.publishedDescription') }
       default:
-        return { label: 'Unknown', description: '' }
+        return { label: t('common.unknown'), description: '' }
     }
   }
 
@@ -248,7 +248,7 @@ function HomePage() {
         }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h6" component="h2" color="text.secondary">
-              Upload files, build content, and publish across multiple platforms
+              {t('workflow.subtitle')}
             </Typography>
           </Box>
 

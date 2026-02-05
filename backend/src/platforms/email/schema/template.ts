@@ -68,6 +68,9 @@ export const emailTemplateSchema: TemplateSchema = {
       type: 'string'
     }
   ],
+  // Note: Categories are now loaded dynamically from templates with translations.
+  // This is kept for documentation purposes only.
+  // Actual categories and their translations come from template.categoryTranslations.
   categories: [
     {
       id: 'announcement',

@@ -8,11 +8,24 @@
     "spanish": "🇪🇸 ES"
   },
   "workflow": {
-    "startHere": "Start here:",
-    "next": "Next:",
-    "publishContent": "🚀 Publish Content",
-    "saving": "💾 Saving...",
-    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+    "startHere": "Comienza aquí:",
+    "next": "Siguiente:",
+    "publishContent": "🚀 Publicar Contenido",
+    "saving": "💾 Guardando...",
+    "publishingToPlatforms": "Publicando en {{count}} plataforma{{plural}}...",
+    "uploadFiles": "📁 Subir Archivos",
+    "uploadFilesDescription": "Comienza subiendo tus archivos de eventos",
+    "selectPlatforms": "🎯 Seleccionar Plataformas",
+    "selectPlatformsDescription": "Elige dónde publicar tu contenido",
+    "createContent": "✏️ Crear Contenido",
+    "createContentDescription": "Escribe contenido específico para cada plataforma",
+    "readyToPublish": "📤 Listo para Publicar",
+    "readyToPublishDescription": "Revisa y publica tu contenido",
+    "publishing": "🚀 Publicando...",
+    "publishingDescription": "Enviando contenido a las plataformas",
+    "published": "✅ ¡Publicado!",
+    "publishedDescription": "Contenido publicado exitosamente",
+    "subtitle": "Sube archivos, crea contenido y publica en múltiples plataformas"
   },
   "status": {
     "ready": "Listo",
@@ -74,7 +87,8 @@
     "dropInactive": "Arrastra y suelta los archivos aquí",
     "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
     "characters": "caracteres",
-    "unknown": "Desconocido"
+    "unknown": "Desconocido",
+    "update": "Actualizar"
   },
   "fileUpload": {
     "title": "Subir Archivos",
@@ -105,7 +119,33 @@
     "delete": "Eliminar Plantilla",
     "name": "Nombre",
     "description": "Descripción",
-    "platform": "Plataforma"
+    "platform": "Plataforma",
+    "newTemplate": "Nueva Plantilla",
+    "noTemplates": "Aún no hay plantillas",
+    "createFirstTemplate": "Crea tu primera plantilla para comenzar",
+    "createTemplate": "Crear Plantilla",
+    "editTemplate": "Editar Plantilla",
+    "templateName": "Nombre de Plantilla",
+    "category": "Categoría",
+    "loadingCategories": "Cargando categorías...",
+    "availableVariables": "Variables disponibles:",
+    "useTemplate": "Usar Plantilla",
+    "default": "Predeterminado",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar esta plantilla?",
+    "filterByCategory": "Filtrar por Categoría",
+    "applyTemplatesToAll": "Aplicar Plantillas a Todas las Plataformas",
+    "overwriteExisting": "Sobrescribir contenido existente",
+    "overwriteExistingDescription": "Si está desactivado, las plantillas solo se aplicarán a plataformas sin contenido existente.",
+    "selectPlatforms": "Seleccionar Plataformas",
+    "selected": "seleccionado",
+    "applyResults": "Resultados de Aplicación:",
+    "applied": "Aplicado",
+    "skipped": "Omitido",
+    "errors": "Errores",
+    "applying": "Aplicando...",
+    "applyToSelected": "Aplicar a Plataformas Seleccionadas",
+    "noTemplateAvailable": "No hay plantilla disponible",
+    "noTemplateForCategory": "No hay plantilla para esta categoría"
   },
   "settings": {
     "title": "Configuración",
@@ -136,6 +176,11 @@
   },
   "hashtags": {
     "title": "Hashtags"
+  },
+  "platform": {
+    "selection": "Selección de Plataforma",
+    "enabled": "Plataforma habilitada",
+    "settings": "Configuración"
   },
   "registry": {
     "noPanelConfiguration": "No se proporcionó configuración de panel",

@@ -25,6 +25,7 @@ const SAMPLE_DATA = {
 }
 
 function TemplatePreview({ template, platform }) {
+  const { categories } = useTemplateCategories()
   const [previewContent, setPreviewContent] = useState('')
   const [customVariables, setCustomVariables] = useState({})
 
@@ -87,7 +88,14 @@ function TemplatePreview({ template, platform }) {
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
           <Chip label={platform.charAt(0).toUpperCase() + platform.slice(1)} color="primary" size="small" />
-          <Chip label={template.category} variant="outlined" size="small" />
+          <Chip 
+            label={
+              categories?.find(cat => cat.id === template.category)?.name || 
+              template.category.charAt(0).toUpperCase() + template.category.slice(1).replace(/-/g, ' ')
+            } 
+            variant="outlined" 
+            size="small" 
+          />
           {template.isDefault && <Chip label="Default" color="secondary" size="small" />}
         </Box>
 

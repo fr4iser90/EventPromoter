@@ -66,5 +66,8 @@
   },
   "help": {
     "instagramCaption": "Subtítulo para publicación de Instagram"
+  },
+  "metadata": {
+    "description": "Comparte eventos en Instagram con imágenes y pies de foto"
   }
 }

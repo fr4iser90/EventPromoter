@@ -1,10 +1,11 @@
 import { EmailTemplate } from '../templates';
+import { TEMPLATE_CATEGORIES } from '@/shared/templateCategories.js';
 
 export const eventAnnouncementTemplate: EmailTemplate = {
   id: 'event-announcement',
   name: 'Event Announcement',
   description: 'A comprehensive email template for event announcements with detailed information and call-to-action',
-  category: 'announcement',
+  category: TEMPLATE_CATEGORIES.ANNOUNCEMENT,
   template: {
     subject: '🎉 {title} - {date} at {venue}',
     html: `<!DOCTYPE html>
@@ -61,6 +62,8 @@ export const eventAnnouncementTemplate: EmailTemplate = {
   },
   translations: {
     de: {
+      name: 'Event-Ankündigung',
+      description: 'Eine umfassende E-Mail-Vorlage für Event-Ankündigungen mit detaillierten Informationen und Call-to-Action',
       subject: '🎉 {title} - {date} in {venue}',
       html: `<!DOCTYPE html>
 <html>
@@ -115,6 +118,8 @@ export const eventAnnouncementTemplate: EmailTemplate = {
 </html>`
     },
     es: {
+      name: 'Anuncio de Evento',
+      description: 'Una plantilla de correo electrónico completa para anuncios de eventos con información detallada y llamada a la acción',
       subject: '🎉 {title} - {date} en {venue}',
       html: `<!DOCTYPE html>
 <html>

@@ -92,6 +92,11 @@ export class PlatformController {
       console.debug('🌐 API Request: GET /api/platforms')
     }
     try {
+      // Get request language (from i18next middleware or default to 'en')
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+
       const registry = await PlatformController.ensureRegistry()
       
       if (!registry.isInitialized()) {
@@ -101,22 +106,42 @@ export class PlatformController {
 
       const allPlatforms = registry.getAllPlatforms()
       
-      const platforms = allPlatforms.map(platform => ({
-        id: platform.metadata.id,
-        name: platform.metadata.displayName,
-        version: platform.metadata.version,
-        category: platform.metadata.category,
-        icon: platform.metadata.icon,
-        color: platform.metadata.color,
-        description: platform.metadata.description,
-        capabilities: platform.capabilities,
-        limits: platform.validator.getLimits(),
-        config: {
-          supportedFormats: platform.config?.supportedFormats || [],
-          rateLimits: platform.config?.rateLimits
-        },
-        templates: platform.templates ? Object.keys(platform.templates) : [],
-        hasSchema: !!platform.schema
+      const platforms = await Promise.all(allPlatforms.map(async (platform) => {
+        // Load translated description from platform locale files
+        let description = platform.metadata.description // Fallback to hardcoded
+        try {
+          const translations = await getPlatformTranslations(platform.metadata.id, validLang)
+          if (translations?.metadata?.description) {
+            description = translations.metadata.description
+          } else {
+            // Fallback to English if translation not available
+            const enTranslations = await getPlatformTranslations(platform.metadata.id, 'en')
+            if (enTranslations?.metadata?.description) {
+              description = enTranslations.metadata.description
+            }
+          }
+        } catch (error) {
+          // Use fallback if translation loading fails
+          console.warn(`Failed to load description translation for ${platform.metadata.id}:`, error)
+        }
+
+        return {
+          id: platform.metadata.id,
+          name: platform.metadata.displayName,
+          version: platform.metadata.version,
+          category: platform.metadata.category,
+          icon: platform.metadata.icon,
+          color: platform.metadata.color,
+          description,
+          capabilities: platform.capabilities,
+          limits: platform.validator.getLimits(),
+          config: {
+            supportedFormats: platform.config?.supportedFormats || [],
+            rateLimits: platform.config?.rateLimits
+          },
+          templates: platform.templates ? Object.keys(platform.templates) : [],
+          hasSchema: !!platform.schema
+        }
       }))
 
       if (process.env.DEBUG_API_REQUESTS === 'true') {
@@ -139,6 +164,12 @@ export class PlatformController {
   static async getPlatform(req: Request, res: Response) {
     try {
       const { platformId } = req.params
+      
+      // Get request language (from i18next middleware or default to 'en')
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+
       const registry = await PlatformController.ensureRegistry()
 
       // ✅ GENERIC: Only use registry system
@@ -156,6 +187,24 @@ export class PlatformController {
         })
       }
 
+      // Load translated description from platform locale files
+      let description = platform.metadata.description // Fallback to hardcoded
+      try {
+        const translations = await getPlatformTranslations(platformId, validLang)
+        if (translations?.metadata?.description) {
+          description = translations.metadata.description
+        } else {
+          // Fallback to English if translation not available
+          const enTranslations = await getPlatformTranslations(platformId, 'en')
+          if (enTranslations?.metadata?.description) {
+            description = enTranslations.metadata.description
+          }
+        }
+      } catch (error) {
+        // Use fallback if translation loading fails
+        console.warn(`Failed to load description translation for ${platformId}:`, error)
+      }
+
       return res.json({
         success: true,
         platform: {
@@ -165,7 +214,7 @@ export class PlatformController {
           category: platform.metadata.category,
           icon: platform.metadata.icon,
           color: platform.metadata.color,
-          description: platform.metadata.description,
+          description,
           capabilities: platform.capabilities,
           limits: platform.validator.getLimits(),
           schema: platform.schema,

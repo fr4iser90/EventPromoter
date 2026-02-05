@@ -5,6 +5,8 @@ FROM node:20-alpine AS builder
 
 # Enable corepack for pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm directly via npm (more reliable than corepack)
+# RUN npm install -g pnpm@10.24.0
 
 WORKDIR /app
 
@@ -33,8 +35,8 @@ RUN pnpm --filter @eventpromoter/backend run build
 # Stage 2: Production
 FROM node:20-alpine
 
-# Enable corepack for pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm directly via npm (more reliable than corepack)
+RUN npm install -g pnpm@10.24.0
 
 WORKDIR /app
 
