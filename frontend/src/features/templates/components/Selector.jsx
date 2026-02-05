@@ -18,7 +18,16 @@ import {
   ListItemText,
   Checkbox,
   Tooltip,
-  useTheme
+  useTheme,
+  Grid,
+  Card,
+  CardContent,
+  Tabs,
+  Tab,
+  useMediaQuery,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material'
 import {
   KeyboardArrowDown as ArrowDownIcon,
@@ -26,7 +35,8 @@ import {
   Check as CheckIcon,
   AttachFile as AttachFileIcon,
   Lock as LockIcon,
-  Public as PublicIcon
+  Public as PublicIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../hooks/useTemplates'
 import { useTemplateCategories } from '../hooks/useTemplateCategories'
@@ -44,12 +54,15 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
   const { schema } = usePlatformSchema(platform) // Load schema to check for targets block
   const { parsedData, uploadedFileRefs } = useStore()
   const theme = useTheme() // Get current theme for dark mode detection
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')) // Mobile detection for hybrid layout
   const [anchorEl, setAnchorEl] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
   const [targetsValue, setTargetsValue] = useState(null) // Store targets selection
   const [specificFiles, setSpecificFiles] = useState([]) // NEW: Specific files for this run
+  const [mobileTab, setMobileTab] = useState(0) // For mobile tabs: 0 = Config, 1 = Preview
+  const [attachmentsExpanded, setAttachmentsExpanded] = useState(true) // Accordion state for attachments
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget)
@@ -252,187 +265,518 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         </Menu>
       </Box>
 
-      {/* Template Preview Dialog */}
+      {/* Template Preview Dialog - Hybrid Layout: Split (Desktop) / Tabs (Mobile) */}
       <Dialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
+        PaperProps={{
+          sx: {
+            height: '90vh',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column'
+          }
+        }}
       >
         <DialogTitle>
           Apply Template: {selectedTemplate?.name}
         </DialogTitle>
-        <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            This template will replace your current content. Variables have been filled with data extracted from your current content.
-          </Alert>
+        
+        <DialogContent 
+          sx={{ 
+            flex: 1, 
+            overflow: 'hidden', 
+            display: 'flex', 
+            flexDirection: 'column',
+            p: 0
+          }}
+        >
+          {/* Mobile: Tabs Layout */}
+          {isMobile ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Tabs 
+                value={mobileTab} 
+                onChange={(e, newValue) => setMobileTab(newValue)}
+                sx={{ borderBottom: 1, borderColor: 'divider' }}
+              >
+                <Tab label="Configuration" />
+                <Tab label="Preview" />
+              </Tabs>
+              
+              <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+                {mobileTab === 0 ? (
+                  // Config Tab Content
+                  <Box>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      This template will replace your current content. Variables have been filled with data extracted from your current content.
+                    </Alert>
 
-          <Typography variant="subtitle1" gutterBottom>
-            Preview:
-          </Typography>
+                    {selectedTemplate && (
+                      <Card sx={{ mb: 2 }}>
+                        <CardContent>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Variables used:
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            {selectedTemplate.variables.map(variable => (
+                              <Chip
+                                key={variable}
+                                label={`{${variable}}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            ))}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    )}
 
-          {/* Use iframe for backend-rendered HTML (consistent with Platform Preview) */}
-          {previewContent.includes('<!DOCTYPE html>') || previewContent.includes('<html>') ? (
-            <Box
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                overflow: 'hidden',
-                maxHeight: 400,
-                height: 400
-              }}
-            >
-              <iframe
-                srcDoc={previewContent}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none'
-                }}
-                title="Template Preview"
-              />
+                    {targetsBlock && (
+                      <Card sx={{ mb: 2 }}>
+                        <CardContent>
+                          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                            {targetsBlock.label || 'Targets'}
+                          </Typography>
+                          {targetsBlock.description && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                              {targetsBlock.description}
+                            </Typography>
+                          )}
+                          <CompositeRenderer
+                            block={targetsBlock}
+                            value={targetsValue}
+                            onChange={setTargetsValue}
+                            platform={platform}
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {platform === 'email' && (
+                      <Card>
+                        <CardContent sx={{ p: 0 }}>
+                          <Accordion 
+                            expanded={attachmentsExpanded} 
+                            onChange={(e, expanded) => setAttachmentsExpanded(expanded)}
+                            sx={{ boxShadow: 'none', '&:before': { display: 'none' } }}
+                          >
+                            <AccordionSummary 
+                              expandIcon={<ExpandMoreIcon />}
+                              sx={{ 
+                                px: 2, 
+                                py: 1,
+                                borderBottom: attachmentsExpanded ? 1 : 0,
+                                borderColor: 'divider'
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
+                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                                  Anhänge für diesen Run
+                                </Typography>
+                                <Box sx={{ ml: 'auto', mr: 1 }}>
+                                  <Chip 
+                                    label={`${specificFiles.length + globalFiles.length}`}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                  />
+                                </Box>
+                              </Box>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ px: 2, pb: 2 }}>
+                              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Wählen Sie zusätzliche Anhänge für diese Gruppe aus. Standard-Anhänge sind bereits voreingestellt.
+                              </Typography>
+
+                              <List 
+                                dense 
+                                sx={{ 
+                                  bgcolor: 'background.default', 
+                                  borderRadius: 1, 
+                                  border: '1px solid', 
+                                  borderColor: 'divider',
+                                  maxHeight: 300,
+                                  overflow: 'auto'
+                                }}
+                              >
+                                {uploadedFileRefs.map((file) => {
+                                  const isStandard = isGlobalFile(file.id);
+                                  const isSelected = specificFiles.some(f => f.id === file.id);
+                                  const isDisabled = isStandard;
+
+                                  return (
+                                    <MenuItem 
+                                      key={file.id} 
+                                      onClick={() => !isDisabled && handleToggleSpecificFile(file)}
+                                      disabled={isDisabled}
+                                      sx={{ opacity: isDisabled ? 0.7 : 1 }}
+                                    >
+                                      <ListItemIcon sx={{ minWidth: 40 }}>
+                                        <Checkbox
+                                          edge="start"
+                                          checked={isStandard || isSelected}
+                                          disabled={isDisabled}
+                                          tabIndex={-1}
+                                          disableRipple
+                                        />
+                                      </ListItemIcon>
+                                      <ListItemText 
+                                        primary={file.filename}
+                                        secondary={isStandard ? 'Standard (Global)' : file.type}
+                                        primaryTypographyProps={{ 
+                                          variant: 'body2', 
+                                          fontWeight: (isStandard || isSelected) ? 'bold' : 'normal' 
+                                        }}
+                                      />
+                                      {file.visibility === 'public' ? (
+                                        <Tooltip title="Öffentlich (Public)">
+                                          <PublicIcon fontSize="small" color="success" sx={{ opacity: 0.6 }} />
+                                        </Tooltip>
+                                      ) : (
+                                        <Tooltip title="Intern (Internal)">
+                                          <LockIcon fontSize="small" color="action" sx={{ opacity: 0.6 }} />
+                                        </Tooltip>
+                                      )}
+                                    </MenuItem>
+                                  );
+                                })}
+                              </List>
+                              
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                  Gesamt für diese Gruppe: {specificFiles.length + globalFiles.length} Anhänge
+                                </Typography>
+                              </Box>
+                            </AccordionDetails>
+                          </Accordion>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </Box>
+                ) : (
+                  // Preview Tab Content
+                  <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Preview:
+                    </Typography>
+                    <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+                      {previewContent.includes('<!DOCTYPE html>') || previewContent.includes('<html>') ? (
+                        <Box
+                          sx={{
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            overflow: 'hidden',
+                            height: '100%',
+                            minHeight: 400
+                          }}
+                        >
+                          <iframe
+                            srcDoc={previewContent}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              border: 'none',
+                              display: 'block'
+                            }}
+                            scrolling="yes"
+                            title="Template Preview"
+                          />
+                        </Box>
+                      ) : (
+                        <Box
+                          sx={{
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            p: 2,
+                            bgcolor: 'background.paper',
+                            color: 'text.primary',
+                            height: '100%',
+                            overflow: 'auto',
+                            '& img': {
+                              maxWidth: '100%',
+                              height: 'auto',
+                              display: 'block',
+                              marginBottom: 1
+                            },
+                            '& a': {
+                              color: 'primary.main'
+                            },
+                            '& *': {
+                              color: 'inherit !important'
+                            },
+                            '& *[style*="background"]': {
+                              backgroundColor: 'transparent !important',
+                              background: 'transparent !important'
+                            },
+                            '& style': {
+                              display: 'none !important'
+                            }
+                          }}
+                          dangerouslySetInnerHTML={{ __html: previewContent }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </Box>
             </Box>
           ) : (
-            <Box
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                p: 2,
-                bgcolor: 'background.paper',
-                color: 'text.primary',
-                maxHeight: 400,
-                overflow: 'auto',
-                '& img': {
-                  maxWidth: '100%',
-                  height: 'auto',
-                  display: 'block',
-                  marginBottom: 1
-                },
-                '& a': {
-                  color: 'primary.main'
-                },
-                '& *': {
-                  color: 'inherit !important'
-                },
-                '& *[style*="background"]': {
-                  backgroundColor: 'transparent !important',
-                  background: 'transparent !important'
-                },
-                '& style': {
-                  display: 'none !important'
-                }
-              }}
-              dangerouslySetInnerHTML={{ __html: previewContent }}
-            />
-          )}
+            // Desktop: Split Layout (40/60)
+            <Grid container sx={{ height: '100%' }}>
+              {/* Left: Form Section (40%) */}
+              <Grid 
+                item 
+                xs={12} 
+                md={5} 
+                sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  p: 2,
+                  borderRight: { md: 1 },
+                  borderColor: 'divider',
+                  height: '100%'
+                }}
+              >
+                <Box sx={{ flex: 1, overflow: 'auto', pr: 1 }}>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  This template will replace your current content. Variables have been filled with data extracted from your current content.
+                </Alert>
 
-          {selectedTemplate && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Variables used:
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {selectedTemplate.variables.map(variable => (
-                  <Chip
-                    key={variable}
-                    label={`{${variable}}`}
-                    size="small"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            </Box>
-          )}
+                {selectedTemplate && (
+                  <Card sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Variables used:
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        {selectedTemplate.variables.map(variable => (
+                          <Chip
+                            key={variable}
+                            label={`{${variable}}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                )}
 
-          {/* ✅ GENERIC: Show targets selection if schema defines targets block */}
-          {targetsBlock && (
-            <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                {targetsBlock.label || 'Targets'}
-              </Typography>
-              {targetsBlock.description && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {targetsBlock.description}
-                </Typography>
-              )}
-              <CompositeRenderer
-                block={targetsBlock}
-                value={targetsValue}
-                onChange={setTargetsValue}
-                platform={platform}
-              />
-            </Box>
-          )}
-
-          {/* ✅ NEW: Specific Files Selection (Modell C) */}
-          {platform === 'email' && (
-            <Box sx={{ mt: 3, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                  Anhänge für diesen Run
-                </Typography>
-              </Box>
-              
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Wählen Sie zusätzliche Anhänge für diese Gruppe aus. Standard-Anhänge sind bereits voreingestellt.
-              </Typography>
-
-              <List dense sx={{ bgcolor: 'background.default', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-                {uploadedFileRefs.map((file) => {
-                  const isStandard = isGlobalFile(file.id);
-                  const isSelected = specificFiles.some(f => f.id === file.id);
-                  const isDisabled = isStandard;
-
-                  return (
-                    <MenuItem 
-                      key={file.id} 
-                      onClick={() => !isDisabled && handleToggleSpecificFile(file)}
-                      disabled={isDisabled}
-                      sx={{ opacity: isDisabled ? 0.7 : 1 }}
-                    >
-                      <ListItemIcon sx={{ minWidth: 40 }}>
-                        <Checkbox
-                          edge="start"
-                          checked={isStandard || isSelected}
-                          disabled={isDisabled}
-                          tabIndex={-1}
-                          disableRipple
-                        />
-                      </ListItemIcon>
-                      <ListItemText 
-                        primary={file.filename}
-                        secondary={isStandard ? 'Standard (Global)' : file.type}
-                        primaryTypographyProps={{ 
-                          variant: 'body2', 
-                          fontWeight: (isStandard || isSelected) ? 'bold' : 'normal' 
-                        }}
-                      />
-                      {file.visibility === 'public' ? (
-                        <Tooltip title="Öffentlich (Public)">
-                          <PublicIcon fontSize="small" color="success" sx={{ opacity: 0.6 }} />
-                        </Tooltip>
-                      ) : (
-                        <Tooltip title="Intern (Internal)">
-                          <LockIcon fontSize="small" color="action" sx={{ opacity: 0.6 }} />
-                        </Tooltip>
+                {targetsBlock && (
+                  <Card sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                        {targetsBlock.label || 'Targets'}
+                      </Typography>
+                      {targetsBlock.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {targetsBlock.description}
+                        </Typography>
                       )}
-                    </MenuItem>
-                  );
-                })}
-              </List>
-              
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Gesamt für diese Gruppe: {specificFiles.length + globalFiles.length} Anhänge
+                      <CompositeRenderer
+                        block={targetsBlock}
+                        value={targetsValue}
+                        onChange={setTargetsValue}
+                        platform={platform}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+
+                {platform === 'email' && (
+                  <Card>
+                    <CardContent sx={{ p: 0 }}>
+                      <Accordion 
+                        expanded={attachmentsExpanded} 
+                        onChange={(e, expanded) => setAttachmentsExpanded(expanded)}
+                        sx={{ boxShadow: 'none', '&:before': { display: 'none' } }}
+                      >
+                        <AccordionSummary 
+                          expandIcon={<ExpandMoreIcon />}
+                          sx={{ 
+                            px: 2, 
+                            py: 1,
+                            borderBottom: attachmentsExpanded ? 1 : 0,
+                            borderColor: 'divider'
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                            <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                              Anhänge für diesen Run
+                            </Typography>
+                            <Box sx={{ ml: 'auto', mr: 1 }}>
+                              <Chip 
+                                label={`${specificFiles.length + globalFiles.length}`}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                            </Box>
+                          </Box>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ px: 2, pb: 2 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Wählen Sie zusätzliche Anhänge für diese Gruppe aus. Standard-Anhänge sind bereits voreingestellt.
+                          </Typography>
+
+                          <List 
+                            dense 
+                            sx={{ 
+                              bgcolor: 'background.default', 
+                              borderRadius: 1, 
+                              border: '1px solid', 
+                              borderColor: 'divider',
+                              maxHeight: 300,
+                              overflow: 'auto'
+                            }}
+                          >
+                            {uploadedFileRefs.map((file) => {
+                              const isStandard = isGlobalFile(file.id);
+                              const isSelected = specificFiles.some(f => f.id === file.id);
+                              const isDisabled = isStandard;
+
+                              return (
+                                <MenuItem 
+                                  key={file.id} 
+                                  onClick={() => !isDisabled && handleToggleSpecificFile(file)}
+                                  disabled={isDisabled}
+                                  sx={{ opacity: isDisabled ? 0.7 : 1 }}
+                                >
+                                  <ListItemIcon sx={{ minWidth: 40 }}>
+                                    <Checkbox
+                                      edge="start"
+                                      checked={isStandard || isSelected}
+                                      disabled={isDisabled}
+                                      tabIndex={-1}
+                                      disableRipple
+                                    />
+                                  </ListItemIcon>
+                                  <ListItemText 
+                                    primary={file.filename}
+                                    secondary={isStandard ? 'Standard (Global)' : file.type}
+                                    primaryTypographyProps={{ 
+                                      variant: 'body2', 
+                                      fontWeight: (isStandard || isSelected) ? 'bold' : 'normal' 
+                                    }}
+                                  />
+                                  {file.visibility === 'public' ? (
+                                    <Tooltip title="Öffentlich (Public)">
+                                      <PublicIcon fontSize="small" color="success" sx={{ opacity: 0.6 }} />
+                                    </Tooltip>
+                                  ) : (
+                                    <Tooltip title="Intern (Internal)">
+                                      <LockIcon fontSize="small" color="action" sx={{ opacity: 0.6 }} />
+                                    </Tooltip>
+                                  )}
+                                </MenuItem>
+                              );
+                            })}
+                          </List>
+                          
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="caption" color="text.secondary">
+                              Gesamt für diese Gruppe: {specificFiles.length + globalFiles.length} Anhänge
+                            </Typography>
+                          </Box>
+                        </AccordionDetails>
+                      </Accordion>
+                    </CardContent>
+                  </Card>
+                )}
+                </Box>
+              </Grid>
+
+              {/* Right: Preview Section (60%) */}
+              <Grid 
+                item 
+                xs={12} 
+                md={7} 
+                sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  p: 2
+                }}
+              >
+                <Typography variant="subtitle1" gutterBottom>
+                  Preview:
                 </Typography>
-              </Box>
-            </Box>
+                <Box sx={{ 
+                  flex: 1, 
+                  minHeight: 0,  // Critical for flex scrolling
+                  overflow: 'auto'
+                }}>
+                  {previewContent.includes('<!DOCTYPE html>') || previewContent.includes('<html>') ? (
+                    <Box
+                      sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        height: '100%',
+                        minHeight: 400
+                      }}
+                    >
+                      <iframe
+                        srcDoc={previewContent}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          border: 'none',
+                          display: 'block'
+                        }}
+                        scrolling="yes"
+                        title="Template Preview"
+                      />
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        p: 2,
+                        bgcolor: 'background.paper',
+                        color: 'text.primary',
+                        height: '100%',
+                        overflow: 'auto',
+                        '& img': {
+                          maxWidth: '100%',
+                          height: 'auto',
+                          display: 'block',
+                          marginBottom: 1
+                        },
+                        '& a': {
+                          color: 'primary.main'
+                        },
+                        '& *': {
+                          color: 'inherit !important'
+                        },
+                        '& *[style*="background"]': {
+                          backgroundColor: 'transparent !important',
+                          background: 'transparent !important'
+                        },
+                        '& style': {
+                          display: 'none !important'
+                        }
+                      }}
+                      dangerouslySetInnerHTML={{ __html: previewContent }}
+                    />
+                  )}
+                </Box>
+              </Grid>
+            </Grid>
           )}
         </DialogContent>
-        <DialogActions>
+        
+        <DialogActions sx={{ borderTop: 1, borderColor: 'divider' }}>
           <Button onClick={() => setPreviewOpen(false)}>
             Cancel
           </Button>

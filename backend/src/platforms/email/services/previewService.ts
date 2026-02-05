@@ -52,15 +52,24 @@ export async function renderEmailPreview(
       background-color: ${bgColor};
       color: ${textColor};
       padding: 20px;
+      padding-bottom: 40px;  // ✅ More padding at bottom
       line-height: 1.6;
+      min-height: 100vh;  // ✅ Minimum height
     }
     .email-container {
       max-width: ${width}px;
+      width: 100%;  // ✅ Responsive: Use full width if container is smaller
       margin: 0 auto;
       background: ${containerBg};
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    /* ✅ Ensure all images scale properly */
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+      display: block;
     }
     .email-header {
       padding: 20px;
