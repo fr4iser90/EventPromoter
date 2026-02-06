@@ -18,7 +18,7 @@ import { markdownToHtml, isMarkdown } from '../../../utils/markdownRenderer.js'
  * @param fullHtml - Vollständiges HTML-Dokument vom Template
  * @returns Content-HTML (nur der Content-Teil, kein DOCTYPE/html/head/body)
  */
-function extractContentFromTemplateHtml(fullHtml: string): string {
+export function extractContentFromTemplateHtml(fullHtml: string): string {
   let content = fullHtml
   
   // Remove HTML document structure
@@ -81,6 +81,7 @@ export async function renderEmailPreview(
       const template = await TemplateService.getTemplate('email', processedContent._templateId)
       if (template && template.template && typeof template.template === 'object') {
         // Convert Template to EmailTemplate format (EmailTemplate is an interface, so we construct it manually)
+        // ✅ translations and defaultLocale are on the template object, not in template.template
         const emailTemplate = {
           id: template.id,
           name: template.name,
@@ -91,8 +92,8 @@ export async function renderEmailPreview(
             subject: template.template.subject || '',
             html: template.template.html || ''
           },
-          translations: template.template.translations,
-          defaultLocale: template.template.defaultLocale,
+          translations: (template as any).translations, // ✅ translations are on template object, not template.template
+          defaultLocale: (template as any).defaultLocale, // ✅ defaultLocale is on template object, not template.template
           createdAt: template.createdAt,
           updatedAt: template.updatedAt
         }
@@ -102,7 +103,20 @@ export async function renderEmailPreview(
         for (const [key, value] of Object.entries(processedContent)) {
           if (key.startsWith('_var_')) {
             const varName = key.replace('_var_', '')
-            variables[varName] = String(value || '')
+            let varValue = String(value || '')
+            
+            // ✅ FORMATIERUNG: Datum/Zeit mit Target-Locale formatieren
+            if (locale && (locale === 'de' || locale === 'es' || locale === 'en')) {
+              const { formatDate } = await import('../../../services/parsing/templateVariables.js')
+              
+              if (varName === 'date' || varName === 'eventDate') {
+                // Format date with Target-Locale
+                varValue = formatDate(varValue, locale)
+              }
+              // time bleibt unverändert (bereits 24h Format)
+            }
+            
+            variables[varName] = varValue
           }
         }
         
@@ -423,18 +437,20 @@ export async function renderMultiPreview(
       }
     }
 
-    // ✅ Resolve locale: Priority: options.locale > recipients.templateLocale > 'en'
-    const resolvedLocale = options.locale || 
-                          (options.recipients?.templateLocale && ['en', 'de', 'es'].includes(options.recipients.templateLocale) 
-                            ? options.recipients.templateLocale 
-                            : undefined) ||
-                          undefined
+    // ✅ Use ONLY recipients.templateLocale if set and valid (user's explicit choice) - NO FALLBACKS
+    const templateLocale = (options.recipients?.templateLocale && ['en', 'de', 'es'].includes(options.recipients.templateLocale))
+      ? options.recipients.templateLocale
+      : undefined
+    
+    console.log('🔍 PreviewService: Using locale:', {
+      templateLocale: templateLocale
+    })
 
     const preview = await renderEmailPreview(service, {
       content: previewContent,
       schema,
       mode,
-      locale: resolvedLocale
+      locale: templateLocale
     })
 
     previews.push({
@@ -473,18 +489,16 @@ export async function renderMultiPreview(
         }
       }
 
-      // ✅ Resolve locale: Priority: options.locale > recipients.templateLocale > 'en'
-      const resolvedLocale = options.locale || 
-                            (options.recipients?.templateLocale && ['en', 'de', 'es'].includes(options.recipients.templateLocale) 
-                              ? options.recipients.templateLocale 
-                              : undefined) ||
-                            undefined
+      // ✅ Use ONLY recipients.templateLocale if set and valid (user's explicit choice) - NO FALLBACKS
+      const templateLocale = (options.recipients?.templateLocale && ['en', 'de', 'es'].includes(options.recipients.templateLocale))
+        ? options.recipients.templateLocale
+        : undefined
 
       const preview = await renderEmailPreview(service, {
         content: previewContent,
         schema,
         mode,
-        locale: resolvedLocale
+        locale: templateLocale
       })
 
       previews.push({
@@ -516,18 +530,20 @@ export async function renderMultiPreview(
       }
     }
 
-    // ✅ Resolve locale: Priority: options.locale > recipients.templateLocale > 'en'
-    const resolvedLocale = options.locale || 
-                          (options.recipients?.templateLocale && ['en', 'de', 'es'].includes(options.recipients.templateLocale) 
-                            ? options.recipients.templateLocale 
-                            : undefined) ||
-                          undefined
+    // ✅ Use ONLY recipients.templateLocale if set and valid (user's explicit choice) - NO FALLBACKS
+    const templateLocale = (options.recipients?.templateLocale && ['en', 'de', 'es'].includes(options.recipients.templateLocale))
+      ? options.recipients.templateLocale
+      : undefined
+    
+    console.log('🔍 PreviewService: Using locale:', {
+      templateLocale: templateLocale
+    })
 
     const preview = await renderEmailPreview(service, {
       content: previewContent,
       schema,
       mode,
-      locale: resolvedLocale
+      locale: templateLocale
     })
 
     previews.push({

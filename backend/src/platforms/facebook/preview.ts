@@ -72,7 +72,7 @@ export async function renderFacebookPreview(options: {
       text-decoration: underline;
     }
   `
-  
+
   return {
     html: contentHtml,
     css: structuralCss,

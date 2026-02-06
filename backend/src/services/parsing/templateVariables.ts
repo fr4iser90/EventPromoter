@@ -21,7 +21,7 @@ export interface UploadedFileRef {
 /**
  * Format date based on locale
  */
-function formatDate(dateString: string, locale: string = 'en'): string {
+export function formatDate(dateString: string, locale: string = 'en'): string {
   try {
     const date = new Date(dateString)
     if (isNaN(date.getTime())) return dateString // Invalid date, return as-is

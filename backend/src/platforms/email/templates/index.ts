@@ -80,13 +80,13 @@ export function renderTemplate(
   locale?: 'en' | 'de' | 'es'
 ): { subject: string, html: string } {
   // If locale not provided, use template default or 'en'
-  const resolvedLocale = locale || template.defaultLocale || 'en'
+  const templateLocale = locale || template.defaultLocale || 'en'
   
   // Get template content based on locale
   let templateContent = template.template
   
-  if (resolvedLocale !== 'en' && template.translations?.[resolvedLocale]) {
-    templateContent = template.translations[resolvedLocale]
+  if (templateLocale !== 'en' && template.translations?.[templateLocale]) {
+    templateContent = template.translations[templateLocale]
   }
 
   let subject = templateContent.subject

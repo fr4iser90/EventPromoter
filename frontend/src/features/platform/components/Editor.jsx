@@ -39,6 +39,7 @@ import {
   isAutoFilledVariable,
   getVariableLabel
 } from '../../../shared/utils/templateUtils'
+import { getLocaleDisplayName, getValidLocale } from '../../../shared/utils/localeUtils'
 import config from '../../../config'
 import { getApiUrl, getFileUrl } from '../../../shared/utils/api'
 
@@ -262,13 +263,28 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       const targetsBlock = editorSchema?.blocks?.find(block => block.type === 'targets')
       if (targetsBlock) {
         // Use provided targetsValue, or default to 'all' if nothing selected
-        updatedContent[targetsBlock.id] = targetsValue || { mode: 'all' }
+        // ✅ Remove templateLocale from targetsValue before saving to content[targetsBlock.id]
+        // templateLocale should only be stored in _templates[].targets.templateLocale
+        const targetsForContent = targetsValue ? { ...targetsValue } : { mode: 'all' }
+        delete targetsForContent.templateLocale
+        updatedContent[targetsBlock.id] = targetsForContent
       }
 
       // ✅ GENERIC: Resolve target names using schema endpoints (no platform-specific logic!)
-      let resolvedTargets = targetsValue || null
+      // ✅ Spread targetsValue to preserve ALL properties including templateLocale
+      let resolvedTargets = targetsValue ? { ...targetsValue } : null
+      
+      // ✅ DEBUG: Log to verify templateLocale is present
+      if (targetsValue) {
+        console.log('🔍 targetsValue:', targetsValue)
+        console.log('🔍 templateLocale in targetsValue:', targetsValue.templateLocale)
+      }
+      
       if (resolvedTargets && targetsBlock) {
         const dataEndpoints = targetsBlock.rendering?.dataEndpoints || {}
+        
+        // ✅ PRESERVE templateLocale before any modifications
+        const preservedTemplateLocale = resolvedTargets.templateLocale
         
         try {
           // Resolve individual target names
@@ -313,11 +329,23 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
               resolvedTargets.targetNames = options.map(opt => opt.label || opt.value)
             }
           }
+          
+          // ✅ RESTORE templateLocale if it was lost during modifications
+          if (preservedTemplateLocale) {
+            resolvedTargets.templateLocale = preservedTemplateLocale
+          }
         } catch (err) {
           console.warn('Failed to resolve target names:', err)
-          // Continue without resolved names - IDs will be shown as fallback
+          // ✅ RESTORE templateLocale even if there was an error
+          if (preservedTemplateLocale) {
+            resolvedTargets.templateLocale = preservedTemplateLocale
+          }
         }
       }
+      
+      // ✅ DEBUG: Log before saving
+      console.log('🔍 resolvedTargets before saving:', resolvedTargets)
+      console.log('🔍 templateLocale in resolvedTargets:', resolvedTargets?.templateLocale)
 
       // ✅ Add to _templates array (multiple templates with targets)
       const existingTemplates = content._templates || []
@@ -511,6 +539,19 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                       Targets: {formatTargetsSummary(templateEntry.targets)}
                     </Typography>
+                    {/* ✅ Show Language always - if templateLocale is missing, show Error */}
+                    {(() => {
+                      const templateLocale = templateEntry.targets?.templateLocale || 
+                                           (targetsBlock && content?.[targetsBlock.id]?.templateLocale)
+                      return (
+                        <Typography variant="caption" color="primary.main" sx={{ display: 'block', mt: 0.5 }}>
+                          Language: {templateLocale 
+                            ? getLocaleDisplayName(getValidLocale(templateLocale))
+                            : 'Error'
+                          }
+                        </Typography>
+                      )
+                    })()}
                     {(templateEntry.specificFiles?.length > 0 || (content?.globalFiles?.length > 0)) && (
                       <Typography variant="caption" color="primary.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                         <AttachFileIcon sx={{ fontSize: '0.8rem' }} />

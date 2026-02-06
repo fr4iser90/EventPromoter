@@ -97,7 +97,7 @@ export async function renderTwitterPreview(options: {
       display: block;
     }
   `
-  
+
   return {
     html: contentHtml,
     css: structuralCss,

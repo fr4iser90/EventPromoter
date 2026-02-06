@@ -165,7 +165,7 @@ export async function renderRedditPreview(options: {
       text-decoration: underline;
     }
   `
-  
+
   return {
     html: contentHtml,
     css: structuralCss,

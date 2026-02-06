@@ -21,7 +21,7 @@ export function usePlatformSchema(platformId) {
   const [schema, setSchema] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-
+  
   useEffect(() => {
     if (!platformId) {
       setLoading(false)

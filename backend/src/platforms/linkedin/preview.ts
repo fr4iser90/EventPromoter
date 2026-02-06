@@ -113,7 +113,7 @@ export async function renderLinkedInPreview(options: {
       text-decoration: underline;
     }
   `
-  
+
   return {
     html: contentHtml,
     css: structuralCss,

@@ -555,12 +555,12 @@ export class PlatformController {
       const normalizedLocale = locale && typeof locale === 'string' 
         ? locale.split('-')[0].toLowerCase() 
         : undefined
-      const resolvedLocale = normalizedLocale && validLocales.includes(normalizedLocale) 
+      const validLocale = normalizedLocale && validLocales.includes(normalizedLocale) 
         ? normalizedLocale 
         : undefined
       
-      console.log('[Backend Preview] locale query param:', locale, '→ resolved:', resolvedLocale)
-      
+      console.log('[Backend Preview] locale query param:', locale, '→ valid:', validLocale)
+
       // Render preview using PreviewRenderer
       const result = await PreviewRenderer.render({
         platform: platformId,
@@ -568,7 +568,7 @@ export class PlatformController {
         client: client as string,
         content,
         schema: schema.preview,
-        locale: resolvedLocale
+        locale: validLocale
       })
 
       res.json({
@@ -635,12 +635,22 @@ export class PlatformController {
       const normalizedLocale = locale && typeof locale === 'string' 
         ? locale.split('-')[0].toLowerCase() 
         : undefined
-      const resolvedLocale = normalizedLocale && validLocales.includes(normalizedLocale) 
+      const validLocale = normalizedLocale && validLocales.includes(normalizedLocale) 
         ? normalizedLocale 
         : undefined
 
       // Check if platform implements renderMultiPreview
       if (service && typeof service.renderMultiPreview === 'function') {
+        // ✅ DEBUG: Log incoming content to check if templateLocale is present
+        if (content._templates && Array.isArray(content._templates)) {
+          console.log('🔍 Controller: Received _templates from frontend:', content._templates.map((t: any, i: number) => ({
+            index: i,
+            templateId: t.templateId,
+            targetsTemplateLocale: t.targets?.templateLocale,
+            targets: t.targets
+          })))
+        }
+        
         // Backend extracts targets from content if needed (platform-specific)
         // Service decides if multi-preview is needed based on content
         const previews = await service.renderMultiPreview({
@@ -648,7 +658,7 @@ export class PlatformController {
           targets, // Optional: can be extracted from content by service
           schema: schema?.preview,
           mode: (mode as string) || 'desktop',
-          locale: resolvedLocale
+          locale: validLocale
         })
 
         // If service returns single preview in array, that's fine
@@ -665,7 +675,7 @@ export class PlatformController {
         mode: mode as string,
         content,
         schema: schema?.preview || {},
-        locale: resolvedLocale
+        locale: validLocale
       })
 
       res.json({

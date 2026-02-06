@@ -351,13 +351,22 @@ export class EmailService {
       for (const templateEntry of options.content._templates) {
         if (!templateEntry.targets) continue
 
+        // ✅ NO FALLBACKS: Use ONLY templateEntry.targets.templateLocale (user's explicit choice)
+        // If not set, use undefined (no fallback to options.locale)
+
+        console.log('🔍 EmailService: Rendering preview for template:', {
+          templateId: templateEntry.templateId,
+          templateName: templateEntry.templateName,
+          templateLocale: templateEntry.targets.templateLocale
+        })
+
         // Use email-specific renderMultiPreview for this template+targets combination
         const templatePreviews = await renderMultiPreview(this, {
           content: { ...options.content, _templateId: templateEntry.templateId },
           recipients: templateEntry.targets,
           schema: options.schema,
           mode: options.mode || 'desktop',
-          locale: options.locale
+          locale: templateEntry.targets.templateLocale
         })
 
         // Add templateId to each preview

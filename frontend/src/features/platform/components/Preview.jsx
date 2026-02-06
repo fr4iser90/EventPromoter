@@ -24,9 +24,10 @@ import {
   Tab,
   Tooltip
 } from '@mui/material'
-import { usePlatformMetadata } from '../hooks/usePlatformSchema'
+import { usePlatformMetadata, usePlatformSchema } from '../hooks/usePlatformSchema'
 import { getApiUrl } from '../../../shared/utils/api'
-import { getUserLocale } from '../../../shared/utils/localeUtils'
+import { getUserLocale, getValidLocale } from '../../../shared/utils/localeUtils'
+import { resolveTargetsLocale, resolveGroupsLocale } from '../../../shared/utils/targetUtils'
 import { PreviewFrame } from '../../../shared/components/PreviewFrame'
 
 function PlatformPreview({ platform, content, isActive }) {
@@ -43,13 +44,87 @@ function PlatformPreview({ platform, content, isActive }) {
   // Use usePlatformMetadata for platform metadata (name, icon, color)
   const { platform: platformData, loading: metadataLoading, error: metadataError } = usePlatformMetadata(platform)
   
-  // ✅ Get user locale for preview (same as Selector.jsx)
-  const userLocale = getUserLocale(i18n)
+  // ✅ Get schema for locale resolution (same as Selector.jsx)
+  const { schema } = usePlatformSchema(platform)
+  
+  // ✅ Resolve locale: Priority: templateLocale (from content) > Target Locale > User Language
+  const [previewLocale, setPreviewLocale] = useState(() => getUserLocale(i18n))
 
   // ✅ GENERIC: Fetch preview HTML from backend
   // Backend decides if multi-preview is needed based on content
   // Use JSON.stringify to detect deep changes in content object
   const contentKey = content ? JSON.stringify(content) : null
+  
+  // ✅ Resolve locale from content (same logic as Modal Preview)
+  useEffect(() => {
+    if (!platform || !content || !schema) {
+      setPreviewLocale(getUserLocale(i18n))
+      return
+    }
+
+    const resolveLocale = async () => {
+      let locale = getUserLocale(i18n) // Default: User Language
+      
+      // Get targets block from schema
+      const targetsBlock = schema?.editor?.blocks?.find(block => block.type === 'targets')
+      if (!targetsBlock) {
+        setPreviewLocale(locale)
+        return
+      }
+      
+      // ✅ Priority 1: Check _templates array for templateLocale (new format)
+      const templates = content._templates || []
+      if (templates.length > 0) {
+        // Use templateLocale from first template (for single preview)
+        // Multi-preview will use locale per template in backend
+        const firstTemplate = templates[0]
+        if (firstTemplate.targets?.templateLocale) {
+          locale = getValidLocale(firstTemplate.targets.templateLocale)
+          setPreviewLocale(locale)
+          return
+        }
+      }
+      
+      // Get targets value from content (fallback for old format)
+      const targetsValue = content[targetsBlock.id]
+      if (!targetsValue) {
+        setPreviewLocale(locale)
+        return
+      }
+      
+      // Priority 2: Use templateLocale from content if explicitly set
+      if (targetsValue.templateLocale) {
+        locale = getValidLocale(targetsValue.templateLocale)
+      } else {
+        // Priority 2: Try to resolve locale from targets
+        const dataEndpoints = targetsBlock.rendering?.dataEndpoints || {}
+        
+        try {
+          if (targetsValue.mode === 'individual' && targetsValue.individual?.length > 0) {
+            const targetLocale = await resolveTargetsLocale(
+              targetsValue.individual,
+              platform,
+              dataEndpoints.recipients || `platforms/${platform}/targets`
+            )
+            if (targetLocale) locale = targetLocale
+          } else if (targetsValue.mode === 'groups' && targetsValue.groups?.length > 0) {
+            const groupLocale = await resolveGroupsLocale(
+              targetsValue.groups,
+              platform,
+              dataEndpoints.recipientGroups || `platforms/${platform}/target-groups`
+            )
+            if (groupLocale) locale = groupLocale
+          }
+        } catch (error) {
+          console.warn('Failed to resolve target locale for preview:', error)
+        }
+      }
+      
+      setPreviewLocale(locale)
+    }
+    
+    resolveLocale()
+  }, [platform, content, schema, i18n.language])
   
   useEffect(() => {
     if (!platform || !content) {
@@ -68,8 +143,8 @@ function PlatformPreview({ platform, content, isActive }) {
         
         // ✅ GENERIC: Try multi-preview first (backend decides if it's needed)
         // If platform doesn't support multi-preview, backend returns single preview
-        // ✅ Include locale parameter for correct language rendering
-        const endpoint = getApiUrl(`platforms/${platform}/multi-preview?mode=desktop&locale=${userLocale}`)
+        // ✅ Include resolved locale parameter for correct language rendering
+        const endpoint = getApiUrl(`platforms/${platform}/multi-preview?mode=desktop&locale=${previewLocale}`)
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -84,8 +159,8 @@ function PlatformPreview({ platform, content, isActive }) {
 
         if (!response.ok) {
           // If multi-preview fails, fallback to single preview
-          // ✅ Include locale parameter for correct language rendering
-          const fallbackEndpoint = getApiUrl(`platforms/${platform}/preview?mode=desktop&locale=${userLocale}`)
+          // ✅ Include resolved locale parameter for correct language rendering
+          const fallbackEndpoint = getApiUrl(`platforms/${platform}/preview?mode=desktop&locale=${previewLocale}`)
           const fallbackResponse = await fetch(fallbackEndpoint, {
             method: 'POST',
             headers: {
@@ -114,6 +189,15 @@ function PlatformPreview({ platform, content, isActive }) {
         
         if (data.success && data.previews && Array.isArray(data.previews) && data.previews.length > 0) {
           // Multi-preview response
+          console.log('🔍 Preview: Received multi-previews from backend:', data.previews.map((p, i) => ({
+            index: i,
+            templateId: p.templateId,
+            group: p.group,
+            targets: p.targets,
+            metadata: p.metadata,
+            htmlLength: p.html?.length,
+            cssLength: p.css?.length
+          })))
           setMultiPreviews(data.previews)
           setPreviewHtml(null)
           setPreviewCss(null)
@@ -135,7 +219,7 @@ function PlatformPreview({ platform, content, isActive }) {
     }
 
     fetchPreview()
-  }, [platform, contentKey, theme.palette.mode, userLocale, i18n.language])
+  }, [platform, contentKey, theme.palette.mode, previewLocale, i18n.language])
 
   // Use platform metadata from backend - NO HARDCODED VALUES
   const platformColor = platformData?.color || platformData?.metadata?.color || '#666'
@@ -182,7 +266,18 @@ function PlatformPreview({ platform, content, isActive }) {
           <Box>
             <Tabs 
               value={activeTab} 
-              onChange={(e, newValue) => setActiveTab(newValue)}
+              onChange={(e, newValue) => {
+                console.log('🔍 Preview: Tab changed to:', newValue)
+                const preview = multiPreviews[newValue]
+                console.log('🔍 Preview: Selected preview:', {
+                  index: newValue,
+                  templateId: preview?.templateId,
+                  group: preview?.group,
+                  targets: preview?.targets,
+                  metadata: preview?.metadata
+                })
+                setActiveTab(newValue)
+              }}
               variant="scrollable"
               scrollable="auto"
               sx={{ borderBottom: 1, borderColor: 'divider' }}
@@ -264,18 +359,29 @@ function PlatformPreview({ platform, content, isActive }) {
                 )
               })}
             </Tabs>
-            {multiPreviews[activeTab] && (
-              <PreviewFrame
-                document={{
-                  html: multiPreviews[activeTab].html,
-                  css: multiPreviews[activeTab].css,
-                  meta: {
-                    title: `${platformName} Preview - ${multiPreviews[activeTab].group || 'Alle'}`
-                  }
-                }}
-                dimensions={multiPreviews[activeTab].dimensions}
-              />
-            )}
+            {multiPreviews[activeTab] && (() => {
+              const currentPreview = multiPreviews[activeTab]
+              console.log('🔍 Preview: Rendering preview tab:', {
+                index: activeTab,
+                templateId: currentPreview.templateId,
+                group: currentPreview.group,
+                targets: currentPreview.targets,
+                metadata: currentPreview.metadata,
+                fullPreview: currentPreview
+              })
+              return (
+                <PreviewFrame
+                  document={{
+                    html: currentPreview.html,
+                    css: currentPreview.css,
+                    meta: {
+                      title: `${platformName} Preview - ${currentPreview.group || 'Alle'}`
+                    }
+                  }}
+                  dimensions={currentPreview.dimensions}
+                />
+              )
+            })()}
           </Box>
         ) : previewHtml ? (
           // ✅ Generic PreviewFrame: Hostet Content-HTML vom Backend
@@ -288,7 +394,7 @@ function PlatformPreview({ platform, content, isActive }) {
               }
             }}
             dimensions={previewDimensions}
-          />
+            />
         ) : (
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">

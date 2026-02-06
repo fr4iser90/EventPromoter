@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Typography,
@@ -30,6 +31,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close'
 import SchemaRenderer from './Renderer'
 import { getApiUrl } from '../../../shared/utils/api'
+import { getUserLocale } from '../../../shared/utils/localeUtils'
 import axios from 'axios'
 
 /**
@@ -84,6 +86,7 @@ function renderMappingField(field, value, onChange, options, groups) {
  * Loads data from endpoints and renders fields generically.
  */
 function CompositeRenderer({ block, value, onChange, platform }) {
+  const { i18n } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [data, setData] = useState({})
@@ -146,21 +149,35 @@ function CompositeRenderer({ block, value, onChange, platform }) {
   useEffect(() => {
     if (loading || !data || Object.keys(data).length === 0) return
     
-    // Don't override if value prop is explicitly set (from parent)
+    const currentValues = compositeValues || {}
+    const initialValues = { ...currentValues }
+    let hasChanges = false
+    
+    // ✅ Always initialize templateLocale if missing (even if value is set)
+    // This ensures templateLocale is always available
+    if (!initialValues.templateLocale) {
+      const userLocale = getUserLocale(i18n)
+      console.log('🔍 CompositeRenderer: Initializing templateLocale with user locale:', userLocale)
+      initialValues.templateLocale = userLocale
+      hasChanges = true
+    }
+    
+    // Don't override other fields if value prop is explicitly set (from parent)
     if (value !== undefined && value !== null && Object.keys(value).length > 0) {
+      // Only update if we initialized templateLocale
+      if (hasChanges) {
+        setCompositeValues(initialValues)
+        onChange(initialValues)
+      }
       return
     }
     
-    const currentValues = compositeValues || {}
-    
-    // Only initialize if mode is not set
-    if (!currentValues.mode) {
-      const initialValues = { ...currentValues }
-      
-      // Set default mode to 'all' if not set
+    // Set default mode to 'all' if not set
+    if (!initialValues.mode) {
       const modeField = schema.mode
       if (modeField?.default) {
         initialValues.mode = modeField.default
+        hasChanges = true
       } else {
         // Fallback: use first available mode option (prefer 'all')
         const modes = data.modes || []
@@ -168,23 +185,26 @@ function CompositeRenderer({ block, value, onChange, platform }) {
           const allMode = modes.find(m => (m.value || m) === 'all')
           const firstMode = allMode || modes[0]
           initialValues.mode = firstMode?.value || firstMode
+          hasChanges = true
         }
       }
-      
-      // Smart Default: Auto-select template if only one available
-      if (!initialValues.defaultTemplate) {
-        const templates = data.templates || []
-        if (templates.length === 1) {
-          const singleTemplate = templates[0]
-          initialValues.defaultTemplate = singleTemplate.value || singleTemplate.id || singleTemplate
-        }
+    }
+    
+    // Smart Default: Auto-select template if only one available
+    if (!initialValues.defaultTemplate) {
+      const templates = data.templates || []
+      if (templates.length === 1) {
+        const singleTemplate = templates[0]
+        initialValues.defaultTemplate = singleTemplate.value || singleTemplate.id || singleTemplate
+        hasChanges = true
       }
-      
-      // Only update if we actually changed something
-      if (JSON.stringify(initialValues) !== JSON.stringify(currentValues)) {
-        setCompositeValues(initialValues)
-        onChange(initialValues)
-      }
+    }
+    
+    
+    // Only update if we actually changed something
+    if (hasChanges) {
+      setCompositeValues(initialValues)
+      onChange(initialValues)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, loading]) // Run after data is loaded
@@ -195,7 +215,14 @@ function CompositeRenderer({ block, value, onChange, platform }) {
       const valueStr = JSON.stringify(value)
       const currentStr = JSON.stringify(compositeValues)
       if (valueStr !== currentStr) {
-        setCompositeValues(value)
+        // ✅ PRESERVE templateLocale when syncing - only if user has set it
+        const preservedTemplateLocale = compositeValues?.templateLocale
+        const newCompositeValues = { ...value }
+        // Only preserve if user explicitly set it (not undefined/null)
+        if (preservedTemplateLocale !== undefined && preservedTemplateLocale !== null) {
+          newCompositeValues.templateLocale = preservedTemplateLocale
+        }
+        setCompositeValues(newCompositeValues)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,6 +234,15 @@ function CompositeRenderer({ block, value, onChange, platform }) {
       [fieldKey]: fieldValue
     }
     setCompositeValues(newValues)
+    
+    // ✅ DEBUG: Log templateLocale changes
+    if (fieldKey === 'templateLocale') {
+      console.log('🔍 CompositeRenderer: templateLocale changed to:', fieldValue)
+      console.log('🔍 CompositeRenderer: compositeValues before:', compositeValues)
+      console.log('🔍 CompositeRenderer: newValues:', newValues)
+      console.log('🔍 CompositeRenderer: calling onChange with:', newValues)
+    }
+    
     // Call onChange immediately, not in useEffect
     onChange(newValues)
   }
@@ -231,6 +267,13 @@ function CompositeRenderer({ block, value, onChange, platform }) {
   // Convert schema to fields for SchemaRenderer
   const fields = Object.entries(schema).map(([fieldKey, fieldSchema]) => {
     const sourceData = data[fieldSchema.source] || []
+    
+    // ✅ DEBUG: Log templateLocale field
+    if (fieldKey === 'templateLocale') {
+      console.log('🔍 CompositeRenderer: templateLocale field found in schema:', fieldSchema)
+      console.log('🔍 CompositeRenderer: sourceData for templateLocale:', sourceData)
+      console.log('🔍 CompositeRenderer: compositeValues[templateLocale]:', compositeValues[fieldKey])
+    }
     
     return {
       name: fieldKey,
@@ -476,7 +519,14 @@ function CompositeRenderer({ block, value, onChange, platform }) {
               <SchemaRenderer
                 fields={[field]}
                 values={{ [field.name]: compositeValues[field.name] || field.default || '' }}
-                onChange={handleFieldChange}
+                onChange={(fieldName, fieldValue) => {
+                  // ✅ DEBUG: Log all onChange calls
+                  if (fieldName === 'templateLocale') {
+                    console.log('🔍 CompositeRenderer: SchemaRenderer onChange called for templateLocale:', fieldValue)
+                    console.log('🔍 CompositeRenderer: current compositeValues:', compositeValues)
+                  }
+                  handleFieldChange(fieldName, fieldValue)
+                }}
                 errors={{}}
               />
             </Box>

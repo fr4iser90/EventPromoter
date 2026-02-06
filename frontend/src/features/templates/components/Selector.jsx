@@ -94,12 +94,12 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
   // ✅ Wrapped in useCallback to ensure it always uses the latest theme
   const loadPreview = useCallback(async (template) => {
     // ✅ Resolve locale: Priority: templateLocale (from dropdown) > Target Locale > User Language
-    let resolvedLocale = getUserLocale(i18n) // Default: User Language
+    let previewLocale = getUserLocale(i18n) // Default: User Language
     
     if (targetsValue) {
       // Priority 1: Use templateLocale from dropdown if explicitly set
       if (targetsValue.templateLocale) {
-        resolvedLocale = getValidLocale(targetsValue.templateLocale)
+        previewLocale = getValidLocale(targetsValue.templateLocale)
       } else {
         // Priority 2: Try to resolve locale from targets (Option B: Locale pro Target)
         const targetsBlock = schema?.editor?.blocks?.find(block => block.type === 'targets')
@@ -115,7 +115,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                 platform,
                 dataEndpoints.recipients || `platforms/${platform}/targets`
               )
-              if (targetLocale) resolvedLocale = targetLocale
+              if (targetLocale) previewLocale = targetLocale
             } else {
               // Multiple targets: Use locale if all have same locale
               const targetLocale = await resolveTargetsLocale(
@@ -123,7 +123,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                 platform,
                 dataEndpoints.recipients || `platforms/${platform}/targets`
               )
-              if (targetLocale) resolvedLocale = targetLocale
+              if (targetLocale) previewLocale = targetLocale
               // If mixed locales, fall back to user locale
             }
           } else if (targetsValue.mode === 'groups' && targetsValue.groups?.length > 0) {
@@ -135,7 +135,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                 platform,
                 dataEndpoints.recipientGroups || `platforms/${platform}/target-groups`
               )
-              if (groupLocale) resolvedLocale = groupLocale
+              if (groupLocale) previewLocale = groupLocale
             } else {
               // Multiple groups: Use locale if all have same locale
               const groupLocale = await resolveGroupsLocale(
@@ -143,7 +143,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                 platform,
                 dataEndpoints.recipientGroups || `platforms/${platform}/target-groups`
               )
-              if (groupLocale) resolvedLocale = groupLocale
+              if (groupLocale) previewLocale = groupLocale
               // If mixed locales, fall back to user locale
             }
           }
@@ -156,37 +156,20 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
     }
     
     // Store resolved locale in state for display
-    setPreviewLocale(resolvedLocale)
+    setPreviewLocale(previewLocale)
     
     // Select correct template content based on resolved locale
     let templateContent = template.template || {}
-    if (resolvedLocale !== 'en' && template.translations?.[resolvedLocale]) {
-      templateContent = template.translations[resolvedLocale]
+    if (previewLocale !== 'en' && template.translations?.[previewLocale]) {
+      templateContent = template.translations[previewLocale]
     }
     
     // Generate preview content using parsedData and uploadedFileRefs
-    // Note: Frontend getTemplateVariables doesn't support locale yet, but backend will format when applying
+    // Note: Backend will format dates based on target locale when rendering
     const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
     
-    // Format date/time variables based on resolved locale (frontend-side formatting for preview)
-    const formattedVariables = { ...templateVariables }
-    if (formattedVariables.date && parsedData?.date) {
-      try {
-        const date = new Date(parsedData.date)
-        formattedVariables.date = date.toLocaleDateString(getLocaleMap(resolvedLocale), {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        })
-        // Also update aliases
-        formattedVariables.eventDate = formattedVariables.date
-      } catch (e) {
-        // Keep original if formatting fails
-      }
-    }
-    
     const previewText = templateContent.html || templateContent.text || ''
-    const filledContent = replaceTemplateVariables(previewText, formattedVariables)
+    const filledContent = replaceTemplateVariables(previewText, templateVariables)
     
     // ✅ Use Backend Preview API for consistent rendering (same as Platform Preview)
     // This ensures Markdown is rendered the same way everywhere
@@ -198,7 +181,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         : { text: filledContent }      // Markdown/text template
       
       // ✅ No darkMode parameter needed - Frontend sets CSS Variables based on theme
-      const previewUrl = getApiUrl(`platforms/${platform}/preview?mode=desktop&locale=${resolvedLocale}`)
+      const previewUrl = getApiUrl(`platforms/${platform}/preview?mode=desktop&locale=${previewLocale}`)
       console.log('[Template Preview] Preview URL:', previewUrl)
       
       const response = await fetch(previewUrl, {

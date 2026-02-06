@@ -94,7 +94,7 @@ export async function renderInstagramPreview(options: {
       text-decoration: underline;
     }
   `
-  
+
   return {
     html: contentHtml,
     css: structuralCss,

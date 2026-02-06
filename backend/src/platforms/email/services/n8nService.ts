@@ -89,14 +89,90 @@ export class EmailN8nService {
           continue
         }
 
-        // Get HTML content - use html if available, otherwise build from bodyText
+        // ✅ RE-RENDER TEMPLATE: Render template with Target-Locale for correct date formatting
         let html: string
-        if (content.html && typeof content.html === 'string' && content.html.trim().length > 0) {
-          html = content.html
-        } else if (content.bodyText && typeof content.bodyText === 'string' && content.bodyText.trim().length > 0) {
-          html = emailService.buildBodyFromStructuredFields({ bodyText: content.bodyText })
+        let subject: string
+        
+        // Get target locale from templateEntry.targets.templateLocale
+        const targetLocale = templateEntry.targets?.templateLocale
+        
+        // If template exists and we have a target locale, re-render with correct locale
+        if (templateEntry.templateId && targetLocale && ['en', 'de', 'es'].includes(targetLocale)) {
+          try {
+            const { TemplateService } = await import('../../../services/templateService.js')
+            const templateModule = await import('../templates/index.js')
+            const { renderTemplate } = templateModule
+            const { formatDate } = await import('../../../services/parsing/templateVariables.js')
+            
+            const template = await TemplateService.getTemplate('email', templateEntry.templateId)
+            if (template && template.template && typeof template.template === 'object') {
+              // Convert Template to EmailTemplate format
+              const emailTemplate = {
+                id: template.id,
+                name: template.name,
+                description: template.description,
+                category: template.category,
+                variables: template.variables,
+                template: {
+                  subject: template.template.subject || '',
+                  html: template.template.html || ''
+                },
+                translations: (template as any).translations,
+                defaultLocale: (template as any).defaultLocale,
+                createdAt: template.createdAt,
+                updatedAt: template.updatedAt
+              }
+              
+              // Extract variables from content (all _var_* fields)
+              const variables: Record<string, string> = {}
+              for (const [key, value] of Object.entries(content)) {
+                if (key.startsWith('_var_')) {
+                  const varName = key.replace('_var_', '')
+                  let varValue = String(value || '')
+                  
+                  // ✅ FORMATIERUNG: Datum/Zeit mit Target-Locale formatieren
+                  if (varName === 'date' || varName === 'eventDate') {
+                    varValue = formatDate(varValue, targetLocale)
+                  }
+                  // time bleibt unverändert (bereits 24h Format)
+                  
+                  variables[varName] = varValue
+                }
+              }
+              
+              // Render template with Target-Locale
+              const rendered = renderTemplate(emailTemplate, variables, targetLocale as 'en' | 'de' | 'es')
+              
+              // Extract content HTML from template HTML (remove document structure)
+              const previewService = await import('./previewService.js')
+              html = previewService.extractContentFromTemplateHtml(rendered.html)
+              subject = rendered.subject
+            } else {
+              // Fallback: use existing content
+              throw new Error('Template not found or invalid')
+            }
+          } catch (error: any) {
+            console.warn(`Failed to re-render template ${templateEntry.templateId} with locale ${targetLocale}, using existing content:`, error.message)
+            // Fallback: use existing content
+            if (content.html && typeof content.html === 'string' && content.html.trim().length > 0) {
+              html = content.html
+            } else if (content.bodyText && typeof content.bodyText === 'string' && content.bodyText.trim().length > 0) {
+              html = emailService.buildBodyFromStructuredFields({ bodyText: content.bodyText })
+            } else {
+              throw new Error(`Email content (html or bodyText) is required for template ${templateEntry.templateId}`)
+            }
+            subject = content.subject || 'No Subject'
+          }
         } else {
-          throw new Error(`Email content (html or bodyText) is required for template ${templateEntry.templateId}`)
+          // No template or no target locale: use existing content
+          if (content.html && typeof content.html === 'string' && content.html.trim().length > 0) {
+            html = content.html
+          } else if (content.bodyText && typeof content.bodyText === 'string' && content.bodyText.trim().length > 0) {
+            html = emailService.buildBodyFromStructuredFields({ bodyText: content.bodyText })
+          } else {
+            throw new Error(`Email content (html or bodyText) is required for template ${templateEntry.templateId}`)
+          }
+          subject = content.subject || 'No Subject'
         }
 
         if (!html || html.trim().length === 0) {
@@ -104,7 +180,7 @@ export class EmailN8nService {
         }
 
         const emailPayload: any = {
-          subject: content.subject || 'No Subject',
+          subject: subject,
           html: html,
           recipients: uniqueRecipients.join(', '),
           templateId: templateEntry.templateId,

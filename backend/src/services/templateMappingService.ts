@@ -165,8 +165,20 @@ export class TemplateMappingService {
         return
       }
 
-      // Get value from templateVariables (already computed from parsedData)
-      const varValue = templateVariables[varName]
+      // ✅ For date/time: Store RAW data (ISO format), not formatted
+      // Formatting happens later based on target locale (in previewService.ts)
+      let varValue: string
+      if (varName === 'date' && request.parsedData?.date) {
+        // Store raw date (ISO format: "2026-05-16")
+        varValue = String(request.parsedData.date)
+      } else if (varName === 'time' && request.parsedData?.time) {
+        // Store raw time (already 24h format: "22:00")
+        varValue = String(request.parsedData.time)
+      } else {
+        // Other variables: use formatted value from templateVariables
+        varValue = templateVariables[varName]
+      }
+
       if (varValue !== undefined && varValue !== null && varValue !== '') {
         // Store as _var_ field (will be displayed as separate field in UI)
         newContent[`_var_${varName}`] = varValue
