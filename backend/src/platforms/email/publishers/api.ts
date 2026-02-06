@@ -65,26 +65,14 @@ export class EmailApiPublisher implements EmailPublisher {
       const globalFileIds = content.globalFiles || []
       const globalAttachments = this.resolveAttachments(globalFileIds, files, 'global')
 
-      // 2. Handle multiple runs (templates) or single run
+      // 2. Handle multiple runs (templates) - _templates format is required
       const runs = content._templates || []
       
       if (runs.length === 0) {
-        // Fallback to legacy single-run behavior
-        const recipients = content.recipients || []
-        if (recipients.length === 0) {
-          return { success: false, error: 'No email recipients specified' }
+        return { 
+          success: false, 
+          error: 'Email content must use _templates format with targets configuration. Legacy recipients format is no longer supported.' 
         }
-
-        const subject = content.subject || 'Event Notification'
-        const html = content.html || content.body || ''
-        const text = this.htmlToText(html)
-        
-        // Use files from legacy 'includedFiles' if available
-        const legacyFileIds = (content.includedFiles || []).map((f: any) => typeof f === 'string' ? f : f.id)
-        const specificAttachments = this.resolveAttachments(legacyFileIds, files, 'specific')
-        const allAttachments = this.mergeAttachments(globalAttachments, specificAttachments)
-
-        return await this.sendWithNodemailer(credentials, recipients, subject, html, text, allAttachments)
       }
 
       // Handle multiple runs

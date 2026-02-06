@@ -1,0 +1,29 @@
+[
+  {
+    "id": "platform-linkedin-check",
+    "name": "💼 Has LinkedIn Content?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.linkedin !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [200, 400],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-linkedin-post",
+    "name": "💼 Post to LinkedIn",
+    "type": "linkedIn",
+    "parameters": {
+      "additionalFields": {}
+    },
+    "position": [400, 400],
+    "typeVersion": 1
+  }
+]

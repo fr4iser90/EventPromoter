@@ -30,16 +30,72 @@ function loadStickyNote(fileName) {
 }
 
 /**
+ * Load node definitions from a JSON file
+ * @param {string} filePath - Path to the node file (relative to nodes/ directory or absolute)
+ * @returns {Array|Object} Node definition(s) - can be single object or array
+ */
+function loadNodeFile(filePath) {
+  // If relative path, assume it's in nodes/ directory
+  if (!path.isAbsolute(filePath)) {
+    filePath = path.join(__dirname, 'nodes', filePath);
+  }
+  
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Node file not found: ${filePath}`);
+  }
+  
+  const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  // Return as array (single node or array of nodes)
+  return Array.isArray(content) ? content : [content];
+}
+
+/**
+ * Load all node files from a directory
+ * @param {string} dirPath - Directory path (relative to nodes/ or absolute)
+ * @returns {Array} Array of all nodes from all files in directory
+ */
+function loadNodesFromDirectory(dirPath) {
+  // If relative path, assume it's in nodes/ directory
+  if (!path.isAbsolute(dirPath)) {
+    dirPath = path.join(__dirname, 'nodes', dirPath);
+  }
+  
+  if (!fs.existsSync(dirPath)) {
+    console.log(`⚠️  Directory not found: ${dirPath}, skipping...`);
+    return [];
+  }
+  
+  const nodes = [];
+  const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.json'));
+  
+  files.forEach(file => {
+    const filePath = path.join(dirPath, file);
+    console.log(`📦 Loading nodes from: ${file}`);
+    try {
+      const fileNodes = loadNodeFile(filePath);
+      nodes.push(...fileNodes);
+    } catch (error) {
+      console.error(`❌ Error loading ${file}:`, error.message);
+    }
+  });
+  
+  return nodes;
+}
+
+// Import layout functions
+const {
+  applyAutoLayout,
+  applyStickyNotesLayout
+} = require('./utils/layout');
+
+/**
  * Generate deterministic UUIDs for template IDs
+ * @param {object} config - Config object with nodes
  * @returns {object} Mapping of template IDs to UUIDs
  */
-function loadIdMapping() {
+function generateWorkflowUUIDs(config) {
   const { generateWorkflowUUIDs } = require('../uuid-generator');
-  const config = JSON.parse(require('fs').readFileSync('./config.json', 'utf8'));
-  const mapping = generateWorkflowUUIDs(config);
-
-  console.log(`🔧 Generated ${Object.keys(mapping).length} deterministic UUIDs`);
-  return mapping;
+  return generateWorkflowUUIDs(config);
 }
 
 /**
@@ -58,12 +114,52 @@ function buildWorkflow() {
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   console.log(`📋 Loaded config for: ${config.name}`);
 
-  // Load ID mapping for compatibility
-  const idMapping = loadIdMapping();
+  // Collect all nodes from various sources
+  let allNodes = [];
+  
+  // 1. Load nodes from nodeFiles array (if specified)
+  if (config.nodeFiles && Array.isArray(config.nodeFiles)) {
+    config.nodeFiles.forEach(nodeFile => {
+      console.log(`📁 Loading node file: ${nodeFile}`);
+      const fileNodes = loadNodeFile(nodeFile);
+      allNodes.push(...fileNodes);
+    });
+  }
+  
+  // 2. Load nodes from nodeDirectories (if specified)
+  if (config.nodeDirectories && Array.isArray(config.nodeDirectories)) {
+    config.nodeDirectories.forEach(dir => {
+      console.log(`📂 Loading nodes from directory: ${dir}`);
+      const dirNodes = loadNodesFromDirectory(dir);
+      allNodes.push(...dirNodes);
+    });
+  }
+  
+  // 3. Add inline nodes (if specified)
+  if (config.nodes && Array.isArray(config.nodes)) {
+    console.log(`📝 Adding ${config.nodes.length} inline nodes`);
+    allNodes.push(...config.nodes);
+  }
+  
+  if (allNodes.length === 0) {
+    throw new Error('No nodes found! Specify nodeFiles, nodeDirectories, or nodes in config.json');
+  }
+  
+  console.log(`📊 Total nodes collected: ${allNodes.length}`);
+
+  // Apply auto-layout if enabled (default: true)
+  if (config.autoLayout !== false) {
+    allNodes = applyAutoLayout(allNodes, config.connections || {});
+  }
+
+  // Load ID mapping for compatibility (need to create temp config with all nodes)
+  const tempConfig = { ...config, nodes: allNodes };
+  const idMapping = generateWorkflowUUIDs(tempConfig);
+  console.log(`🔧 Generated ${Object.keys(idMapping).length} deterministic UUIDs`);
 
   // Create name mapping for connections (template ID → node name)
   const nameMapping = {};
-  config.nodes.forEach(node => {
+  allNodes.forEach(node => {
     nameMapping[node.id] = node.name;
   });
   if (config.stickyNotes) {
@@ -73,7 +169,7 @@ function buildWorkflow() {
   }
 
   // Build nodes array
-  const nodes = config.nodes.map(node => {
+  const nodes = allNodes.map(node => {
     // Use generated UUID for this template ID
     const originalId = idMapping[node.id] || node.id;
     const nodeObj = {
@@ -112,7 +208,13 @@ function buildWorkflow() {
 
   // Add sticky notes if they exist
   if (config.stickyNotes) {
-    config.stickyNotes.forEach(note => {
+    // Apply auto-layout to sticky notes if enabled
+    let processedStickyNotes = config.stickyNotes;
+    if (config.autoLayout !== false) {
+      processedStickyNotes = applyStickyNotesLayout(config.stickyNotes);
+    }
+    
+    processedStickyNotes.forEach(note => {
       // Load content from file if specified, otherwise use inline content
       let content = note.content;
       if (note.file) {
@@ -232,4 +334,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { buildWorkflow, loadScript, getNodeType };
+module.exports = { buildWorkflow, loadScript, getNodeType, loadNodeFile, loadNodesFromDirectory };

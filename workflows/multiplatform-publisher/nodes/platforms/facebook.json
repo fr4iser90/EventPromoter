@@ -1,0 +1,31 @@
+[
+  {
+    "id": "platform-facebook-check",
+    "name": "👥 Has Facebook Content?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.facebook !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [200, 200],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-facebook-post",
+    "name": "👥 Post to Facebook Page",
+    "type": "facebook",
+    "parameters": {
+      "resource": "post",
+      "message": "={{ $json.facebook.text }}",
+      "additionalFields": {}
+    },
+    "position": [400, 200],
+    "typeVersion": 2.1
+  }
+]

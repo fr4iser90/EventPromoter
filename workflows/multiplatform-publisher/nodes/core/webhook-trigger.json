@@ -1,0 +1,12 @@
+{
+  "id": "webhook-trigger",
+  "name": "📥 Webhook Trigger (API) - PRE-FORMATTED CONTENT",
+  "type": "webhook",
+  "parameters": {
+    "httpMethod": "POST",
+    "path": "dj-event",
+    "responseMode": "responseNode"
+  },
+  "position": [-1000, 0],
+  "webhookId": "dj-event-webhook"
+}

@@ -53,11 +53,35 @@ export class EmailPlaywrightPublisher implements EmailPublisher {
         }
       }
 
-      const recipients = content.recipients || []
-      if (recipients.length === 0) {
+      // Check for _templates format
+      const templates = content._templates || []
+      if (templates.length === 0) {
         return {
           success: false,
-          error: 'No email recipients specified'
+          error: 'Email content must use _templates format with targets configuration. Legacy recipients format is no longer supported.'
+        }
+      }
+      
+      // For Playwright, we'll use the first template's recipients
+      // (Playwright typically sends to one recipient at a time)
+      const firstTemplate = templates[0]
+      if (!firstTemplate.targets) {
+        return {
+          success: false,
+          error: 'Template targets configuration is required'
+        }
+      }
+      
+      // Extract recipients from first template (simplified for Playwright)
+      // Note: Playwright publisher may need to be refactored to handle multiple templates
+      const recipients: string[] = []
+      // This is a simplified extraction - full extraction would require EmailTargetService
+      if (firstTemplate.targets.mode === 'individual' && firstTemplate.targets.individual) {
+        // We can't resolve target IDs to emails here without EmailTargetService
+        // For now, return error suggesting to use API publisher instead
+        return {
+          success: false,
+          error: 'Playwright publisher does not fully support _templates format. Please use API publisher instead.'
         }
       }
 

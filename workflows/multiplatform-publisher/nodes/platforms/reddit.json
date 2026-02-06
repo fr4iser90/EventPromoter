@@ -1,0 +1,33 @@
+[
+  {
+    "id": "platform-reddit-check",
+    "name": "🔴 Has Reddit Content?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.reddit !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [200, 800],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-reddit-post",
+    "name": "🔴 Post to Reddit",
+    "type": "n8n-nodes-base.reddit",
+    "parameters": {
+      "resource": "post",
+      "subreddit": "={{ $json.reddit.subreddit }}",
+      "title": "={{ $json.reddit.title }}",
+      "text": "={{ $json.reddit.text }}",
+      "additionalFields": {}
+    },
+    "position": [400, 800],
+    "typeVersion": 1
+  }
+]

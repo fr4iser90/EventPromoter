@@ -4,216 +4,9 @@
   "version": "1.0.0",
   "author": "fr4iser",
   "platforms": ["twitter", "instagram", "facebook", "linkedin", "reddit", "email"],
-  "nodes": [
-    {
-      "id": "webhook-trigger",
-      "name": "📥 Webhook Trigger (API) - PRE-FORMATTED CONTENT",
-      "type": "n8n-nodes-base.webhook",
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "dj-event",
-        "responseMode": "responseNode"
-      },
-      "position": [-1000, 0],
-      "webhookId": "dj-event-webhook"
-    },
-    {
-      "id": "platform-twitter-check",
-      "name": "🐦 Has Twitter Content?",
-      "type": "if",
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.twitter !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "position": [200, -200],
-      "typeVersion": 2
-    },
-    {
-      "id": "platform-twitter-post",
-      "name": "🐦 Post to Twitter/X",
-      "type": "n8n-nodes-base.twitter",
-      "parameters": {
-        "resource": "tweet",
-        "text": "={{ $json.twitter.text }}",
-        "additionalFields": {}
-      },
-      "position": [400, -200],
-      "typeVersion": 2
-    },
-    {
-      "id": "platform-instagram-check",
-      "name": "📸 Has Instagram Content?",
-      "type": "if",
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.instagram !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "position": [200, 0],
-      "typeVersion": 2
-    },
-    {
-      "id": "platform-instagram-post",
-      "name": "📸 Post to Instagram",
-      "type": "n8n-nodes-base.instagram",
-      "parameters": {
-        "operation": "createPost",
-        "additionalFields": {}
-      },
-      "position": [400, 0],
-      "typeVersion": 1
-    },
-    {
-      "id": "platform-facebook-check",
-      "name": "👥 Has Facebook Content?",
-      "type": "if",
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.facebook !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "position": [200, 200],
-      "typeVersion": 2
-    },
-    {
-      "id": "platform-facebook-post",
-      "name": "👥 Post to Facebook Page",
-      "type": "n8n-nodes-base.facebook",
-      "parameters": {
-        "resource": "post",
-        "message": "={{ $json.facebook.text }}",
-        "additionalFields": {}
-      },
-      "position": [400, 200],
-      "typeVersion": 2.1
-    },
-    {
-      "id": "platform-linkedin-check",
-      "name": "💼 Has LinkedIn Content?",
-      "type": "if",
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.linkedin !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "position": [200, 400],
-      "typeVersion": 2
-    },
-    {
-      "id": "platform-linkedin-post",
-      "name": "💼 Post to LinkedIn",
-      "type": "n8n-nodes-base.linkedIn",
-      "parameters": {
-        "additionalFields": {}
-      },
-      "position": [400, 400],
-      "typeVersion": 1
-    },
-    {
-      "id": "platform-email-check",
-      "name": "📧 Has Email Content?",
-      "type": "if",
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.email !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "position": [200, 600],
-      "typeVersion": 2
-    },
-    {
-      "id": "platform-email-send",
-      "name": "📧 Send Email",
-      "type": "emailSend",
-      "parameters": {
-        "fromEmail": "noreply@eventpromoter.com",
-        "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
-        "subject": "={{ $json.email.subject }}",
-        "html": "={{ $json.email.html }}"
-      },
-      "position": [400, 600],
-      "typeVersion": 2.1
-    },
-    {
-      "id": "platform-reddit-check",
-      "name": "🔴 Has Reddit Content?",
-      "type": "if",
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.reddit !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "position": [200, 800],
-      "typeVersion": 2
-    },
-    {
-      "id": "platform-reddit-post",
-      "name": "🔴 Post to Reddit",
-      "type": "n8n-nodes-base.reddit",
-      "parameters": {
-        "resource": "post",
-        "subreddit": "={{ $json.reddit.subreddit }}",
-        "title": "={{ $json.reddit.title }}",
-        "text": "={{ $json.reddit.text }}",
-        "additionalFields": {}
-      },
-      "position": [400, 800],
-      "typeVersion": 1
-    },
-    {
-      "id": "structure-response",
-      "name": "🔧 Structure Response",
-      "type": "n8n-nodes-base.code",
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "// Structure all platform responses into unified format\nconst result = {\n  success: true,\n  data: {}\n};\n\n// Platform mapping from node names/response patterns\nconst platformPatterns = {\n  'twitter': ['twitter', 'tweet', 'id_str'],\n  'instagram': ['instagram', 'media_id'],\n  'facebook': ['facebook', 'pageId'],\n  'linkedin': ['linkedin', 'urn'],\n  'reddit': ['reddit', 'subreddit', 'name'],\n  'email': ['email', 'recipients', 'messageId']\n};\n\n// Process all incoming items\nfor (const item of $input.all()) {\n  const json = item.json || {};\n  const responseData = json.json || json;\n  \n  // Try to identify platform\n  let platform = null;\n  \n  // Method 1: Check if platform is explicitly set\n  if (json.platform) {\n    platform = json.platform;\n  }\n  // Method 2: Check response data patterns\n  else {\n    for (const [platformName, patterns] of Object.entries(platformPatterns)) {\n      if (patterns.some(pattern => \n        json[pattern] !== undefined || \n        responseData[pattern] !== undefined ||\n        JSON.stringify(json).toLowerCase().includes(pattern) ||\n        JSON.stringify(responseData).toLowerCase().includes(pattern)\n      )) {\n        platform = platformName;\n        break;\n      }\n    }\n  }\n  \n  if (platform) {\n    // Extract response data based on platform\n    const extracted = {\n      success: responseData.success !== false && !responseData.error && responseData.errorCode === undefined,\n      error: responseData.error || responseData.errorMessage || (responseData.success === false ? responseData.message : undefined)\n    };\n    \n    // Platform-specific extraction\n    if (platform === 'twitter') {\n      extracted.postId = responseData.id_str || responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://twitter.com/i/web/status/${extracted.postId}` : undefined);\n    } else if (platform === 'reddit') {\n      extracted.postId = responseData.id || responseData.name?.replace('t3_', '');\n      extracted.url = responseData.url || responseData.permalink || (extracted.postId ? `https://reddit.com${responseData.permalink || ''}` : undefined);\n    } else if (platform === 'email') {\n      extracted.postId = responseData.messageId || responseData.id;\n      // Emails don't have URLs\n    } else if (platform === 'instagram') {\n      extracted.postId = responseData.id || responseData.media_id;\n      extracted.url = responseData.url || (extracted.postId ? `https://instagram.com/p/${extracted.postId}/` : undefined);\n    } else if (platform === 'facebook') {\n      extracted.postId = responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://facebook.com/${extracted.postId}` : undefined);\n    } else if (platform === 'linkedin') {\n      extracted.postId = responseData.id || responseData.urn?.split(':').pop();\n      extracted.url = responseData.url || (extracted.postId ? `https://linkedin.com/feed/update/${extracted.postId}` : undefined);\n    }\n    \n    // Remove undefined fields\n    Object.keys(extracted).forEach(key => {\n      if (extracted[key] === undefined) delete extracted[key];\n    });\n    \n    result.data[platform] = extracted;\n  }\n}\n\n// Check if any platform failed\nconst allSuccess = Object.values(result.data).every(p => p.success !== false);\nresult.success = allSuccess && Object.keys(result.data).length > 0;\n\nreturn result;"
-      },
-      "position": [500, 0],
-      "typeVersion": 2
-    },
-    {
-      "id": "webhook-response",
-      "name": "✅ Send Response",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}",
-        "options": {}
-      },
-      "position": [700, 0],
-      "typeVersion": 1
-    }
+  "nodeDirectories": [
+    "core",
+    "platforms"
   ],
   "connections": {
     "📥 Webhook Trigger (API) - PRE-FORMATTED CONTENT": {
@@ -348,7 +141,7 @@
       "main": [
         [
           {
-            "node": "📧 Send Email",
+            "node": "📧 Prepare Email Data",
             "type": "main",
             "index": 0
           }
@@ -356,7 +149,124 @@
         []
       ]
     },
+    "📧 Prepare Email Data": {
+      "main": [
+        [
+          {
+            "node": "📎 Has Attachments?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Has Attachments?": {
+      "main": [
+        [
+          {
+            "node": "💾 Save Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📧 Send Email (No Attachments)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Save Email Data": {
+      "main": [
+        [
+          {
+            "node": "📎 Split Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Split Attachments": {
+      "main": [
+        [
+          {
+            "node": "⬇️ Download Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⬇️ Download Attachment": {
+      "main": [
+        [
+          {
+            "node": "🔄 Transform to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔄 Transform to Base64": {
+      "main": [
+        [
+          {
+            "node": "📎 Aggregate Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Aggregate Attachments": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Email & Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Email & Attachments": {
+      "main": [
+        [
+          {
+            "node": "📎 Format Attachments Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Format Attachments Array": {
+      "main": [
+        [
+          {
+            "node": "📧 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "📧 Send Email": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Send Email (No Attachments)": {
       "main": [
         [
           {
@@ -407,45 +317,40 @@
       "id": "overview",
       "name": "📋 Overview",
       "file": "overview.md",
-      "height": 600,
+      "height": 900,
       "width": 800,
-      "color": 5,
-      "position": [380, 100]
+      "color": 5
     },
     {
       "id": "input-format",
       "name": "📥 Input Format",
       "file": "input-format.md",
-      "height": 700,
-      "width": 600,
-      "position": [-420, -380]
+      "height": 900,
+      "width": 600
     },
     {
       "id": "credentials-overview",
       "name": "🔐 Credentials Overview",
       "file": "credentials-overview.md",
-      "height": 500,
+      "height": 900,
       "width": 600,
-      "color": 3,
-      "position": [-420, 360]
+      "color": 3
     },
     {
       "id": "twitter-credentials",
       "name": "🐦 Twitter Credentials",
       "file": "twitter-credentials.md",
-      "height": 450,
+      "height": 690,
       "width": 500,
-      "color": 2,
-      "position": [1500, -420]
+      "color": 2
     },
     {
       "id": "instagram-credentials",
       "name": "📷 Instagram Credentials",
       "file": "instagram-credentials.md",
-      "height": 710,
+      "height": 690,
       "width": 500,
-      "color": 2,
-      "position": [1480, 360]
+      "color": 2
     },
     {
       "id": "facebook-credentials",
@@ -453,17 +358,15 @@
       "file": "facebook-credentials.md",
       "height": 680,
       "width": 500,
-      "color": 2,
-      "position": [2020, 360]
+      "color": 2
     },
     {
       "id": "linkedin-credentials",
       "name": "💼 LinkedIn Credentials",
       "file": "linkedin-credentials.md",
-      "height": 500,
+      "height": 700,
       "width": 500,
-      "color": 2,
-      "position": [2060, -420]
+      "color": 2
     },
     {
       "id": "reddit-credentials",
@@ -471,26 +374,23 @@
       "file": "reddit-credentials.md",
       "height": 960,
       "width": 500,
-      "color": 2,
-      "position": [2600, 360]
+      "color": 2
     },
     {
       "id": "email-credentials",
       "name": "📧 Email Credentials",
       "file": "email-credentials.md",
-      "height": 550,
+      "height": 870,
       "width": 500,
-      "color": 2,
-      "position": [2680, -440]
+      "color": 2
     },
     {
       "id": "discord-telegram-setup",
       "name": "📢 Discord & Telegram Setup",
       "file": "discord-telegram-setup.md",
-      "height": 600,
+      "height": 1300,
       "width": 700,
-      "color": 6,
-      "position": [3240, 360]
+      "color": 6
     }
   ]
 }

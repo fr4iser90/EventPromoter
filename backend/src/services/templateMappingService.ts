@@ -17,6 +17,11 @@ export interface TemplateMappingRequest {
   uploadedFileRefs?: Array<{ url: string; type: string; isImage?: boolean }>
   existingContent?: Record<string, ContentValue>
   locale?: string // Optional locale for date/time formatting (e.g., 'de', 'en', 'es')
+  targets?: {
+    mode?: 'all' | 'groups' | 'individual'
+    groups?: string[]
+    individual?: string[]
+  }
 }
 
 export interface TemplateMappingResult {

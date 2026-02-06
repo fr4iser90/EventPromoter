@@ -4,6 +4,34 @@
   "nodes": [
     {
       "parameters": {
+        "jsCode": "// Structure all platform responses into unified format\nconst result = {\n  success: true,\n  data: {}\n};\n\n// Platform mapping from node names/response patterns\nconst platformPatterns = {\n  'twitter': ['twitter', 'tweet', 'id_str'],\n  'instagram': ['instagram', 'media_id'],\n  'facebook': ['facebook', 'pageId'],\n  'linkedin': ['linkedin', 'urn'],\n  'reddit': ['reddit', 'subreddit', 'name'],\n  'email': ['email', 'recipients', 'messageId']\n};\n\n// Process all incoming items\nfor (const item of $input.all()) {\n  const json = item.json || {};\n  const responseData = json.json || json;\n  \n  // Try to identify platform\n  let platform = null;\n  \n  // Method 1: Check if platform is explicitly set\n  if (json.platform) {\n    platform = json.platform;\n  }\n  // Method 2: Check response data patterns\n  else {\n    for (const [platformName, patterns] of Object.entries(platformPatterns)) {\n      if (patterns.some(pattern => \n        json[pattern] !== undefined || \n        responseData[pattern] !== undefined ||\n        JSON.stringify(json).toLowerCase().includes(pattern) ||\n        JSON.stringify(responseData).toLowerCase().includes(pattern)\n      )) {\n        platform = platformName;\n        break;\n      }\n    }\n  }\n  \n  if (platform) {\n    // Extract response data based on platform\n    const extracted = {\n      success: responseData.success !== false && !responseData.error && responseData.errorCode === undefined,\n      error: responseData.error || responseData.errorMessage || (responseData.success === false ? responseData.message : undefined)\n    };\n    \n    // Platform-specific extraction\n    if (platform === 'twitter') {\n      extracted.postId = responseData.id_str || responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://twitter.com/i/web/status/${extracted.postId}` : undefined);\n    } else if (platform === 'reddit') {\n      extracted.postId = responseData.id || responseData.name?.replace('t3_', '');\n      extracted.url = responseData.url || responseData.permalink || (extracted.postId ? `https://reddit.com${responseData.permalink || ''}` : undefined);\n    } else if (platform === 'email') {\n      extracted.postId = responseData.messageId || responseData.id;\n      // Emails don't have URLs\n    } else if (platform === 'instagram') {\n      extracted.postId = responseData.id || responseData.media_id;\n      extracted.url = responseData.url || (extracted.postId ? `https://instagram.com/p/${extracted.postId}/` : undefined);\n    } else if (platform === 'facebook') {\n      extracted.postId = responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://facebook.com/${extracted.postId}` : undefined);\n    } else if (platform === 'linkedin') {\n      extracted.postId = responseData.id || responseData.urn?.split(':').pop();\n      extracted.url = responseData.url || (extracted.postId ? `https://linkedin.com/feed/update/${extracted.postId}` : undefined);\n    }\n    \n    // Remove undefined fields\n    Object.keys(extracted).forEach(key => {\n      if (extracted[key] === undefined) delete extracted[key];\n    });\n    \n    result.data[platform] = extracted;\n  }\n}\n\n// Check if any platform failed\nconst allSuccess = Object.values(result.data).every(p => p.success !== false);\nresult.success = allSuccess && Object.keys(result.data).length > 0;\n\nreturn result;\n"
+      },
+      "id": "26fb8d5c-63b7-aa84-4623-a557accaa6df",
+      "name": "🔧 Structure Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16660,
+        5080
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "0b96c802-0f57-4ef6-4700-89c6caae9042",
+      "name": "✅ Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        16960,
+        5080
+      ]
+    },
+    {
+      "parameters": {
         "httpMethod": "POST",
         "path": "dj-event",
         "responseMode": "responseNode"
@@ -13,8 +41,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -1000,
-        0
+        13360,
+        5080
       ],
       "webhookId": "dj-event-webhook"
     },
@@ -23,34 +51,32 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.twitter !== undefined }}",
+              "value1": "={{ $json.email !== undefined }}",
               "value2": true
             }
           ]
         }
       },
-      "id": "9b235081-7c85-c87b-4929-becf7057566d",
-      "name": "🐦 Has Twitter Content?",
+      "id": "669903d2-b36d-5ec7-4d7d-a5fe796e212a",
+      "name": "📧 Has Email Content?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        200,
-        -200
+        14160,
+        5680
       ]
     },
     {
       "parameters": {
-        "resource": "tweet",
-        "text": "={{ $json.twitter.text }}",
-        "additionalFields": {}
+        "jsCode": "// Prepare email data and handle multiple email format\nconst input = $input.item.json;\nconst emailData = input.email || input.emails;\n\n// Handle both single email and multiple emails format\nif (Array.isArray(emailData)) {\n  // Multiple emails format: { emails: [...] }\n  return emailData.map(email => ({\n    json: {\n      ...input,\n      email: email\n    }\n  }));\n} else if (emailData) {\n  // Single email format\n  return [{\n    json: {\n      ...input,\n      email: emailData\n    }\n  }];\n}\n\n// No email data\nreturn [];\n"
       },
-      "id": "2c3fe310-333f-277b-4f32-ab8676d78d8b",
-      "name": "🐦 Post to Twitter/X",
-      "type": "n8n-nodes-base.twitter",
+      "id": "89cd2d89-838d-c243-47ed-b4721026fbac",
+      "name": "📧 Prepare Email Data",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        400,
-        -200
+        14760,
+        5680
       ]
     },
     {
@@ -58,33 +84,156 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.instagram !== undefined }}",
+              "value1": "={{ $json.email.attachments !== undefined && Array.isArray($json.email.attachments) && $json.email.attachments.length > 0 }}",
               "value2": true
             }
           ]
         }
       },
-      "id": "780e148d-85b9-639f-4d15-836c6d558325",
-      "name": "📸 Has Instagram Content?",
+      "id": "d696cb41-2034-01a0-4c3a-aa3db43338d6",
+      "name": "📎 Has Attachments?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        200,
-        0
+        15060,
+        5680
       ]
     },
     {
       "parameters": {
-        "operation": "createPost",
-        "additionalFields": {}
+        "jsCode": "// Save email data before splitting attachments\nconst email = $input.item.json.email;\nreturn [{\n  json: {\n    email: email,\n    emailData: email // Store for later merge\n  }\n}];\n"
       },
-      "id": "0088e969-08ca-7f61-457e-9b96c9b9ae29",
-      "name": "📸 Post to Instagram",
-      "type": "n8n-nodes-base.instagram",
+      "id": "f9602cf0-9d3a-ef82-46c2-aa2ecdf988dc",
+      "name": "💾 Save Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        15360,
+        5880
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "email.attachments",
+        "options": {}
+      },
+      "id": "dd488718-a091-992e-4529-ba8397f51176",
+      "name": "📎 Split Attachments",
+      "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        400,
-        0
+        15660,
+        5880
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.email.attachments.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        },
+        "authentication": "none"
+      },
+      "id": "247e6ba9-2a7e-e8ce-4a2b-ba9071fb24a6",
+      "name": "⬇️ Download Attachment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        15960,
+        5980
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform downloaded attachment to n8n emailSend format\n// n8n emailSend expects: { fileName: string, content: string (base64) }\nconst attachment = $input.item.json.email.attachments;\nconst fileData = $input.item.binary;\n\n// Get the binary data key (usually 'data')\nconst binaryKey = Object.keys(fileData)[0];\nconst file = fileData[binaryKey];\n\n// Convert binary to base64\nconst base64Content = file.data;\n\nreturn [{\n  json: {\n    fileName: attachment.filename || attachment.name || 'attachment',\n    content: base64Content,\n    contentType: attachment.contentType || attachment.type || 'application/octet-stream',\n    originalUrl: attachment.url\n  }\n}];\n"
+      },
+      "id": "2009aaad-342c-950b-4ff8-ac015ab97aae",
+      "name": "🔄 Transform to Base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        15960,
+        6080
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "processedAttachments",
+        "options": {}
+      },
+      "id": "85be2362-4fc7-5ab4-407f-bcb48c017e51",
+      "name": "📎 Aggregate Attachments",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        15960,
+        6180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "25f27203-4363-561d-4840-9a8da1ebb15a",
+      "name": "🔗 Merge Email & Attachments",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        16260,
+        5740
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format attachments array for n8n emailSend node\n// emailSend expects: attachments: [{ fileName: string, content: string (base64) }]\nconst email = $input.item.json.email || $input.item.json[0]?.email;\nconst processedAttachments = $input.item.json.processedAttachments || [];\n\n// Ensure processedAttachments is an array\nconst attachmentsArray = Array.isArray(processedAttachments) \n  ? processedAttachments.map(att => ({\n      fileName: att.fileName || att.filename || 'attachment',\n      content: att.content\n    }))\n  : [];\n\nreturn [{\n  json: {\n    email: email,\n    attachments: attachmentsArray.length > 0 ? attachmentsArray : undefined\n  }\n}];\n"
+      },
+      "id": "8d2fc4c8-5f51-ea1e-46a3-b067bc4a26bd",
+      "name": "📎 Format Attachments Array",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16300,
+        5820
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@eventpromoter.com",
+        "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
+        "subject": "={{ $json.email.subject }}",
+        "html": "={{ $json.email.html }}",
+        "attachments": "={{ $json.attachments }}"
+      },
+      "id": "759aad6f-89e1-c521-4728-9c3c10aa5117",
+      "name": "📧 Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        16260,
+        5680
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@eventpromoter.com",
+        "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
+        "subject": "={{ $json.email.subject }}",
+        "html": "={{ $json.email.html }}"
+      },
+      "id": "1bd6f8b7-c442-b4f7-4178-8be07cd237ad",
+      "name": "📧 Send Email (No Attachments)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        15360,
+        5940
       ]
     },
     {
@@ -103,8 +252,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        200,
-        200
+        14160,
+        5280
       ]
     },
     {
@@ -118,8 +267,42 @@
       "type": "n8n-nodes-base.facebook",
       "typeVersion": 2.1,
       "position": [
-        400,
-        200
+        14460,
+        5280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.instagram !== undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "780e148d-85b9-639f-4d15-836c6d558325",
+      "name": "📸 Has Instagram Content?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        14160,
+        5080
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "createPost",
+        "additionalFields": {}
+      },
+      "id": "0088e969-08ca-7f61-457e-9b96c9b9ae29",
+      "name": "📸 Post to Instagram",
+      "type": "n8n-nodes-base.instagram",
+      "typeVersion": 1,
+      "position": [
+        14460,
+        5080
       ]
     },
     {
@@ -138,8 +321,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        200,
-        400
+        14160,
+        5480
       ]
     },
     {
@@ -151,44 +334,8 @@
       "type": "n8n-nodes-base.linkedIn",
       "typeVersion": 1,
       "position": [
-        400,
-        400
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.email !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "669903d2-b36d-5ec7-4d7d-a5fe796e212a",
-      "name": "📧 Has Email Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        200,
-        600
-      ]
-    },
-    {
-      "parameters": {
-        "fromEmail": "noreply@eventpromoter.com",
-        "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
-        "subject": "={{ $json.email.subject }}",
-        "html": "={{ $json.email.html }}"
-      },
-      "id": "759aad6f-89e1-c521-4728-9c3c10aa5117",
-      "name": "📧 Send Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
-      "position": [
-        400,
-        600
+        14460,
+        5480
       ]
     },
     {
@@ -207,8 +354,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        200,
-        800
+        14160,
+        6080
       ]
     },
     {
@@ -224,51 +371,57 @@
       "type": "n8n-nodes-base.reddit",
       "typeVersion": 1,
       "position": [
-        400,
-        800
+        14460,
+        6080
       ]
     },
     {
       "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "// Structure all platform responses into unified format\nconst result = {\n  success: true,\n  data: {}\n};\n\n// Platform mapping from node names/response patterns\nconst platformPatterns = {\n  'twitter': ['twitter', 'tweet', 'id_str'],\n  'instagram': ['instagram', 'media_id'],\n  'facebook': ['facebook', 'pageId'],\n  'linkedin': ['linkedin', 'urn'],\n  'reddit': ['reddit', 'subreddit', 'name'],\n  'email': ['email', 'recipients', 'messageId']\n};\n\n// Process all incoming items\nfor (const item of $input.all()) {\n  const json = item.json || {};\n  const responseData = json.json || json;\n  \n  // Try to identify platform\n  let platform = null;\n  \n  // Method 1: Check if platform is explicitly set\n  if (json.platform) {\n    platform = json.platform;\n  }\n  // Method 2: Check response data patterns\n  else {\n    for (const [platformName, patterns] of Object.entries(platformPatterns)) {\n      if (patterns.some(pattern => \n        json[pattern] !== undefined || \n        responseData[pattern] !== undefined ||\n        JSON.stringify(json).toLowerCase().includes(pattern) ||\n        JSON.stringify(responseData).toLowerCase().includes(pattern)\n      )) {\n        platform = platformName;\n        break;\n      }\n    }\n  }\n  \n  if (platform) {\n    // Extract response data based on platform\n    const extracted = {\n      success: responseData.success !== false && !responseData.error && responseData.errorCode === undefined,\n      error: responseData.error || responseData.errorMessage || (responseData.success === false ? responseData.message : undefined)\n    };\n    \n    // Platform-specific extraction\n    if (platform === 'twitter') {\n      extracted.postId = responseData.id_str || responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://twitter.com/i/web/status/${extracted.postId}` : undefined);\n    } else if (platform === 'reddit') {\n      extracted.postId = responseData.id || responseData.name?.replace('t3_', '');\n      extracted.url = responseData.url || responseData.permalink || (extracted.postId ? `https://reddit.com${responseData.permalink || ''}` : undefined);\n    } else if (platform === 'email') {\n      extracted.postId = responseData.messageId || responseData.id;\n      // Emails don't have URLs\n    } else if (platform === 'instagram') {\n      extracted.postId = responseData.id || responseData.media_id;\n      extracted.url = responseData.url || (extracted.postId ? `https://instagram.com/p/${extracted.postId}/` : undefined);\n    } else if (platform === 'facebook') {\n      extracted.postId = responseData.id;\n      extracted.url = responseData.url || (extracted.postId ? `https://facebook.com/${extracted.postId}` : undefined);\n    } else if (platform === 'linkedin') {\n      extracted.postId = responseData.id || responseData.urn?.split(':').pop();\n      extracted.url = responseData.url || (extracted.postId ? `https://linkedin.com/feed/update/${extracted.postId}` : undefined);\n    }\n    \n    // Remove undefined fields\n    Object.keys(extracted).forEach(key => {\n      if (extracted[key] === undefined) delete extracted[key];\n    });\n    \n    result.data[platform] = extracted;\n  }\n}\n\n// Check if any platform failed\nconst allSuccess = Object.values(result.data).every(p => p.success !== false);\nresult.success = allSuccess && Object.keys(result.data).length > 0;\n\nreturn result;"
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.twitter !== undefined }}",
+              "value2": true
+            }
+          ]
+        }
       },
-      "id": "26fb8d5c-63b7-aa84-4623-a557accaa6df",
-      "name": "🔧 Structure Response",
-      "type": "n8n-nodes-base.code",
+      "id": "9b235081-7c85-c87b-4929-becf7057566d",
+      "name": "🐦 Has Twitter Content?",
+      "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        500,
-        0
+        14160,
+        4880
       ]
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}",
-        "options": {}
+        "resource": "tweet",
+        "text": "={{ $json.twitter.text }}",
+        "additionalFields": {}
       },
-      "id": "0b96c802-0f57-4ef6-4700-89c6caae9042",
-      "name": "✅ Send Response",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "id": "2c3fe310-333f-277b-4f32-ab8676d78d8b",
+      "name": "🐦 Post to Twitter/X",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
       "position": [
-        700,
-        0
+        14460,
+        4880
       ]
     },
     {
       "parameters": {
         "content": "# 🚀 Multi-Platform Social Media & Email Publisher\n\n**EN:** This workflow publishes DJ events (or any events) to multiple social media platforms and sends emails simultaneously.\n\n**DE:** Dieser Workflow veröffentlicht DJ-Events (oder beliebige Events) auf mehreren Social-Media-Plattformen und sendet gleichzeitig E-Mails.\n\n## 📋 Supported Platforms / Unterstützte Plattformen\n\n- 🐦 **Twitter/X** - Text + Images\n- 📷 **Instagram** - Images + Captions\n- 👤 **Facebook** - Posts + Images\n- 💼 **LinkedIn** - Professional Posts\n- 🔴 **Reddit** - Subreddit Posts with Flairs\n- 📧 **Email** - HTML + Plain Text\n\n## ⚙️ How to Use / Verwendung\n\n1. **Configure Credentials** - See panels below for each platform\n2. **Send POST request** to webhook with event data\n3. **Enable/Disable platforms** via `publishTo` object\n\n## 📝 Input Format\n\nSee \"📥 Input Format\" panel below for complete example.\n\n---\n\n*(Doppelklick zum Bearbeiten | [n8n Sticky Notes Guide](https://docs.n8n.io/workflows/sticky-notes/))*\n",
-        "height": 600,
+        "height": 900,
         "width": 800,
         "color": 5
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        380,
-        100
+        14240,
+        3820
       ],
       "id": "overview",
       "name": "📋 Overview"
@@ -276,15 +429,15 @@
     {
       "parameters": {
         "content": "# 📥 Input Format / Eingabeformat\n\n## Required Fields / Pflichtfelder\n\n```json\n{\n  \"eventTitle\": \"DJ Night @ Club XYZ\",\n  \"eventDate\": \"2025-05-15\",\n  \"venue\": \"Club XYZ\",\n  \"city\": \"Berlin\"\n}\n```\n\n## Complete Example / Vollständiges Beispiel\n\n```json\n{\n  \"eventTitle\": \"Techno Night @ Berghain\",\n  \"eventDate\": \"2025-05-15\",\n  \"eventTime\": \"23:00\",\n  \"venue\": \"Berghain\",\n  \"city\": \"Berlin\",\n  \"description\": \"Join us for an unforgettable night!\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"ticketUrl\": \"https://tickets.example.com\",\n  \"publishTo\": {\n    \"twitter\": true,\n    \"instagram\": true,\n    \"facebook\": true,\n    \"linkedin\": false,\n    \"reddit\": true,\n    \"email\": true\n  },\n  \"emailRecipients\": [\"fan@example.com\"],\n  \"redditSubreddit\": \"DJs\",\n  \"redditFlair\": \"Event\",\n  \"redditNsfw\": false,\n  \"redditSpoiler\": false\n}\n```\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 700,
+        "height": 900,
         "width": 600,
         "color": 1
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -420,
-        -380
+        12920,
+        3820
       ],
       "id": "input-format",
       "name": "📥 Input Format"
@@ -292,15 +445,15 @@
     {
       "parameters": {
         "content": "# 🔐 Credentials Setup / Credentials einrichten\n\n## ⚠️ WICHTIG: Separate Credentials!\n\n**Jede Plattform benötigt EIGENE Credentials!**\n\n## Checklist / Checkliste\n\n- [ ] **Twitter/X**: `TWITTER_CREDENTIALS_ID`\n- [ ] **Instagram**: `INSTAGRAM_CREDENTIALS_ID`\n- [ ] **Facebook**: `FACEBOOK_CREDENTIALS_ID`\n- [ ] **LinkedIn**: `LINKEDIN_CREDENTIALS_ID`\n- [ ] **Reddit**: `REDDIT_CREDENTIALS_ID`\n- [ ] **Email**: `SMTP_CREDENTIALS_ID`\n\n## 📚 Detailed Instructions\n\nSee individual credential panels below for each platform.\n\nSiehe einzelne Credential-Panels unten für jede Plattform.\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 500,
+        "height": 900,
         "width": 600,
         "color": 3
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -420,
-        360
+        14240,
+        3820
       ],
       "id": "credentials-overview",
       "name": "🔐 Credentials Overview"
@@ -308,15 +461,15 @@
     {
       "parameters": {
         "content": "# 🐦 Twitter/X Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://developer.twitter.com/**\n2. Create App → **API Keys & Tokens**\n3. You need:\n   - **API Key** (Consumer Key)\n   - **API Secret** (Consumer Secret)\n   - **Access Token**\n   - **Access Token Secret**\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Twitter OAuth1 API**\n3. Enter all 4 values\n4. Assign to node: **🐦 Post to Twitter/X**\n\n---\n\n**Credential ID:** `TWITTER_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 450,
+        "height": 690,
         "width": 500,
         "color": 2
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1500,
-        -420
+        17140,
+        4220
       ],
       "id": "twitter-credentials",
       "name": "🐦 Twitter Credentials"
@@ -324,15 +477,15 @@
     {
       "parameters": {
         "content": "# 📷 Instagram Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n⚠️ **Requires Facebook Business Account**\n\n1. Go to: **https://developers.facebook.com/**\n2. Create **Meta App** (Type: **Business**)\n3. Add **Instagram Graph API** product\n4. You need:\n   - **App ID**\n   - **App Secret**\n   - **Access Token** (with permissions)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Instagram OAuth2 API**\n3. Enter credentials\n4. Assign to node: **📷 Post to Instagram**\n\n---\n\n**Credential ID:** `INSTAGRAM_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 710,
+        "height": 690,
         "width": 500,
         "color": 2
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1480,
-        360
+        17700,
+        4220
       ],
       "id": "instagram-credentials",
       "name": "📷 Instagram Credentials"
@@ -347,8 +500,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2020,
-        360
+        18260,
+        4220
       ],
       "id": "facebook-credentials",
       "name": "👤 Facebook Credentials"
@@ -356,15 +509,15 @@
     {
       "parameters": {
         "content": "# 💼 LinkedIn Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://www.linkedin.com/developers/apps**\n2. Create new app\n3. You need:\n   - **Client ID**\n   - **Client Secret**\n4. Configure **OAuth Redirect URL**:\n   `https://your-n8n-instance.com/rest/oauth2-credential/callback`\n5. Request permissions: `w_member_social`, `w_organization_social`\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **LinkedIn OAuth2 API**\n3. Enter Client ID and Secret\n4. Complete OAuth flow\n5. Assign to node: **💼 Post to LinkedIn**\n\n---\n\n**Credential ID:** `LINKEDIN_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 500,
+        "height": 700,
         "width": 500,
         "color": 2
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2060,
-        -420
+        16580,
+        4220
       ],
       "id": "linkedin-credentials",
       "name": "💼 LinkedIn Credentials"
@@ -379,8 +532,8 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2600,
-        360
+        18820,
+        4220
       ],
       "id": "reddit-credentials",
       "name": "🔴 Reddit Credentials"
@@ -388,15 +541,15 @@
     {
       "parameters": {
         "content": "# 📧 Email (SMTP) Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n### Gmail:\n1. Enable **2-Factor Authentication**\n2. Go to: **https://myaccount.google.com/apppasswords**\n3. Generate **App Password** for \"Mail\"\n4. Use this password (not your regular password)\n\n### SMTP Settings:\n- **Host**: `smtp.gmail.com`\n- **Port**: `587` (TLS) or `465` (SSL)\n- **User**: your-email@gmail.com\n- **Password**: App Password (for Gmail)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **SMTP**\n3. Enter SMTP settings\n4. Optional: Set `EMAIL_FROM` env var\n5. Assign to node: **📧 Send Email**\n\n---\n\n**Credential ID:** `SMTP_CREDENTIALS_ID`\n\n**Other Providers:**\n- Outlook: `smtp.office365.com`\n- Custom: Use your provider's SMTP settings\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 550,
+        "height": 870,
         "width": 500,
         "color": 2
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2680,
-        -440
+        17140,
+        4960
       ],
       "id": "email-credentials",
       "name": "📧 Email Credentials"
@@ -404,15 +557,15 @@
     {
       "parameters": {
         "content": "# 📢 Discord & Telegram Notifications\n\n## Discord Webhook Setup\n\n1. **Go to your Discord server**\n2. **Right-click on a channel** → **Edit Channel** → **Integrations** → **Webhooks**\n3. **Create new Webhook** with a name (e.g., \"n8n-workflow\")\n4. **Copy the Webhook URL**\n\n## In n8n Environment Variables:\n```bash\nDISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN\n```\n\n## Telegram Bot Setup\n\n1. **Message @BotFather** on Telegram\n2. **Send:** `/newbot`\n3. **Follow instructions** to create your bot\n4. **Get your Bot Token** from BotFather\n\n## In n8n Environment Variables:\n```bash\nTELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\nTELEGRAM_CHAT_ID=123456789\n```\n\n### How to get Chat ID:\n1. **Message your bot** with any text\n2. **Visit:** `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`\n3. **Find your chat ID** in the response\n\n## Features:\n- ✅ **Rich Discord embeds** with colors and formatting\n- ✅ **HTML Telegram messages** with markup\n- ✅ **Success/Failure indicators** with colors\n- ✅ **Performance metrics** included\n- ✅ **Automatic fallbacks** to console logging\n\n## Example Notification:\n\n**Discord:** Rich embed with event details, success rates, and timing\n**Telegram:** Formatted message with HTML markup and statistics\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 600,
+        "height": 1300,
         "width": 700,
         "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3240,
-        360
+        17700,
+        4960
       ],
       "id": "discord-telegram-setup",
       "name": "📢 Discord & Telegram Setup"
@@ -551,7 +704,7 @@
       "main": [
         [
           {
-            "node": "📧 Send Email",
+            "node": "📧 Prepare Email Data",
             "type": "main",
             "index": 0
           }
@@ -559,7 +712,124 @@
         []
       ]
     },
+    "📧 Prepare Email Data": {
+      "main": [
+        [
+          {
+            "node": "📎 Has Attachments?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Has Attachments?": {
+      "main": [
+        [
+          {
+            "node": "💾 Save Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "📧 Send Email (No Attachments)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Save Email Data": {
+      "main": [
+        [
+          {
+            "node": "📎 Split Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Split Attachments": {
+      "main": [
+        [
+          {
+            "node": "⬇️ Download Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⬇️ Download Attachment": {
+      "main": [
+        [
+          {
+            "node": "🔄 Transform to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔄 Transform to Base64": {
+      "main": [
+        [
+          {
+            "node": "📎 Aggregate Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Aggregate Attachments": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Email & Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Email & Attachments": {
+      "main": [
+        [
+          {
+            "node": "📎 Format Attachments Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📎 Format Attachments Array": {
+      "main": [
+        [
+          {
+            "node": "📧 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "📧 Send Email": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Send Email (No Attachments)": {
       "main": [
         [
           {

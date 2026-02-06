@@ -74,22 +74,6 @@
     "home": "Inicio",
     "templates": "Plantillas"
   },
-  "common": {
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "delete": "Eliminar",
-    "edit": "Editar",
-    "close": "Cerrar",
-    "loading": "Cargando...",
-    "error": "Error",
-    "success": "Éxito",
-    "dropActive": "Suelta los archivos aquí...",
-    "dropInactive": "Arrastra y suelta los archivos aquí",
-    "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
-    "characters": "caracteres",
-    "unknown": "Desconocido",
-    "update": "Actualizar"
-  },
   "fileUpload": {
     "title": "Subir Archivos",
     "dropzone": "Arrastra archivos aquí o haz clic para seleccionar",
@@ -110,7 +94,7 @@
     "parsedData": "Datos del Evento Analizados",
     "sourceFiles": "Archivos Fuente",
     "eventImage": "Imagen del Evento",
-    "title": "Título"
+    "eventTitle": "Título"
   },
   "template": {
     "placeholders": "Marcadores de Posición de Plantilla Disponibles",
@@ -229,6 +213,20 @@
     "hashtagBuilder": "# Constructor de Hashtags"
   },
   "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "dropActive": "Suelta los archivos aquí...",
+    "dropInactive": "Arrastra y suelta los archivos aquí",
+    "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
+    "characters": "caracteres",
+    "unknown": "Desconocido",
+    "update": "Actualizar",
     "done": "Hecho",
     "files": "Archivos",
     "platforms": "Plataformas"

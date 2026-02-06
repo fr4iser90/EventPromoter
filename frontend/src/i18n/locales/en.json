@@ -74,22 +74,6 @@
     "home": "Home",
     "templates": "Templates"
   },
-  "common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "close": "Close",
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
-    "dropActive": "Drop files here...",
-    "dropInactive": "Drag & drop files here",
-    "hashtagsPlaceholder": "Enter hashtags separated by commas (e.g., party, music, berlin)",
-    "characters": "characters",
-    "unknown": "Unknown",
-    "update": "Update"
-  },
   "fileUpload": {
     "title": "Upload Files",
     "dropzone": "Drop files here or click to select",
@@ -111,7 +95,8 @@
     "parsedData": "Parsed Event Data",
     "sourceFiles": "Source Files",
     "eventImage": "Event Image",
-    "title": "Title"
+    "title": "Title",
+    "eventTitle": "Title"
   },
   "template": {
     "placeholders": "Template Placeholders Available",
@@ -230,6 +215,20 @@
     "hashtagBuilder": "# Hashtag Builder"
   },
   "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "dropActive": "Drop files here...",
+    "dropInactive": "Drag & drop files here",
+    "hashtagsPlaceholder": "Enter hashtags separated by commas (e.g., party, music, berlin)",
+    "characters": "characters",
+    "unknown": "Unknown",
+    "update": "Update",
     "done": "Done",
     "files": "Files",
     "platforms": "Platforms"

@@ -1,0 +1,11 @@
+{
+  "id": "structure-response",
+  "name": "🔧 Structure Response",
+  "type": "code",
+  "script": "structure-response.js",
+  "parameters": {
+    "mode": "runOnceForAllItems"
+  },
+  "position": [500, 0],
+  "typeVersion": 2
+}

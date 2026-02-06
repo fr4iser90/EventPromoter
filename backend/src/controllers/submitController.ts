@@ -8,6 +8,7 @@ import { HistoryService } from '../services/historyService.js'
 import { ConfigService } from '../services/configService.js'
 import { EventService } from '../services/eventService.js'
 import { PublishTrackingService, PublishResult } from '../services/publishTrackingService.js'
+import { getBaseUrlFromRequest } from '../utils/requestUtils.js'
 
 export class SubmitController {
   static async submit(req: Request, res: Response) {
@@ -114,6 +115,9 @@ export class SubmitController {
         })
       }
 
+      // Get base URL from request (proxy-safe, handles all cases)
+      const baseUrl = getBaseUrlFromRequest(req)
+
       // Use PublishingService which handles n8n/API/Playwright routing
       // All data comes from backend storage
       const publishRequest = {
@@ -124,7 +128,7 @@ export class SubmitController {
         eventData: parsedData // Use parsed data for eventData
       }
 
-      const publishResult = await PublishingService.publish(publishRequest)
+      const publishResult = await PublishingService.publish(publishRequest, baseUrl)
 
       // Save to history
       try {

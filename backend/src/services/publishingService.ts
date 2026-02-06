@@ -32,8 +32,10 @@ export interface PublishResult {
 export class PublishingService {
   /**
    * Main publish method - routes to appropriate publisher based on config
+   * @param request - Publish request with files, platforms, content, etc.
+   * @param baseUrl - Base URL derived from request (for file URL transformation)
    */
-  static async publish(request: PublishRequest): Promise<PublishResult> {
+  static async publish(request: PublishRequest, baseUrl?: string): Promise<PublishResult> {
     const appConfig = await ConfigService.getAppConfig()
     const publishingMode = appConfig?.publishingMode || 'auto'
     const n8nEnabled = appConfig?.n8nEnabled !== false // Default to true if not set
@@ -46,7 +48,7 @@ export class PublishingService {
       // Try n8n first if enabled and URL is configured
       if (n8nEnabled && n8nUrl) {
         try {
-          return await this.publishViaN8n(request, n8nUrl)
+          return await this.publishViaN8n(request, n8nUrl, baseUrl)
         } catch (error: any) {
           console.warn('N8N publishing failed, falling back to API:', error.message)
           mode = 'api'
@@ -64,7 +66,7 @@ export class PublishingService {
         if (!n8nUrl) {
           throw new Error('N8N webhook URL not configured')
         }
-        return await this.publishViaN8n(request, n8nUrl)
+        return await this.publishViaN8n(request, n8nUrl, baseUrl)
 
       case 'api':
         return await this.publishViaAPI(request)
@@ -79,14 +81,18 @@ export class PublishingService {
 
   /**
    * Publish via N8N webhook (existing implementation)
+   * @param request - Publish request
+   * @param webhookUrl - N8N webhook URL
+   * @param baseUrl - Base URL for file URL transformation (from request)
    */
-  private static async publishViaN8n(request: PublishRequest, webhookUrl: string): Promise<PublishResult> {
+  private static async publishViaN8n(request: PublishRequest, webhookUrl: string, baseUrl?: string): Promise<PublishResult> {
     const n8nPayload = await N8nService.transformPayloadForN8n(
       request.files,
       request.platforms,
       request.content,
       request.hashtags,
-      request.eventData
+      request.eventData,
+      baseUrl
     )
 
     const n8nResult = await N8nService.submitToN8n(webhookUrl, n8nPayload)

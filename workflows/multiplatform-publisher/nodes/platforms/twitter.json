@@ -1,0 +1,31 @@
+[
+  {
+    "id": "platform-twitter-check",
+    "name": "🐦 Has Twitter Content?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.twitter !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [200, -200],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-twitter-post",
+    "name": "🐦 Post to Twitter/X",
+    "type": "twitter",
+    "parameters": {
+      "resource": "tweet",
+      "text": "={{ $json.twitter.text }}",
+      "additionalFields": {}
+    },
+    "position": [400, -200],
+    "typeVersion": 2
+  }
+]

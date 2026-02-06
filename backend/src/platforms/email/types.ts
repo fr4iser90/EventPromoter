@@ -14,7 +14,12 @@ export interface EmailAttachment {
   name: string
   type: string
   size: number
-  base64: string
+  base64?: string // Optional: for legacy support
+  url?: string // Optional: URL to file (preferred for n8n)
+  fileId?: string // Optional: file ID for mapping to UploadedFile
+  id?: string // Optional: alternative file ID field
+  filename?: string // Optional: alternative name field
+  contentType?: string // Optional: alternative type field
 }
 
 export interface EmailConfig {

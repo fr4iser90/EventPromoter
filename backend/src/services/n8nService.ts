@@ -57,7 +57,8 @@ export class N8nService {
     platforms: Record<string, boolean>,
     content: any,
     hashtags: string[],
-    eventData: any
+    eventData: any,
+    baseUrl?: string
   ): Promise<any> {
     // Transform platformContent for N8N API format
     const n8nPayload: any = {
@@ -89,7 +90,9 @@ export class N8nService {
             // If not, use content as-is
             if (platformService && typeof (platformService as any).transformForN8n === 'function') {
               // Platform-specific transformation (now supports async)
-              const transformed = await (platformService as any).transformForN8n(platformContent)
+              // Pass files array for attachment URL mapping (email platform needs this)
+              // Pass baseUrl for file URL transformation (email platform needs this)
+              const transformed = await (platformService as any).transformForN8n(platformContent, files, baseUrl)
               n8nPayload[platformId] = transformed
             } else {
               // No platform-specific transformation - use content as-is
@@ -105,16 +108,13 @@ export class N8nService {
     // Transform files to include full URLs for n8n
     if (n8nPayload.files && Array.isArray(n8nPayload.files)) {
       n8nPayload.files = n8nPayload.files.map((file: any) => {
-        // If file has URL, ensure it's a full URL
-        if (file.url && (file.url.startsWith('/files/') || file.url.startsWith('/api/files/'))) {
-          // Convert relative URL to absolute URL
-          const baseUrl = process.env.BASE_URL
+        // If file has relative URL, convert to absolute URL
+        if (file.url?.startsWith('/')) {
           if (!baseUrl) {
-            throw new Error('BASE_URL environment variable is required for file URL transformation')
+            throw new Error('BASE_URL required - must come from request')
           }
-          // Ensure URL starts with /api/files/ for n8n
-          const cleanUrl = file.url.startsWith('/api/files/') ? file.url : `/api${file.url}`
-          file.url = `${baseUrl}${cleanUrl}`
+          // Use URL API for robust URL construction (handles /files/, /api/files/, etc.)
+          file.url = new URL(file.url, baseUrl).toString()
         }
         return file
       })

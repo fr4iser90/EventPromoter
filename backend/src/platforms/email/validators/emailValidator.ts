@@ -15,29 +15,50 @@ export class EmailValidator {
     return emailRegex.test(email.trim())
   }
 
-  static validateContent(content: EmailContent): EmailValidation {
+  static validateContent(content: EmailContent | any): EmailValidation {
     const errors: string[] = []
 
-    // Required fields
-    if (!content.subject || typeof content.subject !== 'string' || content.subject.trim().length === 0) {
-      errors.push('Email subject is required')
-    }
+    // ✅ NEW FORMAT: Check for _templates array (multiple templates with targets)
+    const hasTemplates = (content as any)._templates && Array.isArray((content as any)._templates) && (content as any)._templates.length > 0
 
-    // Accept both html and bodyText (bodyText is from editor, html is legacy/full HTML)
-    const hasHtml = content.html && typeof content.html === 'string' && content.html.trim().length > 0
-    const hasBodyText = content.bodyText && typeof content.bodyText === 'string' && content.bodyText.trim().length > 0
-    if (!hasHtml && !hasBodyText) {
-      errors.push('Email content is required (html or bodyText)')
-    }
-
-    // Recipients are required but may come from platform settings, not content
-    // Only validate if recipients are provided in content
-    if (content.recipients) {
-      if (!Array.isArray(content.recipients)) {
-        errors.push('Recipients must be an array')
-      } else if (content.recipients.length === 0) {
-        errors.push('At least one recipient is required')
+    if (hasTemplates) {
+      // Validate _templates format
+      const templates = (content as any)._templates
+      
+      if (templates.length === 0) {
+        errors.push('At least one template must be specified')
       }
+
+      // Validate each template entry
+      for (let i = 0; i < templates.length; i++) {
+        const templateEntry = templates[i]
+        
+        if (!templateEntry.templateId) {
+          errors.push(`Template entry ${i + 1}: templateId is required`)
+        }
+        
+        if (!templateEntry.targets) {
+          errors.push(`Template entry ${i + 1}: targets configuration is required`)
+        } else {
+          const targets = templateEntry.targets
+          if (!targets.mode) {
+            errors.push(`Template entry ${i + 1}: targets.mode is required`)
+          } else if (targets.mode === 'individual' && (!targets.individual || !Array.isArray(targets.individual) || targets.individual.length === 0)) {
+            errors.push(`Template entry ${i + 1}: individual targets array is required when mode is 'individual'`)
+          } else if (targets.mode === 'groups' && (!targets.groups || !Array.isArray(targets.groups) || targets.groups.length === 0)) {
+            errors.push(`Template entry ${i + 1}: groups array is required when mode is 'groups'`)
+          }
+        }
+      }
+
+      // For _templates format, subject/html/bodyText are optional (will be generated from template)
+      // But if provided, validate them
+      if (content.subject && typeof content.subject === 'string' && content.subject.trim().length === 0) {
+        errors.push('Email subject cannot be empty')
+      }
+    } else {
+      // No _templates format found - this is required
+      errors.push('Email content must use _templates format with targets configuration')
     }
 
     // Subject validation
@@ -45,24 +66,8 @@ export class EmailValidator {
       errors.push(`Subject too long: ${content.subject.length}/${this.MAX_SUBJECT_LENGTH} characters (may be truncated)`)
     }
 
-    // Recipients validation (only if array)
-    if (content.recipients && Array.isArray(content.recipients)) {
-      if (content.recipients.length > this.MAX_RECIPIENTS) {
-        errors.push(`Too many recipients: ${content.recipients.length}/${this.MAX_RECIPIENTS} maximum`)
-      }
-
-      const invalidEmails = content.recipients.filter(email => !email || !this.validateEmail(email))
-      if (invalidEmails.length > 0) {
-        errors.push(`Invalid email addresses: ${invalidEmails.join(', ')}`)
-      }
-
-      // Check for duplicates (only valid emails)
-      const validRecipients = content.recipients.filter(email => email && typeof email === 'string')
-      const uniqueRecipients = new Set(validRecipients.map(email => email.toLowerCase()))
-      if (uniqueRecipients.size !== validRecipients.length) {
-        errors.push('Duplicate email addresses found')
-      }
-    }
+    // Recipients validation is done per template in _templates format
+    // No need to validate legacy recipients array anymore
 
     // CC/BCC validation
     const allAdditionalRecipients = [
@@ -128,19 +133,30 @@ export class EmailValidator {
       }
     }
 
+    // Calculate recipient count (for _templates format, count will be calculated later)
+    // We can count the number of templates
+    const recipientCount = hasTemplates ? (content as any)._templates.length : 0
+
     return {
       isValid: errors.length === 0,
       errors,
       warnings,
-      recipientCount: content.recipients?.length || 0,
+      recipientCount,
       totalSize
     }
   }
 
-  static getTotalRecipientCount(content: EmailContent): number {
-    return (content.recipients?.length || 0) +
-           (content.cc?.length || 0) +
-           (content.bcc?.length || 0)
+  static getTotalRecipientCount(content: EmailContent | any): number {
+    // For _templates format, count will be calculated when recipients are extracted
+    if ((content as any)._templates && Array.isArray((content as any)._templates)) {
+      // Return number of templates as approximation (actual count requires target resolution)
+      return (content as any)._templates.length
+    }
+    
+    // Legacy format (should not be used)
+    return ((content as EmailContent).recipients?.length || 0) +
+           ((content as EmailContent).cc?.length || 0) +
+           ((content as EmailContent).bcc?.length || 0)
   }
 
   static estimateSendTime(recipientCount: number): string {

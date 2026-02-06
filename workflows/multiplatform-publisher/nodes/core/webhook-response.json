@@ -1,0 +1,12 @@
+{
+  "id": "webhook-response",
+  "name": "✅ Send Response",
+  "type": "respondToWebhook",
+  "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ $json }}",
+    "options": {}
+  },
+  "position": [700, 0],
+  "typeVersion": 1
+}

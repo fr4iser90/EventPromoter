@@ -14,11 +14,14 @@ const schemaRegistry = SchemaRegistry.getInstance();
 schemaRegistry.loadAllSchemas();
 
 const app = express()
-const PORT = process.env.PORT || 4000
+const PORT = Number(process.env.PORT) || 4000
 
 console.log(`🚀 Starting EventPromoter Backend...`)
-console.log(`🚀 EventPromoter Backend running on http://localhost:${PORT}`)
+console.log(`🚀 EventPromoter Backend running on http://0.0.0.0:${PORT}`)
 console.log(`📁 Config directory: ${process.cwd()}/config`)
+
+// 0. Trust proxy - REQUIRED for X-Forwarded-* headers (Case 3-5)
+app.set('trust proxy', true)
 
 // 1. Global middleware (CORS, i18n)
 app.use(corsMiddleware)
@@ -43,8 +46,8 @@ app.use(notFoundHandler)
 // Error handler (must be last)
 app.use(errorHandler)
 
-// Start server
-app.listen(PORT, () => {
+// Start server on 0.0.0.0 to accept connections from network (Case 2-5)
+app.listen(PORT, '0.0.0.0', () => {
   if (process.env.DEBUG_CONFIG_ACCESS === 'true') {
     console.log('🔍 Debug mode: Config access will be logged')
   }

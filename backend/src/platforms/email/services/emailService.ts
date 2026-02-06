@@ -25,11 +25,16 @@ export class EmailService {
     return EmailValidator.estimateSendTime(this.getTotalRecipientCount(content))
   }
 
-  transformForAPI(content: EmailContent) {
+  transformForAPI(content: EmailContent | any) {
     // Use html if available, otherwise use bodyText (convert to HTML if needed)
     const html = content.html || (content.bodyText ? this.buildBodyFromStructuredFields({ bodyText: content.bodyText }) : '')
+    
+    // For _templates format, recipients are extracted per template
+    // This method is mainly for legacy/fallback, but we'll return empty recipients for _templates
+    const recipients = (content as any)._templates ? [] : (content as EmailContent).recipients || []
+    
     return {
-      to: content.recipients,
+      to: recipients,
       cc: content.cc || [],
       bcc: content.bcc || [],
       subject: content.subject,
@@ -399,25 +404,37 @@ export class EmailService {
    * Transform email content for N8N webhook
    * Delegates to platform-specific N8N service
    * Now supports async (for extracting recipients from targets)
+   * @param content - Email content
+   * @param files - Optional array of uploaded files for attachment URL mapping
+   * @param baseUrl - Base URL from request (for file URL transformation)
    */
-  async transformForN8n(content: any): Promise<any> {
-    return EmailN8nService.transformForN8n(content, this)
+  async transformForN8n(content: any, files: any[] = [], baseUrl?: string): Promise<any> {
+    return EmailN8nService.transformForN8n(content, this, files, baseUrl)
   }
 
   /**
    * Extract human-readable target from email content
-   * Returns comma-separated list of recipients
+   * Returns template info from _templates format
    */
-  extractTarget(content: EmailContent): string {
-    if (content.recipients) {
-      if (Array.isArray(content.recipients)) {
-        return content.recipients.join(', ')
-      }
-      if (typeof content.recipients === 'string') {
-        return content.recipients
-      }
+  extractTarget(content: any): string {
+    // Only support _templates format
+    if (!content._templates || !Array.isArray(content._templates) || content._templates.length === 0) {
+      return 'No templates configured'
     }
-    return 'No recipients'
+
+    const templates = content._templates
+    const targetDescriptions = templates.map((t: any, idx: number) => {
+      const templateName = t.templateName || t.templateId || `Template ${idx + 1}`
+      if (t.targets?.mode === 'all') {
+        return `${templateName}: All recipients`
+      } else if (t.targets?.mode === 'individual' && t.targets?.targetNames) {
+        return `${templateName}: ${t.targets.targetNames.join(', ')}`
+      } else if (t.targets?.mode === 'groups' && t.targets?.groups) {
+        return `${templateName}: ${t.targets.groups.length} group(s)`
+      }
+      return templateName
+    })
+    return targetDescriptions.join(' | ')
   }
 
   /**

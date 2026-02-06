@@ -556,18 +556,19 @@ export class TemplateController {
             // Check individual targets
             if (mappingRequest.targets.mode === 'individual' && 
                 mappingRequest.targets.individual) {
+              const individualTargetIds = mappingRequest.targets.individual
               const selectedTargets = allTargets.filter(t => 
-                mappingRequest.targets.individual.includes(t.id)
+                individualTargetIds.includes(t.id)
               )
               
               const missing = selectedTargets.filter(target => {
-                return requiredFields.some(field => {
+                return requiredFields.some((field: string) => {
                   // Check if field exists and has value
                   if (field === 'name') {
                     // name can be firstName+lastName or name field
                     return !target.name && !(target.firstName && target.lastName)
                   }
-                  return !target[field] || String(target[field]).trim() === ''
+                  return !target[field as keyof typeof target] || String(target[field as keyof typeof target]).trim() === ''
                 })
               })
               
@@ -587,9 +588,10 @@ export class TemplateController {
                 mappingRequest.targets.groups) {
               const groups = await service.getGroups()
               const allTargets = await service.getTargets()
+              const groupIds = mappingRequest.targets.groups
               
-              for (const groupId of mappingRequest.targets.groups) {
-                const group = groups[groupId] || Object.values(groups).find(g => 
+              for (const groupId of groupIds) {
+                const group = (groups as Record<string, any>)[groupId] || Object.values(groups).find((g: any) => 
                   g.id === groupId || g.name === groupId
                 )
                 
@@ -600,11 +602,11 @@ export class TemplateController {
                 )
                 
                 const missing = groupTargets.filter(target => {
-                  return requiredFields.some(field => {
+                  return requiredFields.some((field: string) => {
                     if (field === 'name') {
                       return !target.name && !(target.firstName && target.lastName)
                     }
-                    return !target[field] || String(target[field]).trim() === ''
+                    return !target[field as keyof typeof target] || String(target[field as keyof typeof target]).trim() === ''
                   })
                 })
                 

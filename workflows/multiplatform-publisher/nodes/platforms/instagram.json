@@ -1,0 +1,30 @@
+[
+  {
+    "id": "platform-instagram-check",
+    "name": "📸 Has Instagram Content?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.instagram !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [200, 0],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-instagram-post",
+    "name": "📸 Post to Instagram",
+    "type": "instagram",
+    "parameters": {
+      "operation": "createPost",
+      "additionalFields": {}
+    },
+    "position": [400, 0],
+    "typeVersion": 1
+  }
+]

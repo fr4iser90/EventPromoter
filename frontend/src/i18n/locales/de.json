@@ -74,22 +74,6 @@
     "home": "Start",
     "templates": "Vorlagen"
   },
-  "common": {
-    "save": "Speichern",
-    "cancel": "Abbrechen",
-    "delete": "Löschen",
-    "edit": "Bearbeiten",
-    "close": "Schließen",
-    "loading": "Laden...",
-    "error": "Fehler",
-    "success": "Erfolg",
-    "dropActive": "Dateien hier ablegen...",
-    "dropInactive": "Dateien hier ziehen und ablegen",
-    "hashtagsPlaceholder": "Hashtags durch Kommas getrennt eingeben (z.B., party, music, berlin)",
-    "characters": "Zeichen",
-    "unknown": "Unbekannt",
-    "update": "Aktualisieren"
-  },
   "fileUpload": {
     "title": "Dateien hochladen",
     "dropzone": "Dateien hier ablegen oder klicken zum Auswählen",
@@ -110,7 +94,8 @@
     "parsedData": "Geparste Event-Daten",
     "sourceFiles": "Quelldateien",
     "eventImage": "Event-Bild",
-    "title": "Titel"
+    "title": "Titel",
+    "eventTitle": "Titel"
   },
   "template": {
     "placeholders": "Vorlagen-Platzhalter verfügbar",
@@ -229,6 +214,20 @@
     "hashtagBuilder": "# Hashtag Builder"
   },
   "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "dropActive": "Dateien hier ablegen...",
+    "dropInactive": "Dateien hier ziehen und ablegen",
+    "hashtagsPlaceholder": "Hashtags durch Kommas getrennt eingeben (z.B., party, music, berlin)",
+    "characters": "Zeichen",
+    "unknown": "Unbekannt",
+    "update": "Aktualisieren",
     "done": "Fertig",
     "files": "Dateien",
     "platforms": "Plattformen"

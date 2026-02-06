@@ -9,8 +9,79 @@
 import { EmailContent } from '../types.js'
 import { EmailService } from './emailService.js'
 import { EmailTargetService } from './targetService.js'
+import { UploadedFile } from '../../../types/index.js'
 
 export class EmailN8nService {
+  /**
+   * Transform attachments from Base64/File-IDs to URLs for n8n
+   * Maps attachment file IDs to URLs from the files array
+   * @param attachments - Attachment array
+   * @param files - Uploaded files array for mapping
+   * @param baseUrl - Base URL from request (for absolute URL construction)
+   */
+  private static transformAttachmentsToUrls(
+    attachments: any[],
+    files: UploadedFile[],
+    baseUrl?: string
+  ): any[] {
+    if (!attachments || !Array.isArray(attachments) || attachments.length === 0) {
+      return []
+    }
+
+    if (!baseUrl) {
+      console.warn('BASE_URL not provided, cannot convert attachments to URLs')
+      return attachments // Return as-is if BASE_URL not available
+    }
+
+    return attachments.map((attachment: any) => {
+      // If attachment already has a URL, use it (but ensure it's absolute)
+      if (attachment.url) {
+        if (attachment.url.startsWith('http://') || attachment.url.startsWith('https://')) {
+          return {
+            filename: attachment.name || attachment.filename || 'attachment',
+            url: attachment.url,
+            contentType: attachment.type || attachment.contentType || 'application/octet-stream',
+            size: attachment.size || 0
+          }
+        }
+        // Relative URL - make it absolute using URL API
+        return {
+          filename: attachment.name || attachment.filename || 'attachment',
+          url: new URL(attachment.url, baseUrl).toString(),
+          contentType: attachment.type || attachment.contentType || 'application/octet-stream',
+          size: attachment.size || 0
+        }
+      }
+
+      // If attachment has a file ID, try to find it in files array
+      if (attachment.fileId || attachment.id) {
+        const fileId = attachment.fileId || attachment.id
+        const file = files.find(f => f.id === fileId || f.filename === fileId || f.name === fileId)
+        
+        if (file && file.url) {
+          // Convert relative URL to absolute using URL API
+          return {
+            filename: file.name || attachment.name || 'attachment',
+            url: new URL(file.url, baseUrl).toString(),
+            contentType: file.type || attachment.type || 'application/octet-stream',
+            size: file.size || attachment.size || 0
+          }
+        }
+      }
+
+      // If attachment has base64 but no URL/fileId, we can't convert it
+      // Log warning and skip it (n8n can't use base64 directly)
+      if (attachment.base64) {
+        console.warn(`Attachment "${attachment.name || 'unknown'}" has base64 but no file ID/URL. Skipping for n8n.`)
+        return null
+      }
+
+      // Fallback: return as-is (might not work with n8n, but at least we tried)
+      console.warn(`Attachment "${attachment.name || 'unknown'}" could not be converted to URL format`)
+      return attachment
+    }).filter((att: any) => att !== null) // Remove null entries
+  }
+
   /**
    * Extract recipients from targets configuration
    * Helper function to convert targets (mode/groups/individual) to recipient email array
@@ -57,9 +128,18 @@ export class EmailN8nService {
 
   /**
    * Transform email content for N8N webhook
-   * Supports both legacy format (content.recipients) and new format (_templates array)
+   * Requires _templates format with targets configuration
+   * @param content - Email content with _templates array
+   * @param emailService - Email service instance
+   * @param files - Array of uploaded files for mapping attachment IDs to URLs
+   * @param baseUrl - Base URL from request (for file URL transformation)
    */
-  static async transformForN8n(content: any, emailService: EmailService): Promise<any> {
+  static async transformForN8n(
+    content: any, 
+    emailService: EmailService,
+    files: UploadedFile[] = [],
+    baseUrl?: string
+  ): Promise<any> {
     // ✅ NEW FORMAT: Check for _templates array (multiple templates with targets)
     if (content._templates && Array.isArray(content._templates) && content._templates.length > 0) {
       // Transform each template+targets combination to a separate email
@@ -197,9 +277,9 @@ export class EmailN8nService {
           emailPayload.bcc = content.bcc.join(', ')
         }
 
-        // Add attachments if present
+        // Add attachments if present - transform to URLs for n8n
         if (content.attachments && Array.isArray(content.attachments) && content.attachments.length > 0) {
-          emailPayload.attachments = content.attachments
+          emailPayload.attachments = this.transformAttachmentsToUrls(content.attachments, files, baseUrl)
         }
 
         emails.push(emailPayload)
@@ -209,47 +289,7 @@ export class EmailN8nService {
       return emails.length === 1 ? emails[0] : { emails }
     }
 
-    // ✅ LEGACY FORMAT: Check if recipients exist and is valid array
-    if (!content.recipients || !Array.isArray(content.recipients) || content.recipients.length === 0) {
-      throw new Error('Email recipients are required but not found in content')
-    }
-
-    // Get HTML content - use html if available, otherwise build from bodyText
-    let html: string
-    if (content.html && typeof content.html === 'string' && content.html.trim().length > 0) {
-      html = content.html
-    } else if (content.bodyText && typeof content.bodyText === 'string' && content.bodyText.trim().length > 0) {
-      html = emailService.buildBodyFromStructuredFields({ bodyText: content.bodyText })
-    } else {
-      throw new Error('Email content (html or bodyText) is required')
-    }
-
-    if (!html || html.trim().length === 0) {
-      throw new Error('Email content (html or bodyText) is required')
-    }
-
-    const result: any = {
-      subject: content.subject,
-      html: html,
-      // Convert recipients array to comma-separated string for N8N email node
-      recipients: content.recipients.join(', ')
-    }
-
-    // Add cc if present
-    if (content.cc && Array.isArray(content.cc) && content.cc.length > 0) {
-      result.cc = content.cc.join(', ')
-    }
-
-    // Add bcc if present
-    if (content.bcc && Array.isArray(content.bcc) && content.bcc.length > 0) {
-      result.bcc = content.bcc.join(', ')
-    }
-
-    // Add attachments if present
-    if (content.attachments && Array.isArray(content.attachments) && content.attachments.length > 0) {
-      result.attachments = content.attachments
-    }
-
-    return result
+    // No _templates format found - this is required
+    throw new Error('Email content must use _templates format with targets configuration. Legacy recipients format is no longer supported.')
   }
 }

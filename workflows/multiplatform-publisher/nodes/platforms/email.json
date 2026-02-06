@@ -1,0 +1,160 @@
+[
+  {
+    "id": "platform-email-check",
+    "name": "📧 Has Email Content?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.email !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [200, 600],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-prepare",
+    "name": "📧 Prepare Email Data",
+    "type": "code",
+    "script": "email-prepare.js",
+    "parameters": {
+      "mode": "runOnceForEachItem"
+    },
+    "position": [400, 600],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-check-attachments",
+    "name": "📎 Has Attachments?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.email.attachments !== undefined && Array.isArray($json.email.attachments) && $json.email.attachments.length > 0 }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [600, 600],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-save-email-data",
+    "name": "💾 Save Email Data",
+    "type": "code",
+    "script": "email-save-data.js",
+    "parameters": {
+      "mode": "runOnceForEachItem"
+    },
+    "position": [800, 500],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-split-attachments",
+    "name": "📎 Split Attachments",
+    "type": "n8n-nodes-base.splitOut",
+    "parameters": {
+      "fieldToSplitOut": "email.attachments",
+      "options": {}
+    },
+    "position": [1600, 500],
+    "typeVersion": 1
+  },
+  {
+    "id": "platform-email-download-attachment",
+    "name": "⬇️ Download Attachment",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "GET",
+      "url": "={{ $json.email.attachments.url }}",
+      "options": {
+        "response": {
+          "response": {
+            "responseFormat": "file"
+          }
+        }
+      },
+      "authentication": "none"
+    },
+    "position": [1600, 500],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-email-transform-attachment",
+    "name": "🔄 Transform to Base64",
+    "type": "code",
+    "script": "email-transform-attachment.js",
+    "parameters": {
+      "mode": "runOnceForEachItem"
+    },
+    "position": [1600, 500],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-aggregate-attachments",
+    "name": "📎 Aggregate Attachments",
+    "type": "n8n-nodes-base.aggregate",
+    "parameters": {
+      "aggregate": "aggregateAllItemData",
+      "destinationFieldName": "processedAttachments",
+      "options": {}
+    },
+    "position": [1600, 500],
+    "typeVersion": 1
+  },
+  {
+    "id": "platform-email-merge-with-attachments",
+    "name": "🔗 Merge Email & Attachments",
+    "type": "n8n-nodes-base.merge",
+    "parameters": {
+      "mode": "mergeByPosition",
+      "options": {}
+    },
+    "position": [2200, 600],
+    "typeVersion": 2.1
+  },
+  {
+    "id": "platform-email-format-attachments",
+    "name": "📎 Format Attachments Array",
+    "type": "code",
+    "script": "email-format-attachments.js",
+    "parameters": {
+      "mode": "runOnceForEachItem"
+    },
+    "position": [2200, 600],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-send",
+    "name": "📧 Send Email",
+    "type": "emailSend",
+    "parameters": {
+      "fromEmail": "noreply@eventpromoter.com",
+      "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
+      "subject": "={{ $json.email.subject }}",
+      "html": "={{ $json.email.html }}",
+      "attachments": "={{ $json.attachments }}"
+    },
+    "position": [2200, 600],
+    "typeVersion": 2.1
+  },
+  {
+    "id": "platform-email-send-no-attachments",
+    "name": "📧 Send Email (No Attachments)",
+    "type": "emailSend",
+    "parameters": {
+      "fromEmail": "noreply@eventpromoter.com",
+      "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
+      "subject": "={{ $json.email.subject }}",
+      "html": "={{ $json.email.html }}"
+    },
+    "position": [800, 700],
+    "typeVersion": 2.1
+  }
+]
