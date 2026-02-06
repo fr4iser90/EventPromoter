@@ -44,7 +44,7 @@ import config from '../../../config'
 import { getApiUrl, getFileUrl } from '../../../shared/utils/api'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect, onBatchChange }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const theme = useTheme()
   const { schema, loading: schemaLoading, error: schemaError } = usePlatformSchema(platform)
   const { templates, getTemplate } = useTemplates(platform)
@@ -61,7 +61,52 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   const [disabledVariables, setDisabledVariables] = useState(new Set())
   const [hideAutoFilled, setHideAutoFilled] = useState(true) // Hide auto-filled variables by default
   const [targetsExpanded, setTargetsExpanded] = useState(false) // For collapsible targets summary
-  
+  const [translatedTemplateNames, setTranslatedTemplateNames] = useState({}) // Cache for translated template names
+
+  // ✅ Translate template names based on current language
+  useEffect(() => {
+    const translateTemplateNames = async () => {
+      if (!content?._templates || !Array.isArray(content._templates)) {
+        setTranslatedTemplateNames({})
+        return
+      }
+
+      const translations = {}
+      const currentLang = i18n.language.split('-')[0] // 'de-DE' -> 'de'
+
+      for (const templateEntry of content._templates) {
+        if (!templateEntry.templateId) {
+          translations[templateEntry.id] = templateEntry.templateName || templateEntry.templateId
+          continue
+        }
+
+        try {
+          const template = await getTemplate(templateEntry.templateId)
+          if (template) {
+            // Check if template has translations
+            const templateTranslations = template.translations
+            if (templateTranslations && currentLang !== 'en' && templateTranslations[currentLang]) {
+              // Use translated name if available
+              translations[templateEntry.id] = templateTranslations[currentLang].name || templateEntry.templateName
+            } else {
+              // Fallback to stored name or template.name
+              translations[templateEntry.id] = templateEntry.templateName || template.name || templateEntry.templateId
+            }
+          } else {
+            // Template not found, use stored name
+            translations[templateEntry.id] = templateEntry.templateName || templateEntry.templateId
+          }
+        } catch (error) {
+          // Error loading template, use stored name
+          translations[templateEntry.id] = templateEntry.templateName || templateEntry.templateId
+        }
+      }
+
+      setTranslatedTemplateNames(translations)
+    }
+
+    translateTemplateNames()
+  }, [content?._templates, i18n.language, getTemplate])
 
   // Get available images for image selection (memoized to prevent hook issues)
   const availableImages = useMemo(() => {
@@ -274,12 +319,6 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
       // ✅ Spread targetsValue to preserve ALL properties including templateLocale
       let resolvedTargets = targetsValue ? { ...targetsValue } : null
       
-      // ✅ DEBUG: Log to verify templateLocale is present
-      if (targetsValue) {
-        console.log('🔍 targetsValue:', targetsValue)
-        console.log('🔍 templateLocale in targetsValue:', targetsValue.templateLocale)
-      }
-      
       if (resolvedTargets && targetsBlock) {
         const dataEndpoints = targetsBlock.rendering?.dataEndpoints || {}
         
@@ -342,10 +381,6 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
           }
         }
       }
-      
-      // ✅ DEBUG: Log before saving
-      console.log('🔍 resolvedTargets before saving:', resolvedTargets)
-      console.log('🔍 templateLocale in resolvedTargets:', resolvedTargets?.templateLocale)
 
       // ✅ Add to _templates array (multiple templates with targets)
       const existingTemplates = content._templates || []
@@ -517,7 +552,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         return (
           <Box sx={{ mt: 2, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-              Angewendete Templates:
+              {t('editor.appliedTemplates')}
             </Typography>
             {templates.map((templateEntry, index) => (
               <Box
@@ -534,10 +569,10 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                      {templateEntry.templateName || templateEntry.templateId}
+                      {translatedTemplateNames[templateEntry.id] || templateEntry.templateName || templateEntry.templateId}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      Targets: {formatTargetsSummary(templateEntry.targets)}
+                      {t('editor.targets')} {formatTargetsSummary(templateEntry.targets)}
                     </Typography>
                     {/* ✅ Show Language always - if templateLocale is missing, show Error */}
                     {(() => {
@@ -555,7 +590,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                     {(templateEntry.specificFiles?.length > 0 || (content?.globalFiles?.length > 0)) && (
                       <Typography variant="caption" color="primary.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                         <AttachFileIcon sx={{ fontSize: '0.8rem' }} />
-                        {templateEntry.specificFiles?.length || 0} spezifisch, {content?.globalFiles?.length || 0} standard
+                        {templateEntry.specificFiles?.length || 0} {t('editor.specificFiles')}, {content?.globalFiles?.length || 0} {t('editor.standardFiles')}
                       </Typography>
                     )}
                   </Box>
@@ -600,7 +635,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                   size="small"
                 />
               }
-              label="Hide auto-filled variables"
+              label={t('editor.hideAutoFilledVariables')}
               sx={{ mb: 1 }}
             />
             
@@ -677,7 +712,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                         }}
                       >
                         <MenuItem value="">
-                          <em>No image</em>
+                          <em>{t('editor.noImage')}</em>
                         </MenuItem>
                         {availableImages.map((file, index) => {
                           const fileUrl = getFileUrl(file.url)
@@ -757,7 +792,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
             variant="body2"
             color={textLength > maxLength ? "error" : "text.secondary"}
           >
-            Characters: {textLength}/{maxLength}
+            {t('editor.characters')} {textLength}/{maxLength}
           </Typography>
         )}
         <Chip

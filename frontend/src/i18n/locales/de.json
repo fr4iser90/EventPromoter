@@ -216,6 +216,23 @@
   "hashtags": {
     "title": "Hashtags"
   },
+  "parser": {
+    "lineupPlaceholder": "Künstler 1, Künstler 2, ...",
+    "commaSeparated": "Komma-getrennt eingeben",
+    "saving": "Speichere...",
+    "saved": "Gespeichert",
+    "save": "Speichern",
+    "parsedHashtagsFromFile": "Geparste Hashtags aus der Datei",
+    "noHashtagsFound": "Keine Hashtags in der geparsten Datei gefunden",
+    "additionalHashtags": "Weitere Hashtags (komma-getrennt)",
+    "manageHashtags": "Hashtags verwalten",
+    "hashtagBuilder": "# Hashtag Builder"
+  },
+  "common": {
+    "done": "Fertig",
+    "files": "Dateien",
+    "platforms": "Plattformen"
+  },
   "platform": {
     "selection": "Plattform-Auswahl",
     "enabled": "Plattform aktiviert",
@@ -230,5 +247,28 @@
     "invalidJsonFormat": "Ungültiges JSON-Format",
     "failedToLoadFileContent": "Dateiinhalt konnte nicht geladen werden",
     "errorLoadingFileContent": "Fehler beim Laden des Dateiinhalts"
+  },
+  "editor": {
+    "appliedTemplates": "Angewendete Templates:",
+    "targets": "Targets:",
+    "hideAutoFilledVariables": "Automatisch ausgefüllte Variablen ausblenden",
+    "characters": "Zeichen:",
+    "specificFiles": "spezifisch",
+    "standardFiles": "standard",
+    "attachments": "Anhänge",
+    "includeAttachments": "Anhänge mitschicken",
+    "selectFilesToAttach": "Wählen Sie die Dateien aus, die als Anhang gesendet werden sollen:",
+    "selected": "Ausgewählt:",
+    "noImage": "Kein Bild",
+    "standardFilesGlobal": "Standard (Global)",
+    "standardAttachments": "Standard-Anhänge",
+    "standardAttachmentsDescription": "Diese Dateien werden JEDEM Template als Anhang beigefügt (z.B. Flyer, AGB).",
+    "includeStandardAttachments": "Standard-Anhänge mitschicken",
+    "maxStandardAttachments": "Sie können maximal 10 Standard-Anhänge hinzufügen.",
+    "noAttachmentFilesFound": "Keine Dateien für Anhänge gefunden.",
+    "selectPublicFile": "Öffentliche Datei auswählen...",
+    "selectedStandardAttachments": "Ausgewählte Standard-Anhänge:",
+    "maxFilesReached": "Maximale Dateianzahl erreicht.",
+    "noCompatibleFiles": "Keine kompatiblen Dateien hochgeladen."
   }
 }

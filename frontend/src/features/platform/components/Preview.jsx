@@ -189,15 +189,6 @@ function PlatformPreview({ platform, content, isActive }) {
         
         if (data.success && data.previews && Array.isArray(data.previews) && data.previews.length > 0) {
           // Multi-preview response
-          console.log('🔍 Preview: Received multi-previews from backend:', data.previews.map((p, i) => ({
-            index: i,
-            templateId: p.templateId,
-            group: p.group,
-            targets: p.targets,
-            metadata: p.metadata,
-            htmlLength: p.html?.length,
-            cssLength: p.css?.length
-          })))
           setMultiPreviews(data.previews)
           setPreviewHtml(null)
           setPreviewCss(null)
@@ -267,15 +258,6 @@ function PlatformPreview({ platform, content, isActive }) {
             <Tabs 
               value={activeTab} 
               onChange={(e, newValue) => {
-                console.log('🔍 Preview: Tab changed to:', newValue)
-                const preview = multiPreviews[newValue]
-                console.log('🔍 Preview: Selected preview:', {
-                  index: newValue,
-                  templateId: preview?.templateId,
-                  group: preview?.group,
-                  targets: preview?.targets,
-                  metadata: preview?.metadata
-                })
                 setActiveTab(newValue)
               }}
               variant="scrollable"
@@ -361,14 +343,6 @@ function PlatformPreview({ platform, content, isActive }) {
             </Tabs>
             {multiPreviews[activeTab] && (() => {
               const currentPreview = multiPreviews[activeTab]
-              console.log('🔍 Preview: Rendering preview tab:', {
-                index: activeTab,
-                templateId: currentPreview.templateId,
-                group: currentPreview.group,
-                targets: currentPreview.targets,
-                metadata: currentPreview.metadata,
-                fullPreview: currentPreview
-              })
               return (
                 <PreviewFrame
                   document={{

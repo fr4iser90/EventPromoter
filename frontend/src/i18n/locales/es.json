@@ -216,6 +216,23 @@
   "hashtags": {
     "title": "Hashtags"
   },
+  "parser": {
+    "lineupPlaceholder": "Artista 1, Artista 2, ...",
+    "commaSeparated": "Ingrese separado por comas",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "save": "Guardar",
+    "parsedHashtagsFromFile": "Hashtags Analizados del Archivo",
+    "noHashtagsFound": "No se encontraron hashtags en el archivo analizado",
+    "additionalHashtags": "Hashtags Adicionales (separados por comas)",
+    "manageHashtags": "Gestionar Hashtags",
+    "hashtagBuilder": "# Constructor de Hashtags"
+  },
+  "common": {
+    "done": "Hecho",
+    "files": "Archivos",
+    "platforms": "Plataformas"
+  },
   "platform": {
     "selection": "Selección de Plataforma",
     "enabled": "Plataforma habilitada",
@@ -230,5 +247,28 @@
     "invalidJsonFormat": "Formato JSON inválido",
     "failedToLoadFileContent": "Error al cargar contenido del archivo",
     "errorLoadingFileContent": "Error al cargar contenido del archivo"
+  },
+  "editor": {
+    "appliedTemplates": "Plantillas Aplicadas:",
+    "targets": "Destinos:",
+    "hideAutoFilledVariables": "Ocultar variables auto-completadas",
+    "characters": "Caracteres:",
+    "specificFiles": "específicos",
+    "standardFiles": "estándar",
+    "attachments": "Adjuntos",
+    "includeAttachments": "Incluir adjuntos",
+    "selectFilesToAttach": "Seleccione los archivos para adjuntar:",
+    "selected": "Seleccionado:",
+    "noImage": "Sin imagen",
+    "standardFilesGlobal": "Estándar (Global)",
+    "standardAttachments": "Adjuntos Estándar",
+    "standardAttachmentsDescription": "Estos archivos se adjuntarán a CADA plantilla (p. ej. folleto, términos).",
+    "includeStandardAttachments": "Incluir adjuntos estándar",
+    "maxStandardAttachments": "Puede agregar un máximo de 10 adjuntos estándar.",
+    "noAttachmentFilesFound": "No se encontraron archivos para adjuntos.",
+    "selectPublicFile": "Seleccionar archivo público...",
+    "selectedStandardAttachments": "Adjuntos Estándar Seleccionados:",
+    "maxFilesReached": "Número máximo de archivos alcanzado.",
+    "noCompatibleFiles": "No se han subido archivos compatibles."
   }
 }

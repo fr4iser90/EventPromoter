@@ -157,7 +157,6 @@ function CompositeRenderer({ block, value, onChange, platform }) {
     // This ensures templateLocale is always available
     if (!initialValues.templateLocale) {
       const userLocale = getUserLocale(i18n)
-      console.log('🔍 CompositeRenderer: Initializing templateLocale with user locale:', userLocale)
       initialValues.templateLocale = userLocale
       hasChanges = true
     }
@@ -235,14 +234,6 @@ function CompositeRenderer({ block, value, onChange, platform }) {
     }
     setCompositeValues(newValues)
     
-    // ✅ DEBUG: Log templateLocale changes
-    if (fieldKey === 'templateLocale') {
-      console.log('🔍 CompositeRenderer: templateLocale changed to:', fieldValue)
-      console.log('🔍 CompositeRenderer: compositeValues before:', compositeValues)
-      console.log('🔍 CompositeRenderer: newValues:', newValues)
-      console.log('🔍 CompositeRenderer: calling onChange with:', newValues)
-    }
-    
     // Call onChange immediately, not in useEffect
     onChange(newValues)
   }
@@ -264,18 +255,11 @@ function CompositeRenderer({ block, value, onChange, platform }) {
     )
   }
 
-  // Convert schema to fields for SchemaRenderer
-  const fields = Object.entries(schema).map(([fieldKey, fieldSchema]) => {
-    const sourceData = data[fieldSchema.source] || []
-    
-    // ✅ DEBUG: Log templateLocale field
-    if (fieldKey === 'templateLocale') {
-      console.log('🔍 CompositeRenderer: templateLocale field found in schema:', fieldSchema)
-      console.log('🔍 CompositeRenderer: sourceData for templateLocale:', sourceData)
-      console.log('🔍 CompositeRenderer: compositeValues[templateLocale]:', compositeValues[fieldKey])
-    }
-    
-    return {
+    // Convert schema to fields for SchemaRenderer
+    const fields = Object.entries(schema).map(([fieldKey, fieldSchema]) => {
+      const sourceData = data[fieldSchema.source] || []
+
+      return {
       name: fieldKey,
       type: fieldSchema.fieldType === 'mapping' ? 'mapping' : fieldSchema.fieldType,
       label: fieldSchema.label,
@@ -520,11 +504,6 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                 fields={[field]}
                 values={{ [field.name]: compositeValues[field.name] || field.default || '' }}
                 onChange={(fieldName, fieldValue) => {
-                  // ✅ DEBUG: Log all onChange calls
-                  if (fieldName === 'templateLocale') {
-                    console.log('🔍 CompositeRenderer: SchemaRenderer onChange called for templateLocale:', fieldValue)
-                    console.log('🔍 CompositeRenderer: current compositeValues:', compositeValues)
-                  }
                   handleFieldChange(fieldName, fieldValue)
                 }}
                 errors={{}}

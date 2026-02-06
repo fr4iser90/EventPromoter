@@ -208,7 +208,7 @@ function Preview() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {savingParsedData && (
             <Alert severity="info" icon={<CircularProgress size={20} />} sx={{ py: 0.5 }}>
-              Speichere...
+              {t('parser.saving')}
             </Alert>
           )}
           {!savingParsedData && lastParsedDataSave && !parsedDataSaveError && (
@@ -217,7 +217,7 @@ function Preview() {
               icon={<CheckCircleIcon />}
               sx={{ py: 0.5 }}
             >
-              Gespeichert {new Date(lastParsedDataSave).toLocaleTimeString()}
+              {t('parser.saved')} {new Date(lastParsedDataSave).toLocaleTimeString()}
             </Alert>
           )}
           {parsedDataSaveError && (
@@ -480,8 +480,8 @@ function Preview() {
                           size="small"
                           value={Array.isArray(editedData.lineup) ? editedData.lineup.join(', ') : (editedData.lineup || '')}
                           onChange={(e) => handleLineupChange(e.target.value)}
-                          placeholder="Künstler 1, Künstler 2, ..."
-                          helperText="Komma-getrennt eingeben"
+                          placeholder={t('parser.lineupPlaceholder')}
+                          helperText={t('parser.commaSeparated')}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               '&:hover fieldset': {
@@ -544,7 +544,7 @@ function Preview() {
                             disabled={savingParsedData}
                             size="medium"
                           >
-                            {savingParsedData ? 'Speichere...' : 'Speichern'}
+                            {savingParsedData ? t('parser.saving') : t('parser.save')}
                           </Button>
                         </Box>
                       </Grid>
@@ -560,7 +560,7 @@ function Preview() {
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                             <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                              #️⃣ Hashtags
+                              {t('hashtags.title')}
                             </Typography>
                             {hashtags.length > 0 && (
                               <Chip 
@@ -575,7 +575,7 @@ function Preview() {
                         <AccordionDetails>
                           <Box sx={{ mb: 2 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                              Geparste Hashtags aus der Datei:
+                              {t('parser.parsedHashtagsFromFile')}:
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
                               {hashtags.length > 0 ? (
@@ -595,7 +595,7 @@ function Preview() {
                                 ))
                               ) : (
                                 <Typography variant="body2" color="text.secondary">
-                                  Keine Hashtags in der geparsten Datei gefunden
+                                  {t('parser.noHashtagsFound')}
                                 </Typography>
                               )}
                             </Box>
@@ -605,7 +605,7 @@ function Preview() {
                             <Box sx={{ display: 'flex', gap: 1, ml: 2, alignItems: 'center' }}>
                               <TextField
                                 size="small"
-                                placeholder="Weitere Hashtags (komma-getrennt)"
+                                placeholder={t('parser.additionalHashtags')}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     const input = e.target.value.trim()
@@ -629,7 +629,7 @@ function Preview() {
                                 variant="contained"
                                 onClick={() => setHashtagDialogOpen(true)}
                               >
-                                Manage Hashtags
+                                {t('parser.manageHashtags')}
                               </Button>
                             </Box>
                           </Box>
@@ -807,7 +807,7 @@ function Preview() {
         maxWidth="lg"
         fullWidth
       >
-        <DialogTitle># Hashtag Builder</DialogTitle>
+        <DialogTitle>{t('parser.hashtagBuilder')}</DialogTitle>
         <DialogContent>
           <HashtagBuilder
             eventData={editedData}
@@ -819,7 +819,7 @@ function Preview() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setHashtagDialogOpen(false)}>
-            Done
+            {t('common.done')}
           </Button>
         </DialogActions>
       </Dialog>

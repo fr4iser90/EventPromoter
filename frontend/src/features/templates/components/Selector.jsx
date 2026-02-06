@@ -182,7 +182,6 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
       
       // ✅ No darkMode parameter needed - Frontend sets CSS Variables based on theme
       const previewUrl = getApiUrl(`platforms/${platform}/preview?mode=desktop&locale=${previewLocale}`)
-      console.log('[Template Preview] Preview URL:', previewUrl)
       
       const response = await fetch(previewUrl, {
         method: 'POST',
@@ -225,7 +224,6 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
   // This ensures preview follows app theme changes
   useEffect(() => {
     if (previewOpen && selectedTemplate) {
-      console.log('[Template Preview] Theme changed, reloading preview. Current mode:', theme.palette.mode)
       loadPreview(selectedTemplate)
     }
   }, [theme.palette.mode, previewOpen, selectedTemplate, loadPreview]) // ✅ Include loadPreview in dependencies
@@ -517,7 +515,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                                       </ListItemIcon>
                                       <ListItemText 
                                         primary={file.filename}
-                                        secondary={isStandard ? 'Standard (Global)' : file.type}
+                                        secondary={isStandard ? t('editor.standardFilesGlobal') : file.type}
                                         primaryTypographyProps={{ 
                                           variant: 'body2', 
                                           fontWeight: (isStandard || isSelected) ? 'bold' : 'normal' 
@@ -711,7 +709,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                                   </ListItemIcon>
                                   <ListItemText 
                                     primary={file.filename}
-                                    secondary={isStandard ? 'Standard (Global)' : file.type}
+                                    secondary={isStandard ? t('editor.standardFilesGlobal') : file.type}
                                     primaryTypographyProps={{ 
                                       variant: 'body2', 
                                       fontWeight: (isStandard || isSelected) ? 'bold' : 'normal' 

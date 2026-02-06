@@ -25,9 +25,9 @@ function FileSelectionBlock({ block, content, onChange, uploadedFileRefs }) {
   // Extrahiere Einstellungen aus dem Block-Schema
   const { id: fileSelectionKey, settings } = block;
   const {
-    enableToggle = { label: 'Dateieinschluss aktivieren', default: false },
-    selectionLimit = { max: Infinity, message: 'Maximale Dateianzahl erreicht.' },
-    fileFilter = { allowedMimeTypes: [], allowedExtensions: [], noFilesMessage: 'Keine kompatiblen Dateien hochgeladen.' }
+    enableToggle = { label: 'editor.includeAttachments', default: false },
+    selectionLimit = { max: Infinity, message: 'editor.maxFilesReached' },
+    fileFilter = { allowedMimeTypes: [], allowedExtensions: [], noFilesMessage: 'editor.noCompatibleFiles' }
   } = settings || {};
 
   const [isFileInclusionEnabled, setIsFileInclusionEnabled] = useState(enableToggle?.default || false);
@@ -119,7 +119,7 @@ function FileSelectionBlock({ block, content, onChange, uploadedFileRefs }) {
           {compatibleFiles.length > 0 ? (
             <>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                Wählen Sie die Dateien aus, die als Anhang gesendet werden sollen:
+                {t('editor.selectFilesToAttach')}
               </Typography>
               <List dense sx={{ 
                 width: '100%', 
@@ -178,7 +178,7 @@ function FileSelectionBlock({ block, content, onChange, uploadedFileRefs }) {
               
               <Box sx={{ mt: 1, display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="caption" color={content?.[fileSelectionKey]?.length >= (selectionLimit?.max || Infinity) ? 'error' : 'text.secondary'}>
-                  Ausgewählt: {content?.[fileSelectionKey]?.length || 0} / {selectionLimit?.max || '∞'}
+                  {t('editor.selected')} {content?.[fileSelectionKey]?.length || 0} / {selectionLimit?.max || '∞'}
                 </Typography>
               </Box>
 
@@ -190,7 +190,7 @@ function FileSelectionBlock({ block, content, onChange, uploadedFileRefs }) {
             </>
           ) : (
             <Alert severity="warning" sx={{ mt: 1 }}>
-              {t(fileFilter?.noFilesMessage || 'Keine kompatiblen Dateien hochgeladen.')}
+              {t(fileFilter?.noFilesMessage || 'editor.noCompatibleFiles')}
             </Alert>
           )}
         </Box>

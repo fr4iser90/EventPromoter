@@ -138,25 +138,25 @@ export const emailEditorSchema: EditorSchema = {
     {
       type: 'file_selection_input',
       id: 'globalFiles',
-      label: 'Standard-Anhänge',
-      description: 'Diese Dateien werden JEDEM Template als Anhang beigefügt (z.B. Flyer, AGB).',
+      label: 'editor.standardAttachments',
+      description: 'editor.standardAttachmentsDescription',
       required: false,
       settings: {
         enableToggle: {
-          label: 'Standard-Anhänge mitschicken',
+          label: 'editor.includeStandardAttachments',
           default: false
         },
         selectionLimit: {
           max: 10,
-          message: 'Sie können maximal 10 Standard-Anhänge hinzufügen.'
+          message: 'editor.maxStandardAttachments'
         },
         fileFilter: {
           allowedMimeTypes: ["application/pdf", "image/jpeg", "image/png", "image/gif", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "text/plain"],
           allowedExtensions: ["pdf", "jpg", "jpeg", "png", "gif", "doc", "docx", "xls", "xlsx", "txt"],
-          noFilesMessage: 'Keine Dateien für Anhänge gefunden.'
+          noFilesMessage: 'editor.noAttachmentFilesFound'
         },
-        selectFileLabel: 'Öffentliche Datei auswählen...',
-        selectedFilesLabel: 'Ausgewählte Standard-Anhänge:'
+        selectFileLabel: 'editor.selectPublicFile',
+        selectedFilesLabel: 'editor.selectedStandardAttachments'
       },
       ui: {
         icon: 'attach_file',

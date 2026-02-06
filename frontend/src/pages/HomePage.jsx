@@ -354,19 +354,19 @@ function HomePage() {
             <Box sx={{ mb: 2, textAlign: 'center' }}>
               <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mb: 1, flexWrap: 'wrap' }}>
                 <Chip
-                  label={`📁 ${safeUploadedFileRefs.length} Files`}
+                  label={`📁 ${safeUploadedFileRefs.length} ${t('common.files')}`}
                   size="small"
                   color={safeUploadedFileRefs.length > 0 ? 'success' : 'default'}
                   variant={safeUploadedFileRefs.length > 0 ? 'filled' : 'outlined'}
                 />
                 <Chip
-                  label={`🎯 ${safeSelectedPlatforms.length} Platforms`}
+                  label={`🎯 ${safeSelectedPlatforms.length} ${t('common.platforms')}`}
                   size="small"
                   color={safeSelectedPlatforms.length > 0 ? 'success' : 'default'}
                   variant={safeSelectedPlatforms.length > 0 ? 'filled' : 'outlined'}
                 />
                 <Chip
-                  label={`🏷️ ${safeSelectedHashtags.length} Hashtags`}
+                  label={`🏷️ ${safeSelectedHashtags.length} ${t('hashtags.title')}`}
                   size="small"
                   color={safeSelectedHashtags.length > 0 ? 'info' : 'default'}
                   variant={safeSelectedHashtags.length > 0 ? 'filled' : 'outlined'}

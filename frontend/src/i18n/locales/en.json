@@ -217,6 +217,23 @@
   "hashtags": {
     "title": "Hashtags"
   },
+  "parser": {
+    "lineupPlaceholder": "Artist 1, Artist 2, ...",
+    "commaSeparated": "Enter comma-separated",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "save": "Save",
+    "parsedHashtagsFromFile": "Parsed Hashtags from File",
+    "noHashtagsFound": "No hashtags found in parsed file",
+    "additionalHashtags": "Additional Hashtags (comma-separated)",
+    "manageHashtags": "Manage Hashtags",
+    "hashtagBuilder": "# Hashtag Builder"
+  },
+  "common": {
+    "done": "Done",
+    "files": "Files",
+    "platforms": "Platforms"
+  },
   "platform": {
     "selection": "Platform Selection",
     "enabled": "Platform enabled",
@@ -231,5 +248,28 @@
     "invalidJsonFormat": "Invalid JSON format",
     "failedToLoadFileContent": "Failed to load file content",
     "errorLoadingFileContent": "Error loading file content"
+  },
+  "editor": {
+    "appliedTemplates": "Applied Templates:",
+    "targets": "Targets:",
+    "hideAutoFilledVariables": "Hide auto-filled variables",
+    "characters": "Characters:",
+    "specificFiles": "specific",
+    "standardFiles": "standard",
+    "attachments": "Attachments",
+    "includeAttachments": "Include attachments",
+    "selectFilesToAttach": "Select files to attach:",
+    "selected": "Selected:",
+    "noImage": "No image",
+    "standardFilesGlobal": "Standard (Global)",
+    "standardAttachments": "Standard Attachments",
+    "standardAttachmentsDescription": "These files will be attached to EVERY template (e.g. flyer, terms).",
+    "includeStandardAttachments": "Include standard attachments",
+    "maxStandardAttachments": "You can add a maximum of 10 standard attachments.",
+    "noAttachmentFilesFound": "No files found for attachments.",
+    "selectPublicFile": "Select public file...",
+    "selectedStandardAttachments": "Selected Standard Attachments:",
+    "maxFilesReached": "Maximum number of files reached.",
+    "noCompatibleFiles": "No compatible files uploaded."
   }
 }
