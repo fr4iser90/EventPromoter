@@ -253,17 +253,8 @@ export class PlatformController {
         })
       }
 
-      // Get dark mode from query parameter (mode=dark or darkMode=true)
-      const mode = req.query.mode as string
-      const darkModeParam = req.query.darkMode as string
-      const darkMode = mode === 'dark' || darkModeParam === 'true'
-
-      // Resolve tokens in schema if darkMode parameter is provided
-      let schema = rawSchema
-      if (darkMode !== undefined) {
-        const { resolveSchema } = await import('../utils/tokenResolver.js')
-        schema = await resolveSchema(rawSchema, platformId, darkMode)
-      }
+      // ✅ Schema ist jetzt theme-agnostisch - kein darkMode-Parameter mehr nötig
+      const schema = rawSchema
 
       return res.json({
         success: true,
@@ -524,13 +515,13 @@ export class PlatformController {
    * Schema-driven preview rendering.
    * Backend renders HTML, frontend only displays it.
    * 
-   * GET /api/platforms/:platformId/preview?mode=desktop&darkMode=false
+   * GET /api/platforms/:platformId/preview?mode=desktop&locale=en
    * Body: { content: { ... } }
    */
   static async renderPreview(req: Request, res: Response) {
     try {
       const { platformId } = req.params
-      const { mode, client, darkMode } = req.query
+      const { mode, client, locale } = req.query
       const { content } = req.body
 
       if (!platformId) {
@@ -558,7 +549,18 @@ export class PlatformController {
           error: `Preview schema not available for platform '${platformId}'`
         })
       }
-
+      
+      // ✅ Validate and normalize locale
+      const validLocales = ['en', 'de', 'es']
+      const normalizedLocale = locale && typeof locale === 'string' 
+        ? locale.split('-')[0].toLowerCase() 
+        : undefined
+      const resolvedLocale = normalizedLocale && validLocales.includes(normalizedLocale) 
+        ? normalizedLocale 
+        : undefined
+      
+      console.log('[Backend Preview] locale query param:', locale, '→ resolved:', resolvedLocale)
+      
       // Render preview using PreviewRenderer
       const result = await PreviewRenderer.render({
         platform: platformId,
@@ -566,7 +568,7 @@ export class PlatformController {
         client: client as string,
         content,
         schema: schema.preview,
-        darkMode: darkMode === 'true'
+        locale: resolvedLocale
       })
 
       res.json({
@@ -587,7 +589,7 @@ export class PlatformController {
   /**
    * Render multi-preview HTML (generic - any platform can implement)
    * 
-   * POST /api/platforms/:platformId/multi-preview?mode=desktop&darkMode=false
+   * POST /api/platforms/:platformId/multi-preview?mode=desktop&locale=en
    * Body: { content: { ... }, targets: { ... } }
    * 
    * Platforms can implement renderMultiPreview in their service to support multiple previews
@@ -596,7 +598,7 @@ export class PlatformController {
   static async renderMultiPreview(req: Request, res: Response) {
     try {
       const { platformId } = req.params
-      const { mode, darkMode } = req.query
+      const { mode, locale } = req.query
       const { content, targets } = req.body
 
       if (!platformId) {
@@ -628,6 +630,15 @@ export class PlatformController {
       const schema = platformModule.schema
       const service = platformModule.service
 
+      // ✅ Validate and normalize locale
+      const validLocales = ['en', 'de', 'es']
+      const normalizedLocale = locale && typeof locale === 'string' 
+        ? locale.split('-')[0].toLowerCase() 
+        : undefined
+      const resolvedLocale = normalizedLocale && validLocales.includes(normalizedLocale) 
+        ? normalizedLocale 
+        : undefined
+
       // Check if platform implements renderMultiPreview
       if (service && typeof service.renderMultiPreview === 'function') {
         // Backend extracts targets from content if needed (platform-specific)
@@ -637,7 +648,7 @@ export class PlatformController {
           targets, // Optional: can be extracted from content by service
           schema: schema?.preview,
           mode: (mode as string) || 'desktop',
-          darkMode: darkMode === 'true'
+          locale: resolvedLocale
         })
 
         // If service returns single preview in array, that's fine
@@ -654,7 +665,7 @@ export class PlatformController {
         mode: mode as string,
         content,
         schema: schema?.preview || {},
-        darkMode: darkMode === 'true'
+        locale: resolvedLocale
       })
 
       res.json({

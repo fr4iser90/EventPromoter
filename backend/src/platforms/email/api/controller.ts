@@ -68,4 +68,28 @@ export class EmailController {
     }
   }
 
+  /**
+   * Get available locales (for composite block)
+   * GET /api/platforms/email/locales
+   */
+  static async getLocales(req: Request, res: Response) {
+    try {
+      return res.json({
+        success: true,
+        options: [
+          { label: '🇩🇪 Deutsch', value: 'de' },
+          { label: '🇬🇧 English', value: 'en' },
+          { label: '🇪🇸 Español', value: 'es' }
+        ]
+      })
+    } catch (error: any) {
+      console.error('Get locales error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get locales',
+        details: error.message
+      })
+    }
+  }
+
 }

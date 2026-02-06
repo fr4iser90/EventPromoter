@@ -16,6 +16,7 @@ export interface TemplateMappingRequest {
   parsedData?: ParsedEventData | null
   uploadedFileRefs?: Array<{ url: string; type: string; isImage?: boolean }>
   existingContent?: Record<string, ContentValue>
+  locale?: string // Optional locale for date/time formatting (e.g., 'de', 'en', 'es')
 }
 
 export interface TemplateMappingResult {
@@ -65,10 +66,16 @@ export class TemplateMappingService {
 
     const editorBlocks: ContentBlock[] = editorSchema.blocks
 
-    // Get template variables
+    // Get request language (from request.locale or default to 'en')
+    const lang = request.locale || 'en'
+    const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+    const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+
+    // Get template variables WITH locale formatting
     const templateVariables = getTemplateVariables(
       request.parsedData || null,
-      request.uploadedFileRefs || []
+      request.uploadedFileRefs || [],
+      validLang // Pass locale for date/time formatting
     )
 
     // Get template content structure

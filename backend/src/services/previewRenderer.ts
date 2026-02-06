@@ -25,14 +25,14 @@ export interface PreviewRenderOptions {
   content: Record<string, any>
   /** Preview schema */
   schema: PreviewSchema
-  /** Dark mode */
-  darkMode?: boolean
+  /** Locale for rendering (e.g., 'en', 'de', 'es') */
+  locale?: string
 }
 
 export interface PreviewRenderResult {
-  /** Rendered HTML */
+  /** Content HTML (kein vollständiges Dokument, nur Content) */
   html: string
-  /** Optional: CSS (if separate from HTML) */
+  /** Optional: strukturelles CSS (Layout, keine Farben) */
   css?: string
   /** Preview dimensions */
   dimensions?: {
@@ -60,7 +60,7 @@ export class PreviewRenderer {
    * @throws Error if platform doesn't have renderPreview method
    */
   static async render(options: PreviewRenderOptions): Promise<PreviewRenderResult> {
-    const { platform, mode, client, content, schema, darkMode } = options
+    const { platform, mode, client, content, schema, locale } = options
 
     // Get platform-specific service
     const platformService = await PlatformManager.getPlatformService(platform)
@@ -80,7 +80,7 @@ export class PreviewRenderer {
       schema,
       mode: mode || schema.defaultMode,
       client,
-      darkMode
+      locale
     })
   }
 }

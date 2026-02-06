@@ -37,6 +37,8 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { useTranslation } from 'react-i18next'
 import useStore from '../../../store'
 import DateDisplay from '../../../shared/components/ui/DateDisplay'
+import DateInput from '../../../shared/components/ui/DateInput'
+import TimeInput from '../../../shared/components/ui/TimeInput'
 import HashtagBuilder from '../../../flows/parser/HashtagBuilder'
 import axios from 'axios'
 import config from '../../../config'
@@ -298,12 +300,11 @@ function Preview() {
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           📅 {t('event.date')}
                         </Typography>
-                        <TextField
+                        <DateInput
                           fullWidth
                           size="small"
                           value={editedData.date || ''}
-                          onChange={(e) => handleFieldChange('date', e.target.value)}
-                          placeholder="DD.MM.YYYY"
+                          onChange={(isoDate) => handleFieldChange('date', isoDate)}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               '&:hover fieldset': {
@@ -320,12 +321,11 @@ function Preview() {
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                           🕒 {t('event.time')}
                         </Typography>
-                        <TextField
+                        <TimeInput
                           fullWidth
                           size="small"
                           value={editedData.time || ''}
-                          onChange={(e) => handleFieldChange('time', e.target.value)}
-                          placeholder="HH:MM"
+                          onChange={(time) => handleFieldChange('time', time)}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               '&:hover fieldset': {

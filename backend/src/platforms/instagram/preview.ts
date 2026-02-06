@@ -13,16 +13,13 @@ export async function renderInstagramPreview(options: {
   schema: any
   mode?: string
   client?: string
-  darkMode?: boolean
 }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
-  const { content, schema, mode = 'mobile', darkMode = false } = options
+  const { content, schema, mode = 'mobile' } = options
   
   const selectedMode = schema.modes?.find((m: any) => m.id === mode) || schema.modes?.[0]
   const width = selectedMode?.width || 375
   const height = selectedMode?.height || 375
   
-  const bgColor = darkMode ? '#000000' : '#ffffff'
-  const textColor = darkMode ? '#f5f5f5' : '#262626'
   const fontFamily = schema.styling?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
   
   // Process caption content - check if it's Markdown
@@ -37,28 +34,26 @@ export async function renderInstagramPreview(options: {
     }
   }
   
-  let html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+  // ✅ Nur Content-HTML (kein vollständiges Dokument)
+  // Frontend besitzt die Preview-Shell
+  let contentHtml = `
+  <div class="post-container">
+    ${content.image ? `<div class="post-media"><img src="${escapeHtml(content.image)}" alt="Instagram post" /></div>` : ''}
+    ${captionContent ? `<div class="post-caption">${captionContent}</div>` : ''}
+  </div>
+`
+  
+  // ✅ Strukturelles CSS (Theme via CSS Variables vom Frontend)
+  const structuralCss = `
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    body {
-      font-family: ${fontFamily};
-      background-color: ${bgColor};
-      color: ${textColor};
-      padding: 0;
-      line-height: 1.5;
-    }
     .post-container {
       max-width: ${width}px;
       margin: 0 auto;
-      background: ${bgColor};
+      background: var(--preview-container-bg);
     }
     .post-media {
       width: 100%;
@@ -76,6 +71,8 @@ export async function renderInstagramPreview(options: {
       line-height: 18px;
       padding: 12px;
       word-wrap: break-word;
+      color: var(--preview-text);
+      font-family: ${fontFamily};
     }
     .post-caption p {
       margin-bottom: 4px;
@@ -90,24 +87,17 @@ export async function renderInstagramPreview(options: {
       font-style: italic;
     }
     .post-caption a {
-      color: ${darkMode ? '#8e8e8e' : '#00376b'};
+      color: var(--preview-link);
       text-decoration: none;
     }
     .post-caption a:hover {
       text-decoration: underline;
     }
-  </style>
-</head>
-<body>
-  <div class="post-container">
-    ${content.image ? `<div class="post-media"><img src="${escapeHtml(content.image)}" alt="Instagram post" /></div>` : ''}
-    ${captionContent ? `<div class="post-caption">${captionContent}</div>` : ''}
-  </div>
-</body>
-</html>`
-
+  `
+  
   return {
-    html,
+    html: contentHtml,
+    css: structuralCss,
     dimensions: { width, height }
   }
 }

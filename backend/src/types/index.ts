@@ -105,7 +105,7 @@ export interface PlatformService {
     schema: any
     mode?: string
     client?: string
-    darkMode?: boolean
+    locale?: string
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }>
 
   // Multi-preview rendering (for platforms with multiple targets/segments)
@@ -115,7 +115,7 @@ export interface PlatformService {
     targets?: Record<string, any> // Platform-specific target configuration (e.g., recipients for email, subreddits for reddit)
     schema: any
     mode?: string
-    darkMode?: boolean
+    locale?: string
   }): Promise<Array<{
     target?: string // Target identifier (e.g., group name, subreddit name)
     templateId?: string // Template used for this target

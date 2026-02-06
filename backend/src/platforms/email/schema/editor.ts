@@ -57,6 +57,14 @@ export const emailEditorSchema: EditorSchema = {
             required: false,
             visibleWhen: { field: 'mode', value: 'individual' }
           },
+          templateLocale: {
+            fieldType: 'select',
+            label: '🌐 Template-Sprache',
+            description: 'Sprache für das Template (wird automatisch aus Targets aufgelöst, kann überschrieben werden)',
+            source: 'locales',
+            required: false,
+            default: 'de'
+          },
           defaultTemplate: {
             fieldType: 'select',
             label: 'Standard-Template',
@@ -77,7 +85,8 @@ export const emailEditorSchema: EditorSchema = {
           modes: 'platforms/email/recipient-modes',
           recipientGroups: 'platforms/email/target-groups',
           recipients: 'platforms/email/targets',
-          templates: 'platforms/email/templates'
+          templates: 'platforms/email/templates',
+          locales: 'platforms/email/locales'
         }
       }
     },

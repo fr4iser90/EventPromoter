@@ -151,7 +151,7 @@ function BulkTemplateApplier({
         if (!templateInfo?.hasTemplate) {
           results.skipped.push({
             platformId,
-            reason: 'No template for category'
+            reason: t('template.noTemplateForCategory')
           })
           continue
         }
@@ -160,7 +160,7 @@ function BulkTemplateApplier({
         if (hasContent && !overwriteExisting) {
           results.skipped.push({
             platformId,
-            reason: 'Existing content (overwrite disabled)'
+            reason: t('template.existingContentOverwriteDisabled')
           })
           continue
         }
@@ -173,7 +173,7 @@ function BulkTemplateApplier({
               : templateInfo.templateId)
           
           if (!templateIdToUse) {
-            throw new Error('No template selected')
+            throw new Error(t('template.noTemplateSelected'))
           }
 
           // ✅ Use backend API to apply template (same as Editor)
@@ -195,12 +195,12 @@ function BulkTemplateApplier({
           )
 
           if (!applyResponse.ok) {
-            throw new Error(`Failed to apply template: ${applyResponse.status}`)
+            throw new Error(t('template.failedToApplyWithStatus', { status: applyResponse.status }))
           }
 
           const applyResult = await applyResponse.json()
           if (!applyResult.success) {
-            throw new Error(applyResult.error || 'Failed to apply template')
+            throw new Error(applyResult.error || t('template.failedToApply'))
           }
 
           // Backend returns mapped content - use it directly!
@@ -238,7 +238,7 @@ function BulkTemplateApplier({
         skipped: [],
         errors: [{
           platformId: 'general',
-          error: error.message || 'Failed to apply templates'
+          error: error.message || t('template.failedToApplyTemplates')
         }]
       })
     } finally {
@@ -257,15 +257,15 @@ function BulkTemplateApplier({
     const hasContent = hasExistingContent(platformId)
     
     if (!templateInfo?.hasTemplate) {
-      return { type: 'missing', icon: <WarningIcon color="warning" />, text: 'No template' }
+      return { type: 'missing', icon: <WarningIcon color="warning" />, text: t('template.noTemplateAvailable') }
     }
     if (hasContent && !overwriteExisting) {
-      return { type: 'blocked', icon: <InfoIcon color="info" />, text: 'Has content' }
+      return { type: 'blocked', icon: <InfoIcon color="info" />, text: t('template.hasContent') }
     }
     if (hasContent && overwriteExisting) {
-      return { type: 'overwrite', icon: <WarningIcon color="warning" />, text: 'Will overwrite' }
+      return { type: 'overwrite', icon: <WarningIcon color="warning" />, text: t('template.willOverwrite') }
     }
-    return { type: 'ready', icon: <CheckIcon color="success" />, text: 'Ready' }
+    return { type: 'ready', icon: <CheckIcon color="success" />, text: t('status.ready') }
   }
 
   const canApply = selectedCategory && 

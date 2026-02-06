@@ -522,6 +522,14 @@ export class TemplateController {
       const { platform, id } = req.params
       const mappingRequest: TemplateMappingRequest = req.body
 
+      // Get request language (from i18next middleware or default to 'en')
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+      
+      // Add locale to mapping request for date/time formatting
+      mappingRequest.locale = validLang
+
       // Get template
       const template = await TemplateService.getTemplate(platform, id)
       if (!template) {

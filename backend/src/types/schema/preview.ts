@@ -78,7 +78,7 @@ export interface PreviewSchema {
     /** Enable interactive preview */
     interactive?: boolean
   }
-  /** Preview styling tokens (resolved by backend based on darkMode) */
+  /** Preview styling tokens (theme handled by frontend via CSS Variables) */
   styling?: {
     /** Background color token */
     backgroundColor?: string

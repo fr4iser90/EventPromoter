@@ -13,17 +13,13 @@ export async function renderLinkedInPreview(options: {
   schema: any
   mode?: string
   client?: string
-  darkMode?: boolean
 }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
-  const { content, schema, mode = 'desktop', darkMode = false } = options
+  const { content, schema, mode = 'desktop' } = options
   
   const selectedMode = schema.modes?.find((m: any) => m.id === mode) || schema.modes?.[0]
   const width = selectedMode?.width || 700
   const height = selectedMode?.height || 600
   
-  const bgColor = darkMode ? '#000000' : '#f3f2ef'
-  const cardBg = darkMode ? '#1d1d1d' : '#ffffff'
-  const textColor = darkMode ? '#e9ecef' : '#000000'
   const fontFamily = schema.styling?.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
   
   // Process text content - check if it's Markdown
@@ -45,29 +41,28 @@ export async function renderLinkedInPreview(options: {
     linkContent = `<a href="${escapeHtml(linkUrl)}" class="post-link" target="_blank" rel="noopener noreferrer">${escapeHtml(content.link)}</a>`
   }
   
-  let html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+  // ✅ Nur Content-HTML (kein vollständiges Dokument)
+  // Frontend besitzt die Preview-Shell
+  let contentHtml = `
+  <div class="post-container">
+    ${textContent ? `<div class="post-content">${textContent}</div>` : ''}
+    ${content.image ? `<div class="post-media"><img src="${escapeHtml(content.image)}" alt="Post media" /></div>` : ''}
+    ${linkContent ? `<div class="post-content">${linkContent}</div>` : ''}
+  </div>
+`
+  
+  // ✅ Strukturelles CSS (Theme via CSS Variables vom Frontend)
+  const structuralCss = `
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    body {
-      font-family: ${fontFamily};
-      background-color: ${bgColor};
-      color: ${textColor};
-      padding: 16px;
-      line-height: 1.5;
-    }
     .post-container {
       max-width: ${width}px;
       margin: 0 auto;
-      background: ${cardBg};
-      border: 1px solid ${darkMode ? '#333' : '#e0e0e0'};
+      background: var(--preview-container-bg);
+      border: 1px solid var(--preview-divider);
       border-radius: 8px;
       padding: 16px;
     }
@@ -76,6 +71,8 @@ export async function renderLinkedInPreview(options: {
       line-height: 20px;
       margin-bottom: 12px;
       word-wrap: break-word;
+      color: var(--preview-text);
+      font-family: ${fontFamily};
     }
     .post-content p {
       margin-bottom: 8px;
@@ -109,25 +106,17 @@ export async function renderLinkedInPreview(options: {
       display: block;
     }
     .post-link {
-      color: ${darkMode ? '#70b5f9' : '#0a66c2'};
+      color: var(--preview-link);
       text-decoration: none;
     }
     .post-link:hover {
       text-decoration: underline;
     }
-  </style>
-</head>
-<body>
-  <div class="post-container">
-    ${textContent ? `<div class="post-content">${textContent}</div>` : ''}
-    ${content.image ? `<div class="post-media"><img src="${escapeHtml(content.image)}" alt="Post media" /></div>` : ''}
-    ${linkContent ? `<div class="post-content">${linkContent}</div>` : ''}
-  </div>
-</body>
-</html>`
-
+  `
+  
   return {
-    html,
+    html: contentHtml,
+    css: structuralCss,
     dimensions: { width, height }
   }
 }

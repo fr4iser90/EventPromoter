@@ -26,11 +26,14 @@ import {
 } from '@mui/material'
 import { usePlatformMetadata } from '../hooks/usePlatformSchema'
 import { getApiUrl } from '../../../shared/utils/api'
+import { getUserLocale } from '../../../shared/utils/localeUtils'
+import { PreviewFrame } from '../../../shared/components/PreviewFrame'
 
 function PlatformPreview({ platform, content, isActive }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const theme = useTheme()
   const [previewHtml, setPreviewHtml] = useState(null)
+  const [previewCss, setPreviewCss] = useState(null)
   const [previewDimensions, setPreviewDimensions] = useState(null)
   const [multiPreviews, setMultiPreviews] = useState(null)
   const [activeTab, setActiveTab] = useState(0)
@@ -39,6 +42,9 @@ function PlatformPreview({ platform, content, isActive }) {
   
   // Use usePlatformMetadata for platform metadata (name, icon, color)
   const { platform: platformData, loading: metadataLoading, error: metadataError } = usePlatformMetadata(platform)
+  
+  // ✅ Get user locale for preview (same as Selector.jsx)
+  const userLocale = getUserLocale(i18n)
 
   // ✅ GENERIC: Fetch preview HTML from backend
   // Backend decides if multi-preview is needed based on content
@@ -58,11 +64,12 @@ function PlatformPreview({ platform, content, isActive }) {
       setError(null)
 
       try {
-        const darkMode = theme.palette.mode === 'dark'
+        // ✅ No darkMode parameter needed - Frontend sets CSS Variables based on theme
         
         // ✅ GENERIC: Try multi-preview first (backend decides if it's needed)
         // If platform doesn't support multi-preview, backend returns single preview
-        const endpoint = getApiUrl(`platforms/${platform}/multi-preview?mode=desktop&darkMode=${darkMode}`)
+        // ✅ Include locale parameter for correct language rendering
+        const endpoint = getApiUrl(`platforms/${platform}/multi-preview?mode=desktop&locale=${userLocale}`)
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -77,7 +84,8 @@ function PlatformPreview({ platform, content, isActive }) {
 
         if (!response.ok) {
           // If multi-preview fails, fallback to single preview
-          const fallbackEndpoint = getApiUrl(`platforms/${platform}/preview?mode=desktop&darkMode=${darkMode}`)
+          // ✅ Include locale parameter for correct language rendering
+          const fallbackEndpoint = getApiUrl(`platforms/${platform}/preview?mode=desktop&locale=${userLocale}`)
           const fallbackResponse = await fetch(fallbackEndpoint, {
             method: 'POST',
             headers: {
@@ -93,6 +101,7 @@ function PlatformPreview({ platform, content, isActive }) {
           const fallbackData = await fallbackResponse.json()
           if (fallbackData.success && fallbackData.html) {
             setPreviewHtml(fallbackData.html)
+            setPreviewCss(fallbackData.css || null)
             setPreviewDimensions(fallbackData.dimensions || null)
             setMultiPreviews(null)
           } else {
@@ -107,9 +116,11 @@ function PlatformPreview({ platform, content, isActive }) {
           // Multi-preview response
           setMultiPreviews(data.previews)
           setPreviewHtml(null)
+          setPreviewCss(null)
         } else if (data.success && data.html) {
           // Single preview response (backend returned single preview even from multi-preview endpoint)
           setPreviewHtml(data.html)
+          setPreviewCss(data.css || null)
           setPreviewDimensions(data.dimensions || null)
           setMultiPreviews(null)
         } else {
@@ -124,7 +135,7 @@ function PlatformPreview({ platform, content, isActive }) {
     }
 
     fetchPreview()
-  }, [platform, contentKey, theme.palette.mode])
+  }, [platform, contentKey, theme.palette.mode, userLocale, i18n.language])
 
   // Use platform metadata from backend - NO HARDCODED VALUES
   const platformColor = platformData?.color || platformData?.metadata?.color || '#666'
@@ -254,49 +265,30 @@ function PlatformPreview({ platform, content, isActive }) {
               })}
             </Tabs>
             {multiPreviews[activeTab] && (
-              <Box
-                sx={{
-                  width: '100%',
-                  height: multiPreviews[activeTab].dimensions?.height || 'auto',
-                  minHeight: multiPreviews[activeTab].dimensions?.height || 400,
-                  overflow: 'auto'
+              <PreviewFrame
+                document={{
+                  html: multiPreviews[activeTab].html,
+                  css: multiPreviews[activeTab].css,
+                  meta: {
+                    title: `${platformName} Preview - ${multiPreviews[activeTab].group || 'Alle'}`
+                  }
                 }}
-              >
-                <iframe
-                  srcDoc={multiPreviews[activeTab].html}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                    minHeight: multiPreviews[activeTab].dimensions?.height || 400
-                  }}
-                  title={`${platformName} Preview - ${multiPreviews[activeTab].group || 'Alle'}`}
-                />
-              </Box>
+                dimensions={multiPreviews[activeTab].dimensions}
+              />
             )}
           </Box>
         ) : previewHtml ? (
-          // ✅ ZERO LOGIC: Just display HTML from backend
-          // Backend has already rendered everything based on schema
-          <Box
-            sx={{
-              width: '100%',
-              height: previewDimensions?.height || 'auto',
-              minHeight: previewDimensions?.height || 400,
-              overflow: 'auto'
+          // ✅ Generic PreviewFrame: Hostet Content-HTML vom Backend
+          <PreviewFrame
+            document={{
+              html: previewHtml,
+              css: previewCss,
+              meta: {
+                title: `${platformName} Preview`
+              }
             }}
-          >
-            <iframe
-              srcDoc={previewHtml}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                minHeight: previewDimensions?.height || 400
-              }}
-              title={`${platformName} Preview`}
-            />
-          </Box>
+            dimensions={previewDimensions}
+          />
         ) : (
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">

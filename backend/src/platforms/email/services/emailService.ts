@@ -305,7 +305,7 @@ export class EmailService {
     schema: any
     mode?: string
     client?: string
-    darkMode?: boolean
+    locale?: string
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderEmailPreview(this, options)
   }
@@ -325,7 +325,7 @@ export class EmailService {
     targets?: Record<string, any> // Optional: can be extracted from content
     schema: any
     mode?: string
-    darkMode?: boolean
+    locale?: string
   }): Promise<Array<{
     target?: string
     templateId?: string
@@ -357,7 +357,7 @@ export class EmailService {
           recipients: templateEntry.targets,
           schema: options.schema,
           mode: options.mode || 'desktop',
-          darkMode: options.darkMode
+          locale: options.locale
         })
 
         // Add templateId to each preview

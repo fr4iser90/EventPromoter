@@ -80,7 +80,6 @@ export class FacebookService {
     schema: any
     mode?: string
     client?: string
-    darkMode?: boolean
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderFacebookPreview(options)
   }

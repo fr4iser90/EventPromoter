@@ -66,7 +66,6 @@ export class LinkedInService {
     schema: any
     mode?: string
     client?: string
-    darkMode?: boolean
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderLinkedInPreview(options)
   }

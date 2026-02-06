@@ -177,5 +177,14 @@
   },
   "metadata": {
     "description": "Send event announcements via email with rich HTML content"
+  },
+  "attachments": {
+    "forRun": "Attachments for this run",
+    "description": "Select additional attachments for this group. Standard attachments are already preset.",
+    "total": "Total for this group: {{count}} attachments"
+  },
+  "fileVisibility": {
+    "public": "Public",
+    "internal": "Internal"
   }
 }

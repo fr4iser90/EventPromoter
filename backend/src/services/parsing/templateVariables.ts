@@ -19,19 +19,57 @@ export interface UploadedFileRef {
 }
 
 /**
+ * Format date based on locale
+ */
+function formatDate(dateString: string, locale: string = 'en'): string {
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return dateString // Invalid date, return as-is
+    
+    const localeMap: Record<string, string> = {
+      'de': 'de-DE',
+      'es': 'es-ES',
+      'en': 'en-US'
+    }
+    const normalizedLocale = localeMap[locale] || 'en-US'
+    
+    return date.toLocaleDateString(normalizedLocale, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  } catch {
+    return dateString
+  }
+}
+
+/**
+ * Format time based on locale (24h for de/es, keep as-is for en)
+ */
+function formatTime(timeString: string, locale: string = 'en'): string {
+  // Time is already in 24h format (HH:MM), just return as-is
+  // All locales use 24h format for consistency
+  return timeString
+}
+
+/**
  * Convert parsed event data + uploaded files to template variables
  * 
  * Creates aliases for compatibility (e.g., {title} → {eventTitle}, {name})
+ * Formats date and time based on locale
  * 
  * @param parsedData - Parsed event data from TXT/MD files
  * @param uploadedFileRefs - Array of uploaded file references
+ * @param locale - Optional locale for formatting dates/times (default: 'en')
  * @returns Object with all template variables (including aliases)
  */
 export function getTemplateVariables(
   parsedData: ParsedEventData | null,
-  uploadedFileRefs: UploadedFileRef[] = []
+  uploadedFileRefs: UploadedFileRef[] = [],
+  locale: string = 'en'
 ): Record<string, string> {
   const variables: Record<string, string> = {}
+  const normalizedLocale = locale.split('-')[0] // Normalize 'de-DE' -> 'de'
 
   // Map parsed data fields using aliases from alias.ts
   if (parsedData) {
@@ -47,21 +85,24 @@ export function getTemplateVariables(
       // Get aliases for this field
       const aliases = VARIABLE_ALIASES[key] || []
       
-      // Set base variable
-      if (key === 'lineup' && Array.isArray(value)) {
-        const lineupStr = value.join(', ')
-        variables[key] = lineupStr
-        // Set aliases
-        aliases.forEach(alias => {
-          variables[alias] = lineupStr
-        })
-      } else if (typeof value === 'string' && value) {
-        variables[key] = value
-        // Set aliases
-        aliases.forEach(alias => {
-          variables[alias] = value
-        })
+      // Format date and time based on locale
+      let formattedValue: string
+      if (key === 'date') {
+        formattedValue = formatDate(String(value), normalizedLocale)
+      } else if (key === 'time') {
+        formattedValue = formatTime(String(value), normalizedLocale)
+      } else if (key === 'lineup' && Array.isArray(value)) {
+        formattedValue = value.join(', ')
+      } else {
+        formattedValue = String(value)
       }
+      
+      // Set base variable
+      variables[key] = formattedValue
+      // Set aliases
+      aliases.forEach(alias => {
+        variables[alias] = formattedValue
+      })
     })
   }
 

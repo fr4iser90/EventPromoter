@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Box,
   Button,
@@ -38,14 +38,19 @@ import {
   Public as PublicIcon,
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
+import { PreviewFrame } from '../../../shared/components/PreviewFrame'
 import { useTemplates } from '../hooks/useTemplates'
 import { useTemplateCategories } from '../hooks/useTemplateCategories'
 import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
+import { usePlatformTranslations } from '../../platform/hooks/usePlatformTranslations'
 import CompositeRenderer from '../../schema/components/CompositeRenderer'
 import FileSelectionBlock from '../../platform/components/blocks/FileSelectionBlock'
 import useStore from '../../../store'
 import { getTemplateVariables, replaceTemplateVariables } from '../../../shared/utils/templateUtils'
 import { getApiUrl } from '../../../shared/utils/api'
+import { getUserLocale, getLocaleMap, getLocaleDisplayName, getValidLocale } from '../../../shared/utils/localeUtils'
+import { resolveTargetsLocale, resolveGroupsLocale } from '../../../shared/utils/targetUtils'
 
 const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', globalFiles = [], sx = {} }) => {
   // Use mode='preview' to get templates without <style> tags (backend removes them)
@@ -55,14 +60,27 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
   const { parsedData, uploadedFileRefs } = useStore()
   const theme = useTheme() // Get current theme for dark mode detection
   const isMobile = useMediaQuery(theme.breakpoints.down('md')) // Mobile detection for hybrid layout
+  const { t, i18n } = useTranslation() // i18n translation hook
+  
+  // ✅ GENERIC: Get editor schema and platform info (not platform-specific)
+  const editorSchema = schema?.editor
+  const editorBlocks = editorSchema?.blocks || []
+  const platformId = editorSchema?.platformId || platform
+  const fileSelectionBlock = editorBlocks.find(block => block.type === 'file_selection_input')
+  
+  // Load platform translations dynamically based on schema
+  usePlatformTranslations(platformId, i18n.language)
+  
   const [anchorEl, setAnchorEl] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewContent, setPreviewContent] = useState('')
+  const [previewCss, setPreviewCss] = useState(null)
   const [targetsValue, setTargetsValue] = useState(null) // Store targets selection
   const [specificFiles, setSpecificFiles] = useState([]) // NEW: Specific files for this run
   const [mobileTab, setMobileTab] = useState(0) // For mobile tabs: 0 = Config, 1 = Preview
   const [attachmentsExpanded, setAttachmentsExpanded] = useState(true) // Accordion state for attachments
+  const [previewLocale, setPreviewLocale] = useState(() => getUserLocale(i18n)) // Store resolved locale for preview
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget)
@@ -73,12 +91,102 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
   }
 
   // Function to load preview with current theme
-  const loadPreview = async (template) => {
+  // ✅ Wrapped in useCallback to ensure it always uses the latest theme
+  const loadPreview = useCallback(async (template) => {
+    // ✅ Resolve locale: Priority: templateLocale (from dropdown) > Target Locale > User Language
+    let resolvedLocale = getUserLocale(i18n) // Default: User Language
+    
+    if (targetsValue) {
+      // Priority 1: Use templateLocale from dropdown if explicitly set
+      if (targetsValue.templateLocale) {
+        resolvedLocale = getValidLocale(targetsValue.templateLocale)
+      } else {
+        // Priority 2: Try to resolve locale from targets (Option B: Locale pro Target)
+        const targetsBlock = schema?.editor?.blocks?.find(block => block.type === 'targets')
+        const dataEndpoints = targetsBlock?.rendering?.dataEndpoints || {}
+        
+        try {
+          if (targetsValue.mode === 'individual' && targetsValue.individual?.length > 0) {
+            // Try to resolve locale from individual targets
+            if (targetsValue.individual.length === 1) {
+              // Single target: Use its locale
+              const targetLocale = await resolveTargetsLocale(
+                targetsValue.individual,
+                platform,
+                dataEndpoints.recipients || `platforms/${platform}/targets`
+              )
+              if (targetLocale) resolvedLocale = targetLocale
+            } else {
+              // Multiple targets: Use locale if all have same locale
+              const targetLocale = await resolveTargetsLocale(
+                targetsValue.individual,
+                platform,
+                dataEndpoints.recipients || `platforms/${platform}/targets`
+              )
+              if (targetLocale) resolvedLocale = targetLocale
+              // If mixed locales, fall back to user locale
+            }
+          } else if (targetsValue.mode === 'groups' && targetsValue.groups?.length > 0) {
+            // Try to resolve locale from groups
+            if (targetsValue.groups.length === 1) {
+              // Single group: Use its locale
+              const groupLocale = await resolveGroupsLocale(
+                targetsValue.groups,
+                platform,
+                dataEndpoints.recipientGroups || `platforms/${platform}/target-groups`
+              )
+              if (groupLocale) resolvedLocale = groupLocale
+            } else {
+              // Multiple groups: Use locale if all have same locale
+              const groupLocale = await resolveGroupsLocale(
+                targetsValue.groups,
+                platform,
+                dataEndpoints.recipientGroups || `platforms/${platform}/target-groups`
+              )
+              if (groupLocale) resolvedLocale = groupLocale
+              // If mixed locales, fall back to user locale
+            }
+          }
+          // For 'all' mode, use user locale (no target-specific locale)
+        } catch (error) {
+          console.warn('Failed to resolve target locale for preview:', error)
+          // Fall back to user locale
+        }
+      }
+    }
+    
+    // Store resolved locale in state for display
+    setPreviewLocale(resolvedLocale)
+    
+    // Select correct template content based on resolved locale
+    let templateContent = template.template || {}
+    if (resolvedLocale !== 'en' && template.translations?.[resolvedLocale]) {
+      templateContent = template.translations[resolvedLocale]
+    }
+    
     // Generate preview content using parsedData and uploadedFileRefs
+    // Note: Frontend getTemplateVariables doesn't support locale yet, but backend will format when applying
     const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
-    const templateContent = template.template || {}
+    
+    // Format date/time variables based on resolved locale (frontend-side formatting for preview)
+    const formattedVariables = { ...templateVariables }
+    if (formattedVariables.date && parsedData?.date) {
+      try {
+        const date = new Date(parsedData.date)
+        formattedVariables.date = date.toLocaleDateString(getLocaleMap(resolvedLocale), {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        })
+        // Also update aliases
+        formattedVariables.eventDate = formattedVariables.date
+      } catch (e) {
+        // Keep original if formatting fails
+      }
+    }
+    
     const previewText = templateContent.html || templateContent.text || ''
-    const filledContent = replaceTemplateVariables(previewText, templateVariables)
+    const filledContent = replaceTemplateVariables(previewText, formattedVariables)
     
     // ✅ Use Backend Preview API for consistent rendering (same as Platform Preview)
     // This ensures Markdown is rendered the same way everywhere
@@ -89,10 +197,11 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         ? { bodyText: filledContent } // HTML template
         : { text: filledContent }      // Markdown/text template
       
-      // Get dark mode from current theme (follows app theme)
-      const darkMode = theme.palette.mode === 'dark'
+      // ✅ No darkMode parameter needed - Frontend sets CSS Variables based on theme
+      const previewUrl = getApiUrl(`platforms/${platform}/preview?mode=desktop&locale=${resolvedLocale}`)
+      console.log('[Template Preview] Preview URL:', previewUrl)
       
-      const response = await fetch(getApiUrl(`platforms/${platform}/preview?mode=desktop&darkMode=${darkMode}`), {
+      const response = await fetch(previewUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: previewContentObj })
@@ -107,8 +216,10 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         throw new Error(data.error || 'Failed to render preview')
       }
       
-      // Use backend-rendered HTML
+      // ✅ Backend liefert Content-HTML + CSS
+      // PreviewFrame hostet es und themed es
       setPreviewContent(data.html)
+      setPreviewCss(data.css || null)
     } catch (error) {
       console.error('Failed to render template preview:', error)
       // Show error - no fallback
@@ -117,7 +228,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         ${error.message || 'Failed to load preview from backend'}
       </div>`)
     }
-  }
+  }, [theme.palette.mode, platform, targetsValue, parsedData, uploadedFileRefs, schema, i18n]) // ✅ Include theme.palette.mode directly (more specific)
 
   const handleTemplateSelect = async (template) => {
     setSelectedTemplate(template)
@@ -131,14 +242,13 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
   // This ensures preview follows app theme changes
   useEffect(() => {
     if (previewOpen && selectedTemplate) {
+      console.log('[Template Preview] Theme changed, reloading preview. Current mode:', theme.palette.mode)
       loadPreview(selectedTemplate)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme.palette.mode]) // Reload when theme changes (only dependency needed)
+  }, [theme.palette.mode, previewOpen, selectedTemplate, loadPreview]) // ✅ Include loadPreview in dependencies
 
   // Check if platform has targets block in editor schema
-  const editorSchema = schema?.editor
-  const targetsBlock = editorSchema?.blocks?.find(block => block.type === 'targets')
+  const targetsBlock = editorBlocks.find(block => block.type === 'targets')
 
   const handleApplyTemplate = () => {
     if (selectedTemplate && onSelectTemplate) {
@@ -195,16 +305,14 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TemplateIcon fontSize="small" />
             <span>
-              {templates.length === 0 ? 'No templates' :
-               templates.length === 1 ? '1 template' :
-               `${templates.length} templates`}
+              {t('template.count', { count: templates.length })}
             </span>
           </Box>
         </Button>
 
         {error && (
           <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-            Error loading templates
+            {t('template.errorLoading')}
           </Typography>
         )}
 
@@ -219,7 +327,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
           {Object.keys(groupedTemplates).length === 0 ? (
             <MenuItem disabled>
               <Typography variant="body2" color="text.secondary">
-                No templates available
+                {t('template.noTemplatesAvailable')}
               </Typography>
             </MenuItem>
           ) : (
@@ -250,11 +358,11 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                       {template.name}
                     </Typography>
                     {template.isDefault && (
-                      <Chip label="Default" size="small" color="primary" variant="outlined" sx={{ ml: 1, fontSize: '0.7rem' }} />
+                      <Chip label={t('template.default')} size="small" color="primary" variant="outlined" sx={{ ml: 1, fontSize: '0.7rem' }} />
                     )}
                   </Box>
                   <Typography variant="caption" color="text.secondary" sx={{ width: '100%' }}>
-                    Variables: {template.variables.join(', ')}
+                    {t('template.variablesUsed')} {template.variables.join(', ')}
                   </Typography>
                 </MenuItem>
               )),
@@ -281,7 +389,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         }}
       >
         <DialogTitle>
-          Apply Template: {selectedTemplate?.name}
+          {t('template.applyTemplateTitle', { name: selectedTemplate?.name })}
         </DialogTitle>
         
         <DialogContent 
@@ -301,8 +409,8 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                 onChange={(e, newValue) => setMobileTab(newValue)}
                 sx={{ borderBottom: 1, borderColor: 'divider' }}
               >
-                <Tab label="Configuration" />
-                <Tab label="Preview" />
+                <Tab label={t('template.configuration')} />
+                <Tab label={t('template.preview')} />
               </Tabs>
               
               <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
@@ -310,14 +418,14 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                   // Config Tab Content
                   <Box>
                     <Alert severity="info" sx={{ mb: 2 }}>
-                      This template will replace your current content. Variables have been filled with data extracted from your current content.
+                      {t('template.applyWarning')}
                     </Alert>
 
                     {selectedTemplate && (
                       <Card sx={{ mb: 2 }}>
                         <CardContent>
                           <Typography variant="subtitle2" gutterBottom>
-                            Variables used:
+                            {t('template.variablesUsed')}
                           </Typography>
                           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                             {selectedTemplate.variables.map(variable => (
@@ -337,7 +445,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                       <Card sx={{ mb: 2 }}>
                         <CardContent>
                           <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                            {targetsBlock.label || 'Targets'}
+                            {targetsBlock.label || t('template.targets')}
                           </Typography>
                           {targetsBlock.description && (
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -354,7 +462,8 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                       </Card>
                     )}
 
-                    {platform === 'email' && (
+                    {/* ✅ GENERIC: File Selection Block (if schema defines it) */}
+                    {fileSelectionBlock && (
                       <Card>
                         <CardContent sx={{ p: 0 }}>
                           <Accordion 
@@ -374,7 +483,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                                 <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
                                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                                  Anhänge für diesen Run
+                                  {t(`platform.${platformId}.attachments.forRun`, { defaultValue: fileSelectionBlock.label || 'Attachments for this run' })}
                                 </Typography>
                                 <Box sx={{ ml: 'auto', mr: 1 }}>
                                   <Chip 
@@ -388,7 +497,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                             </AccordionSummary>
                             <AccordionDetails sx={{ px: 2, pb: 2 }}>
                               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                Wählen Sie zusätzliche Anhänge für diese Gruppe aus. Standard-Anhänge sind bereits voreingestellt.
+                                {t(`platform.${platformId}.attachments.description`, { defaultValue: fileSelectionBlock.description || 'Select additional attachments for this group. Standard attachments are already preset.' })}
                               </Typography>
 
                               <List 
@@ -432,11 +541,11 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                                         }}
                                       />
                                       {file.visibility === 'public' ? (
-                                        <Tooltip title="Öffentlich (Public)">
+                                        <Tooltip title={t(`platform.${platformId}.fileVisibility.public`, { defaultValue: 'Public' })}>
                                           <PublicIcon fontSize="small" color="success" sx={{ opacity: 0.6 }} />
                                         </Tooltip>
                                       ) : (
-                                        <Tooltip title="Intern (Internal)">
+                                        <Tooltip title={t(`platform.${platformId}.fileVisibility.internal`, { defaultValue: 'Internal' })}>
                                           <LockIcon fontSize="small" color="action" sx={{ opacity: 0.6 }} />
                                         </Tooltip>
                                       )}
@@ -447,7 +556,10 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                               
                               <Box sx={{ mt: 1 }}>
                                 <Typography variant="caption" color="text.secondary">
-                                  Gesamt für diese Gruppe: {specificFiles.length + globalFiles.length} Anhänge
+                                  {t(`platform.${platformId}.attachments.total`, { 
+                                    count: specificFiles.length + globalFiles.length,
+                                    defaultValue: `Total for this group: ${specificFiles.length + globalFiles.length} attachments`
+                                  })}
                                 </Typography>
                               </Box>
                             </AccordionDetails>
@@ -460,66 +572,21 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                   // Preview Tab Content
                   <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                     <Typography variant="subtitle1" gutterBottom>
-                      Preview:
+                      {t('template.preview')}:
                     </Typography>
                     <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-                      {previewContent.includes('<!DOCTYPE html>') || previewContent.includes('<html>') ? (
-                        <Box
-                          sx={{
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 1,
-                            overflow: 'hidden',
-                            height: '100%',
-                            minHeight: 400
-                          }}
-                        >
-                          <iframe
-                            srcDoc={previewContent}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              border: 'none',
-                              display: 'block'
-                            }}
-                            scrolling="yes"
-                            title="Template Preview"
-                          />
-                        </Box>
-                      ) : (
-                        <Box
-                          sx={{
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 1,
-                            p: 2,
-                            bgcolor: 'background.paper',
-                            color: 'text.primary',
-                            height: '100%',
-                            overflow: 'auto',
-                            '& img': {
-                              maxWidth: '100%',
-                              height: 'auto',
-                              display: 'block',
-                              marginBottom: 1
-                            },
-                            '& a': {
-                              color: 'primary.main'
-                            },
-                            '& *': {
-                              color: 'inherit !important'
-                            },
-                            '& *[style*="background"]': {
-                              backgroundColor: 'transparent !important',
-                              background: 'transparent !important'
-                            },
-                            '& style': {
-                              display: 'none !important'
+                      {previewContent ? (
+                        <PreviewFrame
+                          document={{
+                            html: previewContent,
+                            css: previewCss,
+                            meta: {
+                              title: t('template.preview')
                             }
                           }}
-                          dangerouslySetInnerHTML={{ __html: previewContent }}
+                          dimensions={{ width: 600, height: 800 }}
                         />
-                      )}
+                      ) : null}
                     </Box>
                   </Box>
                 )}
@@ -545,14 +612,14 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
               >
                 <Box sx={{ flex: 1, overflow: 'auto', pr: 1 }}>
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  This template will replace your current content. Variables have been filled with data extracted from your current content.
+                  {t('template.applyWarning')}
                 </Alert>
 
                 {selectedTemplate && (
                   <Card sx={{ mb: 2 }}>
                     <CardContent>
                       <Typography variant="subtitle2" gutterBottom>
-                        Variables used:
+                        {t('template.variablesUsed')}
                       </Typography>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {selectedTemplate.variables.map(variable => (
@@ -572,7 +639,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                   <Card sx={{ mb: 2 }}>
                     <CardContent>
                       <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        {targetsBlock.label || 'Targets'}
+                        {targetsBlock.label || t('template.targets')}
                       </Typography>
                       {targetsBlock.description && (
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -589,7 +656,8 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                   </Card>
                 )}
 
-                {platform === 'email' && (
+                {/* ✅ GENERIC: File Selection Block (if schema defines it) - Desktop Version */}
+                {fileSelectionBlock && (
                   <Card>
                     <CardContent sx={{ p: 0 }}>
                       <Accordion 
@@ -609,7 +677,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                           <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                             <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
                             <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                              Anhänge für diesen Run
+                              {t(`platform.${platformId}.attachments.forRun`, { defaultValue: fileSelectionBlock.label || 'Attachments for this run' })}
                             </Typography>
                             <Box sx={{ ml: 'auto', mr: 1 }}>
                               <Chip 
@@ -623,7 +691,7 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                         </AccordionSummary>
                         <AccordionDetails sx={{ px: 2, pb: 2 }}>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Wählen Sie zusätzliche Anhänge für diese Gruppe aus. Standard-Anhänge sind bereits voreingestellt.
+                            {t(`platform.${platformId}.attachments.description`, { defaultValue: fileSelectionBlock.description || 'Select additional attachments for this group. Standard attachments are already preset.' })}
                           </Typography>
 
                           <List 
@@ -667,11 +735,11 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                                     }}
                                   />
                                   {file.visibility === 'public' ? (
-                                    <Tooltip title="Öffentlich (Public)">
+                                    <Tooltip title={t(`platform.${platformId}.fileVisibility.public`, { defaultValue: 'Public' })}>
                                       <PublicIcon fontSize="small" color="success" sx={{ opacity: 0.6 }} />
                                     </Tooltip>
                                   ) : (
-                                    <Tooltip title="Intern (Internal)">
+                                    <Tooltip title={t(`platform.${platformId}.fileVisibility.internal`, { defaultValue: 'Internal' })}>
                                       <LockIcon fontSize="small" color="action" sx={{ opacity: 0.6 }} />
                                     </Tooltip>
                                   )}
@@ -682,7 +750,10 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                           
                           <Box sx={{ mt: 1 }}>
                             <Typography variant="caption" color="text.secondary">
-                              Gesamt für diese Gruppe: {specificFiles.length + globalFiles.length} Anhänge
+                              {t(`platform.${platformId}.attachments.total`, { 
+                                count: specificFiles.length + globalFiles.length,
+                                defaultValue: `Total for this group: ${specificFiles.length + globalFiles.length} attachments`
+                              })}
                             </Typography>
                           </Box>
                         </AccordionDetails>
@@ -706,70 +777,25 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                 }}
               >
                 <Typography variant="subtitle1" gutterBottom>
-                  Preview:
+                  {t('template.preview')}:
                 </Typography>
                 <Box sx={{ 
                   flex: 1, 
                   minHeight: 0,  // Critical for flex scrolling
                   overflow: 'auto'
                 }}>
-                  {previewContent.includes('<!DOCTYPE html>') || previewContent.includes('<html>') ? (
-                    <Box
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                        height: '100%',
-                        minHeight: 400
-                      }}
-                    >
-                      <iframe
-                        srcDoc={previewContent}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          border: 'none',
-                          display: 'block'
-                        }}
-                        scrolling="yes"
-                        title="Template Preview"
-                      />
-                    </Box>
-                  ) : (
-                    <Box
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        p: 2,
-                        bgcolor: 'background.paper',
-                        color: 'text.primary',
-                        height: '100%',
-                        overflow: 'auto',
-                        '& img': {
-                          maxWidth: '100%',
-                          height: 'auto',
-                          display: 'block',
-                          marginBottom: 1
-                        },
-                        '& a': {
-                          color: 'primary.main'
-                        },
-                        '& *': {
-                          color: 'inherit !important'
-                        },
-                        '& *[style*="background"]': {
-                          backgroundColor: 'transparent !important',
-                          background: 'transparent !important'
-                        },
-                        '& style': {
-                          display: 'none !important'
+                  {previewContent ? (
+                    <PreviewFrame
+                      document={{
+                        html: previewContent,
+                        css: previewCss,
+                        meta: {
+                          title: t('template.preview')
                         }
                       }}
-                      dangerouslySetInnerHTML={{ __html: previewContent }}
+                      dimensions={{ width: 600, height: 800 }}
                     />
-                  )}
+                  ) : null}
                 </Box>
               </Grid>
             </Grid>
@@ -778,14 +804,14 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
         
         <DialogActions sx={{ borderTop: 1, borderColor: 'divider' }}>
           <Button onClick={() => setPreviewOpen(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleApplyTemplate}
             variant="contained"
             startIcon={<CheckIcon />}
           >
-            Apply Template
+            {t('template.applyTemplate')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -15,5 +15,6 @@ const router = Router()
 // Composite block endpoints
 router.get('/recipient-modes', EmailController.getRecipientModes)
 router.get('/templates', EmailController.getTemplates)
+router.get('/locales', EmailController.getLocales)
 
 export default router

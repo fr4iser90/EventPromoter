@@ -11,6 +11,7 @@ import {
   Chip
 } from '@mui/material'
 import useStore from '../../../../store'
+import { formatDateForDisplay } from '../../../utils/dateUtils'
 
 const DuplicateDialog = () => {
   const { t, i18n } = useTranslation()
@@ -28,7 +29,7 @@ const DuplicateDialog = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return t('common.unknown')
-    return new Date(dateString).toLocaleDateString(i18n.language === 'de' ? 'de-DE' : i18n.language === 'es' ? 'es-ES' : 'en-US')
+    return formatDateForDisplay(dateString, i18n.language)
   }
 
   return (

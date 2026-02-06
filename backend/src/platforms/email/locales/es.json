@@ -177,5 +177,14 @@
   },
   "metadata": {
     "description": "Envía anuncios de eventos por correo electrónico con contenido HTML enriquecido"
+  },
+  "attachments": {
+    "forRun": "Adjuntos para esta ejecución",
+    "description": "Selecciona adjuntos adicionales para este grupo. Los adjuntos estándar ya están preestablecidos.",
+    "total": "Total para este grupo: {{count}} adjuntos"
+  },
+  "fileVisibility": {
+    "public": "Público",
+    "internal": "Interno"
   }
 }

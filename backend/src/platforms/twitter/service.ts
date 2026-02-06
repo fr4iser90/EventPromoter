@@ -100,7 +100,6 @@ export class TwitterService {
     schema: any
     mode?: string
     client?: string
-    darkMode?: boolean
   }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
     return renderTwitterPreview(options)
   }

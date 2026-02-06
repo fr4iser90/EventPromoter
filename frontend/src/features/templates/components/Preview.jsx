@@ -7,7 +7,9 @@ import {
   Divider,
   Chip
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { useTemplates } from '../hooks/useTemplates'
+import { useTemplateCategories } from '../hooks/useTemplateCategories'
 
 const SAMPLE_DATA = {
   eventTitle: 'Summer Music Festival 2025',
@@ -25,6 +27,7 @@ const SAMPLE_DATA = {
 }
 
 function TemplatePreview({ template, platform }) {
+  const { t } = useTranslation()
   const { categories } = useTemplateCategories()
   const [previewContent, setPreviewContent] = useState('')
   const [customVariables, setCustomVariables] = useState({})
@@ -81,7 +84,7 @@ function TemplatePreview({ template, platform }) {
   return (
     <Paper sx={{ p: 3, height: 'fit-content' }}>
       <Typography variant="h6" gutterBottom>
-        👁️ Template Preview: {template.name}
+        👁️ {t('template.previewWithName', { name: template.name })}
       </Typography>
 
       {/* Template Info */}
@@ -96,16 +99,16 @@ function TemplatePreview({ template, platform }) {
             variant="outlined" 
             size="small" 
           />
-          {template.isDefault && <Chip label="Default" color="secondary" size="small" />}
+          {template.isDefault && <Chip label={t('template.default')} color="secondary" size="small" />}
         </Box>
 
         <Typography variant="body2" color="text.secondary" paragraph>
-          {template.description || 'No description available'}
+          {template.description || t('template.noDescription')}
         </Typography>
 
         {/* Variables */}
         <Typography variant="subtitle2" gutterBottom>
-          📋 Available Variables:
+          📋 {t('template.availableVariables')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
           {template.variables.map(variable => (
@@ -124,7 +127,7 @@ function TemplatePreview({ template, platform }) {
 
       {/* Custom Variables Input */}
       <Typography variant="subtitle2" gutterBottom>
-        🎛️ Customize Preview Variables:
+        🎛️ {t('template.customizePreviewVariables')}
       </Typography>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 3 }}>
         {template.variables.map(variable => (
@@ -134,7 +137,7 @@ function TemplatePreview({ template, platform }) {
             size="small"
             value={customVariables[variable] || SAMPLE_DATA[variable] || ''}
             onChange={(e) => handleVariableChange(variable, e.target.value)}
-            placeholder={`Enter ${variable}...`}
+            placeholder={t('template.enterVariable', { variable })}
           />
         ))}
       </Box>
@@ -143,7 +146,7 @@ function TemplatePreview({ template, platform }) {
 
       {/* Preview Content */}
       <Typography variant="subtitle2" gutterBottom>
-        📄 Preview Result:
+        📄 {t('template.previewResult')}
       </Typography>
 
       {/* Render HTML if content contains HTML tags, otherwise render as text */}
@@ -198,7 +201,7 @@ function TemplatePreview({ template, platform }) {
       {/* Character Count */}
       {!previewContent.includes('<') && (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          Characters: {previewContent.length}
+          {t('template.characters', { count: previewContent.length })}
         </Typography>
       )}
     </Paper>

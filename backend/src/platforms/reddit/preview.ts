@@ -13,17 +13,13 @@ export async function renderRedditPreview(options: {
   schema: any
   mode?: string
   client?: string
-  darkMode?: boolean
 }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
-  const { content, schema, mode = 'desktop', darkMode = false } = options
+  const { content, schema, mode = 'desktop' } = options
   
   const selectedMode = schema.modes?.find((m: any) => m.id === mode) || schema.modes?.[0]
   const width = selectedMode?.width || 700
   const height = selectedMode?.height || 600
   
-  const bgColor = darkMode ? '#1a1a1b' : '#ffffff'
-  const textColor = darkMode ? '#d7dadc' : '#1c1c1c'
-  const borderColor = darkMode ? '#343536' : '#edeff1'
   const fontFamily = schema.styling?.fontFamily || 'IBMPlexSans, Arial, sans-serif'
   
   // Process text content - check if it's Markdown
@@ -48,29 +44,29 @@ export async function renderRedditPreview(options: {
     linkContent = `<a href="${escapeHtml(linkUrl)}" class="post-link" target="_blank" rel="noopener noreferrer">${escapeHtml(content.link)}</a>`
   }
   
-  let html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+  // ✅ Nur Content-HTML (kein vollständiges Dokument)
+  // Frontend besitzt die Preview-Shell
+  let contentHtml = `
+  <div class="post-container">
+    ${titleContent ? `<div class="post-title">${titleContent}</div>` : ''}
+    ${textContent ? `<div class="post-content">${textContent}</div>` : ''}
+    ${content.image ? `<div class="post-media"><img src="${escapeHtml(content.image)}" alt="Post media" /></div>` : ''}
+    ${linkContent ? `<div class="post-content">${linkContent}</div>` : ''}
+  </div>
+`
+  
+  // ✅ Strukturelles CSS (Theme via CSS Variables vom Frontend)
+  const structuralCss = `
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    body {
-      font-family: ${fontFamily};
-      background-color: ${bgColor};
-      color: ${textColor};
-      padding: 16px;
-      line-height: 1.5;
-    }
     .post-container {
       max-width: ${width}px;
       margin: 0 auto;
-      background: ${bgColor};
-      border: 1px solid ${borderColor};
+      background: var(--preview-container-bg);
+      border: 1px solid var(--preview-divider);
       border-radius: 4px;
       padding: 12px;
     }
@@ -79,13 +75,16 @@ export async function renderRedditPreview(options: {
       font-weight: 500;
       line-height: 22px;
       margin-bottom: 8px;
-      color: ${textColor};
+      color: var(--preview-text);
+      font-family: ${fontFamily};
     }
     .post-content {
       font-size: 14px;
       line-height: 21px;
       margin-bottom: 12px;
       word-wrap: break-word;
+      color: var(--preview-text);
+      font-family: ${fontFamily};
     }
     .post-content p {
       margin-bottom: 8px;
@@ -100,14 +99,14 @@ export async function renderRedditPreview(options: {
       font-style: italic;
     }
     .post-content code {
-      background-color: ${darkMode ? '#2a2a2a' : '#f5f5f5'};
+      background-color: var(--preview-container-bg);
       padding: 2px 4px;
       border-radius: 3px;
       font-family: 'Courier New', monospace;
       font-size: 13px;
     }
     .post-content pre {
-      background-color: ${darkMode ? '#2a2a2a' : '#f5f5f5'};
+      background-color: var(--preview-container-bg);
       padding: 8px;
       border-radius: 4px;
       overflow-x: auto;
@@ -141,7 +140,7 @@ export async function renderRedditPreview(options: {
       font-size: 16px;
     }
     .post-content a {
-      color: ${darkMode ? '#4fbcff' : '#0079d3'};
+      color: var(--preview-link);
       text-decoration: none;
     }
     .post-content a:hover {
@@ -159,26 +158,17 @@ export async function renderRedditPreview(options: {
       display: block;
     }
     .post-link {
-      color: ${darkMode ? '#4fbcff' : '#0079d3'};
+      color: var(--preview-link);
       text-decoration: none;
     }
     .post-link:hover {
       text-decoration: underline;
     }
-  </style>
-</head>
-<body>
-  <div class="post-container">
-    ${titleContent ? `<div class="post-title">${titleContent}</div>` : ''}
-    ${textContent ? `<div class="post-content">${textContent}</div>` : ''}
-    ${content.image ? `<div class="post-media"><img src="${escapeHtml(content.image)}" alt="Post media" /></div>` : ''}
-    ${linkContent ? `<div class="post-content">${linkContent}</div>` : ''}
-  </div>
-</body>
-</html>`
-
+  `
+  
   return {
-    html,
+    html: contentHtml,
+    css: structuralCss,
     dimensions: { width, height }
   }
 }

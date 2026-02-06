@@ -160,7 +160,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
     <Paper elevation={2} sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5">
-          📝 {platform.charAt(0).toUpperCase() + platform.slice(1)} Templates
+          📝 {t('template.platformTemplates', { platform: platform.charAt(0).toUpperCase() + platform.slice(1) })}
         </Typography>
         <Button
           variant="contained"
@@ -220,10 +220,10 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                     secondary={
                       <Box>
                         <Typography variant="body2" color="text.secondary">
-                          {template.description || 'No description'}
+                          {template.description || t('template.noDescription')}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          Variables: {template.variables.join(', ') || 'none'}
+                          {t('template.availableVariables')} {template.variables.join(', ') || t('template.none')}
                         </Typography>
                       </Box>
                     }
@@ -317,7 +317,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                   type: field.type === 'html' ? 'textarea' : field.type === 'rich' ? 'textarea' : field.type,
                   label: field.label,
                   description: field.description,
-                  placeholder: field.placeholder || `Use {variable} for dynamic content`,
+                  placeholder: field.placeholder || t('template.variablePlaceholder'),
                   required: field.required,
                   default: field.default,
                   ui: { width: 12 }
@@ -333,7 +333,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
               /* Fallback if no template schema */
               <TextField
                 fullWidth
-                label="Text Content"
+                label={t('template.textContent')}
                 value={formData.template.text || ''}
                 onChange={(e) => setFormData(prev => ({
                   ...prev,
@@ -341,7 +341,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
                 }))}
                 multiline
                 rows={4}
-                placeholder="Use {variable} for dynamic content"
+                placeholder={t('template.variablePlaceholder')}
               />
             )}
 

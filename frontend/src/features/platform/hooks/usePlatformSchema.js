@@ -21,9 +21,6 @@ export function usePlatformSchema(platformId) {
   const [schema, setSchema] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
-  // Get darkMode from store
-  const darkMode = useStore((state) => state.darkMode)
 
   useEffect(() => {
     if (!platformId) {
@@ -36,9 +33,8 @@ export function usePlatformSchema(platformId) {
         setLoading(true)
         setError(null)
 
-        // Build URL with darkMode parameter
-        const mode = darkMode ? 'dark' : 'light'
-        const url = `${getApiUrl(`platforms/${platformId}/schema`)}?mode=${mode}`
+        // ✅ Kein darkMode-Parameter mehr - Schema ist theme-agnostisch
+        const url = getApiUrl(`platforms/${platformId}/schema`)
         
         // Try to load schema from dedicated endpoint
         const response = await fetch(url)
@@ -52,7 +48,7 @@ export function usePlatformSchema(platformId) {
         }
 
         // Fallback: try to load from platform endpoint
-        const platformUrl = `${getApiUrl(`platforms/${platformId}`)}?mode=${mode}`
+        const platformUrl = getApiUrl(`platforms/${platformId}`)
         const platformResponse = await fetch(platformUrl)
         if (platformResponse.ok) {
           const platformData = await platformResponse.json()
@@ -76,7 +72,7 @@ export function usePlatformSchema(platformId) {
     }
 
     loadSchema()
-  }, [platformId, darkMode])  // Reload when darkMode changes
+  }, [platformId]) // ✅ Kein darkMode mehr in dependencies
 
   return { schema, loading, error }
 }

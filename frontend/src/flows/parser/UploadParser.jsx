@@ -44,9 +44,10 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import useStore from '../../store'
 import { getApiUrl } from '../../shared/utils/api'
+import { formatDateForDisplay } from '../../shared/utils/dateUtils'
 
 function UploadParser() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const theme = useTheme()
   const {
     uploadedFileRefs,
@@ -438,16 +439,16 @@ function UploadParser() {
                   <Card>
                     <CardContent>
                       <Typography variant="body2" color="text.secondary">
-                        {editedData.title} - {editedData.date} {editedData.time}
+                        {editedData.title} - {editedData.date ? formatDateForDisplay(editedData.date, i18n.language) : ''} {editedData.time || ''}
                         {editedData.venue?.name && ` @ ${editedData.venue.name}`}
                         {editedData.website && ` ${editedData.website}`}
                         #event #party
                       </Typography>
                       <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
                         Characters: {(
-                          editedData.title.length +
-                          editedData.date.length +
-                          editedData.time.length +
+                          (editedData.title?.length || 0) +
+                          (editedData.date ? formatDateForDisplay(editedData.date, i18n.language).length : 0) +
+                          (editedData.time?.length || 0) +
                           (editedData.venue?.name?.length || 0) +
                           (editedData.website?.length || 0) +
                           20 // spaces and hashtags
@@ -469,7 +470,7 @@ function UploadParser() {
                         {editedData.title}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        📅 {editedData.date} {editedData.time}
+                        📅 {editedData.date ? formatDateForDisplay(editedData.date, i18n.language) : ''} {editedData.time || ''}
                         📍 {editedData.venue?.name} {editedData.venue?.address}
                         🎧 {editedData.performers?.join(', ')}
                         🌐 {editedData.website}
@@ -495,7 +496,7 @@ function UploadParser() {
                         {editedData.description}
                       </Typography>
                       <Typography variant="body2" sx={{ mt: 2 }}>
-                        📅 Datum: {editedData.date} um {editedData.time} Uhr
+                        📅 Datum: {editedData.date ? formatDateForDisplay(editedData.date, i18n.language) : ''} um {editedData.time || ''} Uhr
                         📍 Ort: {editedData.venue?.name}, {editedData.venue?.address}, {editedData.venue?.city}
                         🎧 Line-up: {editedData.performers?.join(', ')}
                         🌐 Tickets: {editedData.website}

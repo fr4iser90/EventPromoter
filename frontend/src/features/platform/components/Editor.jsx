@@ -265,13 +265,67 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         updatedContent[targetsBlock.id] = targetsValue || { mode: 'all' }
       }
 
+      // ✅ GENERIC: Resolve target names using schema endpoints (no platform-specific logic!)
+      let resolvedTargets = targetsValue || null
+      if (resolvedTargets && targetsBlock) {
+        const dataEndpoints = targetsBlock.rendering?.dataEndpoints || {}
+        
+        try {
+          // Resolve individual target names
+          if (resolvedTargets.mode === 'individual' && resolvedTargets.individual && dataEndpoints.recipients) {
+            const endpoint = dataEndpoints.recipients.replace(':platformId', platform)
+            const response = await fetch(getApiUrl(endpoint))
+            if (response.ok) {
+              const data = await response.json()
+              const options = data.options || [] // Backend liefert bereits options mit {label, value}!
+              
+              // Create ID -> label mapping (GENERIC!)
+              const idToLabel = new Map(options.map(opt => [opt.value, opt.label]))
+              resolvedTargets.targetNames = resolvedTargets.individual.map(id => 
+                idToLabel.get(id) || id
+              )
+            }
+          }
+          
+          // Resolve group names
+          if (resolvedTargets.mode === 'groups' && resolvedTargets.groups && dataEndpoints.recipientGroups) {
+            const endpoint = dataEndpoints.recipientGroups.replace(':platformId', platform)
+            const response = await fetch(getApiUrl(endpoint))
+            if (response.ok) {
+              const data = await response.json()
+              const groups = data.groups || []
+              // Handle both array and object format
+              const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
+              const idToName = new Map(groupsArray.map(g => [g.id, g.name || g.id]))
+              resolvedTargets.groupNames = resolvedTargets.groups.map(id => 
+                idToName.get(id) || id
+              )
+            }
+          }
+          
+          // For 'all' mode, load all targets to show names
+          if (resolvedTargets.mode === 'all' && dataEndpoints.recipients) {
+            const endpoint = dataEndpoints.recipients.replace(':platformId', platform)
+            const response = await fetch(getApiUrl(endpoint))
+            if (response.ok) {
+              const data = await response.json()
+              const options = data.options || []
+              resolvedTargets.targetNames = options.map(opt => opt.label || opt.value)
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to resolve target names:', err)
+          // Continue without resolved names - IDs will be shown as fallback
+        }
+      }
+
       // ✅ Add to _templates array (multiple templates with targets)
       const existingTemplates = content._templates || []
       const newTemplateEntry = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Simple unique ID
         templateId: template.id,
         templateName: template.name || template.id,
-        targets: targetsValue || null,
+        targets: resolvedTargets, // Use resolved targets with names
         specificFiles: specificFiles, // NEW: Specific files for this run
         appliedAt: new Date().toISOString()
       }

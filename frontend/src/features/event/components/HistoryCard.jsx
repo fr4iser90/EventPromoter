@@ -18,23 +18,15 @@ import TextSnippetIcon from '@mui/icons-material/TextSnippet'
 import AddIcon from '@mui/icons-material/Add'
 import DownloadIcon from '@mui/icons-material/Download'
 import useStore from '../../../store'
+import { formatDateForDisplay } from '../../../shared/utils/dateUtils'
 
 function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { setError } = useStore()
 
   const formatDate = (dateString) => {
     if (!dateString) return 'No date'
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      })
-    } catch {
-      return dateString
-    }
+    return formatDateForDisplay(dateString, i18n.language)
   }
 
   const formatFileSize = (bytes) => {

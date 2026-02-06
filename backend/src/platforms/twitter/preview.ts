@@ -13,17 +13,13 @@ export async function renderTwitterPreview(options: {
   schema: any
   mode?: string
   client?: string
-  darkMode?: boolean
 }): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
-  const { content, schema, mode = 'mobile', darkMode = false } = options
+  const { content, schema, mode = 'mobile' } = options
   
   const selectedMode = schema.modes?.find((m: any) => m.id === mode) || schema.modes?.[0]
   const width = selectedMode?.width || 375
   const height = selectedMode?.height || 667
   
-  const bgColor = darkMode ? '#000000' : '#ffffff'
-  const textColor = darkMode ? '#ffffff' : '#0f1419'
-  const borderColor = darkMode ? '#2f3336' : '#eff3f4'
   const fontFamily = schema.styling?.fontFamily || 'TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
   
   // Process text content - check if it's Markdown
@@ -38,29 +34,27 @@ export async function renderTwitterPreview(options: {
     }
   }
   
-  let html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
+  // ✅ Nur Content-HTML (kein vollständiges Dokument)
+  // Frontend besitzt die Preview-Shell
+  let contentHtml = `
+  <div class="tweet-container">
+    ${textContent ? `<div class="tweet-content">${textContent}</div>` : ''}
+    ${content.image ? `<div class="tweet-media"><img src="${escapeHtml(content.image)}" alt="Tweet media" /></div>` : ''}
+  </div>
+`
+  
+  // ✅ Strukturelles CSS (Theme via CSS Variables vom Frontend)
+  const structuralCss = `
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    body {
-      font-family: ${fontFamily};
-      background-color: ${bgColor};
-      color: ${textColor};
-      padding: 12px;
-      line-height: 1.5;
-    }
     .tweet-container {
       max-width: ${width}px;
       margin: 0 auto;
-      background: ${bgColor};
-      border: 1px solid ${borderColor};
+      background: var(--preview-container-bg);
+      border: 1px solid var(--preview-divider);
       border-radius: 16px;
       padding: 12px;
     }
@@ -69,6 +63,8 @@ export async function renderTwitterPreview(options: {
       line-height: 20px;
       word-wrap: break-word;
       margin-bottom: 12px;
+      color: var(--preview-text);
+      font-family: ${fontFamily};
     }
     .tweet-content p {
       margin-bottom: 4px;
@@ -83,7 +79,7 @@ export async function renderTwitterPreview(options: {
       font-style: italic;
     }
     .tweet-content a {
-      color: ${darkMode ? '#1d9bf0' : '#1d9bf0'};
+      color: var(--preview-link);
       text-decoration: none;
     }
     .tweet-content a:hover {
@@ -100,18 +96,11 @@ export async function renderTwitterPreview(options: {
       height: auto;
       display: block;
     }
-  </style>
-</head>
-<body>
-  <div class="tweet-container">
-    ${textContent ? `<div class="tweet-content">${textContent}</div>` : ''}
-    ${content.image ? `<div class="tweet-media"><img src="${escapeHtml(content.image)}" alt="Tweet media" /></div>` : ''}
-  </div>
-</body>
-</html>`
-
+  `
+  
   return {
-    html,
+    html: contentHtml,
+    css: structuralCss,
     dimensions: { width, height }
   }
 }

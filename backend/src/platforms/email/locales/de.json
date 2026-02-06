@@ -177,5 +177,14 @@
   },
   "metadata": {
     "description": "Sende Event-Ankündigungen per E-Mail mit reichhaltigem HTML-Inhalt"
+  },
+  "attachments": {
+    "forRun": "Anhänge für diesen Run",
+    "description": "Wählen Sie zusätzliche Anhänge für diese Gruppe aus. Standard-Anhänge sind bereits voreingestellt.",
+    "total": "Gesamt für diese Gruppe: {{count}} Anhänge"
+  },
+  "fileVisibility": {
+    "public": "Öffentlich (Public)",
+    "internal": "Intern (Internal)"
   }
 }
