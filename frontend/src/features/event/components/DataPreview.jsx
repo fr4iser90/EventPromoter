@@ -39,7 +39,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
-import { getDefaultCurrency, formatPriceInput, getUserLocale } from '../../../shared/utils/localeUtils'
+import { getDefaultCurrency, formatPriceInput, getUserLocale, extractCurrencyFromPrice } from '../../../shared/utils/localeUtils'
 import useStore from '../../../store'
 import DateDisplay from '../../../shared/components/ui/DateDisplay'
 import DateInput from '../../../shared/components/ui/DateInput'
@@ -489,6 +489,11 @@ function Preview() {
         // Special handling for price fields
         const isPriceField = field.id === 'price' && isNested
         
+        // Extract currency from current value or use default
+        const displayedCurrency = isPriceField && value 
+          ? (extractCurrencyFromPrice(value) || getDefaultCurrency(currentLocale))
+          : (isPriceField ? getDefaultCurrency(currentLocale) : null)
+        
         return (
           <TextField
             fullWidth
@@ -503,21 +508,29 @@ function Preview() {
             }}
             onBlur={(e) => {
               // Auto-format price when user leaves the field
+              // Only format if user entered just numbers (no currency symbol)
               if (isPriceField && e.target.value && e.target.value.trim().length > 0) {
-                const formatted = formatPriceInput(e.target.value, currentLocale)
-                if (formatted !== e.target.value) {
-                  handleExtendedDataChange(groupId, field.id, formatted, isNested, parentFieldId)
+                const inputValue = e.target.value.trim()
+                // Check if user already entered a currency symbol manually
+                const hasManualCurrency = /[€$£¥₹₽₩₪₫₨₦₡₵₴₸₷₯₰₱₲₳₶₷₸₹₺₼₽₾₿]/.test(inputValue)
+                
+                // Only auto-format if no currency was manually entered
+                if (!hasManualCurrency) {
+                  const formatted = formatPriceInput(inputValue, currentLocale)
+                  if (formatted !== inputValue) {
+                    handleExtendedDataChange(groupId, field.id, formatted, isNested, parentFieldId)
+                  }
                 }
               }
             }}
             type={field.type === 'email' ? 'email' : field.type === 'tel' ? 'tel' : 'text'}
-            helperText={conditionalValidation.error || field.description || (isPriceField ? `Standard: ${getDefaultCurrency(currentLocale)}` : '')}
+            helperText={conditionalValidation.error || field.description || (isPriceField ? `Standard: ${getDefaultCurrency(currentLocale)} (manuell änderbar, z.B. "25$")` : '')}
             error={!conditionalValidation.isValid}
-            InputProps={isPriceField ? {
+            InputProps={isPriceField && displayedCurrency ? {
               endAdornment: (
                 <InputAdornment position="end">
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {getDefaultCurrency(currentLocale)}
+                    {displayedCurrency}
                   </Typography>
                 </InputAdornment>
               )

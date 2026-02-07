@@ -86,6 +86,26 @@ export const getDefaultCurrency = (locale?: 'en' | 'de' | 'es'): string => {
 }
 
 /**
+ * Extract currency symbol from price string
+ * 
+ * @param inputValue - Price string (e.g., "25$", "30€")
+ * @returns Currency symbol if found, null otherwise
+ */
+export const extractCurrencyFromPrice = (inputValue: string): string | null => {
+  if (!inputValue || inputValue.trim().length === 0) return null
+  
+  const trimmed = inputValue.trim()
+  
+  // Match currency symbols at the end of the string
+  const currencyMatch = trimmed.match(/[€$£¥₹₽₩₪₫₨₦₡₵₴₸₷₯₰₱₲₳₶₷₸₹₺₼₽₾₿]$/)
+  if (currencyMatch) {
+    return currencyMatch[0]
+  }
+  
+  return null
+}
+
+/**
  * Format price input with currency - auto-add currency if only numbers entered
  * 
  * @param inputValue - User input value
