@@ -168,6 +168,7 @@ function renderField(field, value, onChange, error, platformId = null, formValue
               platformId={platformId}
               onUpdate={() => onButtonAction && onButtonAction('reload')} // Trigger reload on update
               allFields={allFields}
+              values={formValues}
             />
           ) : (
             <Alert severity="warning">
@@ -183,47 +184,12 @@ function renderField(field, value, onChange, error, platformId = null, formValue
           <MuiButton
             variant="contained"
             fullWidth={field.ui?.width === 12}
-            onClick={async () => {
+            onClick={() => {
               // Handle button action if defined
               if (field.action && platformId) {
-                try {
-                  const url = getApiUrl(field.action.endpoint)
-                  
-                  // Build request body from bodyMapping
-                  let body = {}
-                  if (field.action.bodyMapping) {
-                    Object.entries(field.action.bodyMapping).forEach(([key, source]) => {
-                      // Get value from formValues using source field name
-                      body[key] = formValues[source] || ''
-                    })
-                  } else {
-                    // Default: send all form values
-                    body = formValues
-                  }
-
-                  const response = await axios({
-                    method: field.action.method || 'POST',
-                    url,
-                    data: body
-                  })
-
-                  if (response.data.success) {
-                    // Handle onSuccess actions
-                    if (field.action.onSuccess === 'clear') {
-                      if (onButtonAction) {
-                        onButtonAction('clear', field.name)
-                      }
-                    } else if (field.action.onSuccess === 'reload' || field.action.reloadOptions) {
-                      if (onButtonAction) {
-                        onButtonAction('reload')
-                      } else {
-                        window.location.reload()
-                      }
-                    }
-                  }
-                } catch (err) {
-                  console.error(`Failed to execute button action:`, err)
-                  alert(`Error: ${err.message || 'Failed to execute action'}`)
+                // ALWAYS delegate to parent - parent handles ALL actions based on backend schema
+                if (onButtonAction) {
+                  onButtonAction(field.action, field, formValues)
                 }
               }
             }}

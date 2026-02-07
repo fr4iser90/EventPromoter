@@ -217,15 +217,33 @@ export class TargetController {
       const groups = await service.getGroups()
       const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
 
+      // Resolve target IDs to baseField values for display (generic)
+      const targets = await service.getTargets()
+      const baseField = service.getBaseField()
+      const targetMap = new Map(targets.map((t: Target) => [t.id, t[baseField] || t.id]))
+
+      // Add member values to each group (generic - uses baseField)
+      const groupsWithMembers = groupsArray.map((group: any) => {
+        const memberValues = group.targetIds
+          ? group.targetIds
+              .map((targetId: string) => targetMap.get(targetId))
+              .filter((value: string | undefined): value is string => value !== undefined)
+          : []
+        return {
+          ...group,
+          memberValues // Add member values for display (generic)
+        }
+      })
+
       // Transform groups to options array for multiselect components
-      const options = groupsArray.map((group: any) => ({
+      const options = groupsWithMembers.map((group: any) => ({
         label: group.name,
         value: group.id
       }))
 
       return res.json({
         success: true,
-        groups: groupsArray, // Full group objects
+        groups: groupsWithMembers, // Full group objects with member values
         options // For multiselect components
       })
     } catch (error: any) {
@@ -239,18 +257,78 @@ export class TargetController {
   }
 
   /**
+   * Get a single group by ID
+   * GET /api/platforms/:platformId/target-groups/:groupId
+   */
+  static async getGroup(req: Request, res: Response) {
+    try {
+      const { platformId, groupId } = req.params
+      const service = await TargetController.getTargetService(platformId)
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          error: `Target service not found for platform: ${platformId}`
+        })
+      }
+
+      const group = await service.getGroup(groupId)
+
+      if (!group) {
+        return res.status(404).json({
+          success: false,
+          error: 'Group not found'
+        })
+      }
+
+      // Resolve target IDs to baseField values for display (generic)
+      const targets = await service.getTargets()
+      const baseField = service.getBaseField()
+      const targetMap = new Map(targets.map((t: Target) => [t.id, t[baseField] || t.id]))
+      
+      const memberValues = group.targetIds
+        ? group.targetIds
+            .map((targetId: string) => targetMap.get(targetId))
+            .filter((value: string | undefined): value is string => value !== undefined)
+        : []
+
+      return res.json({
+        success: true,
+        group: {
+          ...group,
+          memberValues // Add member values for display (generic)
+        }
+      })
+    } catch (error: any) {
+      console.error('Get group error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get group',
+        details: error.message
+      })
+    }
+  }
+
+  /**
    * Create a new group
    * POST /api/platforms/:platformId/target-groups
    */
   static async createGroup(req: Request, res: Response) {
     try {
       const { platformId } = req.params
-      const { groupName, targetIds } = req.body
+      const { name, targetIds } = req.body
 
-      if (!groupName || !targetIds || !Array.isArray(targetIds)) {
+      if (!name) {
         return res.status(400).json({
           success: false,
-          error: 'Group name and targetIds array are required'
+          error: 'Group name is required'
+        })
+      }
+
+      if (targetIds !== undefined && !Array.isArray(targetIds)) {
+        return res.status(400).json({
+          success: false,
+          error: 'targetIds must be an array'
         })
       }
 
@@ -263,7 +341,7 @@ export class TargetController {
         })
       }
 
-      const result = await service.createGroup(groupName, targetIds)
+      const result = await service.createGroup(name, targetIds)
 
       if (!result.success) {
         return res.status(400).json(result)

@@ -24,6 +24,7 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings'
 import KeyIcon from '@mui/icons-material/VpnKey'
 import SchemaRenderer from '../../schema/components/Renderer'
+import EditModal from '../../../shared/components/EditModal'
 import { getApiUrl } from '../../../shared/utils/api'
 
 function SettingsModal({ platformId, open, onClose, onSave }) {
@@ -38,6 +39,8 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
   const [successMessage, setSuccessMessage] = useState(null)
   const [errors, setErrors] = useState({})
   const [dataLoaded, setDataLoaded] = useState(false) // Track if data was loaded for this modal instance
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [currentEditAction, setCurrentEditAction] = useState(null)
 
   // Convert backend errors (arrays) to strings for SchemaRenderer
   const formatErrors = (backendErrors) => {
@@ -305,6 +308,13 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
                         values={settingsValues}
                         onChange={(f, v) => setSettingsValues(prev => ({ ...prev, [f]: v }))}
                         platformId={platformId}
+                        onButtonAction={(action, field, formValues) => {
+                          // Handle button actions based on backend schema
+                          if (action.type === 'open-edit-modal' && action.schemaId) {
+                            setCurrentEditAction(action)
+                            setEditModalOpen(true)
+                          }
+                        }}
                       />
                     </Box>
                   ))
@@ -376,6 +386,31 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
           </Box>
         )}
       </DialogContent>
+
+      {/* Edit Modal for button actions */}
+      {editModalOpen && currentEditAction && (
+        <EditModal
+          open={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false)
+            setCurrentEditAction(null)
+          }}
+          platformId={platformId}
+          schemaId={currentEditAction.schemaId}
+          itemId={undefined}
+          dataEndpoint={currentEditAction.dataEndpoint}
+          saveEndpoint={currentEditAction.endpoint}
+          method={currentEditAction.method || 'POST'}
+          onSaveSuccess={() => {
+            if (currentEditAction.onSuccess === 'reload') {
+              // Reload settings data
+              setDataLoaded(false)
+            }
+            setEditModalOpen(false)
+            setCurrentEditAction(null)
+          }}
+        />
+      )}
 
       <DialogActions>
         <Button onClick={onClose} disabled={saving}>Cancel</Button>

@@ -98,7 +98,7 @@ export interface FieldDefinition {
     valuePath?: string;
   };
   /** Field action (triggered on value change or submit) */
-  action?: {
+  action?: ActionSchema | {
     /** API endpoint pattern (use :platformId placeholder) */
     endpoint: string;
     /** HTTP method */

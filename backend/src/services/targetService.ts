@@ -260,9 +260,17 @@ export abstract class BaseTargetService {
   }
 
   /**
+   * Get a single group by ID
+   */
+  async getGroup(groupId: string): Promise<Group | null> {
+    const groups = await this.getGroups()
+    return groups.find(g => g.id === groupId) || null
+  }
+
+  /**
    * Create a new group
    */
-  async createGroup(groupName: string, targetIds: string[]): Promise<{ success: boolean; group?: Group; error?: string }> {
+  async createGroup(groupName: string, targetIds: string[] = []): Promise<{ success: boolean; group?: Group; error?: string }> {
     if (!groupName || typeof groupName !== 'string') {
       return { success: false, error: 'Group name is required' }
     }
@@ -276,11 +284,13 @@ export abstract class BaseTargetService {
       return { success: false, error: 'Group name already exists' }
     }
 
-    // Validate that all target IDs exist
-    const targets = await this.getTargets()
-    const invalidIds = targetIds.filter(id => !targets.some(t => t.id === id))
-    if (invalidIds.length > 0) {
-      return { success: false, error: `Invalid target IDs: ${invalidIds.join(', ')}` }
+    // Validate that all target IDs exist (only if targetIds is provided and not empty)
+    if (targetIds && targetIds.length > 0) {
+      const targets = await this.getTargets()
+      const invalidIds = targetIds.filter(id => !targets.some(t => t.id === id))
+      if (invalidIds.length > 0) {
+        return { success: false, error: `Invalid target IDs: ${invalidIds.join(', ')}` }
+      }
     }
 
     // Create new group with UUID

@@ -39,6 +39,9 @@ export const emailSettingsSchema: SettingsSchema = {
           type: 'button',
           label: '+ New Recipient',
           action: {
+            id: 'new-recipient-action',
+            type: 'open-edit-modal',
+            schemaId: 'editRecipientSchema',
             endpoint: 'platforms/:platformId/targets',
             method: 'POST',
             onSuccess: 'reload'
@@ -107,6 +110,9 @@ export const emailSettingsSchema: SettingsSchema = {
           type: 'button',
           label: '+ New Group',
           action: {
+            id: 'new-group-action',
+            type: 'open-edit-modal',
+            schemaId: 'editGroupSchema',
             endpoint: 'platforms/:platformId/target-groups',
             method: 'POST',
             onSuccess: 'reload'
@@ -149,6 +155,11 @@ export const emailSettingsSchema: SettingsSchema = {
                 id: 'memberCount',
                 label: 'Members',
                 type: 'number'
+              },
+              {
+                id: 'memberValues',
+                label: 'Members',
+                type: 'text'
               }
             ]
           }

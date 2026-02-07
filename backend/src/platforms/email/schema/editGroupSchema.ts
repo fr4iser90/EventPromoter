@@ -29,6 +29,7 @@ const emailGroupEditSchema: FormSchema = {
       name: 'targetIds',
       type: 'multiselect',
       label: 'Members',
+      required: false,
       optionsSource: {
         endpoint: 'platforms/:platformId/targets',
         method: 'GET',

@@ -2,21 +2,27 @@ import { FormSchema, SettingsSchema } from '@/types/schema/index.js';
 import { SchemaContext } from '../controllers/schemaController.js';
 
 // Helper to recursively resolve template strings (e.g., :platformId, :id)
-const resolveTemplatesDeep = (obj: any, context: SchemaContext): any => {
+const resolveTemplatesDeep = (obj: any, context: SchemaContext, parentKey?: string): any => {
   if (typeof obj === 'string') {
-    return obj.replace(/:([a-zA-Z0-9_]+)/g, (_, key) => {
+    let resolved = obj.replace(/:([a-zA-Z0-9_]+)/g, (_, key) => {
       return context[key] ?? `:${key}`;
     });
+    // Remove unresolved :id segments from endpoint strings (for new items)
+    if (parentKey === 'endpoint' && !context.id && resolved.includes('/:id')) {
+      // Remove /:id from the end or middle of the path
+      resolved = resolved.replace(/\/:id(\/|$)/g, '$1').replace(/\/:id$/, '');
+    }
+    return resolved;
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => resolveTemplatesDeep(item, context));
+    return obj.map(item => resolveTemplatesDeep(item, context, parentKey));
   }
 
   if (typeof obj === 'object' && obj !== null) {
     const newObj: { [key: string]: any } = {};
     for (const key of Object.keys(obj)) {
-      newObj[key] = resolveTemplatesDeep(obj[key], context);
+      newObj[key] = resolveTemplatesDeep(obj[key], context, key);
     }
     return newObj;
   }

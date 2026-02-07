@@ -51,6 +51,20 @@
         "a2ab961a-40dd-432a-987d-ef6f8caf24fa"
       ],
       "createdAt": "2026-01-20T23:26:13.109Z"
+    },
+    "79ae8be1-6d02-437d-85ff-675c821c1e24": {
+      "id": "79ae8be1-6d02-437d-85ff-675c821c1e24",
+      "name": "Test",
+      "targetIds": [],
+      "createdAt": "2026-02-07T13:15:13.616Z",
+      "updatedAt": "2026-02-07T13:15:13.616Z"
+    },
+    "1051d356-22cc-48b7-bff5-70d400be6e26": {
+      "id": "1051d356-22cc-48b7-bff5-70d400be6e26",
+      "name": "Friends",
+      "targetIds": [],
+      "createdAt": "2026-02-07T13:16:17.262Z",
+      "updatedAt": "2026-02-07T13:16:17.262Z"
     }
   }
 }

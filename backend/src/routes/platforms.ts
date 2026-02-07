@@ -72,6 +72,7 @@ router.delete('/:platformId/targets/:targetId', TargetController.deleteTarget)
 
 // Group routes
 router.get('/:platformId/target-groups', TargetController.getGroups)
+router.get('/:platformId/target-groups/:groupId', TargetController.getGroup)
 router.post('/:platformId/target-groups', TargetController.createGroup)
 router.put('/:platformId/target-groups/:groupId', TargetController.updateGroup)
 router.delete('/:platformId/target-groups/:groupId', TargetController.deleteGroup)

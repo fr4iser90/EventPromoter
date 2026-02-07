@@ -20,10 +20,9 @@ import EditModal from '../../../shared/components/EditModal.jsx';
 import { getApiUrl } from '../../../shared/utils/api';
 import axios from 'axios';
 
-const TargetList = ({ field, platformId, onUpdate, allFields }) => {
+const TargetList = ({ field, platformId, onUpdate, allFields, values = {} }) => {
   const [targets, setTargets] = useState([]);
   const [filteredTargets, setFilteredTargets] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentEditItem, setCurrentEditItem] = useState(null);
   const [currentAction, setCurrentAction] = useState(null);
@@ -31,11 +30,11 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
   const [error, setError] = useState(null);
   const theme = useTheme();
 
-  // Schema-driven: Find the search field and new button for this specific list
+  // Schema-driven: Find the search field for this specific list
   const searchField = allFields?.find(f => f.ui?.isFilterFor === field.name);
-  const newButton = allFields?.find(f => f.type === 'button' && f.action?.endpoint?.includes(field.name === 'targets' ? 'targets' : 'target-groups'));
   
-  const targetsField = field;
+  // Get search term from values (rendered by SchemaRenderer)
+  const searchTerm = searchField ? (values[searchField.name] || '') : '';
 
   const fetchData = async () => {
     if (!field.optionsSource || !platformId) {
@@ -77,10 +76,6 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
     );
     setFilteredTargets(results);
   }, [searchTerm, targets]);
-
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
 
   const handleEdit = (item, action) => {
     setCurrentEditItem(item);
@@ -176,39 +171,6 @@ const TargetList = ({ field, platformId, onUpdate, allFields }) => {
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-        {field.label}
-      </Typography>
-      {field.description && (
-        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-          {field.description}
-        </Typography>
-      )}
-
-      <Box display="flex" alignItems="center" gap={1} mb={2}>
-        {searchField && (
-          <TextField
-            label={searchField.label}
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            sx={{ flexGrow: 1 }}
-            placeholder={searchField.placeholder}
-          />
-        )}
-        {newButton && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleEdit({}, newButton.action)}
-            size="medium"
-          >
-            {newButton.label}
-          </Button>
-        )}
-      </Box>
-
       {renderTable()}
 
       {editModalOpen && currentAction && (

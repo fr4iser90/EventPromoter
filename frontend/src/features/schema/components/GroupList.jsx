@@ -136,21 +136,38 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }) {
                   ) : (
                     filteredGroups.map((row) => (
                       <TableRow key={row.id}>
-                        {columns.map((column) => (
-                          <TableCell key={column.id}>
-                            {column.clickable && row[column.id] !== undefined && column.action ? (
-                              <Link
-                                component="button"
-                                variant="body2"
-                                onClick={() => handleEdit(row, column.action)}
-                              >
-                                {column.id === 'memberCount' ? `${row[column.id]} members` : row[column.id]}
-                              </Link>
-                            ) : (
-                              column.id === 'memberCount' ? `${row[column.id]} members` : row[column.id]
-                            )}
-                          </TableCell>
-                        ))}
+                        {columns.map((column) => {
+                          let displayValue = row[column.id]
+                          
+                          // Format memberCount
+                          if (column.id === 'memberCount') {
+                            displayValue = `${row[column.id]} members`
+                          }
+                          // Format memberValues array as comma-separated string (generic)
+                          else if (column.id === 'memberValues' && Array.isArray(row[column.id])) {
+                            displayValue = row[column.id].join(', ') || 'No members'
+                          }
+                          // Handle undefined/null values
+                          else if (displayValue === undefined || displayValue === null) {
+                            displayValue = ''
+                          }
+                          
+                          return (
+                            <TableCell key={column.id}>
+                              {column.clickable && row[column.id] !== undefined && column.action ? (
+                                <Link
+                                  component="button"
+                                  variant="body2"
+                                  onClick={() => handleEdit(row, column.action)}
+                                >
+                                  {displayValue}
+                                </Link>
+                              ) : (
+                                displayValue
+                              )}
+                            </TableCell>
+                          )
+                        })}
                       </TableRow>
                     ))
                   )}
@@ -173,29 +190,6 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }) {
     <Box sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>{title}</Typography>
       {description && <Typography variant="body2" color="textSecondary" gutterBottom>{description}</Typography>}
-
-      <Box display="flex" alignItems="center" mb={2}>
-        {searchField && (
-          <TextField
-            label={searchField.label}
-            variant="outlined"
-            size="small"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            sx={{ flexGrow: 1, mr: 1 }}
-            placeholder={searchField.label}
-          />
-        )}
-        {newGroupButton && (
-          <Button
-            variant={newGroupButton.ui?.variant || 'contained'}
-            color={newGroupButton.ui?.color || 'primary'}
-            onClick={() => handleEdit({}, newGroupButton.action)}
-          >
-            {newGroupButton.label}
-          </Button>
-        )}
-      </Box>
 
       {groupsOverviewField && renderField(groupsOverviewField)}
 
