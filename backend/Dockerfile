@@ -38,6 +38,10 @@ FROM node:20-alpine
 # Install pnpm directly via npm (more reliable than corepack)
 RUN npm install -g pnpm@10.24.0
 
+# ✅ Create non-root user (UID/GID 1001 - node:alpine verwendet bereits 1000)
+RUN addgroup -g 1001 nodeuser && \
+    adduser -D -u 1001 -G nodeuser nodeuser
+
 WORKDIR /app
 
 # Copy root package.json and pnpm workspace config
@@ -72,12 +76,18 @@ RUN mkdir -p /app/backend/dist/platforms && \
 
 WORKDIR /app/backend
 
+# ✅ Change ownership of app directory to non-root user
+RUN chown -R nodeuser:nodeuser /app
+
 # Expose port
 EXPOSE 4000
 
 # Set environment
 ENV NODE_ENV=production
 ENV PORT=4000
+
+# ✅ Switch to non-root user
+USER nodeuser
 
 # Start server
 CMD ["node", "dist/index.js"]

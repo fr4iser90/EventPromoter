@@ -126,8 +126,8 @@ export class EventController {
       const restoreData = {
         event: {
           id: eventData.id,
-          name: eventData.name,
-          created: eventData.created
+          title: eventData.title,
+          createdAt: eventData.createdAt
         },
         files: files,
         platforms: eventData.selectedPlatforms || [],
@@ -188,6 +188,29 @@ export class EventController {
     } catch (error) {
       console.error('Error saving event platform content:', error)
       res.status(500).json({ error: 'Failed to save platform content' })
+    }
+  }
+
+  // ✅ Update event title
+  static async updateEventTitle(req: Request, res: Response) {
+    try {
+      const { eventId } = req.params
+      const { title } = req.body
+
+      if (!title || typeof title !== 'string' || title.trim().length === 0) {
+        return res.status(400).json({ error: 'Title is required and must be a non-empty string' })
+      }
+
+      const success = await EventService.updateEventTitle(eventId, title.trim())
+
+      if (success) {
+        res.json({ success: true, title })
+      } else {
+        res.status(404).json({ error: 'Event not found' })
+      }
+    } catch (error) {
+      console.error('Error updating event title:', error)
+      res.status(500).json({ error: 'Failed to update event title' })
     }
   }
 }

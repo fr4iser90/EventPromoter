@@ -17,6 +17,21 @@ services:
     volumes:
       # Mount config directory for persistence
       - ./config:/app/config:rw
+      # Mount events directory (contains all event data: event.json, parsed-data.json, platforms/, files/)
+      - ./backend/events:/app/backend/events:rw
+      # Mount platform data directories for persistence
+      # Email platform data
+      - ./backend/src/platforms/email/data:/app/backend/dist/platforms/email/data:rw
+      # Reddit platform data
+      - ./backend/src/platforms/reddit/data:/app/backend/dist/platforms/reddit/data:rw
+      # Facebook platform data
+      - ./backend/src/platforms/facebook/data:/app/backend/dist/platforms/facebook/data:rw
+      # Instagram platform data
+      - ./backend/src/platforms/instagram/data:/app/backend/dist/platforms/instagram/data:rw
+      # LinkedIn platform data
+      - ./backend/src/platforms/linkedin/data:/app/backend/dist/platforms/linkedin/data:rw
+      # Twitter platform data
+      - ./backend/src/platforms/twitter/data:/app/backend/dist/platforms/twitter/data:rw
     restart: unless-stopped
     networks:
       - eventpromoter-network

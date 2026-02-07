@@ -17,10 +17,12 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import TextSnippetIcon from '@mui/icons-material/TextSnippet'
 import AddIcon from '@mui/icons-material/Add'
 import DownloadIcon from '@mui/icons-material/Download'
+import DeleteIcon from '@mui/icons-material/Delete'
 import useStore from '../../../store'
 import { formatDateForDisplay } from '../../../shared/utils/dateUtils'
+import { getApiUrl } from '../../../shared/utils/api'
 
-function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
+function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }) {
   const { t, i18n } = useTranslation()
   const { setError } = useStore()
 
@@ -63,6 +65,29 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
     }
   }
 
+  const handleDelete = async () => {
+    if (!window.confirm(t('common.deleteConfirm', { name: event.title || t('event.untitled') }) || `Are you sure you want to delete "${event.title || t('event.untitled')}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(getApiUrl(`history/${event.id}`), {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        if (onDelete) {
+          onDelete(event.id)
+        }
+      } else {
+        throw new Error('Failed to delete event')
+      }
+    } catch (error) {
+      console.error('Failed to delete event:', error)
+      setError(t('errors.failedToDeleteEvent') || 'Failed to delete event')
+    }
+  }
+
   const displayedFiles = event.files?.slice(0, 3) || []
   const remainingCount = (event.files?.length || 0) - displayedFiles.length
 
@@ -70,7 +95,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
     <Card sx={{ mb: 1, transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-2px)' } }}>
       <CardContent sx={{ pb: 1 }}>
         <Typography variant="h6" sx={{ fontSize: '1rem', mb: 1 }}>
-          {event.name || event.title || t('event.untitled')}
+          {event.title || t('event.untitled')}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -127,25 +152,36 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent }) {
       </CardContent>
 
       <CardActions sx={{ pt: 0, justifyContent: 'space-between', px: 2, pb: 2 }}>
-        <Button
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={handleLoadFiles}
-          disabled={!event.files || event.files.length === 0}
-          variant="outlined"
-        >
-          Load Files Only
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={handleLoadFiles}
+            disabled={!event.files || event.files.length === 0}
+            variant="outlined"
+          >
+            Load Files Only
+          </Button>
 
-        <Button
+          <Button
+            size="small"
+            startIcon={<DownloadIcon />}
+            onClick={handleLoadEvent}
+            variant="contained"
+            color="primary"
+          >
+            Restore Event
+          </Button>
+        </Box>
+
+        <IconButton
           size="small"
-          startIcon={<DownloadIcon />}
-          onClick={handleLoadEvent}
-          variant="contained"
-          color="primary"
+          color="error"
+          onClick={handleDelete}
+          aria-label="Delete event"
         >
-          Restore Event
-        </Button>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
       </CardActions>
     </Card>
   )

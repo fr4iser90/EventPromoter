@@ -65,7 +65,7 @@ function EventHistory() {
 
       if (response.ok) {
         const data = await response.json()
-        alert(`Loaded ${data.files.length} files from "${event.name}"`)
+        alert(`Loaded ${data.files.length} files from "${event.title || 'Event'}"`)
       } else {
         throw new Error('Failed to load files')
       }
@@ -79,15 +79,20 @@ function EventHistory() {
     try {
       // Use the complete restore functionality
       await useStore.getState().restoreEvent(event.id)
-      alert(`✅ "${event.name}" wurde vollständig wiederhergestellt!\n\nAlle Dateien, Plattformen und Inhalte wurden geladen.`)
+      alert(`✅ "${event.title || 'Event'}" wurde vollständig wiederhergestellt!\n\nAlle Dateien, Plattformen und Inhalte wurden geladen.`)
     } catch (error) {
       console.error('Failed to restore event:', error)
-      alert(`❌ Fehler beim Wiederherstellen von "${event.name}": ${error.message}`)
+      alert(`❌ Fehler beim Wiederherstellen von "${event.title || 'Event'}": ${error.message}`)
     }
   }
 
+  const handleDeleteEvent = (eventId) => {
+    // Remove from local state
+    setEvents(prevEvents => prevEvents.filter(e => e.id !== eventId))
+  }
+
   const filteredEvents = events.filter(event =>
-    (event.name || event.title || '').toLowerCase().includes(searchTerm.toLowerCase())
+    (event.title || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -158,6 +163,7 @@ function EventHistory() {
                     event={event}
                     onLoadFiles={handleLoadEventFiles}
                     onLoadEvent={handleLoadEventData}
+                    onDelete={handleDeleteEvent}
                   />
                 ))}
               </Box>

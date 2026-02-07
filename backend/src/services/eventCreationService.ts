@@ -10,16 +10,21 @@ export class EventCreationService {
     parsedData: ParsedEventData,
     uploadedFiles: UploadedFile[]
   ): Promise<any> {
-    // Generate readable event ID
-    const eventTitle = parsedData.title || 'Untitled Event'
-    const eventId = EventService.generateReadableEventId(eventTitle, new Date())
+    // ✅ Generate stable Event ID (UUID)
+    const eventId = EventService.generateEventId()
+    
+    // ✅ Titel aus parsedData (als Vorschlag)
+    const eventTitle = parsedData.title || 'Unbenanntes Event'
+    const now = new Date().toISOString()
 
     // Create event data structure (without parsedData and platformContent)
     // Include hashtags from parsed data if available
     const eventData = {
       id: eventId,
-      name: eventTitle,
-      created: new Date().toISOString(),
+      title: eventTitle,               // ✅ Titel (Single Source of Truth)
+      status: 'draft' as const,
+      createdAt: now,
+      updatedAt: now,
       uploadedFileRefs: uploadedFiles,
       selectedHashtags: parsedData.hashtags && Array.isArray(parsedData.hashtags) ? parsedData.hashtags : [],
       selectedPlatforms: []

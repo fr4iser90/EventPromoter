@@ -38,4 +38,7 @@ router.get('/:eventId/platform-content', EventController.getEventPlatformContent
 // PUT /api/event/:eventId/platform-content - Save platform content for event
 router.put('/:eventId/platform-content', EventController.saveEventPlatformContent)
 
+// PATCH /api/event/:eventId/title - Update event title
+router.patch('/:eventId/title', EventController.updateEventTitle)
+
 export default router

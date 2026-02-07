@@ -134,7 +134,7 @@ export class SubmitController {
       try {
         const historyEntry = {
           id: `published-${Date.now()}`,
-          name: parsedData.title,
+          title: parsedData.title,
           status: 'published' as const,
           platforms: selectedPlatforms,
           publishedAt: new Date().toISOString(),

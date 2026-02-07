@@ -239,7 +239,8 @@
     "errorAdding": "Error adding: {{error}}",
     "allSelected": "All selected",
     "groupsSelected": "{{count}} group(s) selected",
-    "itemsSelected": "{{count}} item(s) selected"
+    "itemsSelected": "{{count}} item(s) selected",
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?"
   },
   "platform": {
     "selection": "Platform Selection",
@@ -264,7 +265,8 @@
     "failedToLoadEventFiles": "Failed to load event files",
     "invalidJsonFormat": "Invalid JSON format",
     "failedToLoadFileContent": "Failed to load file content",
-    "errorLoadingFileContent": "Error loading file content"
+    "errorLoadingFileContent": "Error loading file content",
+    "failedToDeleteEvent": "Failed to delete event"
   },
   "editor": {
     "appliedTemplates": "Applied Templates:",

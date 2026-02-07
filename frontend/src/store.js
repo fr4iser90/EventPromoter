@@ -91,8 +91,8 @@ const useStore = create((set, get) => ({
       const eventWorkspaceData = {
         currentEvent: {
           id: state.currentEvent.id,
-          name: state.currentEvent.name,
-          created: state.currentEvent.created,
+          title: state.currentEvent.title,
+          createdAt: state.currentEvent.createdAt,
           uploadedFileRefs: state.uploadedFileRefs, // File references are serializable
           selectedHashtags: state.selectedHashtags,
           selectedPlatforms: state.selectedPlatforms

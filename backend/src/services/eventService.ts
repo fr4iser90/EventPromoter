@@ -4,6 +4,7 @@ import { EventWorkspace, Event, UploadedFile } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
 import fs from 'fs'
 import path from 'path'
+import { randomUUID } from 'crypto'
 
 // Current event ID is stored in app.json
 
@@ -19,6 +20,11 @@ export const EVENT_ID_PATTERNS = {
 export const EVENT_PATTERN = 'title-first' // ← DIESE ZEILE ÄNDERN!
 
 export class EventService {
+  // ✅ Generate stable Event ID (UUID v4)
+  static generateEventId(): string {
+    return randomUUID()
+  }
+
   // Get current event ID from app config
   static async getCurrentEventId(): Promise<string | null> {
     const appConfig = await readConfig('app.json')
@@ -57,13 +63,44 @@ export class EventService {
     const eventFilePath = path.join(process.cwd(), 'events', eventId, 'event.json')
     try {
       const data = fs.readFileSync(eventFilePath, 'utf8')
-      return JSON.parse(data)
+      const event = JSON.parse(data) as any
+      
+      // ✅ Migration: name → title, created → createdAt
+      if (event && !event.title && (event as any).name) {
+        event.title = (event as any).name
+        delete (event as any).name  // Altes Feld entfernen
+      }
+      if (event && !event.createdAt && (event as any).created) {
+        event.createdAt = (event as any).created
+        delete (event as any).created  // Altes Feld entfernen
+      }
+      if (event && !event.updatedAt) {
+        event.updatedAt = event.createdAt || new Date().toISOString()
+      }
+      if (event && !event.status) {
+        event.status = 'draft'
+      }
+      
+      return event as Event
     } catch (error) {
       if (process.env.DEBUG_EVENT_ACCESS === 'true') {
         console.warn(`⚠️ Event data not found for ${eventId}`)
       }
       return null
     }
+  }
+
+  // ✅ Update event title (Single Source of Truth)
+  static async updateEventTitle(eventId: string, newTitle: string): Promise<boolean> {
+    const event = await this.getEventData(eventId)
+    if (!event) {
+      return false
+    }
+    
+    event.title = newTitle
+    event.updatedAt = new Date().toISOString()
+    
+    return await this.saveEventData(eventId, event)
   }
 
   // Save event data to specific event directory
@@ -97,10 +134,13 @@ export class EventService {
     const eventData = await this.getEventData(currentEventId)
     if (!eventData) {
       // Event exists but data is missing, create default
+      const now = new Date().toISOString()
       const defaultEvent: Event = {
         id: currentEventId,
-        name: 'New Event',
-        created: new Date().toISOString(),
+        title: 'New Event',
+        status: 'draft',
+        createdAt: now,
+        updatedAt: now,
         uploadedFileRefs: [],
         selectedHashtags: [],
         selectedPlatforms: []
@@ -497,10 +537,13 @@ export class EventService {
 
   // Create event from uploaded files with extracted title
   static async createEventFromFiles(eventId: string, title: string, files: UploadedFile[]): Promise<any> {
+    const now = new Date().toISOString()
     const eventData: Event = {
       id: eventId,
-      name: title,
-      created: new Date().toISOString(),
+      title: title,
+      status: 'draft',
+      createdAt: now,
+      updatedAt: now,
       uploadedFileRefs: files,
       selectedHashtags: [],
       selectedPlatforms: [],
@@ -590,8 +633,8 @@ export class EventService {
 
     return {
       id: eventId,
-      name: eventData.name,
-      created: eventData.created,
+      title: eventData.title,
+      createdAt: eventData.createdAt,
       parsedData,
       platformContent,
       uploadedFileRefs,

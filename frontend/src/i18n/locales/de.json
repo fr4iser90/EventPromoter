@@ -238,7 +238,8 @@
     "errorAdding": "Fehler beim Hinzufügen: {{error}}",
     "allSelected": "Alle ausgewählt",
     "groupsSelected": "{{count}} Gruppe(n) ausgewählt",
-    "itemsSelected": "{{count}} Element(e) ausgewählt"
+    "itemsSelected": "{{count}} Element(e) ausgewählt",
+    "deleteConfirm": "Möchten Sie \"{{name}}\" wirklich löschen?"
   },
   "platform": {
     "selection": "Plattform-Auswahl",
@@ -263,7 +264,8 @@
     "failedToLoadEventFiles": "Event-Dateien konnten nicht geladen werden",
     "invalidJsonFormat": "Ungültiges JSON-Format",
     "failedToLoadFileContent": "Dateiinhalt konnte nicht geladen werden",
-    "errorLoadingFileContent": "Fehler beim Laden des Dateiinhalts"
+    "errorLoadingFileContent": "Fehler beim Laden des Dateiinhalts",
+    "failedToDeleteEvent": "Event konnte nicht gelöscht werden"
   },
   "editor": {
     "appliedTemplates": "Angewendete Templates:",

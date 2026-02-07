@@ -2,8 +2,10 @@
 
 export interface Event {
   id: string
-  name: string
-  created: string
+  title: string                    // ✅ Editierbarer Titel (Single Source of Truth)
+  status?: 'draft' | 'published' | 'archived'
+  createdAt: string                // ✅ ISO timestamp
+  updatedAt: string                // ✅ ISO timestamp
   uploadedFileRefs: UploadedFile[] // References to uploaded files on server
   selectedHashtags: string[]      // Event-specific hashtag selections
   selectedPlatforms: string[]     // Event-specific platform selections
@@ -184,7 +186,7 @@ export interface PostResult {
 
 export interface HistoryEntry {
   id: string
-  name: string
+  title: string                    // ✅ Event title (Single Source of Truth)
   status: 'draft' | 'published' | 'archived'
   platforms: string[]
   publishedAt?: string

@@ -30,7 +30,21 @@ export class UploadService {
 
     return files.map(file => {
       const finalPath = path.join(filesDir, file.filename)
-      fs.renameSync(file.path, finalPath)
+      
+      // Use copy + unlink instead of rename for cross-device compatibility
+      // This works when temp/ is in container FS and events/ is mounted from host
+      try {
+        fs.copyFileSync(file.path, finalPath)
+        fs.unlinkSync(file.path)
+      } catch (error) {
+        // Fallback to rename if copy fails (shouldn't happen, but just in case)
+        try {
+          fs.renameSync(file.path, finalPath)
+        } catch (renameError) {
+          console.error(`Failed to move file ${file.path} to ${finalPath}:`, renameError)
+          throw renameError
+        }
+      }
 
       return {
         id: path.parse(file.filename).name,

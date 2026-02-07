@@ -237,7 +237,8 @@
     "errorAdding": "Error al agregar: {{error}}",
     "allSelected": "Todos seleccionados",
     "groupsSelected": "{{count}} grupo(s) seleccionado(s)",
-    "itemsSelected": "{{count}} elemento(s) seleccionado(s)"
+    "itemsSelected": "{{count}} elemento(s) seleccionado(s)",
+    "deleteConfirm": "¿Está seguro de que desea eliminar \"{{name}}\"?"
   },
   "platform": {
     "selection": "Selección de Plataforma",
@@ -262,7 +263,8 @@
     "failedToLoadEventFiles": "Error al cargar archivos de eventos",
     "invalidJsonFormat": "Formato JSON inválido",
     "failedToLoadFileContent": "Error al cargar contenido del archivo",
-    "errorLoadingFileContent": "Error al cargar contenido del archivo"
+    "errorLoadingFileContent": "Error al cargar contenido del archivo",
+    "failedToDeleteEvent": "Error al eliminar evento"
   },
   "editor": {
     "appliedTemplates": "Plantillas Aplicadas:",

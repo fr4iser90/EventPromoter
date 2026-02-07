@@ -2,6 +2,7 @@
 
 import { History, HistoryEntry } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
+import { EventService } from './eventService.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -98,9 +99,13 @@ export class HistoryService {
     // Get event stats
     const eventStats = fs.statSync(eventDir)
 
+    // ✅ event.title ist Single Source of Truth
+    const eventData = await EventService.getEventData(eventId)
+    const displayTitle = eventData?.title || parsedData.title || `Event ${eventId}`
+    
     return {
       id: eventId,
-      name: parsedData.title || `Event ${eventId}`,
+      title: displayTitle,
       status: platforms.length > 0 ? 'published' : 'draft',
       platforms,
       publishedAt: platforms.length > 0 ? eventStats.mtime.toISOString() : undefined,
@@ -172,6 +177,19 @@ export class HistoryService {
       return false // Event not found
     }
 
+    // ✅ Delete event directory (includes event.json, parsed-data.json, files/, platforms/)
+    const eventDir = path.join(process.cwd(), 'events', eventId)
+    if (fs.existsSync(eventDir)) {
+      try {
+        fs.rmSync(eventDir, { recursive: true, force: true })
+        console.log(`Deleted event directory: ${eventDir}`)
+      } catch (error) {
+        console.error(`Failed to delete event directory ${eventDir}:`, error)
+        // Continue anyway - at least remove from history
+      }
+    }
+
+    // Remove from history
     return await this.saveHistory({ Events: filteredEvents })
   }
 

@@ -60,10 +60,11 @@ export class FileController {
       // 1. Parse uploaded files (service)
       const parsedData = await ContentExtractionService.parseUploadedFiles(files)
 
-      if (!parsedData || !parsedData.title) {
+      // Titel ist optional - wird in eventCreationService mit Fallback behandelt
+      if (!parsedData) {
         // Cleanup temp files and return error
         UploadService.cleanupTempFiles(files)
-        return res.status(400).json({ error: 'No event title found in uploaded files' })
+        return res.status(400).json({ error: 'Failed to parse uploaded files' })
       }
 
       // 2. Convert files and enrich with content
@@ -108,7 +109,7 @@ export class FileController {
 
       await EventService.saveEventData(event.id, event)
 
-      console.log(`Upload: Event created ${event.id} (${event.name})`)
+      console.log(`Upload: Event created ${event.id} (${event.title})`)
 
       res.json({
         success: true,
