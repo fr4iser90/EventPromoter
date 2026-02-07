@@ -160,7 +160,7 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
     <Paper elevation={2} sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5">
-          📝 {t('template.platformTemplates', { platform: platform.charAt(0).toUpperCase() + platform.slice(1) })}
+          📝 {t('template.platformTemplates', { platform: platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Unknown' })}
         </Typography>
         <Button
           variant="contained"

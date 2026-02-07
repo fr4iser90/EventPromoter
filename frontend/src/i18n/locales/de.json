@@ -92,6 +92,7 @@
     "noContent": "Noch kein Inhalt...",
     "images": "Bilder",
     "parsedData": "Geparste Event-Daten",
+    "eventData": "Event Daten",
     "sourceFiles": "Quelldateien",
     "eventImage": "Event-Bild",
     "title": "Titel",
@@ -239,7 +240,9 @@
     "allSelected": "Alle ausgewählt",
     "groupsSelected": "{{count}} Gruppe(n) ausgewählt",
     "itemsSelected": "{{count}} Element(e) ausgewählt",
-    "deleteConfirm": "Möchten Sie \"{{name}}\" wirklich löschen?"
+    "deleteConfirm": "Möchten Sie \"{{name}}\" wirklich löschen?",
+    "newEvent": "Neues Event",
+    "resetConfirm": "Möchten Sie wirklich zurücksetzen und ein neues Event starten? Alle aktuellen Daten gehen verloren."
   },
   "platform": {
     "selection": "Plattform-Auswahl",

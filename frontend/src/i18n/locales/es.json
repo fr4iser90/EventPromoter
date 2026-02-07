@@ -92,6 +92,7 @@
     "noContent": "Aún no hay contenido...",
     "images": "Imágenes",
     "parsedData": "Datos del Evento Analizados",
+    "eventData": "Datos del Evento",
     "sourceFiles": "Archivos Fuente",
     "eventImage": "Imagen del Evento",
     "eventTitle": "Título"
@@ -238,7 +239,9 @@
     "allSelected": "Todos seleccionados",
     "groupsSelected": "{{count}} grupo(s) seleccionado(s)",
     "itemsSelected": "{{count}} elemento(s) seleccionado(s)",
-    "deleteConfirm": "¿Está seguro de que desea eliminar \"{{name}}\"?"
+    "deleteConfirm": "¿Está seguro de que desea eliminar \"{{name}}\"?",
+    "newEvent": "Nuevo Evento",
+    "resetConfirm": "¿Está seguro de que desea reiniciar y comenzar un nuevo evento? Se perderán todos los datos actuales."
   },
   "platform": {
     "selection": "Selección de Plataforma",

@@ -93,6 +93,7 @@
     "noFiles": "No files",
     "images": "Images",
     "parsedData": "Parsed Event Data",
+    "eventData": "Event Data",
     "sourceFiles": "Source Files",
     "eventImage": "Event Image",
     "title": "Title",
@@ -240,7 +241,9 @@
     "allSelected": "All selected",
     "groupsSelected": "{{count}} group(s) selected",
     "itemsSelected": "{{count}} item(s) selected",
-    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?"
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
+    "newEvent": "New Event",
+    "resetConfirm": "Are you sure you want to reset and start a new event? All current data will be lost."
   },
   "platform": {
     "selection": "Platform Selection",

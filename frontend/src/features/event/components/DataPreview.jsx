@@ -37,6 +37,7 @@ import ErrorIcon from '@mui/icons-material/Error'
 import SaveIcon from '@mui/icons-material/Save'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import RefreshIcon from '@mui/icons-material/Refresh'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../../i18n'
 import { getDefaultCurrency, formatPriceInput, getUserLocale, extractCurrencyFromPrice } from '../../../shared/utils/localeUtils'
@@ -60,7 +61,9 @@ function Preview() {
     debouncedSaveParsedData,
     savingParsedData,
     parsedDataSaveError,
-    lastParsedDataSave
+    lastParsedDataSave,
+    newEvent,
+    workflowState
   } = useStore()
   const [selectedImage, setSelectedImage] = useState(null)
   const [selectedTextFile, setSelectedTextFile] = useState(null)
@@ -666,12 +669,27 @@ function Preview() {
             </Box>
           )}
 
-          {/* Parsed Event Data Preview - Always Editable */}
+          {/* Event Data Input - Always Editable */}
           {editedData && (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                🎯 {t('preview.parsedData')}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  🎯 {t('preview.eventData')}
+                </Typography>
+                <Button
+                  size="small"
+                  startIcon={<RefreshIcon />}
+                  onClick={() => {
+                    if (window.confirm(t('common.resetConfirm') || 'Are you sure you want to reset and start a new event? All current data will be lost.')) {
+                      newEvent()
+                    }
+                  }}
+                  variant="outlined"
+                  color="secondary"
+                >
+                  {t('common.newEvent') || 'New Event'}
+                </Button>
+              </Box>
               <Card>
                 <CardContent>
                   <Box sx={{ mb: 2 }}>

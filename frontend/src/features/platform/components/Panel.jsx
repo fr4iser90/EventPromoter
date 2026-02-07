@@ -253,7 +253,7 @@ function DynamicPanelWrapper({ platform }) {
       <Paper sx={{ p: 3, mb: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6">
-            {panelConfig?.title || `${platform.charAt(0).toUpperCase() + platform.slice(1)} Options`}
+            {panelConfig?.title || `${platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Unknown'} Options`}
           </Typography>
           <Button
             size="small"

@@ -347,6 +347,8 @@ const useStore = create((set, get) => ({
       publishing: false,
       published: false,
       currentEvent: null,
+      parsedData: null,
+      parsingStatus: 'idle',
       savingParsedData: false,
       parsedDataSaveError: null,
       lastParsedDataSave: null
@@ -1006,7 +1008,7 @@ const useStore = create((set, get) => ({
       if (!backendSuccess && results) {
         for (const platformId in results) {
           const platformResult = results[platformId]
-          if (!platformResult.success && platformResult.error) {
+          if (!platformResult.success && platformResult.error && platformId) {
             const platformName = platformId.charAt(0).toUpperCase() + platformId.slice(1)
             errorMessages.push(`${platformName}: ${platformResult.error}`)
           }

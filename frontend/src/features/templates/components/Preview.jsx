@@ -90,7 +90,7 @@ function TemplatePreview({ template, platform }) {
       {/* Template Info */}
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-          <Chip label={platform.charAt(0).toUpperCase() + platform.slice(1)} color="primary" size="small" />
+          <Chip label={platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Unknown'} color="primary" size="small" />
           <Chip 
             label={
               categories?.find(cat => cat.id === template.category)?.name || 
