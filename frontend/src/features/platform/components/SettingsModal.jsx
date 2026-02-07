@@ -33,12 +33,43 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
   const [settingsValues, setSettingsValues] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [validating, setValidating] = useState(false)
   const [error, setError] = useState(null)
+  const [successMessage, setSuccessMessage] = useState(null)
   const [errors, setErrors] = useState({})
+  const [dataLoaded, setDataLoaded] = useState(false) // Track if data was loaded for this modal instance
 
-  // Load schema and data when platform changes or modal opens
+  // Convert backend errors (arrays) to strings for SchemaRenderer
+  const formatErrors = (backendErrors) => {
+    if (!backendErrors) return {}
+    const formatted = {}
+    Object.keys(backendErrors).forEach(field => {
+      const fieldErrors = backendErrors[field]
+      if (Array.isArray(fieldErrors)) {
+        formatted[field] = fieldErrors.join(', ')
+      } else if (typeof fieldErrors === 'string') {
+        formatted[field] = fieldErrors
+      }
+    })
+    return formatted
+  }
+
+  // Load schema and data when platform changes or modal opens (ONLY ONCE per open)
   useEffect(() => {
-    if (!platformId || !open) return
+    if (!platformId || !open) {
+      // Reset when modal closes
+      if (!open) {
+        setDataLoaded(false)
+        setCredentialsValues({})
+        setSettingsValues({})
+        setError(null)
+        setErrors({})
+      }
+      return
+    }
+
+    // Only load if not already loaded for this modal instance
+    if (dataLoaded) return
 
     const loadData = async () => {
       try {
@@ -82,12 +113,36 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
 
         // Load credentials values
         const credsResponse = await fetch(getApiUrl(`platforms/${platformId}/settings`))
+        const initialValues = {}
+        
+        // Set defaults from schema first
+        if (enrichedCredentials && enrichedCredentials.fields) {
+          enrichedCredentials.fields.forEach(field => {
+            if (field.default !== undefined) {
+              initialValues[field.name] = field.type === 'number' ? Number(field.default) : field.default
+            }
+          })
+        }
+        
         if (credsResponse.ok) {
           const credsData = await credsResponse.json()
-          if (credsData.success && credsData.settings) {
-            setCredentialsValues(credsData.settings.values || {})
+          if (credsData.success && credsData.settings && credsData.settings.values) {
+            // Merge saved values with defaults
+            Object.keys(credsData.settings.values).forEach(key => {
+              const field = enrichedCredentials?.fields?.find(f => f.name === key)
+              const savedValue = credsData.settings.values[key]
+              // Convert number fields to numbers
+              if (field?.type === 'number' && savedValue !== undefined && savedValue !== null && savedValue !== '') {
+                initialValues[key] = Number(savedValue)
+              } else if (savedValue !== undefined && savedValue !== null && savedValue !== '') {
+                initialValues[key] = savedValue
+              }
+            })
           }
         }
+        
+        setCredentialsValues(initialValues)
+        setDataLoaded(true)
       } catch (err) {
         console.error('Failed to load platform data:', err)
         setError(err.message)
@@ -97,14 +152,83 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
     }
 
     loadData()
-  }, [platformId, open])
+  }, [platformId, open, dataLoaded])
+
+  const handleValidate = async () => {
+    try {
+      setValidating(true)
+      setError(null)
+      setSuccessMessage(null)
+      setErrors({})
+      // NO CLIENT-SIDE VALIDATION - Backend validates everything!
+
+      // Send values as-is to backend - backend will validate
+      console.log(`[SettingsModal] Sending values to backend for validation:`, 
+        Object.keys(credentialsValues).reduce((acc, key) => {
+          acc[key] = key === 'password' ? '***' : credentialsValues[key]
+          return acc
+        }, {})
+      )
+
+      // Backend validates - we just send the values
+      const response = await fetch(getApiUrl(`platforms/${platformId}/settings`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: credentialsValues, validateOnly: true })
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        console.error(`[SettingsModal] Backend validation failed for ${platformId}:`, data.errors)
+        if (data.errors) {
+          const formatted = formatErrors(data.errors)
+          setErrors(formatted)
+          const errorCount = Object.keys(formatted).length
+          const errorFields = Object.keys(formatted).map(f => {
+            const field = schema?.credentials?.fields?.find(ff => ff.name === f)
+            return field?.label || f
+          }).join(', ')
+          setError(`Validation failed: ${errorCount} field(s) have errors (${errorFields})`)
+        } else {
+          setError(data.error || 'Validation failed')
+        }
+        return false
+      }
+
+      console.log(`[SettingsModal] Backend validation passed for ${platformId}`)
+      setError(null)
+      setSuccessMessage('✅ Validation passed! All fields are valid.')
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000)
+      return true
+    } catch (err) {
+      console.error(`[SettingsModal] Validation error for ${platformId}:`, err)
+      setError(err.message || 'Validation failed')
+      return false
+    } finally {
+      setValidating(false)
+    }
+  }
 
   const handleSave = async () => {
     try {
       setSaving(true)
       setError(null)
+      setErrors({})
 
-      // Save credentials (only tab 1 for now, as tab 0 targets are usually saved via individual actions)
+      console.log(`[SettingsModal] Saving ${platformId} credentials`)
+
+      // Validate first
+      const isValid = await handleValidate()
+      if (!isValid) {
+        console.warn(`[SettingsModal] Save aborted - validation failed for ${platformId}`)
+        setSaving(false)
+        return
+      }
+
+      // NO CLIENT-SIDE VALIDATION - Backend validates everything!
+      // Send values as-is to backend
       const response = await fetch(getApiUrl(`platforms/${platformId}/settings`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -113,13 +237,19 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
 
       if (!response.ok) {
         const data = await response.json()
-        if (data.errors) setErrors(data.errors)
+        console.error(`[SettingsModal] Save failed for ${platformId}:`, data)
+        if (data.errors) {
+          const formatted = formatErrors(data.errors)
+          setErrors(formatted)
+        }
         throw new Error(data.error || 'Failed to save credentials')
       }
 
+      console.log(`[SettingsModal] Successfully saved ${platformId} credentials`)
       if (onSave) onSave(platformId, credentialsValues)
       onClose()
     } catch (err) {
+      console.error(`[SettingsModal] Save error for ${platformId}:`, err)
       setError(err.message)
     } finally {
       setSaving(false)
@@ -150,10 +280,18 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
       <DialogContent sx={{ mt: 2 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box>
-        ) : error ? (
-          <Alert severity="error">{error}</Alert>
         ) : (
           <Box>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            {successMessage && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {successMessage}
+              </Alert>
+            )}
             {activeTab === 0 && (
               <Box>
                 {schema?.settings ? (
@@ -178,13 +316,58 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
             {activeTab === 1 && (
               <Box>
                 {schema?.credentials ? (
-                  <SchemaRenderer
-                    fields={schema.credentials.fields}
-                    values={credentialsValues}
-                    onChange={(f, v) => setCredentialsValues(prev => ({ ...prev, [f]: v }))}
-                    errors={errors}
-                    groups={schema.credentials.groups}
-                  />
+                  <>
+                    <SchemaRenderer
+                      fields={schema.credentials.fields}
+                      values={credentialsValues}
+                      onChange={(f, v) => {
+                        // For number fields, ensure we store the value properly
+                        const field = schema.credentials.fields.find(ff => ff.name === f)
+                        let valueToStore = v
+                        
+                        if (field?.type === 'number') {
+                          // If empty, use default or undefined
+                          if (v === '' || v === null || v === undefined) {
+                            valueToStore = field.default !== undefined ? field.default : undefined
+                          } else {
+                            // Convert to number
+                            const numVal = Number(v)
+                            valueToStore = isNaN(numVal) ? (field.default !== undefined ? field.default : undefined) : numVal
+                          }
+                        }
+                        
+                        setCredentialsValues(prev => {
+                          const newValues = { ...prev }
+                          if (valueToStore === undefined) {
+                            // Don't set undefined, but keep existing value or use default
+                            if (field?.default !== undefined && prev[f] === undefined) {
+                              newValues[f] = field.default
+                            } else if (valueToStore === undefined && prev[f] !== undefined) {
+                              // Keep existing value if new is undefined
+                              return prev
+                            }
+                          } else {
+                            newValues[f] = valueToStore
+                          }
+                          return newValues
+                        })
+                        
+                        // Clear errors for this field when user types
+                        if (errors[f]) {
+                          setErrors(prev => {
+                            const newErrors = { ...prev }
+                            delete newErrors[f]
+                            return newErrors
+                          })
+                          if (error && Object.keys(errors).length === 1) {
+                            setError(null)
+                          }
+                        }
+                      }}
+                      errors={errors}
+                      groups={schema.credentials.groups}
+                    />
+                  </>
                 ) : (
                   <Alert severity="info">No credentials available for this platform.</Alert>
                 )}
@@ -196,6 +379,14 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
 
       <DialogActions>
         <Button onClick={onClose} disabled={saving}>Cancel</Button>
+        <Button 
+          onClick={handleValidate} 
+          variant="outlined" 
+          disabled={loading || saving || validating}
+          sx={{ mr: 1 }}
+        >
+          {validating ? 'Validating...' : 'Validate'}
+        </Button>
         <Button onClick={handleSave} variant="contained" disabled={loading || saving}>
           {saving ? 'Saving...' : 'Save'}
         </Button>

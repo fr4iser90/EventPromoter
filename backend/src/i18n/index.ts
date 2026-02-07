@@ -1,3 +1,12 @@
+// Filter i18next locize.com spam messages
+const originalLog = console.log;
+console.log = (...args: any[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('i18next is maintained')) {
+    return; // filtert den Banner aus
+  }
+  originalLog(...args);
+};
+
 import i18next from 'i18next'
 import Backend from 'i18next-fs-backend'
 import * as middleware from 'i18next-http-middleware'

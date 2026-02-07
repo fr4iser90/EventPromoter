@@ -23,13 +23,23 @@ const filenames = new Set(); // Track all filenames for CID replacement
 items.forEach((item, index) => {
   if (item.binary && item.binary.data) {
     const binaryKey = index === 0 ? 'data' : `data_${index}`;
-    combinedBinary[binaryKey] = item.binary.data;
     
     // Get filename from attachment data
     const attachmentFilename = item.json.filename || 
                                (item.binary.data.fileName || 
                                 item.binary.data.name || 
                                 `attachment_${index}`);
+    
+    // Extract base filename (without path/query params)
+    const baseFilename = attachmentFilename.split('/').pop().split('?')[0];
+    
+    // Create new binary object with fileName set (for CID matching)
+    // n8n's Email Send Node matches CID with fileName from binary metadata
+    combinedBinary[binaryKey] = {
+      ...item.binary.data,
+      fileName: baseFilename,  // Set fileName for CID matching
+      name: baseFilename       // Also set name as fallback
+    };
     
     if (attachmentFilename) {
       filenames.add(attachmentFilename);

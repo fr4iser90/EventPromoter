@@ -7,7 +7,7 @@ import routes from './routes/index.js'
 import { SchemaRegistry } from './services/schemaRegistry.js'
 
 // Load environment variables
-dotenv.config()
+dotenv.config({ quiet: true })
 
 const schemaRegistry = SchemaRegistry.getInstance();
 // Load all schemas into the registry at application start

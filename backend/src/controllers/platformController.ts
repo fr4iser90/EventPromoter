@@ -425,7 +425,12 @@ export class PlatformController {
   static async updatePlatformSettings(req: Request, res: Response) {
     try {
       const { platformId } = req.params
-      const { settings } = req.body
+      const { settings, validateOnly } = req.body
+
+      console.log(`🔍 [${platformId}] ${validateOnly ? 'Validating' : 'Saving'} platform settings`)
+      if (validateOnly) {
+        console.log(`   Mode: Validation only (no save)`)
+      }
 
       const registry = await PlatformController.ensureRegistry()
 
@@ -456,10 +461,43 @@ export class PlatformController {
       const validation = validateSettingsValues(credentialsSchema, settings || {})
       
       if (!validation.isValid) {
+        // 🔍 LOGGING: Log validation errors with details
+        console.error(`❌ [${platformId}] Validation failed for platform settings:`)
+        console.error(`   Platform: ${platformId}`)
+        console.error(`   Fields with errors: ${Object.keys(validation.errors).length}`)
+        Object.entries(validation.errors).forEach(([field, errors]) => {
+          const fieldDef = credentialsSchema.fields.find(f => f.name === field)
+          const fieldLabel = fieldDef?.label || field
+          console.error(`   - ${fieldLabel} (${field}):`)
+          if (Array.isArray(errors)) {
+            errors.forEach(err => console.error(`     • ${err}`))
+          } else {
+            console.error(`     • ${errors}`)
+          }
+        })
+        console.error(`   Received values:`, Object.keys(settings || {}).reduce((acc, key) => {
+          // Mask sensitive fields for logging
+          if (key === 'password') {
+            acc[key] = settings[key] ? '***' : '<empty>'
+          } else {
+            acc[key] = settings[key] || '<empty>'
+          }
+          return acc
+        }, {} as Record<string, any>))
+        
         return res.status(400).json({
           success: false,
           error: 'Validation failed',
           errors: validation.errors
+        })
+      }
+
+      // If validateOnly flag is set, return validation success without saving
+      if (validateOnly) {
+        console.log(`✅ [${platformId}] Validation passed (validateOnly mode)`)
+        return res.json({
+          success: true,
+          message: 'Validation passed'
         })
       }
 
@@ -491,7 +529,9 @@ export class PlatformController {
           })
         }
         
-        console.info(`✅ Platform ${platformId} settings saved (${Object.keys(changedValues).length} fields changed)`)
+        console.log(`✅ [${platformId}] Platform settings saved successfully`)
+        console.log(`   Changed fields: ${Object.keys(changedValues).join(', ')}`)
+        console.log(`   Fields updated: ${Object.keys(changedValues).length}`)
       }
 
       res.json({

@@ -25,19 +25,18 @@ export class SchemaRegistry {
     console.log('Loading all schemas into registry...');
     const currentDirname = dirname(fileURLToPath(import.meta.url));
     const platformsDirPath = join(currentDirname, '../platforms');
-    console.log(`Scanning for platforms in: ${platformsDirPath}`);
 
     const isDevelopment = process.env.NODE_ENV === 'development';
     const fileExtension = isDevelopment ? '.ts' : '.js';
-    console.log(`Schema loading mode: ${isDevelopment ? 'Development (.ts)' : 'Production (.js)'}`);
 
     try {
       const platformDirs = await readdir(platformsDirPath, { withFileTypes: true });
+      const loadedSchemas: Record<string, string[]> = {};
+      
       for (const platformDir of platformDirs) {
         if (platformDir.isDirectory()) {
           const platformId = platformDir.name;
           const schemaDirPath = join(platformsDirPath, platformId, 'schema');
-          console.debug(`  Scanning schema directory for platform ${platformId}: ${schemaDirPath}`);
           
           try {
             const schemaFiles = await readdir(schemaDirPath, { withFileTypes: true });
@@ -45,7 +44,6 @@ export class SchemaRegistry {
               if (schemaFile.isFile() && schemaFile.name.endsWith(fileExtension)) {
                 const schemaId = schemaFile.name.replace(fileExtension, '');
                 const schemaPath = join(schemaDirPath, schemaFile.name);
-                console.debug(`    Attempting to import schema file: ${schemaPath} with ID: ${schemaId}`);
                 
                 try {
                   const schemaPathWithExt = schemaPath.endsWith(fileExtension) ? schemaPath : schemaPath + fileExtension;
@@ -57,7 +55,10 @@ export class SchemaRegistry {
                       this.cache.set(platformId, new Map());
                     }
                     this.cache.get(platformId)?.set(schemaId, { schema, path: schemaPath });
-                    console.info(`  Loaded schema: ${platformId}/${schemaId}`);
+                    if (!loadedSchemas[platformId]) {
+                      loadedSchemas[platformId] = [];
+                    }
+                    loadedSchemas[platformId].push(schemaId);
                   } else {
                     console.info(`  Schema ${platformId}/${schemaId} has no default export.`);
                   }
@@ -73,6 +74,12 @@ export class SchemaRegistry {
           }
         }
       }
+      
+      // Summarize loaded schemas per platform
+      for (const [platformId, schemas] of Object.entries(loadedSchemas)) {
+        console.info(`  Loaded ${schemas.length} schema(s) for ${platformId}: ${schemas.join(', ')}`);
+      }
+      
       console.log('All schemas loaded.');
     } catch (error: any) {
       console.error('Error loading all schemas into registry:', error);

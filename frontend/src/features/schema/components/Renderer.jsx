@@ -65,6 +65,17 @@ function renderField(field, value, onChange, error, platformId = null, formValue
           key={field.name}
           {...commonProps}
           type="number"
+          value={value !== undefined && value !== null && value !== '' ? value : (field.default !== undefined ? field.default : '')}
+          onChange={(e) => {
+            const val = e.target.value
+            // Convert empty string to undefined, otherwise convert to number
+            if (val === '' || val === null) {
+              onChange(field.name, field.default !== undefined ? field.default : undefined)
+            } else {
+              const numVal = val === '' ? undefined : Number(val)
+              onChange(field.name, isNaN(numVal) ? undefined : numVal)
+            }
+          }}
           inputProps={{
             min: field.validation?.find(r => r.type === 'min')?.value,
             max: field.validation?.find(r => r.type === 'max')?.value

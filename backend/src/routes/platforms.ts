@@ -81,6 +81,7 @@ async function loadPlatformRoutes() {
     const platformsPath = join(__dirname, '../platforms')
     
     const platformDirs = await readdir(platformsPath, { withFileTypes: true })
+    const loadedPlatforms: string[] = []
     
     for (const dirent of platformDirs) {
       if (dirent.isDirectory() && !dirent.name.startsWith('_')) {
@@ -92,7 +93,7 @@ async function loadPlatformRoutes() {
           const routesModule = await import(`../platforms/${platformId}/routes.js`)
           if (routesModule.default) {
             router.use(`/${platformId}`, routesModule.default)
-            console.debug(`✅ Loaded routes for platform: ${platformId}`)
+            loadedPlatforms.push(platformId)
           }
         } catch (error: any) {
           // Platform doesn't have routes.ts - that's OK, not all platforms need custom routes
@@ -101,6 +102,10 @@ async function loadPlatformRoutes() {
           }
         }
       }
+    }
+    
+    if (loadedPlatforms.length > 0) {
+      console.debug(`✅ Loaded routes for ${loadedPlatforms.length} platform(s): ${loadedPlatforms.join(', ')}`)
     }
   } catch (error) {
     console.error('Failed to load platform routes:', error)

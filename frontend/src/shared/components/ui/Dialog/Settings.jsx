@@ -9,39 +9,66 @@ import {
   Typography,
   Box,
   Divider,
-  CircularProgress
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert
 } from '@mui/material'
 import useStore from '../../../../store'
+import { getApiUrl } from '../../../utils/api'
+import axios from 'axios'
 
 function SettingsModal({ open, onClose }) {
   const { n8nWebhookUrl, setN8nWebhookUrl, loadAppConfig } = useStore()
   const [tempN8nUrl, setTempN8nUrl] = useState('')
+  const [publishingMode, setPublishingMode] = useState('auto')
   const [isValidating, setIsValidating] = useState(false)
-  const [validationStatus, setValidationStatus] = useState(null) // null, true, false
+  const [validationStatus, setValidationStatus] = useState(null)
+  const [saving, setSaving] = useState(false)
 
-  // Load config and update temp value when modal opens
+  // Load config when modal opens
   useEffect(() => {
     if (open) {
-      // Ensure config is loaded
-      loadAppConfig().then(() => {
-        // Use current n8nWebhookUrl after config is loaded
-        setTempN8nUrl(n8nWebhookUrl || 'http://localhost:5678/webhook/multiplatform-publisher')
+      loadAppConfig().then(async () => {
+        try {
+          const response = await axios.get(getApiUrl('config/app'))
+          const config = response.data
+          setTempN8nUrl(config.n8nWebhookUrl || 'http://localhost:5678/webhook/multiplatform-publisher')
+          setPublishingMode(config.publishingMode || 'auto')
+        } catch (error) {
+          console.warn('Failed to load app config:', error)
+          setTempN8nUrl(n8nWebhookUrl || 'http://localhost:5678/webhook/multiplatform-publisher')
+          setPublishingMode('auto')
+        }
       })
     }
-  }, [open, n8nWebhookUrl, loadAppConfig])
+  }, [open, loadAppConfig, n8nWebhookUrl])
 
-  const handleSave = () => {
-    setN8nWebhookUrl(tempN8nUrl)
-    onClose()
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await axios.patch(getApiUrl('config/app'), {
+        n8nWebhookUrl: tempN8nUrl,
+        publishingMode: publishingMode
+      })
+      setN8nWebhookUrl(tempN8nUrl)
+      onClose()
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleCancel = () => {
-    setTempN8nUrl(n8nWebhookUrl) // Reset to current value
-    setValidationStatus(null) // Reset validation status
+    setTempN8nUrl(n8nWebhookUrl)
+    setValidationStatus(null)
     onClose()
   }
 
-  const handleValidate = async () => {
+  const handleTestConnection = async () => {
     if (!tempN8nUrl || !tempN8nUrl.trim()) {
       setValidationStatus(false)
       return
@@ -51,13 +78,10 @@ function SettingsModal({ open, onClose }) {
     setValidationStatus(null)
 
     try {
-      // Try to reach the n8n webhook with a minimal test request
-      // Use OPTIONS first (CORS preflight), if that fails, try a minimal POST
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
 
       try {
-        // Try OPTIONS first (less intrusive)
         const optionsResponse = await fetch(tempN8nUrl, {
           method: 'OPTIONS',
           signal: controller.signal,
@@ -67,17 +91,14 @@ function SettingsModal({ open, onClose }) {
         })
         clearTimeout(timeoutId)
         
-        // If OPTIONS works, consider it valid
         if (optionsResponse.ok || optionsResponse.status < 500) {
           setValidationStatus(true)
           return
         }
       } catch (optionsError) {
-        // OPTIONS might not be supported, try POST with minimal payload
         clearTimeout(timeoutId)
       }
 
-      // Try POST with minimal test payload
       const postController = new AbortController()
       const postTimeoutId = setTimeout(() => postController.abort(), 5000)
 
@@ -92,14 +113,12 @@ function SettingsModal({ open, onClose }) {
 
       clearTimeout(postTimeoutId)
 
-      // Consider it valid if we get any response (even error responses mean server is reachable)
       if (response.status < 500) {
         setValidationStatus(true)
       } else {
         setValidationStatus(false)
       }
     } catch (error) {
-      // Connection error, server not reachable
       setValidationStatus(false)
     } finally {
       setIsValidating(false)
@@ -113,41 +132,77 @@ function SettingsModal({ open, onClose }) {
       </DialogTitle>
 
       <DialogContent>
+        {/* Publishing Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            N8N Integration
+            📤 Publishing
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Configure the webhook URL for your N8N automation server.
+            Configure how content is published to external platforms
           </Typography>
 
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-            <TextField
-              fullWidth
-              label="N8N Webhook URL"
-              value={tempN8nUrl}
-              onChange={(e) => {
-                setTempN8nUrl(e.target.value)
-                setValidationStatus(null) // Reset validation when URL changes
-              }}
-              placeholder="http://localhost:5678/webhook/multiplatform-publisher"
-              helperText="Example: http://your-server.com/webhook/multiplatform-publisher"
-              variant="outlined"
-              error={validationStatus === false}
-              sx={{ flex: 1 }}
-            />
-            <Button
-              variant="outlined"
-              onClick={handleValidate}
-              disabled={isValidating || !tempN8nUrl?.trim()}
-              sx={{ mt: 0.5, minWidth: 100 }}
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Publishing Method</InputLabel>
+            <Select
+              value={publishingMode}
+              onChange={(e) => setPublishingMode(e.target.value)}
+              label="Publishing Method"
             >
-              {isValidating ? <CircularProgress size={20} /> : 'Validate'}
-            </Button>
-          </Box>
-          
+              <MenuItem value="auto">Auto (Recommended)</MenuItem>
+              <MenuItem value="api">Direct API</MenuItem>
+              <MenuItem value="n8n">N8N Webhook</MenuItem>
+              <MenuItem value="playwright">Browser Automation (Playwright)</MenuItem>
+            </Select>
+          </FormControl>
+
+          {publishingMode === 'auto' && (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              ℹ️ Auto mode will attempt the following order:
+              <Box component="ol" sx={{ mt: 1, mb: 0, pl: 3 }}>
+                <li>N8N Webhook</li>
+                <li>Direct API</li>
+                <li>Browser Automation (Playwright)</li>
+              </Box>
+            </Alert>
+          )}
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* N8N Integration Section */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            🔗 N8N Integration
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Automate publishing workflows using N8N webhooks.
+          </Typography>
+
+          <TextField
+            fullWidth
+            label="N8N Webhook URL"
+            value={tempN8nUrl}
+            onChange={(e) => {
+              setTempN8nUrl(e.target.value)
+              setValidationStatus(null)
+            }}
+            placeholder="http://localhost:5678/webhook/multiplatform-publisher"
+            variant="outlined"
+            error={validationStatus === false}
+            sx={{ mb: 2 }}
+          />
+
+          <Button
+            variant="outlined"
+            onClick={handleTestConnection}
+            disabled={isValidating || !tempN8nUrl?.trim()}
+            startIcon={isValidating ? <CircularProgress size={16} /> : null}
+          >
+            Test Connection
+          </Button>
+
           {validationStatus !== null && (
-            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ mt: 1 }}>
               <Typography
                 variant="body2"
                 sx={{
@@ -155,37 +210,19 @@ function SettingsModal({ open, onClose }) {
                   fontWeight: 'bold'
                 }}
               >
-                {validationStatus ? '✓ Ja' : '✗ Nein'}
+                {validationStatus ? '✓ Connection successful' : '✗ Connection failed'}
               </Typography>
-              {validationStatus && (
-                <Typography variant="body2" color="text.secondary">
-                  N8N ist erreichbar
-                </Typography>
-              )}
-              {!validationStatus && (
-                <Typography variant="body2" color="text.secondary">
-                  N8N ist nicht erreichbar
-                </Typography>
-              )}
             </Box>
           )}
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Box>
-          <Typography variant="body2" color="text.secondary">
-            💡 Tip: Your N8N webhook should be configured to receive POST requests with JSON payload containing files, hashtags, and platform settings.
-          </Typography>
         </Box>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleCancel} color="inherit">
+        <Button onClick={handleCancel} color="inherit" disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained">
-          Save Settings
+        <Button onClick={handleSave} variant="contained" disabled={saving}>
+          {saving ? 'Saving...' : 'Save Settings'}
         </Button>
       </DialogActions>
     </Dialog>

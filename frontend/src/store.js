@@ -996,12 +996,36 @@ const useStore = create((set, get) => ({
         // Don't fail the whole submit if history save fails
       }
 
+      // Check backend response success
+      const backendSuccess = response.data.success
+      const backendMessage = response.data.message || ''
+      const results = response.data.results || {}
+
+      // Extract error messages from failed platforms
+      const errorMessages = []
+      if (!backendSuccess && results) {
+        for (const platformId in results) {
+          const platformResult = results[platformId]
+          if (!platformResult.success && platformResult.error) {
+            const platformName = platformId.charAt(0).toUpperCase() + platformId.slice(1)
+            errorMessages.push(`${platformName}: ${platformResult.error}`)
+          }
+        }
+      }
+
+      const finalErrorMessage = errorMessages.length > 0 
+        ? errorMessages.join('\n')
+        : (backendMessage || 'Some platforms failed to publish')
+
       set({
         isProcessing: false,
-        successMessage: `Content successfully submitted to ${state.selectedPlatforms.length} platform(s)!`,
+        successMessage: backendSuccess 
+          ? `Content successfully submitted to ${state.selectedPlatforms.length} platform(s)!`
+          : null,
+        error: backendSuccess ? null : finalErrorMessage,
         publishing: false,
-        published: true,
-        workflowState: WORKFLOW_STATES.PUBLISHED
+        published: backendSuccess,
+        workflowState: backendSuccess ? WORKFLOW_STATES.PUBLISHED : state.workflowState // Keep current state on error
       })
 
       // Return session ID for results tracking
