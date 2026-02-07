@@ -40,8 +40,14 @@ export function getFileUrl(filePath) {
     return filePath
   }
   
-  // Ensure relative path starts with /
-  const cleanPath = filePath.startsWith('/') ? filePath : `/${filePath}`
+  // In Development: prepend http://localhost:4000 (config.apiUrl is full URL)
+  // In Production: return as-is (config.apiUrl is '/api', nginx proxies /api)
+  if (config.apiUrl.startsWith('http://') || config.apiUrl.startsWith('https://')) {
+    // Development: prepend full URL
+    const cleanPath = filePath.startsWith('/') ? filePath : `/${filePath}`
+    return `${config.apiUrl}${cleanPath}`
+  }
   
-  return `${config.apiUrl}${cleanPath}`
+  // Production: return path as-is (nginx will proxy /api to backend)
+  return filePath
 }

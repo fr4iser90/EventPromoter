@@ -1,4 +1,4 @@
-import { FormSchema, SettingsSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema/index.js';
 
 export class SchemaValidator {
   public static findUnresolvedTemplates(obj: any, found = new Set<string>()): Set<string> {

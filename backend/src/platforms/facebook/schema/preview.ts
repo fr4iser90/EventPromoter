@@ -6,7 +6,7 @@
  * @module platforms/facebook/schema/preview
  */
 
-import { PreviewSchema } from '@/types/schema'
+import { PreviewSchema } from '@/types/schema/index.js'
 
 export const facebookPreviewSchema: PreviewSchema = {
   version: '1.0.0',

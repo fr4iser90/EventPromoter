@@ -10,7 +10,7 @@
  * @module platforms/twitter/schema/settings
  */
 
-import { SettingsSchema } from '@/types/schema'
+import { SettingsSchema } from '@/types/schema/index.js'
 
 export const twitterSettingsSchema: SettingsSchema = {
   id: 'twitter-settings-schema',

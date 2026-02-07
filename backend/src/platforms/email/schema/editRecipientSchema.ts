@@ -1,4 +1,4 @@
-import { FormSchema } from '@/types/schema'
+import { FormSchema } from '@/types/schema/index.js'
 
 const emailRecipientEditSchema: FormSchema = {
   id: 'editRecipientSchema',

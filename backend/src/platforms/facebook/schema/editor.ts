@@ -6,7 +6,7 @@
  * @module platforms/facebook/schema/editor
  */
 
-import { EditorSchema } from '@/types/schema'
+import { EditorSchema } from '@/types/schema/index.js'
 
 export const facebookEditorSchema: EditorSchema = {
   version: '1.0.0',

@@ -6,7 +6,7 @@
  * @module platforms/reddit/schema/credentials
  */
 
-import { CredentialsSchema } from '@/types/schema'
+import { CredentialsSchema } from '@/types/schema/index.js'
 
 export const redditCredentialsSchema: CredentialsSchema = {
   version: '1.0.0',

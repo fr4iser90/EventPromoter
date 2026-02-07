@@ -10,7 +10,7 @@
  * @module platforms/reddit/schema/settings
  */
 
-import { SettingsSchema } from '@/types/schema'
+import { SettingsSchema } from '@/types/schema/index.js'
 
 export const redditSettingsSchema: SettingsSchema = {
   id: 'reddit-settings-schema',

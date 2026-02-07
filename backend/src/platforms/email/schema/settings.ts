@@ -10,7 +10,7 @@
  * @module platforms/email/schema/settings
  */
 
-import { SettingsSchema } from '@/types/schema'
+import { SettingsSchema } from '@/types/schema/index.js'
 
 export const emailSettingsSchema: SettingsSchema = {
   id: 'email-settings-schema',

@@ -7,7 +7,7 @@
  * @module utils/settingsValidator
  */
 
-import { CredentialsSchema, FieldDefinition, ValidationRule } from '@/types/schema'
+import { CredentialsSchema, FieldDefinition, ValidationRule } from '@/types/schema/index.js'
 
 /**
  * Validation result

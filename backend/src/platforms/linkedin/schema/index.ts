@@ -10,11 +10,11 @@
  * @module platforms/linkedin/schema
  */
 
-import { PlatformSchema } from '@/types/schema'
-import { linkedinCredentialsSchema } from './credentials'
-import { linkedinEditorSchema } from './editor'
-import { linkedinPreviewSchema } from './preview'
-import { linkedinSettingsSchema } from './settings'
+import { PlatformSchema } from '@/types/schema/index.js'
+import { linkedinCredentialsSchema } from './credentials.js'
+import { linkedinEditorSchema } from './editor.js'
+import { linkedinPreviewSchema } from './preview.js'
+import { linkedinSettingsSchema } from './settings.js'
 
 /**
  * Complete LinkedIn Platform Schema

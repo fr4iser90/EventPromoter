@@ -10,11 +10,11 @@
  * @module platforms/reddit/schema
  */
 
-import { PlatformSchema } from '@/types/schema'
-import { redditCredentialsSchema } from './credentials'
-import { redditEditorSchema } from './editor'
-import { redditPreviewSchema } from './preview'
-import { redditSettingsSchema } from './settings'
+import { PlatformSchema } from '@/types/schema/index.js'
+import { redditCredentialsSchema } from './credentials.js'
+import { redditEditorSchema } from './editor.js'
+import { redditPreviewSchema } from './preview.js'
+import { redditSettingsSchema } from './settings.js'
 
 /**
  * Complete Reddit Platform Schema

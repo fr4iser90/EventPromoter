@@ -6,7 +6,7 @@
  * @module platforms/email/schema/template
  */
 
-import { TemplateSchema } from '@/types/schema'
+import { TemplateSchema } from '@/types/schema/index.js'
 
 export const emailTemplateSchema: TemplateSchema = {
   version: '1.0.0',

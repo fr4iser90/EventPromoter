@@ -10,7 +10,7 @@
  * @module platforms/instagram/schema/settings
  */
 
-import { SettingsSchema } from '@/types/schema'
+import { SettingsSchema } from '@/types/schema/index.js'
 
 export const instagramSettingsSchema: SettingsSchema = {
   id: 'instagram-settings-schema',

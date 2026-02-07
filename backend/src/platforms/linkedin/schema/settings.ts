@@ -10,7 +10,7 @@
  * @module platforms/linkedin/schema/settings
  */
 
-import { SettingsSchema } from '@/types/schema'
+import { SettingsSchema } from '@/types/schema/index.js'
 
 export const linkedinSettingsSchema: SettingsSchema = {
   id: 'linkedin-settings-schema',

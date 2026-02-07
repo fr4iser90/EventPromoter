@@ -10,11 +10,11 @@
  * @module platforms/instagram/schema
  */
 
-import { PlatformSchema } from '@/types/schema'
-import { instagramCredentialsSchema } from './credentials'
-import { instagramEditorSchema } from './editor'
-import { instagramPreviewSchema } from './preview'
-import { instagramSettingsSchema } from './settings'
+import { PlatformSchema } from '@/types/schema/index.js'
+import { instagramCredentialsSchema } from './credentials.js'
+import { instagramEditorSchema } from './editor.js'
+import { instagramPreviewSchema } from './preview.js'
+import { instagramSettingsSchema } from './settings.js'
 
 /**
  * Complete Instagram Platform Schema

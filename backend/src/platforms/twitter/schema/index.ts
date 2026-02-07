@@ -10,11 +10,11 @@
  * @module platforms/twitter/schema
  */
 
-import { PlatformSchema } from '@/types/schema'
-import { twitterCredentialsSchema } from './credentials'
-import { twitterEditorSchema } from './editor'
-import { twitterPreviewSchema } from './preview'
-import { twitterSettingsSchema } from './settings'
+import { PlatformSchema } from '@/types/schema/index.js'
+import { twitterCredentialsSchema } from './credentials.js'
+import { twitterEditorSchema } from './editor.js'
+import { twitterPreviewSchema } from './preview.js'
+import { twitterSettingsSchema } from './settings.js'
 
 /**
  * Complete Twitter Platform Schema

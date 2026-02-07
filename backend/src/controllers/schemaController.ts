@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { FormSchema, SettingsSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema/index.js';
 import { SchemaRegistry } from '../services/schemaRegistry.js'
 import { SchemaResolver } from '../services/schemaResolver.js'
 import { SchemaValidator } from '../services/schemaValidator.js'

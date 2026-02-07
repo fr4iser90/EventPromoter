@@ -80,14 +80,24 @@ async function loadPlatformModule(
   try {
     // Try to import the platform module
     // In production (Docker), files are compiled to .js, so try .js first
+    // Check if we're in dist (production) - if so, only try .js
+    const isProduction = __dirname.includes('/dist/') || __dirname.includes('\\dist\\')
     let module
-    try {
+    
+    if (isProduction) {
+      // In production, only try .js
       const modulePath = join(platformPath, 'index.js')
       module = await import(modulePath)
-    } catch (jsError: any) {
-      // Fallback to .ts for development
-      const modulePath = join(platformPath, 'index.ts')
-      module = await import(modulePath)
+    } else {
+      // In development, try .js first, then .ts
+      try {
+        const modulePath = join(platformPath, 'index.js')
+        module = await import(modulePath)
+      } catch (jsError: any) {
+        // Fallback to .ts for development
+        const modulePath = join(platformPath, 'index.ts')
+        module = await import(modulePath)
+      }
     }
 
     // Get the platform module (support both default and named exports)

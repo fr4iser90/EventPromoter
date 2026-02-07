@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from 'crypto'
-import { Target, Group, TargetSchema, ValidationRule } from '@/types/schema'
+import { Target, Group, TargetSchema, ValidationRule } from '@/types/schema/index.js'
 import { readPlatformData, writePlatformData } from '../utils/platformDataUtils.js'
 
 /**

@@ -6,7 +6,7 @@
  * @module platforms/instagram/schema/preview
  */
 
-import { PreviewSchema } from '@/types/schema'
+import { PreviewSchema } from '@/types/schema/index.js'
 
 export const instagramPreviewSchema: PreviewSchema = {
   version: '1.0.0',

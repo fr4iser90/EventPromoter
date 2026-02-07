@@ -10,7 +10,7 @@
  * @module platforms/facebook/schema/settings
  */
 
-import { SettingsSchema } from '@/types/schema'
+import { SettingsSchema } from '@/types/schema/index.js'
 
 export const facebookSettingsSchema: SettingsSchema = {
   id: 'facebook-settings-schema',

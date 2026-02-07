@@ -1,4 +1,4 @@
-import { FormSchema, SettingsSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema/index.js';
 import { SchemaContext } from '../controllers/schemaController.js';
 
 // Helper to recursively resolve template strings (e.g., :platformId, :id)

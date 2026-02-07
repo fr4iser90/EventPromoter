@@ -1,4 +1,4 @@
-import { FormSchema, SettingsSchema } from '@/types/schema';
+import { FormSchema, SettingsSchema } from '@/types/schema/index.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readdir } from 'fs/promises';

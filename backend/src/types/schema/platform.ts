@@ -3,11 +3,11 @@
  * Defines the complete structure for a platform's schema, combining all sub-schemas.
  */
 
-import { CredentialsSchema } from './credentials';
-import { EditorSchema } from './editor';
-import { PreviewSchema } from './preview';
-import { SettingsSchema } from './settings';
-import { TemplateSchema } from './template';
+import { CredentialsSchema } from './credentials.js';
+import { EditorSchema } from './editor.js';
+import { PreviewSchema } from './preview.js';
+import { SettingsSchema } from './settings.js';
+import { TemplateSchema } from './template.js';
 
 /**
  * Complete platform schema

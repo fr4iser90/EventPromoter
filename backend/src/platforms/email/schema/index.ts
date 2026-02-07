@@ -11,12 +11,12 @@
  * @module platforms/email/schema
  */
 
-import { PlatformSchema } from '@/types/schema'
-import { emailCredentialsSchema } from './credentials'
-import { emailEditorSchema } from './editor'
-import { emailPreviewSchema } from './preview'
-import { emailTemplateSchema } from './template'
-import { emailSettingsSchema } from './settings'
+import { PlatformSchema } from '@/types/schema/index.js'
+import { emailCredentialsSchema } from './credentials.js'
+import { emailEditorSchema } from './editor.js'
+import { emailPreviewSchema } from './preview.js'
+import { emailTemplateSchema } from './template.js'
+import { emailSettingsSchema } from './settings.js'
 
 /**
  * Complete Email Platform Schema

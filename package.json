@@ -31,7 +31,9 @@
       "docker:traefik:logs": "docker-compose -f docker-compose.traefik.yml logs -f",
       "test": "npm run test --workspaces",
       "lint": "npm run lint --workspaces",
-      "lint:fix": "npm run lint:fix --workspaces"
+      "lint:fix": "npm run lint:fix --workspaces",
+      "deploy:sftp": "bash scripts/deploy-sftp.sh",
+      "deploy:sftp:dry-run": "bash scripts/deploy-sftp.sh --dry-run"
     },
     "devDependencies": {
       "concurrently": "^8.2.2"

@@ -6,7 +6,7 @@
  * @module platforms/email/schema/credentials
  */
 
-import { CredentialsSchema } from '@/types/schema'
+import { CredentialsSchema } from '@/types/schema/index.js'
 
 export const emailCredentialsSchema: CredentialsSchema = {
   version: '1.0.0',

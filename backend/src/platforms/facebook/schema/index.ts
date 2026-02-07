@@ -10,11 +10,11 @@
  * @module platforms/facebook/schema
  */
 
-import { PlatformSchema } from '@/types/schema'
-import { facebookCredentialsSchema } from './credentials'
-import { facebookEditorSchema } from './editor'
-import { facebookPreviewSchema } from './preview'
-import { facebookSettingsSchema } from './settings'
+import { PlatformSchema } from '@/types/schema/index.js'
+import { facebookCredentialsSchema } from './credentials.js'
+import { facebookEditorSchema } from './editor.js'
+import { facebookPreviewSchema } from './preview.js'
+import { facebookSettingsSchema } from './settings.js'
 
 /**
  * Complete Facebook Platform Schema

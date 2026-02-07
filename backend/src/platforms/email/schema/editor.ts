@@ -6,7 +6,7 @@
  * @module platforms/email/schema/editor
  */
 
-import { EditorSchema } from '@/types/schema'
+import { EditorSchema } from '@/types/schema/index.js'
 
 export const emailEditorSchema: EditorSchema = {
   version: '1.0.0',

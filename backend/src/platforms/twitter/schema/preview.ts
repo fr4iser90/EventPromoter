@@ -6,7 +6,7 @@
  * @module platforms/twitter/schema/preview
  */
 
-import { PreviewSchema } from '@/types/schema'
+import { PreviewSchema } from '@/types/schema/index.js'
 
 export const twitterPreviewSchema: PreviewSchema = {
   version: '1.0.0',

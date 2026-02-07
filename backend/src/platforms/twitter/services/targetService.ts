@@ -1,5 +1,5 @@
 import { BaseTargetService } from '../../../services/targetService.js'
-import { Target, Group } from '@/types/schema'
+import { Target, Group } from '@/types/schema/index.js'
 import { twitterSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**

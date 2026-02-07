@@ -6,7 +6,7 @@
  * @module platforms/linkedin/schema/preview
  */
 
-import { PreviewSchema } from '@/types/schema'
+import { PreviewSchema } from '@/types/schema/index.js'
 
 export const linkedinPreviewSchema: PreviewSchema = {
   version: '1.0.0',
