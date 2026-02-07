@@ -554,11 +554,15 @@ function Preview() {
         )
 
       case 'boolean':
+        // Ensure value is boolean (handle string "true"/"false" or other types)
+        const booleanValue = typeof value === 'boolean' 
+          ? value 
+          : value === true || value === 'true' || value === 1 || value === '1'
         return (
           <FormControlLabel
             control={
               <Checkbox
-                checked={value ?? field.default ?? false}
+                checked={booleanValue ?? field.default ?? false}
                 onChange={(e) => handleExtendedDataChange(groupId, field.id, e.target.checked, isNested, parentFieldId)}
               />
             }

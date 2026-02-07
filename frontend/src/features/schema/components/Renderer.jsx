@@ -330,6 +330,8 @@ function validateField(field, value, t = null) {
  * @param {Function} props.onButtonAction - Callback for button actions (for reload/clear)
  */
 function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, groups = [], platformId = null, onButtonAction = null }) {
+  const { t } = useTranslation()
+  
   // If groups are defined, render by groups
   if (groups && groups.length > 0) {
     return (

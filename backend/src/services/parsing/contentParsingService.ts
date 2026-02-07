@@ -50,9 +50,12 @@ export class ContentExtractionService {
                 ...existingData,   // txt data (first) - overwrites md
                 // Special handling for arrays - merge them
                 lineup: existingData.lineup || structuredData.lineup,
-                hashtags: existingData.hashtags && existingData.hashtags.length > 0 
-                  ? existingData.hashtags 
-                  : (structuredData.hashtags || [])
+                // For hashtags: prefer non-empty array, or use whichever has data
+                hashtags: (existingData.hashtags && existingData.hashtags.length > 0)
+                  ? existingData.hashtags
+                  : ((structuredData.hashtags && structuredData.hashtags.length > 0)
+                    ? structuredData.hashtags
+                    : [])
               }
             }
           }
@@ -272,7 +275,7 @@ export class ContentExtractionService {
       }
 
       // Parse extended data from structured text
-      parsed.extendedData = this.parseExtendedData(text)
+      parsed.extendedData = this.parseExtendedData(content)
 
       // Only return if we have at least a title
       return parsed.title ? parsed : null
