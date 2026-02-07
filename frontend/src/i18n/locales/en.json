@@ -184,7 +184,27 @@
     "variablesHint": "Use variables in curly braces, e.g., {title}, {date}",
     "noTemplatesFound": "No templates found",
     "duplicate": "Duplicate",
-    "selectTemplate": "Select a template"
+    "selectTemplate": "Select a template",
+    "codeEditor": "Code",
+    "visualEditor": "Visual",
+    "blockPalette": "Block Palette",
+    "allBlocksAdded": "All available blocks have been added",
+    "dragToAdd": "Drag blocks to add them",
+    "dropHere": "Drop block here",
+    "dragBlocksHere": "Drag blocks here to get started",
+    "noPlatform": "No platform selected",
+    "noSchemaAvailable": "No template schema available",
+    "noVisualFields": "No visual fields available for this template",
+    "togglePalette": "Toggle Palette",
+    "togglePreview": "Toggle Preview",
+    "noVariables": "No variables available",
+    "variables": "Variables:",
+    "visual": "Visual",
+    "code": "Code",
+    "enterContent": "Enter content... Use {variable} for dynamic content",
+    "enterText": "Enter text...",
+    "textContent": "Text Content",
+    "variablePlaceholder": "Use {variable} for dynamic content"
   },
   "settings": {
     "title": "Settings",
@@ -257,7 +277,9 @@
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "newEvent": "New Event",
     "resetConfirm": "Are you sure you want to reset and start a new event? All current data will be lost.",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down"
   },
   "platform": {
     "selection": "Platform Selection",

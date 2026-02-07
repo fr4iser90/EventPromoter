@@ -10,17 +10,22 @@ import {
   Alert,
   CircularProgress,
   Divider,
-  Paper
+  Paper,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material'
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Code as CodeIcon,
+  ViewModule as VisualIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../hooks/useTemplates'
 import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
 import SchemaRenderer from '../../schema/components/Renderer'
 import { useTemplateCategories } from '../hooks/useTemplateCategories'
+import TemplateBuilder from './VisualBuilder/TemplateBuilder'
 
 function TemplateEditor({ template, platform, onCancel, onSave }) {
   const { t } = useTranslation()
@@ -36,6 +41,7 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
     template: {}
   })
   const [isDirty, setIsDirty] = useState(false)
+  const [useVisualBuilder, setUseVisualBuilder] = useState(false)
 
   // Initialize form data from template
   useEffect(() => {
@@ -49,6 +55,12 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
       setIsDirty(false)
     }
   }, [template])
+
+  // Prüfe ob visueller Builder verfügbar ist
+  const hasVisualFields = schema?.template?.defaultStructure && 
+    Object.values(schema.template.defaultStructure).some(field => 
+      field.type === 'html' || field.type === 'rich'
+    )
 
   // Mark as dirty when form changes
   const handleFormChange = (field, value) => {
@@ -202,13 +214,52 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
 
         {/* Template Content */}
         <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            {t('template.templateContent', { defaultValue: 'Template Content' })}
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="subtitle1">
+              {t('template.templateContent', { defaultValue: 'Template Content' })}
+            </Typography>
+            {hasVisualFields && (
+              <ToggleButtonGroup
+                value={useVisualBuilder ? 'visual' : 'code'}
+                exclusive
+                onChange={(e, value) => {
+                  if (value !== null) {
+                    setUseVisualBuilder(value === 'visual')
+                  }
+                }}
+                size="small"
+              >
+                <ToggleButton value="code">
+                  <CodeIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  {t('template.codeEditor', { defaultValue: 'Code' })}
+                </ToggleButton>
+                <ToggleButton value="visual">
+                  <VisualIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  {t('template.visualEditor', { defaultValue: 'Visual' })}
+                </ToggleButton>
+              </ToggleButtonGroup>
+            )}
+          </Box>
 
           {schemaLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress />
+            </Box>
+          ) : useVisualBuilder && hasVisualFields ? (
+            <Box sx={{ minHeight: '400px' }}>
+              <TemplateBuilder
+                platform={platform}
+                template={{ ...template, template: formData.template }}
+                schema={schema}
+                onChange={(templateData) => {
+                  // Merge mit bestehenden Feldern (z.B. subject)
+                  setFormData(prev => ({
+                    ...prev,
+                    template: { ...prev.template, ...templateData }
+                  }))
+                  setIsDirty(true)
+                }}
+              />
             </Box>
           ) : templateSchema?.defaultStructure ? (
             <SchemaRenderer

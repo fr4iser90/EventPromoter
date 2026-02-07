@@ -182,7 +182,25 @@
     "variablesHint": "Usa variables entre llaves, ej., {title}, {date}",
     "noTemplatesFound": "No se encontraron plantillas",
     "duplicate": "Duplicar",
-    "selectTemplate": "Seleccionar una plantilla"
+    "selectTemplate": "Seleccionar una plantilla",
+    "codeEditor": "Código",
+    "visualEditor": "Visual",
+    "blockPalette": "Paleta de Bloques",
+    "allBlocksAdded": "Todos los bloques disponibles han sido agregados",
+    "dragToAdd": "Arrastra bloques aquí para agregarlos",
+    "dropHere": "Soltar bloque aquí",
+    "dragBlocksHere": "Arrastra bloques aquí para comenzar",
+    "noPlatform": "No hay plataforma seleccionada",
+    "noSchemaAvailable": "No hay esquema de plantilla disponible",
+    "noVisualFields": "No hay campos visuales disponibles para esta plantilla",
+    "togglePalette": "Alternar Paleta",
+    "togglePreview": "Alternar Vista Previa",
+    "noVariables": "No hay variables disponibles",
+    "variables": "Variables:",
+    "visual": "Visual",
+    "code": "Código",
+    "enterContent": "Ingresa contenido... Usa {variable} para contenido dinámico",
+    "enterText": "Ingresa texto..."
   },
   "settings": {
     "title": "Configuración",
@@ -255,7 +273,9 @@
     "deleteConfirm": "¿Está seguro de que desea eliminar \"{{name}}\"?",
     "newEvent": "Nuevo Evento",
     "resetConfirm": "¿Está seguro de que desea reiniciar y comenzar un nuevo evento? Se perderán todos los datos actuales.",
-    "saving": "Guardando..."
+    "saving": "Guardando...",
+    "moveUp": "Mover Arriba",
+    "moveDown": "Mover Abajo"
   },
   "platform": {
     "selection": "Selección de Plataforma",

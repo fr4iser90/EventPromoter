@@ -183,7 +183,27 @@
     "variablesHint": "Verwenden Sie Variablen in geschweiften Klammern, z.B. {title}, {date}",
     "noTemplatesFound": "Keine Vorlagen gefunden",
     "duplicate": "Duplizieren",
-    "selectTemplate": "Vorlage auswählen"
+    "selectTemplate": "Vorlage auswählen",
+    "codeEditor": "Code",
+    "visualEditor": "Visuell",
+    "blockPalette": "Block-Palette",
+    "allBlocksAdded": "Alle verfügbaren Blöcke wurden hinzugefügt",
+    "dragToAdd": "Ziehe Blöcke hierher, um sie hinzuzufügen",
+    "dropHere": "Block hier ablegen",
+    "dragBlocksHere": "Ziehe Blöcke hierher, um zu beginnen",
+    "noPlatform": "Keine Plattform ausgewählt",
+    "noSchemaAvailable": "Kein Template-Schema verfügbar",
+    "noVisualFields": "Keine visuellen Felder für diese Vorlage verfügbar",
+    "togglePalette": "Palette ein-/ausblenden",
+    "togglePreview": "Vorschau ein-/ausblenden",
+    "noVariables": "Keine Variablen verfügbar",
+    "variables": "Variablen:",
+    "visual": "Visuell",
+    "code": "Code",
+    "enterContent": "Inhalt eingeben... Verwende {variable} für dynamischen Inhalt",
+    "enterText": "Text eingeben...",
+    "textContent": "Textinhalt",
+    "variablePlaceholder": "Verwende {variable} für dynamischen Inhalt"
   },
   "settings": {
     "title": "Einstellungen",
@@ -256,7 +276,9 @@
     "deleteConfirm": "Möchten Sie \"{{name}}\" wirklich löschen?",
     "newEvent": "Neues Event",
     "resetConfirm": "Möchten Sie wirklich zurücksetzen und ein neues Event starten? Alle aktuellen Daten gehen verloren.",
-    "saving": "Speichern..."
+    "saving": "Speichern...",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten"
   },
   "platform": {
     "selection": "Plattform-Auswahl",
