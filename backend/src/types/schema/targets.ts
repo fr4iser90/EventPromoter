@@ -28,6 +28,8 @@ export interface TargetSchema {
 export interface Target {
   /** Unique target identifier */
   id: string;
+  /** Target type (e.g., 'subreddit', 'user', 'email') - required for multi-target platforms */
+  targetType?: string;
   /** Metadata (optional additional data) */
   metadata?: Record<string, any>;
   /** Timestamps */

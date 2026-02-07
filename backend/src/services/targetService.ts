@@ -26,54 +26,58 @@ export interface ValidationResult {
  */
 export abstract class BaseTargetService {
   protected platformId: string
-  protected targetSchema: TargetSchema
+  protected targetSchemas: Record<string, TargetSchema> // Multi-target support - required
   protected dataFileName: string = 'targets.json' // Override in subclasses if needed
   
-  constructor(platformId: string, targetSchema: TargetSchema) {
+  constructor(platformId: string, targetSchemas: Record<string, TargetSchema>) {
     this.platformId = platformId
-    this.targetSchema = targetSchema
+    this.targetSchemas = targetSchemas
   }
 
   // Abstract methods (platform-specific)
   /**
-   * Get the base field name (e.g., 'email', 'subreddit')
-   */
-  abstract getBaseField(): string
-
-  /**
    * Validate the base field value
    */
-  abstract validateBaseField(value: string): boolean
+  abstract validateBaseField(value: string, type?: string): boolean
 
   // Generic methods (work for all platforms)
 
   /**
-   * Get all targets
+   * Get all targets, optionally filtered by target type
    */
   async getTargets(type?: string): Promise<Target[]> {
     const data = await this.readTargetData();
     let targets = data?.targets || [];
 
     if (type) {
-      // Implement filtering logic based on the 'type' parameter
-      // This is a generic filtering, subclasses can override for specific logic
-      if (this.targetSchema.baseField === type) {
-        // If the requested type matches the base field, return all targets
-        // as the base field usually represents the primary 'account' type
-        return targets;
-      } else if (this.targetSchema.customFields) {
-        // Check if a custom field matches the requested type
-        const typeField = this.targetSchema.customFields.find(f => f.name === type);
-        if (typeField) {
-          // If a custom field represents the type, filter targets where this field is true/exists
-          return targets.filter(target => target[type] === true || target[type] !== undefined);
-        }
+      // Filter by targetType (multi-target support)
+      if (this.targetSchemas[type]) {
+        return targets.filter(target => target.targetType === type);
       }
-      // Fallback: if no specific filtering rule, return empty array
       return [];
     }
 
     return targets;
+  }
+  
+  /**
+   * Get the target schema for a specific target type
+   */
+  getTargetSchema(type?: string): TargetSchema {
+    if (type && this.targetSchemas[type]) {
+      return this.targetSchemas[type];
+    }
+    // If no type specified, return first schema (for single-target platforms)
+    const firstType = Object.keys(this.targetSchemas)[0];
+    return this.targetSchemas[firstType];
+  }
+  
+  /**
+   * Get base field for a specific target type
+   */
+  getBaseField(type?: string): string {
+    const schema = this.getTargetSchema(type);
+    return schema.baseField;
   }
 
   /**
@@ -88,28 +92,35 @@ export abstract class BaseTargetService {
    * Add a new target
    */
   async addTarget(targetData: Record<string, any>): Promise<{ success: boolean; target?: Target; error?: string }> {
+    // Determine target type (for multi-target support)
+    const targetType = targetData.targetType;
+    const schema = this.getTargetSchema(targetType);
+    
     // Validate base field
-    const baseField = this.getBaseField()
-    const baseValue = targetData[baseField]
+    const baseField = this.getBaseField(targetType);
+    const baseValue = targetData[baseField];
     
     if (!baseValue || typeof baseValue !== 'string') {
-      return { success: false, error: `${this.targetSchema.baseFieldLabel} is required` }
+      return { success: false, error: `${schema.baseFieldLabel} is required` }
     }
 
-    if (!this.validateBaseField(baseValue)) {
-      return { success: false, error: `Invalid ${this.targetSchema.baseFieldLabel}` }
+    if (!this.validateBaseField(baseValue, targetType)) {
+      return { success: false, error: `Invalid ${schema.baseFieldLabel}` }
     }
 
-    // Check if target already exists (by base field value)
-    const existingTargets = await this.getTargets()
-    const normalizedBaseValue = this.normalizeBaseField(baseValue)
+    // Check if target already exists (by base field value and target type)
+    const existingTargets = await this.getTargets(targetType);
+    const normalizedBaseValue = this.normalizeBaseField(baseValue);
     
-    if (existingTargets.some(t => this.normalizeBaseField(t[baseField]) === normalizedBaseValue)) {
-      return { success: false, error: `${this.targetSchema.baseFieldLabel} already exists` }
+    if (existingTargets.some(t => {
+      const existingBaseValue = this.normalizeBaseField(t[baseField]);
+      return existingBaseValue === normalizedBaseValue && (!targetType || t.targetType === targetType);
+    })) {
+      return { success: false, error: `${schema.baseFieldLabel} already exists` }
     }
 
     // Validate custom fields
-    const customFieldsValidation = this.validateCustomFields(targetData)
+    const customFieldsValidation = this.validateCustomFields(targetData, schema)
     if (!customFieldsValidation.isValid) {
       const firstError = Object.values(customFieldsValidation.errors)[0]?.[0]
       return { success: false, error: firstError || 'Validation failed' }
@@ -118,8 +129,9 @@ export abstract class BaseTargetService {
     // Create target object
     const target: Target = {
       id: this.generateTargetId(),
+      ...(targetType && { targetType }), // Add targetType if specified
       [baseField]: baseValue,
-      ...this.extractCustomFields(targetData),
+      ...this.extractCustomFields(targetData, schema),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -148,27 +160,31 @@ export abstract class BaseTargetService {
     }
 
     const existingTarget = targets[targetIndex]
-    const baseField = this.getBaseField()
+    const targetType = targetData.targetType || existingTarget.targetType
+    const schema = this.getTargetSchema(targetType)
+    const baseField = this.getBaseField(targetType)
 
     // If base field is being updated, validate it
     if (targetData[baseField] !== undefined) {
       const baseValue = targetData[baseField]
-      if (!this.validateBaseField(baseValue)) {
-        return { success: false, error: `Invalid ${this.targetSchema.baseFieldLabel}` }
+      if (!this.validateBaseField(baseValue, targetType)) {
+        return { success: false, error: `Invalid ${schema.baseFieldLabel}` }
       }
 
-      // Check if another target already has this base value
+      // Check if another target already has this base value (same type)
       const normalizedBaseValue = this.normalizeBaseField(baseValue)
       const conflictingTarget = targets.find(
-        (t, idx) => idx !== targetIndex && this.normalizeBaseField(t[baseField]) === normalizedBaseValue
+        (t, idx) => idx !== targetIndex && 
+        this.normalizeBaseField(t[baseField]) === normalizedBaseValue &&
+        (!targetType || t.targetType === targetType)
       )
       if (conflictingTarget) {
-        return { success: false, error: `${this.targetSchema.baseFieldLabel} already exists` }
+        return { success: false, error: `${schema.baseFieldLabel} already exists` }
       }
     }
 
     // Validate custom fields
-    const customFieldsValidation = this.validateCustomFields(targetData)
+    const customFieldsValidation = this.validateCustomFields(targetData, schema)
     if (!customFieldsValidation.isValid) {
       const firstError = Object.values(customFieldsValidation.errors)[0]?.[0]
       return { success: false, error: firstError || 'Validation failed' }
@@ -316,17 +332,13 @@ export abstract class BaseTargetService {
 
   /**
    * Update an existing group
-   * Can update by groupId or groupName (for backward compatibility)
    */
-  async updateGroup(groupIdOrName: string, updates: { name?: string; targetIds?: string[] }): Promise<{ success: boolean; group?: Group; error?: string }> {
+  async updateGroup(groupId: string, updates: { name?: string; targetIds?: string[] }): Promise<{ success: boolean; group?: Group; error?: string }> {
     const data = await this.readTargetData()
     const currentGroups = data?.groups || {} as Record<string, Group>
 
-    // Find group by ID or name
-    let group: Group | undefined = currentGroups[groupIdOrName]
-    if (!group) {
-      group = Object.values(currentGroups).find(g => g.name === groupIdOrName)
-    }
+    // Find group by ID
+    const group: Group | undefined = currentGroups[groupId]
     
     if (!group) {
       return { success: false, error: 'Group not found' }
@@ -370,17 +382,13 @@ export abstract class BaseTargetService {
 
   /**
    * Delete a group
-   * Can delete by groupId or groupName (for backward compatibility)
    */
-  async deleteGroup(groupIdOrName: string): Promise<{ success: boolean; error?: string }> {
+  async deleteGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
     const data = await this.readTargetData()
     const currentGroups = data?.groups || {} as Record<string, Group>
     
-    // Find group by ID or name
-    let group: Group | undefined = currentGroups[groupIdOrName]
-    if (!group) {
-      group = Object.values(currentGroups).find(g => g.name === groupIdOrName)
-    }
+    // Find group by ID
+    const group: Group | undefined = currentGroups[groupId]
     
     if (!group) {
       return { success: false, error: 'Group not found' }
@@ -402,14 +410,15 @@ export abstract class BaseTargetService {
   /**
    * Validate custom fields against schema
    */
-  protected validateCustomFields(data: Record<string, any>): ValidationResult {
+  protected validateCustomFields(data: Record<string, any>, schema?: TargetSchema): ValidationResult {
     const errors: Record<string, string[]> = {}
+    const targetSchema = schema || this.getTargetSchema();
 
-    if (!this.targetSchema.customFields) {
+    if (!targetSchema.customFields) {
       return { isValid: true, errors }
     }
 
-    for (const field of this.targetSchema.customFields) {
+    for (const field of targetSchema.customFields) {
       const value = data[field.name]
       const fieldErrors: string[] = []
 
@@ -502,20 +511,22 @@ export abstract class BaseTargetService {
   /**
    * Extract custom fields from data
    */
-  protected extractCustomFields(data: Record<string, any>): Record<string, any> {
+  protected extractCustomFields(data: Record<string, any>, schema?: TargetSchema): Record<string, any> {
     const customFields: Record<string, any> = {}
-    const baseField = this.getBaseField()
+    const targetSchema = schema || this.getTargetSchema();
+    const baseField = this.getBaseField(data.targetType);
 
-    if (this.targetSchema.customFields) {
-      for (const field of this.targetSchema.customFields) {
+    if (targetSchema.customFields) {
+      for (const field of targetSchema.customFields) {
         if (data[field.name] !== undefined && data[field.name] !== null) {
           customFields[field.name] = data[field.name]
         }
       }
     }
 
-    // Don't include base field in custom fields
+    // Don't include base field or targetType in custom fields
     delete customFields[baseField]
+    delete customFields.targetType
 
     return customFields
   }

@@ -303,48 +303,50 @@ export const linkedinSettingsSchema: SettingsSchema = {
       ]
     }
   ],
-  targetSchema: {
-    baseField: 'profileUrl',
-    baseFieldLabel: 'LinkedIn Profile URL',
-    baseFieldValidation: [
-      { type: 'required', message: 'Profile URL is required' },
-      { type: 'url', message: 'Invalid URL format' }
-    ],
-    customFields: [
-      {
-        name: 'name',
-        type: 'text',
-        label: 'Name',
-        required: true,
-        ui: { width: 12, order: 1 }
-      },
-      {
-        name: 'company',
-        type: 'text',
-        label: 'Firma',
-        required: false,
-        ui: { width: 12, order: 2 }
-      },
-      {
-        name: 'title',
-        type: 'text',
-        label: 'Job-Titel',
-        required: false,
-        ui: { width: 12, order: 3 }
-      },
-      {
-        name: 'tags',
-        type: 'multiselect',
-        label: 'Tags',
-        required: false,
-        optionsSource: {
-          endpoint: 'platforms/:platformId/tags',
-          method: 'GET',
-          responsePath: 'tags'
+  targetSchemas: {
+    profileUrl: {
+      baseField: 'profileUrl',
+      baseFieldLabel: 'LinkedIn Profile URL',
+      baseFieldValidation: [
+        { type: 'required', message: 'Profile URL is required' },
+        { type: 'url', message: 'Invalid URL format' }
+      ],
+      customFields: [
+        {
+          name: 'name',
+          type: 'text',
+          label: 'Name',
+          required: true,
+          ui: { width: 12, order: 1 }
         },
-        ui: { width: 12, order: 4 }
-      }
-    ],
-    supportsGroups: false
+        {
+          name: 'company',
+          type: 'text',
+          label: 'Firma',
+          required: false,
+          ui: { width: 12, order: 2 }
+        },
+        {
+          name: 'title',
+          type: 'text',
+          label: 'Job-Titel',
+          required: false,
+          ui: { width: 12, order: 3 }
+        },
+        {
+          name: 'tags',
+          type: 'multiselect',
+          label: 'Tags',
+          required: false,
+          optionsSource: {
+            endpoint: 'platforms/:platformId/tags',
+            method: 'GET',
+            responsePath: 'tags'
+          },
+          ui: { width: 12, order: 4 }
+        }
+      ],
+      supportsGroups: false
+    }
   }
 }

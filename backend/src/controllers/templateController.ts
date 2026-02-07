@@ -573,12 +573,19 @@ export class TemplateController {
               })
               
               if (missing.length > 0) {
-                const missingEmails = missing.map(t => t.email || t.id).join(', ')
+                // Generic: use baseField instead of hardcoded .email
+                const missingDisplay = missing.map(t => {
+                  const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                  return t[baseField] || t.id
+                }).join(', ')
                 return res.status(400).json({
                   success: false,
                   error: `Template requires target fields: ${requiredFields.join(', ')}`,
-                  details: `${missing.length} target(s) missing required fields: ${missingEmails}`,
-                  missingTargets: missing.map(t => ({ id: t.id, email: t.email }))
+                  details: `${missing.length} target(s) missing required fields: ${missingDisplay}`,
+                  missingTargets: missing.map(t => {
+                    const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                    return { id: t.id, [baseField]: t[baseField] }
+                  })
                 })
               }
             }
@@ -611,12 +618,19 @@ export class TemplateController {
                 })
                 
                 if (missing.length > 0) {
-                  const missingEmails = missing.map(t => t.email || t.id).join(', ')
+                  // Generic: use baseField instead of hardcoded .email
+                  const missingDisplay = missing.map(t => {
+                    const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                    return t[baseField] || t.id
+                  }).join(', ')
                   return res.status(400).json({
                     success: false,
                     error: `Template requires target fields: ${requiredFields.join(', ')}`,
-                    details: `Group "${group.name}" has ${missing.length} target(s) missing required fields: ${missingEmails}`,
-                    missingTargets: missing.map(t => ({ id: t.id, email: t.email }))
+                    details: `Group "${group.name}" has ${missing.length} target(s) missing required fields: ${missingDisplay}`,
+                    missingTargets: missing.map(t => {
+                      const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                      return { id: t.id, [baseField]: t[baseField] }
+                    })
                   })
                 }
               }

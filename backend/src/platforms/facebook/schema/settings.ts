@@ -305,40 +305,42 @@ export const facebookSettingsSchema: SettingsSchema = {
       ]
     }
   ],
-  targetSchema: {
-    baseField: 'pageId',
-    baseFieldLabel: 'Facebook Page ID',
-    baseFieldValidation: [
-      { type: 'required', message: 'Page ID is required' }
-    ],
-    customFields: [
-      {
-        name: 'pageName',
-        type: 'text',
-        label: 'Page Name',
-        required: true,
-        ui: { width: 12, order: 1 }
-      },
-      {
-        name: 'pageUrl',
-        type: 'url',
-        label: 'Page URL',
-        required: false,
-        ui: { width: 12, order: 2 }
-      },
-      {
-        name: 'category',
-        type: 'select',
-        label: 'Kategorie',
-        required: false,
-        options: [
-          { label: 'Business', value: 'business' },
-          { label: 'Entertainment', value: 'entertainment' },
-          { label: 'Event', value: 'event' }
-        ],
-        ui: { width: 12, order: 3 }
-      }
-    ],
-    supportsGroups: false
+  targetSchemas: {
+    pageId: {
+      baseField: 'pageId',
+      baseFieldLabel: 'Facebook Page ID',
+      baseFieldValidation: [
+        { type: 'required', message: 'Page ID is required' }
+      ],
+      customFields: [
+        {
+          name: 'pageName',
+          type: 'text',
+          label: 'Page Name',
+          required: true,
+          ui: { width: 12, order: 1 }
+        },
+        {
+          name: 'pageUrl',
+          type: 'url',
+          label: 'Page URL',
+          required: false,
+          ui: { width: 12, order: 2 }
+        },
+        {
+          name: 'category',
+          type: 'select',
+          label: 'Kategorie',
+          required: false,
+          options: [
+            { label: 'Business', value: 'business' },
+            { label: 'Entertainment', value: 'entertainment' },
+            { label: 'Event', value: 'event' }
+          ],
+          ui: { width: 12, order: 3 }
+        }
+      ],
+      supportsGroups: false
+    }
   }
 }

@@ -156,13 +156,21 @@ export class EmailService {
     const targets = await service.getTargets()
     const groups = await service.getGroups()
     
-    const available = targets.map((t: any) => t.email)
+    // Generic: use baseField instead of hardcoded .email
+    const available = targets.map((t: any) => {
+      const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+      return t[baseField]
+    })
     
-    // Convert groups from { [groupId]: Group } to { [groupName]: [email] } or { [groupId]: [email] }
+    // Convert groups from Array to { [groupName]: [email] } or { [groupId]: [email] }
     const groupEmails: Record<string, string[]> = {}
-    const targetMap = new Map(targets.map((t: any) => [t.id, t.email]))
+    const targetMap = new Map(targets.map((t: any) => {
+      const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+      return [t.id, t[baseField]]
+    }))
     
-    for (const group of Object.values(groups)) {
+    // groups is an array, not an object
+    for (const group of groups) {
       const emails = group.targetIds
         .map((id: string) => targetMap.get(id))
         .filter((email: string | undefined): email is string => email !== undefined)
@@ -530,16 +538,17 @@ export class EmailService {
     } else if (recipients.mode === 'groups' && recipients.groups && recipients.groups.length > 0) {
       // Send to each group with its assigned template
       for (const groupIdentifier of recipients.groups) {
-        // Find group by ID or name
-        let group = groups[groupIdentifier]
-        if (!group) {
-          group = Object.values(groups).find(g => g.name === groupIdentifier)
-        }
+        // Find group by ID or name (groups is an array)
+        let group = groups.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier)
         if (!group) continue
 
-        // Get emails for this group
+        // Get emails for this group (generic - uses baseField)
         const allTargets = await this.getTargetService().getTargets()
-        const targetMap = new Map(allTargets.map((t: any) => [t.id, t.email]))
+        const targetService = this.getTargetService()
+        const targetMap = new Map(allTargets.map((t: any) => {
+          const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+          return [t.id, t[baseField]]
+        }))
         const groupEmails = group.targetIds
           .map((targetId: string) => targetMap.get(targetId))
           .filter((email: string | undefined): email is string => email !== undefined)

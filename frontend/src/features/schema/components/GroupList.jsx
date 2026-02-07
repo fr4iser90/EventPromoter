@@ -145,7 +145,7 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }) {
                           }
                           // Format memberValues array as comma-separated string (generic)
                           else if (column.id === 'memberValues' && Array.isArray(row[column.id])) {
-                            displayValue = row[column.id].join(', ') || 'No members'
+                            displayValue = row[column.id].filter(v => v != null && v !== '').join(', ') || 'No members'
                           }
                           // Handle undefined/null values
                           else if (displayValue === undefined || displayValue === null) {

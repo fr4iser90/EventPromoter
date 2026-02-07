@@ -29,16 +29,23 @@ export class TargetController {
         });
       }
 
-      const targets = await service.getTargets(type as string | undefined); // Pass type to service
+      const targetType = typeof type === 'string' ? type : undefined;
+      const targets = await service.getTargets(targetType); // Pass type to service
       const groups = await service.getGroups();
       const groupsArray = Array.isArray(groups) ? groups : Object.values(groups);
 
       // Transform targets to options format for multiselect components
-      const baseField = service.getBaseField()
-      const options = targets.map((target: Target) => ({
-        label: `${target[baseField]}${target.name ? ` (${target.name})` : ''}`,
-        value: target.id
-      }))
+      // Use type-specific baseField if type is provided, otherwise use default
+      const baseField = targetType ? service.getBaseField(targetType) : service.getBaseField()
+      const options = targets.map((target: Target) => {
+        const targetBaseField = target.targetType ? service.getBaseField(target.targetType) : baseField;
+        const baseValue = target[targetBaseField] || target[baseField] || target.id;
+        const displayName = target.name || target.displayName || '';
+        return {
+          label: `${baseValue}${displayName ? ` (${displayName})` : ''}`,
+          value: target.id
+        };
+      })
 
       return res.json({
         success: true,
@@ -218,9 +225,12 @@ export class TargetController {
       const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
 
       // Resolve target IDs to baseField values for display (generic)
+      // Handle multi-target support: each target may have different baseField based on targetType
       const targets = await service.getTargets()
-      const baseField = service.getBaseField()
-      const targetMap = new Map(targets.map((t: Target) => [t.id, t[baseField] || t.id]))
+      const targetMap = new Map(targets.map((t: Target) => {
+        const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+        return [t.id, t[baseField] || t.id]
+      }))
 
       // Add member values to each group (generic - uses baseField)
       const groupsWithMembers = groupsArray.map((group: any) => {
@@ -282,9 +292,12 @@ export class TargetController {
       }
 
       // Resolve target IDs to baseField values for display (generic)
+      // Handle multi-target support: each target may have different baseField based on targetType
       const targets = await service.getTargets()
-      const baseField = service.getBaseField()
-      const targetMap = new Map(targets.map((t: Target) => [t.id, t[baseField] || t.id]))
+      const targetMap = new Map(targets.map((t: Target) => {
+        const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+        return [t.id, t[baseField] || t.id]
+      }))
       
       const memberValues = group.targetIds
         ? group.targetIds

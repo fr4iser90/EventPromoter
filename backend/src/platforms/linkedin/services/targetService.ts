@@ -1,5 +1,4 @@
 import { BaseTargetService } from '../../../services/targetService.js'
-import { Target, Group } from '@/types/schema/index.js'
 import { linkedinSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**
@@ -14,24 +13,19 @@ import { linkedinSettingsSchema } from '../schema/settings.js' // Import the set
  */
 export class LinkedinTargetService extends BaseTargetService {
   constructor() {
-    super('linkedin', linkedinSettingsSchema.targetSchema!)
-  }
-
-  /**
-   * Get the base field name for LinkedIn targets (e.g., 'profileUrl').
-   */
-  getBaseField(): string {
-    return this.targetSchema.baseField
+    super('linkedin', linkedinSettingsSchema.targetSchemas!)
   }
 
   /**
    * Validate the base field value for LinkedIn targets.
    * @param value The value to validate.
+   * @param type Optional target type.
    * @returns True if the value is valid, false otherwise.
    */
-  validateBaseField(value: string): boolean {
-    // Implement validation based on targetSchema.baseFieldValidation rules
-    for (const rule of this.targetSchema.baseFieldValidation || []) {
+  validateBaseField(value: string, type?: string): boolean {
+    const schema = this.getTargetSchema(type);
+    // Implement validation based on schema.baseFieldValidation rules
+    for (const rule of schema.baseFieldValidation || []) {
       if (rule.type === 'required' && (!value || value.trim() === '')) {
         return false
       }
@@ -40,15 +34,5 @@ export class LinkedinTargetService extends BaseTargetService {
       }
     }
     return true
-  }
-
-  async getTargets(type?: string): Promise<Target[]> {
-    // TODO: Implement actual fetching of LinkedIn targets based on type
-    return []
-  }
-
-  async getGroups(): Promise<Group[]> {
-    // TODO: Implement actual fetching of LinkedIn groups
-    return []
   }
 }

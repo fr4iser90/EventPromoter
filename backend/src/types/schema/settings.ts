@@ -46,6 +46,6 @@ export interface SettingsSchema {
     label: string;
     sections: string[]; // Section IDs in this tab
   }>;
-  /** Target schema for managing platform targets (recipients, subreddits, etc.) */
-  targetSchema?: TargetSchema;
+  /** Target schemas for managing multiple target types per platform (e.g., subreddits + users) */
+  targetSchemas?: Record<string, TargetSchema>;
 }

@@ -370,7 +370,11 @@ export class EmailApiPublisher implements EmailPublisher {
     const targetService = new EmailTargetService()
     const allTargets = await targetService.getTargets()
     const groups = await targetService.getGroups()
-    const allRecipients = allTargets.map((t: any) => t.email)
+    // Generic: use baseField instead of hardcoded .email
+    const allRecipients = allTargets.map((t: any) => {
+      const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+      return t[baseField]
+    })
 
     if (targets.mode === 'all') {
       return allRecipients
@@ -378,27 +382,32 @@ export class EmailApiPublisher implements EmailPublisher {
       // Collect all emails from selected groups
       const emails: string[] = []
       for (const groupIdentifier of targets.groups) {
-        // Find group by ID or name
-        let group: any = groups[groupIdentifier]
-        if (!group) {
-          const foundGroup = Object.values(groups).find(g => g.name === groupIdentifier || g.id === groupIdentifier)
-          if (!foundGroup) continue
-          group = foundGroup
-        }
+        // Find group by ID or name (groups is an array)
+        const group = groups.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier)
+        if (!group) continue
         
-        // Convert target IDs to emails
+        // Convert target IDs to emails (generic - uses baseField)
         const groupEmails = group.targetIds
-          .map((targetId: string) => allTargets.find((t: any) => t.id === targetId)?.email)
+          .map((targetId: string) => {
+            const target = allTargets.find((t: any) => t.id === targetId)
+            if (!target) return undefined
+            const baseField = target.targetType ? targetService.getBaseField(target.targetType) : targetService.getBaseField()
+            return target[baseField]
+          })
           .filter((email: string | undefined): email is string => email !== undefined)
         emails.push(...groupEmails)
       }
       return [...new Set(emails)] // Remove duplicates
     } else if (targets.mode === 'individual' && targets.individual && Array.isArray(targets.individual)) {
-      const targetMap = new Map(allTargets.map((t: any) => [t.id, t.email]))
+      // Generic: use baseField instead of hardcoded .email
+      const targetMap = new Map(allTargets.map((t: any) => {
+        const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+        return [t.id, t[baseField]]
+      }))
       const individualEmails: string[] = targets.individual
         .map((targetId: string) => targetMap.get(targetId))
         .filter((email: string | undefined): email is string => email !== undefined)
-      return [...new Set(individualEmails)]
+        return [...new Set(individualEmails)]
     }
 
     return []

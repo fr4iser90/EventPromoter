@@ -988,9 +988,10 @@ export class ContentExtractionService {
       const groups = await service.getGroups()
 
       // Create mapping: ID -> display name (use baseField, e.g. email)
+      // Handle multi-target support: each target may have different baseField based on targetType
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
-        const baseField = service.getBaseField()
+        const baseField = target.targetType ? service.getBaseField(target.targetType) : service.getBaseField()
         // ✅ Always use baseField (e.g., email) for display, not target.name
         targetNameMap[target.id] = target[baseField] || target.id
       })

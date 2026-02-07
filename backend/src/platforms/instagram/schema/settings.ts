@@ -278,29 +278,31 @@ export const instagramSettingsSchema: SettingsSchema = {
       ]
     }
   ],
-  targetSchema: {
-    baseField: 'username',
-    baseFieldLabel: 'Instagram Username',
-    baseFieldValidation: [
-      { type: 'required', message: 'Username is required' },
-      { type: 'pattern', value: '^@?[a-zA-Z0-9_.]+$', message: 'Invalid Instagram username' }
-    ],
-    customFields: [
-      {
-        name: 'displayName',
-        type: 'text',
-        label: 'Anzeigename',
-        required: false,
-        ui: { width: 12, order: 1 }
-      },
-      {
-        name: 'description',
-        type: 'textarea',
-        label: 'Beschreibung',
-        required: false,
-        ui: { width: 12, order: 2 }
-      }
-    ],
-    supportsGroups: false
+  targetSchemas: {
+    username: {
+      baseField: 'username',
+      baseFieldLabel: 'Instagram Username',
+      baseFieldValidation: [
+        { type: 'required', message: 'Username is required' },
+        { type: 'pattern', value: '^@?[a-zA-Z0-9_.]+$', message: 'Invalid Instagram username' }
+      ],
+      customFields: [
+        {
+          name: 'displayName',
+          type: 'text',
+          label: 'Anzeigename',
+          required: false,
+          ui: { width: 12, order: 1 }
+        },
+        {
+          name: 'description',
+          type: 'textarea',
+          label: 'Beschreibung',
+          required: false,
+          ui: { width: 12, order: 2 }
+        }
+      ],
+      supportsGroups: false
+    }
   }
 }

@@ -12,79 +12,77 @@ import { TargetSchema } from '@/types/schema/index.js'
 
 export class EmailTargetService extends BaseTargetService {
   constructor() {
-    const targetSchema: TargetSchema = {
-      baseField: 'email',
-      baseFieldLabel: 'Email-Adresse',
-      baseFieldValidation: [
-        { type: 'required', message: 'Email is required' },
-        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
-      ],
-      customFields: [
-        {
-          name: 'name',
-          type: 'text',
-          label: 'Name',
-          required: false,
-          ui: { width: 12, order: 1 }
-        },
-        {
-          name: 'birthday',
-          type: 'date',
-          label: 'Geburtstag',
-          required: false,
-          ui: { width: 6, order: 2 }
-        },
-        {
-          name: 'tags',
-          type: 'multiselect',
-          label: 'Tags',
-          required: false,
-          options: [],
-          ui: { width: 12, order: 3 }
-        },
-        {
-          name: 'company',
-          type: 'text',
-          label: 'Firma',
-          required: false,
-          ui: { width: 12, order: 4 }
-        },
-        {
-          name: 'phone',
-          type: 'text',
-          label: 'Telefon',
-          required: false,
-          validation: [
-            { type: 'pattern', value: '^[\\d\\s\\+\\-\\(\\)]+$', message: 'Invalid phone number format' }
-          ],
-          ui: { width: 12, order: 5 }
-        },
-        {
-          name: 'locale',
-          type: 'select',
-          label: 'Sprache',
-          required: false,
-          options: [
-            { value: 'en', label: '🇺🇸 English' },
-            { value: 'de', label: '🇩🇪 Deutsch' },
-            { value: 'es', label: '🇪🇸 Español' }
-          ],
-          ui: { width: 6, order: 6 },
-          description: 'Sprache für E-Mails an diesen Empfänger'
-        }
-      ],
-      supportsGroups: true
+    const targetSchemas: Record<string, TargetSchema> = {
+      email: {
+        baseField: 'email',
+        baseFieldLabel: 'Email-Adresse',
+        baseFieldValidation: [
+          { type: 'required', message: 'Email is required' },
+          { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
+        ],
+        customFields: [
+          {
+            name: 'name',
+            type: 'text',
+            label: 'Name',
+            required: false,
+            ui: { width: 12, order: 1 }
+          },
+          {
+            name: 'birthday',
+            type: 'date',
+            label: 'Geburtstag',
+            required: false,
+            ui: { width: 6, order: 2 }
+          },
+          {
+            name: 'tags',
+            type: 'multiselect',
+            label: 'Tags',
+            required: false,
+            options: [],
+            ui: { width: 12, order: 3 }
+          },
+          {
+            name: 'company',
+            type: 'text',
+            label: 'Firma',
+            required: false,
+            ui: { width: 12, order: 4 }
+          },
+          {
+            name: 'phone',
+            type: 'text',
+            label: 'Telefon',
+            required: false,
+            validation: [
+              { type: 'pattern', value: '^[\\d\\s\\+\\-\\(\\)]+$', message: 'Invalid phone number format' }
+            ],
+            ui: { width: 12, order: 5 }
+          },
+          {
+            name: 'locale',
+            type: 'select',
+            label: 'Sprache',
+            required: false,
+            options: [
+              { value: 'en', label: '🇺🇸 English' },
+              { value: 'de', label: '🇩🇪 Deutsch' },
+              { value: 'es', label: '🇪🇸 Español' }
+            ],
+            ui: { width: 6, order: 6 },
+            description: 'Sprache für E-Mails an diesen Empfänger'
+          }
+        ],
+        supportsGroups: true
+      }
     }
 
-    super('email', targetSchema)
+    super('email', targetSchemas)
     this.dataFileName = 'targets.json'
   }
 
-  getBaseField(): string {
-    return 'email'
-  }
-
-  validateBaseField(email: string): boolean {
+  validateBaseField(email: string, type?: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
 

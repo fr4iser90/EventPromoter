@@ -167,55 +167,57 @@ export const emailSettingsSchema: SettingsSchema = {
       ]
     },
   ],
-  targetSchema: {
-    baseField: 'email',
-    baseFieldLabel: 'Email-Adresse',
-    baseFieldValidation: [
-      { type: 'required', message: 'Email is required' },
-      { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
-    ],
-    customFields: [
-      {
-        name: 'name',
-        type: 'text',
-        label: 'Name',
-        required: false,
-        ui: { width: 12, order: 1 }
-      },
-      {
-        name: 'birthday',
-        type: 'date',
-        label: 'Geburtstag',
-        required: false,
-        ui: { width: 6, order: 2 }
-      },
-      {
-        name: 'company',
-        type: 'text',
-        label: 'Firma',
-        required: false,
-        ui: { width: 12, order: 3 }
-      },
-      {
-        name: 'phone',
-        type: 'text',
-        label: 'Telefon',
-        required: false,
-        ui: { width: 12, order: 4 }
-      },
-      {
-        name: 'tags',
-        type: 'multiselect',
-        label: 'Tags',
-        required: false,
-        optionsSource: {
-          endpoint: 'platforms/:platformId/tags',
-          method: 'GET',
-          responsePath: 'tags'
+  targetSchemas: {
+    email: {
+      baseField: 'email',
+      baseFieldLabel: 'Email-Adresse',
+      baseFieldValidation: [
+        { type: 'required', message: 'Email is required' },
+        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
+      ],
+      customFields: [
+        {
+          name: 'name',
+          type: 'text',
+          label: 'Name',
+          required: false,
+          ui: { width: 12, order: 1 }
         },
-        ui: { width: 12, order: 5 }
-      }
-    ],
-    supportsGroups: true
+        {
+          name: 'birthday',
+          type: 'date',
+          label: 'Geburtstag',
+          required: false,
+          ui: { width: 6, order: 2 }
+        },
+        {
+          name: 'company',
+          type: 'text',
+          label: 'Firma',
+          required: false,
+          ui: { width: 12, order: 3 }
+        },
+        {
+          name: 'phone',
+          type: 'text',
+          label: 'Telefon',
+          required: false,
+          ui: { width: 12, order: 4 }
+        },
+        {
+          name: 'tags',
+          type: 'multiselect',
+          label: 'Tags',
+          required: false,
+          optionsSource: {
+            endpoint: 'platforms/:platformId/tags',
+            method: 'GET',
+            responsePath: 'tags'
+          },
+          ui: { width: 12, order: 5 }
+        }
+      ],
+      supportsGroups: true
+    }
   }
 }

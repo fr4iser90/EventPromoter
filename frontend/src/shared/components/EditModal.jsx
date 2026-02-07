@@ -28,6 +28,7 @@ const EditModal = ({
   const [error, setError] = useState(null);
   const [schema, setSchema] = useState(null);
   const [formData, setFormData] = useState({});
+  const [fieldOptions, setFieldOptions] = useState({});
 
   useEffect(() => {
     if (!open) return;
@@ -50,6 +51,61 @@ const EditModal = ({
         console.log('EditModal: Setting schema state with', schemaData.schema);
         const loadedSchema = schemaData.schema;
         setSchema(loadedSchema);
+
+        // Load options for fields with optionsSource
+        const optionsMap = {};
+        for (const field of loadedSchema.fields || []) {
+          if (field.optionsSource) {
+            try {
+              const endpoint = field.optionsSource.endpoint.replace(':platformId', platformId);
+              const url = getApiUrl(endpoint);
+              
+              const response = await fetch(url, {
+                method: field.optionsSource.method || 'GET',
+              });
+              
+              if (!response.ok) {
+                throw new Error(`Failed to load options: ${response.statusText}`);
+              }
+              
+              const responseData = await response.json();
+              
+              // Extract data from response using responsePath
+              let extractedData = responseData;
+              if (field.optionsSource.responsePath) {
+                const paths = field.optionsSource.responsePath.split('.');
+                for (const path of paths) {
+                  extractedData = extractedData?.[path];
+                }
+              }
+              
+              // Transform to options format
+              let transformedOptions = [];
+              
+              if (Array.isArray(extractedData)) {
+                // If labelPath and valuePath are specified, transform the data
+                if (field.optionsSource.labelPath && field.optionsSource.valuePath) {
+                  transformedOptions = extractedData.map(item => ({
+                    label: item[field.optionsSource.labelPath],
+                    value: item[field.optionsSource.valuePath]
+                  }));
+                } else {
+                  // Assume already in {label, value} format
+                  transformedOptions = extractedData;
+                }
+              } else if (responseData.options && Array.isArray(responseData.options)) {
+                // Fallback: check for 'options' key
+                transformedOptions = responseData.options;
+              }
+              
+              optionsMap[field.name] = transformedOptions;
+            } catch (err) {
+              console.error(`Failed to load options for field ${field.name}:`, err);
+              optionsMap[field.name] = []; // Set empty array on error
+            }
+          }
+        }
+        setFieldOptions(optionsMap);
 
         // If itemId and endpoint are provided in the schema, fetch existing data
         if (itemId && loadedSchema.endpoint) {
@@ -137,7 +193,13 @@ const EditModal = ({
         )}
         {!loading && !error && schema && (
           <SchemaRenderer
-            fields={schema.fields} // Correctly pass the fields array
+            fields={schema.fields.map(field => {
+              // Merge options from fieldOptions into field
+              if (fieldOptions[field.name]) {
+                return { ...field, options: fieldOptions[field.name] };
+              }
+              return field;
+            })}
             groups={schema.groups || []} // Pass groups if available
             values={formData}
             onChange={handleFormChange}

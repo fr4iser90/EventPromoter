@@ -415,7 +415,11 @@ export async function renderMultiPreview(
   const targetService = new EmailTargetService()
   const targets = await targetService.getTargets()
   const groups = await targetService.getGroups()
-  const allRecipients = targets.map(t => t.email)
+  // Generic: use baseField instead of hardcoded .email
+  const allRecipients = targets.map((t: any) => {
+    const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+    return t[baseField]
+  })
 
   // Import template service
   const { TemplateService } = await import('../../../services/templateService.js')
@@ -467,8 +471,11 @@ export async function renderMultiPreview(
       const group = groups.find(g => g.name === groupIdentifier || g.id === groupIdentifier)
       if (!group) continue
 
-      // Get emails for this group
-      const targetMap = new Map(targets.map(t => [t.id, t.email]))
+      // Get emails for this group (generic - uses baseField)
+      const targetMap = new Map(targets.map((t: any) => {
+        const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+        return [t.id, t[baseField]]
+      }))
       const groupEmails = group.targetIds
         .map((targetId: string) => targetMap.get(targetId))
         .filter((email: string | undefined): email is string => email !== undefined)
@@ -511,7 +518,11 @@ export async function renderMultiPreview(
       })
     }
   } else if (recipients.mode === 'individual' && recipients.individual && recipients.individual.length > 0) {
-    const targetMap = new Map(targets.map(t => [t.id, t.email]))
+    // Generic: use baseField instead of hardcoded .email
+    const targetMap = new Map(targets.map((t: any) => {
+      const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+      return [t.id, t[baseField]]
+    }))
     const individualEmails = recipients.individual
       .map((targetId: string) => targetMap.get(targetId))
       .filter((email: string | undefined): email is string => email !== undefined)

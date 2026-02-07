@@ -643,9 +643,10 @@ export class EventService {
       console.debug('[DEBUG] Loaded targets:', targets.length, 'groups:', Object.keys(groups).length)
 
       // Create mapping: ID -> display name (use baseField, e.g. email)
+      // Handle multi-target support: each target may have different baseField based on targetType
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
-        const baseField = service.getBaseField()
+        const baseField = target.targetType ? service.getBaseField(target.targetType) : service.getBaseField()
         // ✅ Always use baseField (e.g., email) for display, not target.name
         targetNameMap[target.id] = target[baseField] || target.id
       })
@@ -671,8 +672,9 @@ export class EventService {
         // Resolve target names
         if (templateEntry.targets.mode === 'all') {
           // For 'all' mode, include ALL available targets
+          // Handle multi-target support: each target may have different baseField based on targetType
           targetsWithNames.targetNames = targets.map((target: any) => {
-            const baseField = service.getBaseField()
+            const baseField = target.targetType ? service.getBaseField(target.targetType) : service.getBaseField()
             // ✅ Always use baseField (e.g., email) for display
             return target[baseField] || target.id
           })

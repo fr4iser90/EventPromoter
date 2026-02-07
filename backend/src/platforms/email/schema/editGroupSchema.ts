@@ -33,9 +33,7 @@ const emailGroupEditSchema: FormSchema = {
       optionsSource: {
         endpoint: 'platforms/:platformId/targets',
         method: 'GET',
-        responsePath: 'targets',
-        labelPath: 'email',
-        valuePath: 'id',
+        responsePath: 'options',
       },
       ui: {
         width: 12,

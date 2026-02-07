@@ -1,5 +1,5 @@
 import { BaseTargetService } from '../../../services/targetService.js'
-import { Target, Group } from '@/types/schema/index.js'
+import { Target, Group, TargetSchema } from '@/types/schema/index.js'
 import { redditSettingsSchema } from '../schema/settings.js' // Import the settings schema
 
 /**
@@ -9,29 +9,25 @@ import { redditSettingsSchema } from '../schema/settings.js' // Import the setti
  * It extends the BaseTargetService to provide platform-specific implementations
  * for fetching and managing targets (e.g., subreddits, users).
  * 
- * Currently, it returns empty arrays as target management for Reddit
- * is not yet fully implemented.
+ * Supports multiple target types: 'subreddit' and 'user'
  */
 export class RedditTargetService extends BaseTargetService {
   constructor() {
-    super('reddit', redditSettingsSchema.targetSchema!)
-  }
-
-  /**
-   * Get the base field name for Reddit targets (e.g., 'subreddit').
-   */
-  getBaseField(): string {
-    return this.targetSchema.baseField
+    const targetSchemas = redditSettingsSchema.targetSchemas!;
+    super('reddit', targetSchemas)
   }
 
   /**
    * Validate the base field value for Reddit targets.
    * @param value The value to validate.
+   * @param type Optional target type ('subreddit' or 'user')
    * @returns True if the value is valid, false otherwise.
    */
-  validateBaseField(value: string): boolean {
-    // Implement validation based on targetSchema.baseFieldValidation rules
-    for (const rule of this.targetSchema.baseFieldValidation || []) {
+  validateBaseField(value: string, type?: string): boolean {
+    const schema = this.getTargetSchema(type);
+    
+    // Implement validation based on schema.baseFieldValidation rules
+    for (const rule of schema.baseFieldValidation || []) {
       if (rule.type === 'required' && (!value || value.trim() === '')) {
         return false
       }
@@ -42,13 +38,7 @@ export class RedditTargetService extends BaseTargetService {
     return true
   }
 
-  async getTargets(type?: string): Promise<Target[]> {
-    // TODO: Implement actual fetching of Reddit targets based on type
-    return []
-  }
-
-  async getGroups(): Promise<Group[]> {
-    // TODO: Implement actual fetching of Reddit groups
-    return []
+  protected normalizeBaseField(value: string): string {
+    return value.trim().toLowerCase()
   }
 }
