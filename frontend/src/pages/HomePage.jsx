@@ -13,7 +13,8 @@ import {
   useMediaQuery,
   Select,
   MenuItem,
-  FormControl
+  FormControl,
+  Tooltip
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
@@ -33,6 +34,7 @@ import SettingsModal from '../shared/components/ui/Dialog/Settings'
 import DuplicateDialog from '../shared/components/ui/Dialog/Duplicate'
 import useStore, { WORKFLOW_STATES } from '../store'
 import { useMultiplePlatformTranslations } from '../features/platform/hooks/usePlatformTranslations'
+import { getApiUrl } from '../shared/utils/api'
 
 // Static theme for media queries (needed before component renders)
 const staticTheme = createTheme({
@@ -70,10 +72,29 @@ function HomePage() {
   } = useStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [configuredMode, setConfiguredMode] = useState(null)
 
   // Load session data
   useEffect(() => {
     useStore.getState().initialize()
+  }, [])
+
+  // Load configured publishing mode
+  useEffect(() => {
+    const loadConfiguredMode = async () => {
+      try {
+        const response = await fetch(getApiUrl('platforms/publishing-mode'))
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setConfiguredMode(data.configuredMode)
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load configured publishing mode:', error)
+      }
+    }
+    loadConfiguredMode()
   }, [])
 
   // Responsive breakpoints
@@ -156,6 +177,17 @@ function HomePage() {
           <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
             {t('app.title')}
           </Typography>
+          {/* Publishing Mode Badge (Development Only) */}
+          {process.env.NODE_ENV === 'development' && configuredMode && (
+            <Tooltip title={`Configured publishing mode: ${configuredMode}`} arrow>
+              <Chip
+                label={configuredMode.toUpperCase()}
+                size="small"
+                color={configuredMode === 'auto' ? 'info' : configuredMode === 'n8n' ? 'success' : configuredMode === 'api' ? 'primary' : 'default'}
+                sx={{ mr: 1, fontSize: '0.7rem' }}
+              />
+            </Tooltip>
+          )}
           <Button
             variant="outlined"
             size="small"

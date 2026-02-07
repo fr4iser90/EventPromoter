@@ -4,6 +4,7 @@ import { Request, Response } from 'express'
 import { ConfigService } from '../services/configService.js'
 import { getPlatformRegistry, initializePlatformRegistry } from '../services/platformRegistry.js'
 import { getPlatformTranslations, getAvailableLanguages } from '../utils/translationLoader.js'
+import { PublishingService } from '../services/publishingService.js'
 
 // User Preferences Controller
 export class UserPreferencesController {
@@ -125,6 +126,14 @@ export class PlatformController {
           console.warn(`Failed to load description translation for ${platform.metadata.id}:`, error)
         }
 
+        // Get available publishing modes for this platform
+        let availableModes: ('n8n' | 'api' | 'playwright')[] = []
+        try {
+          availableModes = await PublishingService.getAvailableModes(platform.metadata.id)
+        } catch (error) {
+          console.warn(`Failed to get available modes for ${platform.metadata.id}:`, error)
+        }
+
         return {
           id: platform.metadata.id,
           name: platform.metadata.displayName,
@@ -140,7 +149,8 @@ export class PlatformController {
             rateLimits: platform.config?.rateLimits
           },
           templates: platform.templates ? Object.keys(platform.templates) : [],
-          hasSchema: !!platform.schema
+          hasSchema: !!platform.schema,
+          availableModes // Add available publishing modes
         }
       }))
 
@@ -155,6 +165,54 @@ export class PlatformController {
       console.error('❌ Get platforms error:', error)
       res.status(500).json({
         error: 'Failed to get platforms',
+        details: error.message
+      })
+    }
+  }
+
+  // Get available publishing modes for a platform
+  static async getAvailableModes(req: Request, res: Response) {
+    try {
+      const { platformId } = req.params
+      const modes = await PublishingService.getAvailableModes(platformId)
+      const appConfig = await ConfigService.getAppConfig()
+      const configuredMode = appConfig?.publishingMode || 'auto'
+      
+      res.json({
+        success: true,
+        platformId,
+        availableModes: modes,
+        configuredMode
+      })
+    } catch (error: any) {
+      console.error('Get available modes error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get available modes',
+        details: error.message
+      })
+    }
+  }
+
+  // Get configured publishing mode
+  static async getConfiguredMode(req: Request, res: Response) {
+    try {
+      const appConfig = await ConfigService.getAppConfig()
+      const configuredMode = appConfig?.publishingMode || 'auto'
+      const n8nEnabled = appConfig?.n8nEnabled !== false
+      const n8nUrl = appConfig?.n8nWebhookUrl
+      
+      res.json({
+        success: true,
+        configuredMode,
+        n8nEnabled,
+        n8nUrl: n8nUrl || null
+      })
+    } catch (error: any) {
+      console.error('Get configured mode error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get configured mode',
         details: error.message
       })
     }
@@ -205,6 +263,14 @@ export class PlatformController {
         console.warn(`Failed to load description translation for ${platformId}:`, error)
       }
 
+      // Get available publishing modes for this platform
+      let availableModes: ('n8n' | 'api' | 'playwright')[] = []
+      try {
+        availableModes = await PublishingService.getAvailableModes(platformId)
+      } catch (error) {
+        console.warn(`Failed to get available modes for ${platformId}:`, error)
+      }
+
       return res.json({
         success: true,
         platform: {
@@ -220,7 +286,8 @@ export class PlatformController {
           schema: platform.schema,
           templates: platform.templates || {},
           config: platform.config,
-          uiConfig: platform.uiConfig
+          uiConfig: platform.uiConfig,
+          availableModes // Add available publishing modes
         }
       })
     } catch (error: any) {

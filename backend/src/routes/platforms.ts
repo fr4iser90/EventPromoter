@@ -22,6 +22,9 @@ router.get('/', PlatformController.getPlatforms)
 // Get platforms that support specific capability
 router.get('/capability/:capability', PlatformController.getPlatformsByCapability)
 
+// Get configured publishing mode
+router.get('/publishing-mode', PlatformController.getConfiguredMode)
+
 // User preferences (must be before /:platformId routes)
 router.get('/preferences', UserPreferencesController.getPreferences)
 router.post('/preferences', UserPreferencesController.savePreferences)
@@ -29,6 +32,9 @@ router.patch('/preferences', UserPreferencesController.updatePreferences)
 
 // Get specific platform metadata and field configuration
 router.get('/:platformId', PlatformController.getPlatform)
+
+// Get available publishing modes for a platform
+router.get('/:platformId/available-modes', PlatformController.getAvailableModes)
 
 // Get platform schema
 

@@ -12,9 +12,13 @@ import {
   Button,
   Divider,
   CircularProgress,
-  Alert
+  Alert,
+  Chip,
+  Tooltip
 } from '@mui/material'
 import SettingsIcon from '@mui/icons-material/Settings'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import WarningIcon from '@mui/icons-material/Warning'
 import useStore from '../../../store'
 import SettingsModal from './SettingsModal'
 import config from '../../../config'
@@ -55,6 +59,7 @@ function PlatformSelector({ disabled = false }) {
   const [platforms, setPlatforms] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [platformModes, setPlatformModes] = useState({}) // Store available modes per platform
 
   // Load platforms dynamically from backend - NO FALLBACKS
   useEffect(() => {
@@ -83,6 +88,24 @@ function PlatformSelector({ disabled = false }) {
         }))
 
         setPlatforms(enhancedPlatforms)
+        
+        // Load available modes for each platform
+        const modesMap = {}
+        for (const platform of enhancedPlatforms) {
+          try {
+            const modesResponse = await fetch(getApiUrl(`platforms/${platform.id}/available-modes`))
+            if (modesResponse.ok) {
+              const modesData = await modesResponse.json()
+              if (modesData.success) {
+                modesMap[platform.id] = modesData.availableModes || []
+              }
+            }
+          } catch (err) {
+            console.warn(`Failed to load modes for ${platform.id}:`, err)
+            modesMap[platform.id] = []
+          }
+        }
+        setPlatformModes(modesMap)
         setError(null)
       } catch (err) {
         console.error('Failed to load platforms:', err)
@@ -212,6 +235,42 @@ function PlatformSelector({ disabled = false }) {
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
                         {platform.description}
                       </Typography>
+                    )}
+
+                    {/* Debugging badges for available publishing modes */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <Box sx={{ mt: 1, mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {(() => {
+                          const modes = platformModes[platform.id] || platform.availableModes || []
+                          const modeStatus = {
+                            n8n: { label: 'n8n', color: modes.includes('n8n') ? 'success' : 'default', 
+                                   tooltip: platform.id === 'email' ? 'Working, but needs CID image improvements' : 'Available' },
+                            api: { label: 'API', color: modes.includes('api') ? 'success' : 'default', 
+                                   tooltip: 'Available' },
+                            playwright: { label: 'Playwright', color: modes.includes('playwright') ? 'warning' : 'default',
+                                         tooltip: platform.id === 'email' ? 'Not yet implemented/tested' : modes.includes('playwright') ? 'Available' : 'Not available' }
+                          }
+                          
+                          return Object.entries(modeStatus).map(([key, status]) => {
+                            const isAvailable = modes.includes(key)
+                            return (
+                              <Tooltip key={key} title={status.tooltip} arrow>
+                                <Chip
+                                  size="small"
+                                  label={status.label}
+                                  color={isAvailable ? status.color : 'default'}
+                                  icon={isAvailable ? <CheckCircleIcon sx={{ fontSize: 14 }} /> : undefined}
+                                  sx={{ 
+                                    fontSize: '0.65rem',
+                                    height: '20px',
+                                    opacity: isAvailable ? 1 : 0.5
+                                  }}
+                                />
+                              </Tooltip>
+                            )
+                          })
+                        })()}
+                      </Box>
                     )}
 
                     {isSelected && (
