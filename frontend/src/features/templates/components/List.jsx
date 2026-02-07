@@ -251,7 +251,6 @@ const TemplateList = ({
                         <IconButton
                           size="small"
                           onClick={(e) => handleEdit(template, e)}
-                          disabled={template.isDefault}
                         >
                           <EditIcon fontSize="small" />
                         </IconButton>

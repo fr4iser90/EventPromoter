@@ -120,11 +120,11 @@ function TemplatePreview({ template, platform, onEdit }) {
           <Typography variant="h6">
             👁️ {template.name}
           </Typography>
-          {onEdit && !template.isDefault && (
+          {onEdit && (
             <Button
               size="small"
               startIcon={<EditIcon />}
-              onClick={() => onEdit(template)}
+              onClick={onEdit}
             >
               {t('template.editTemplate')}
             </Button>
@@ -237,12 +237,12 @@ function TemplatePreview({ template, platform, onEdit }) {
         )}
 
         {/* Actions */}
-        {onEdit && !template.isDefault && (
+        {onEdit && (
           <Box sx={{ mt: 2 }}>
             <Button
               variant="outlined"
               startIcon={<EditIcon />}
-              onClick={() => onEdit(template)}
+              onClick={onEdit}
               fullWidth
             >
               {t('template.editTemplate')}

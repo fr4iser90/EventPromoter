@@ -168,8 +168,6 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
             onChange={(e) => handleFormChange('name', e.target.value)}
             sx={{ mb: 2 }}
             required
-            disabled={template.isDefault}
-            helperText={template.isDefault ? t('template.defaultCannotEdit', { defaultValue: 'Default templates cannot be edited. Create a copy to edit.' }) : ''}
           />
 
           <TextField
@@ -180,7 +178,6 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
             sx={{ mb: 2 }}
             multiline
             rows={2}
-            disabled={template.isDefault}
           />
 
           <TextField
@@ -190,7 +187,6 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
             value={formData.category}
             onChange={(e) => handleFormChange('category', e.target.value)}
             required
-            disabled={template.isDefault}
           >
             {categories && categories.length > 0 ? (
               categories.map((category) => (

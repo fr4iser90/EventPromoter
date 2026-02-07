@@ -88,8 +88,6 @@ function TemplatePage() {
         display: 'flex',
         minHeight: '100vh',
         pt: 8, // Account for fixed header
-        maxWidth: '1400px',
-        mx: 'auto',
         width: '100%'
       }}>
         {/* Left Panel - Template List (60% on desktop, 100% on mobile) */}
