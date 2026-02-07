@@ -43,6 +43,11 @@ export interface ParsedEventData {
   originalTime?: string  // Original time format from source
   detectedLocale?: string // Detected locale (e.g., "de-DE", "en-US")
 
+  // Extended data (schema-based extensible fields)
+  // Structure: { [groupId]: { [fieldId]: value } }
+  // Example: { ticketInfo: { presale: { price: "25€", available: true }, boxOffice: { price: "30€" } } }
+  extendedData?: Record<string, Record<string, any>>
+
   // Metadata
   rawText: string
   confidence: number

@@ -17,14 +17,14 @@ export const emailEditorSchema: EditorSchema = {
     {
       type: 'targets',
       id: 'recipients', // Email-specific ID, but generic block type
-      label: 'Empfänger für diesen Versand',
-      description: 'Wähle die Empfänger für diesen Versand',
+      label: 'platform.email.recipients.label',
+      description: 'platform.email.recipients.description',
       required: true,
       constraints: {
         minRecipients: 1
       },
       validation: [
-        { type: 'required', message: 'Mindestens ein Empfänger muss ausgewählt sein' }
+        { type: 'required', message: 'platform.email.recipients.validation.required' }
       ],
       ui: {
         icon: 'email',
@@ -36,46 +36,46 @@ export const emailEditorSchema: EditorSchema = {
         schema: {
           mode: {
             fieldType: 'select',
-            label: 'Auswahl-Modus',
-            description: 'Wähle wie Empfänger ausgewählt werden sollen',
+            label: 'platform.email.recipients.mode.label',
+            description: 'platform.email.recipients.mode.description',
             source: 'modes',
             default: 'all' // ✅ UX: Default to "all" for simplest use case
           },
           groups: {
             fieldType: 'multiselect',
-            label: 'Empfänger-Gruppen',
-            description: 'Wähle eine oder mehrere Gruppen',
+            label: 'platform.email.recipients.groups.label',
+            description: 'platform.email.recipients.groups.description',
             source: 'recipientGroups',
             required: false,
             visibleWhen: { field: 'mode', value: 'groups' }
           },
           individual: {
             fieldType: 'multiselect',
-            label: 'Einzelne Empfänger',
-            description: 'Wähle einzelne Empfänger aus',
+            label: 'platform.email.recipients.individual.label',
+            description: 'platform.email.recipients.individual.description',
             source: 'recipients',
             required: false,
             visibleWhen: { field: 'mode', value: 'individual' }
           },
           templateLocale: {
             fieldType: 'select',
-            label: '🌐 Template-Sprache',
-            description: 'Sprache für das Template (wird automatisch aus Targets aufgelöst, kann überschrieben werden)',
+            label: 'platform.email.recipients.templateLocale.label',
+            description: 'platform.email.recipients.templateLocale.description',
             source: 'locales',
             required: false,
             default: 'de'
           },
           defaultTemplate: {
             fieldType: 'select',
-            label: 'Standard-Template',
-            description: 'Template das für alle Empfänger verwendet wird (falls keine Gruppen-Mapping vorhanden)',
+            label: 'platform.email.recipients.defaultTemplate.label',
+            description: 'platform.email.recipients.defaultTemplate.description',
             source: 'templates',
             required: false
           },
           templateMapping: {
             fieldType: 'mapping',
-            label: 'Template-Zuordnung',
-            description: 'Weise jeder Gruppe ein spezifisches Template zu',
+            label: 'platform.email.recipients.templateMapping.label',
+            description: 'platform.email.recipients.templateMapping.description',
             source: 'templates',
             required: false,
             visibleWhen: { field: 'mode', value: 'groups' }

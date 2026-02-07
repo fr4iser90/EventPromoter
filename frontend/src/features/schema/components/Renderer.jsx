@@ -8,6 +8,7 @@
  */
 
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   TextField,
   FormControl,
@@ -30,14 +31,18 @@ import axios from 'axios'
 /**
  * Render a single field based on schema definition
  */
-function renderField(field, value, onChange, error, platformId = null, formValues = {}, allFields = [], onButtonAction = null) {
+function renderField(field, value, onChange, error, platformId = null, formValues = {}, allFields = [], onButtonAction = null, t = null) {
+  const translatedLabel = field.label && t ? t(field.label, field.label) : field.label
+  const translatedDescription = field.description && t ? t(field.description, field.description) : field.description
+  const translatedPlaceholder = field.placeholder && t ? t(field.placeholder, field.placeholder) : field.placeholder
+  
   const commonProps = {
     fullWidth: true,
-    label: field.label,
-    placeholder: field.placeholder,
+    label: translatedLabel,
+    placeholder: translatedPlaceholder,
     required: field.required,
     error: !!error,
-    helperText: error || field.description,
+    helperText: error || translatedDescription,
     value: value || field.default || '',
     onChange: (e) => onChange(field.name, e.target.value),
     disabled: field.ui?.disabled,
@@ -97,7 +102,7 @@ function renderField(field, value, onChange, error, platformId = null, formValue
               disabled={field.ui?.disabled}
             />
           }
-          label={field.label}
+          label={translatedLabel}
         />
       )
 
@@ -121,13 +126,13 @@ function renderField(field, value, onChange, error, platformId = null, formValue
       
       return (
         <FormControl key={field.name} fullWidth error={!!error} required={field.required}>
-          <InputLabel>{field.label}</InputLabel>
+          <InputLabel>{translatedLabel}</InputLabel>
           <Select
             value={selectValue}
             onChange={(e) => onChange(field.name, e.target.value)}
             multiple={field.type === 'multiselect'}
             disabled={field.ui?.disabled}
-            label={field.label}
+            label={translatedLabel}
           >
             {field.options.map((option) => (
               <MenuItem
@@ -139,8 +144,8 @@ function renderField(field, value, onChange, error, platformId = null, formValue
               </MenuItem>
             ))}
           </Select>
-          {(error || field.description) && (
-            <FormHelperText>{error || field.description}</FormHelperText>
+          {(error || translatedDescription) && (
+            <FormHelperText>{error || translatedDescription}</FormHelperText>
           )}
         </FormControl>
       )
@@ -224,10 +229,10 @@ function renderField(field, value, onChange, error, platformId = null, formValue
             }}
             disabled={field.ui?.disabled}
           >
-            {field.label}
+            {translatedLabel}
           </MuiButton>
-          {field.description && (
-            <FormHelperText>{field.description}</FormHelperText>
+          {translatedDescription && (
+            <FormHelperText>{translatedDescription}</FormHelperText>
           )}
         </Box>
       )
@@ -247,52 +252,54 @@ function renderField(field, value, onChange, error, platformId = null, formValue
 /**
  * Validate field value based on validation rules
  */
-function validateField(field, value) {
+function validateField(field, value, t = null) {
   if (!field.validation || !field.validation.length) {
     return null
   }
+
+  const translatedLabel = field.label && t ? t(field.label, field.label) : field.label
 
   for (const rule of field.validation) {
     switch (rule.type) {
       case 'required':
         if (field.required && (!value || value === '')) {
-          return rule.message || `${field.label} is required`
+          return rule.message || (t ? t('validation.required', { field: translatedLabel, defaultValue: `${translatedLabel} is required` }) : `${translatedLabel} is required`)
         }
         break
 
       case 'minLength':
         if (value && value.length < rule.value) {
-          return rule.message || `${field.label} must be at least ${rule.value} characters`
+          return rule.message || (t ? t('validation.minLength', { field: translatedLabel, value: rule.value, defaultValue: `${translatedLabel} must be at least ${rule.value} characters` }) : `${translatedLabel} must be at least ${rule.value} characters`)
         }
         break
 
       case 'maxLength':
         if (value && value.length > rule.value) {
-          return rule.message || `${field.label} must be at most ${rule.value} characters`
+          return rule.message || (t ? t('validation.maxLength', { field: translatedLabel, value: rule.value, defaultValue: `${translatedLabel} must be at most ${rule.value} characters` }) : `${translatedLabel} must be at most ${rule.value} characters`)
         }
         break
 
       case 'min':
         if (value !== null && value !== undefined && Number(value) < rule.value) {
-          return rule.message || `${field.label} must be at least ${rule.value}`
+          return rule.message || (t ? t('validation.min', { field: translatedLabel, value: rule.value, defaultValue: `${translatedLabel} must be at least ${rule.value}` }) : `${translatedLabel} must be at least ${rule.value}`)
         }
         break
 
       case 'max':
         if (value !== null && value !== undefined && Number(value) > rule.value) {
-          return rule.message || `${field.label} must be at most ${rule.value}`
+          return rule.message || (t ? t('validation.max', { field: translatedLabel, value: rule.value, defaultValue: `${translatedLabel} must be at most ${rule.value}` }) : `${translatedLabel} must be at most ${rule.value}`)
         }
         break
 
       case 'pattern':
         if (value && !new RegExp(rule.value).test(value)) {
-          return rule.message || `${field.label} format is invalid`
+          return rule.message || (t ? t('validation.invalidFormat', { field: translatedLabel, defaultValue: `${translatedLabel} format is invalid` }) : `${translatedLabel} format is invalid`)
         }
         break
 
       case 'url':
         if (value && !/^https?:\/\/.+/.test(value)) {
-          return rule.message || `${field.label} must be a valid URL`
+          return rule.message || (t ? t('validation.invalidUrl', { field: translatedLabel, defaultValue: `${translatedLabel} must be a valid URL` }) : `${translatedLabel} must be a valid URL`)
         }
         break
 
@@ -300,7 +307,7 @@ function validateField(field, value) {
         if (rule.validator) {
           const result = rule.validator(value)
           if (result !== true) {
-            return typeof result === 'string' ? result : rule.message || `${field.label} is invalid`
+            return typeof result === 'string' ? result : rule.message || (t ? t('validation.invalid', { field: translatedLabel, defaultValue: `${translatedLabel} is invalid` }) : `${translatedLabel} is invalid`)
           }
         }
         break
@@ -361,7 +368,7 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
                       {field.helper && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                            {field.label}
+                            {translatedLabel}
                           </Typography>
                           <HelperIcon 
                             helperId={field.helper}
@@ -414,7 +421,7 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
             {field.helper && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                 <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                  {field.label}
+                  {translatedLabel}
                 </Typography>
                 <HelperIcon 
                   helperId={field.helper}
@@ -432,7 +439,8 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
               platformId,
               values,
               fields,
-              onButtonAction
+              onButtonAction,
+              t
             )}
           </Box>
         )
@@ -448,8 +456,9 @@ export function validateSchema(fields, values) {
   const errors = {}
   let isValid = true
 
+  const { t } = useTranslation()
   fields.forEach((field) => {
-    const error = validateField(field, values[field.name])
+    const error = validateField(field, values[field.name], t)
     if (error) {
       errors[field.name] = error
       isValid = false

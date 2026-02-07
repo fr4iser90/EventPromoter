@@ -186,5 +186,46 @@
   "fileVisibility": {
     "public": "Público",
     "internal": "Interno"
+  },
+  "recipients": {
+    "label": "Destinatarios para este envío",
+    "description": "Selecciona los destinatarios para este envío",
+    "validation": {
+      "required": "Debe seleccionarse al menos un destinatario"
+    },
+    "mode": {
+      "label": "Modo de Selección",
+      "description": "Elige cómo se deben seleccionar los destinatarios"
+    },
+    "groups": {
+      "label": "Grupos de Destinatarios",
+      "description": "Selecciona uno o más grupos"
+    },
+    "individual": {
+      "label": "Destinatarios Individuales",
+      "description": "Selecciona destinatarios individuales"
+    },
+    "templateLocale": {
+      "label": "🌐 Idioma de la Plantilla",
+      "description": "Idioma para la plantilla (se resuelve automáticamente desde los destinos, se puede sobrescribir)"
+    },
+    "defaultTemplate": {
+      "label": "Plantilla Predeterminada",
+      "description": "Plantilla utilizada para todos los destinatarios (si no existe mapeo de grupo)"
+    },
+    "templateMapping": {
+      "label": "Asignación de Plantilla",
+      "description": "Asigna una plantilla específica a cada grupo"
+    },
+    "selected": "Seleccionado ({{count}}):",
+    "available": "Disponible ({{count}}):",
+    "addNew": "Agregar nueva selección...",
+    "noGroupsSelected": "No se seleccionaron grupos",
+    "errorAdding": "Error al agregar: {{error}}",
+    "summary": {
+      "all": "Todos los destinatarios",
+      "groups": "{{count}} grupo(s) seleccionado(s)",
+      "individual": "{{count}} destinatario(s) seleccionado(s)"
+    }
   }
 }

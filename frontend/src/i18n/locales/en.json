@@ -231,12 +231,30 @@
     "update": "Update",
     "done": "Done",
     "files": "Files",
-    "platforms": "Platforms"
+    "platforms": "Platforms",
+    "noSelection": "No selection",
+    "selected": "Selected ({{count}}):",
+    "available": "Available ({{count}}):",
+    "addNew": "Add new selection...",
+    "errorAdding": "Error adding: {{error}}",
+    "allSelected": "All selected",
+    "groupsSelected": "{{count}} group(s) selected",
+    "itemsSelected": "{{count}} item(s) selected"
   },
   "platform": {
     "selection": "Platform Selection",
     "enabled": "Platform enabled",
     "settings": "Settings"
+  },
+  "validation": {
+    "required": "This field is required",
+    "minLength": "Minimum length: {{min}} characters",
+    "maxLength": "Maximum length: {{max}} characters",
+    "min": "Minimum value: {{min}}",
+    "max": "Maximum value: {{max}}",
+    "invalidFormat": "Invalid format",
+    "invalidUrl": "Invalid URL",
+    "invalid": "Invalid value"
   },
   "registry": {
     "noPanelConfiguration": "No panel configuration provided",

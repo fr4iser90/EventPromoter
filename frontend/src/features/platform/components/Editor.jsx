@@ -42,11 +42,14 @@ import {
 import { getLocaleDisplayName, getValidLocale } from '../../../shared/utils/localeUtils'
 import config from '../../../config'
 import { getApiUrl, getFileUrl } from '../../../shared/utils/api'
+import { usePlatformTranslations } from '../hooks/usePlatformTranslations'
 
 function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, onSelect, onBatchChange }) {
   const { t, i18n } = useTranslation()
   const theme = useTheme()
   const { schema, loading: schemaLoading, error: schemaError } = usePlatformSchema(platform)
+  // Load platform-specific translations
+  usePlatformTranslations(platform, i18n.language)
   const { templates, getTemplate } = useTemplates(platform)
   const [platformConfig, setPlatformConfig] = useState(null)
   const [loading, setLoading] = useState(true)

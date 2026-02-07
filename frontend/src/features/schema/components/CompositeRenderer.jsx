@@ -37,12 +37,12 @@ import axios from 'axios'
 /**
  * Render a mapping field (group → template mapping)
  */
-function renderMappingField(field, value, onChange, options, groups) {
+function renderMappingField(field, value, onChange, options, groups, t) {
   if (!groups || groups.length === 0) {
     return (
       <Box sx={{ mb: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          {field.label}: No groups selected
+          {field.label}: {t('common.noSelection', { defaultValue: 'No selection' })}
         </Typography>
       </Box>
     )
@@ -86,7 +86,7 @@ function renderMappingField(field, value, onChange, options, groups) {
  * Loads data from endpoints and renders fields generically.
  */
 function CompositeRenderer({ block, value, onChange, platform }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [data, setData] = useState({})
@@ -262,8 +262,8 @@ function CompositeRenderer({ block, value, onChange, platform }) {
       return {
       name: fieldKey,
       type: fieldSchema.fieldType === 'mapping' ? 'mapping' : fieldSchema.fieldType,
-      label: fieldSchema.label,
-      description: fieldSchema.description,
+      label: fieldSchema.label ? t(fieldSchema.label, fieldSchema.label) : fieldSchema.label,
+      description: fieldSchema.description ? t(fieldSchema.description, fieldSchema.description) : fieldSchema.description,
       required: fieldSchema.required,
       default: fieldSchema.default,
       visibleWhen: fieldSchema.visibleWhen, // Support for conditional visibility
@@ -293,13 +293,13 @@ function CompositeRenderer({ block, value, onChange, platform }) {
       {/* Block label and description - only show if not already shown by fields */}
       {block.label && !schema.mode && (
         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-          {block.label}
+          {t(block.label, block.label)}
         </Typography>
       )}
       
       {block.description && !schema.mode && (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {block.description}
+          {t(block.description, block.description)}
         </Typography>
       )}
 
@@ -319,7 +319,8 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                   compositeValues[field.name],
                   handleFieldChange,
                   field.options,
-                  selectedGroups
+                  selectedGroups,
+                  t
                 )}
               </Box>
             )
@@ -361,11 +362,11 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                   </Typography>
                 )}
 
-                {/* Chips: Ausgewählte Targets */}
+                {/* Chips: Selected Targets */}
                 {selectedOptions.length > 0 && (
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      Ausgewählt ({selectedOptions.length}):
+                      {t('common.selected', { count: selectedOptions.length, defaultValue: `Selected (${selectedOptions.length}):` })}
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                       {selectedOptions.map((opt) => {
@@ -432,7 +433,7 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                             setReloadTrigger(prev => prev + 1)
                           } catch (err) {
                             console.error(`Failed to add target ${newTarget}:`, err)
-                            alert(`Fehler beim Hinzufügen: ${err.response?.data?.error || err.message}`)
+                            alert(t('common.errorAdding', { error: err.response?.data?.error || err.message, defaultValue: `Error adding: ${err.response?.data?.error || err.message}` }))
                             return
                           }
                         }
@@ -447,7 +448,7 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        placeholder={field.description || "Neue Auswahl hinzufügen..."}
+                        placeholder={t(field.description || 'common.addNew', { defaultValue: field.description || 'Add new selection...' })}
                         variant="outlined"
                         size="small"
                       />
@@ -456,11 +457,11 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                   />
                 )}
 
-                {/* Cards: Liste zum Auswählen */}
+                {/* Cards: Available Options */}
                 {unselectedOptions.length > 0 && (
                   <Box>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      Verfügbar ({unselectedOptions.length}):
+                      {t('common.available', { count: unselectedOptions.length, defaultValue: `Available (${unselectedOptions.length}):` })}
                     </Typography>
                     <Box sx={{ maxHeight: 300, overflowY: 'auto', border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
                       {unselectedOptions.map((opt) => {
@@ -519,11 +520,11 @@ function CompositeRenderer({ block, value, onChange, platform }) {
         let summaryText = ''
         
         if (mode === 'all') {
-          summaryText = 'Alle Empfänger'
+          summaryText = t('common.allSelected', { defaultValue: 'All selected' })
         } else if (mode === 'groups' && selectedGroups.length > 0) {
-          summaryText = `${selectedGroups.length} Gruppe(n) ausgewählt`
+          summaryText = t('common.groupsSelected', { count: selectedGroups.length, defaultValue: `${selectedGroups.length} group(s) selected` })
         } else if (mode === 'individual' && selectedIndividuals.length > 0) {
-          summaryText = `${selectedIndividuals.length} Empfänger ausgewählt`
+          summaryText = t('common.itemsSelected', { count: selectedIndividuals.length, defaultValue: `${selectedIndividuals.length} item(s) selected` })
         }
         
         return summaryText ? (

@@ -104,6 +104,12 @@ export function getTemplateVariables(
         variables[alias] = formattedValue
       })
     })
+
+    // Map extended data fields (Ticket-Info, Contact-Info, etc.)
+    if (parsedData.extendedData) {
+      const extendedVars = generateExtendedDataVariables(parsedData.extendedData)
+      Object.assign(variables, extendedVars)
+    }
   }
 
   // Map image files
@@ -221,7 +227,88 @@ export function getTemplateVariableNames(
     }
   })
 
+  // Add extended data variables
+  if (parsedData?.extendedData) {
+    const extendedVarNames = getExtendedDataVariableNames(parsedData.extendedData)
+    variableNames.push(...extendedVarNames)
+  }
+
   return [...new Set(variableNames)] // Remove duplicates
+}
+
+/**
+ * Generate template variables from extended data structure
+ * 
+ * @param extendedData - Extended data object with groups
+ * @returns Object with template variables
+ */
+function generateExtendedDataVariables(extendedData: Record<string, Record<string, any>>): Record<string, string> {
+  const variables: Record<string, string> = {}
+
+  Object.entries(extendedData).forEach(([groupId, groupData]) => {
+    if (!groupData || typeof groupData !== 'object') return
+
+    // Handle nested structures (e.g., ticketInfo.presale.price)
+    Object.entries(groupData).forEach(([fieldId, fieldValue]) => {
+      if (fieldValue === null || fieldValue === undefined) return
+
+      // If fieldValue is an object (nested group), process recursively
+      if (typeof fieldValue === 'object' && !Array.isArray(fieldValue)) {
+        Object.entries(fieldValue).forEach(([subFieldId, subFieldValue]) => {
+          if (subFieldValue === null || subFieldValue === undefined) return
+          
+          // Generate variable name: {groupId}{capitalize(fieldId)}{capitalize(subFieldId)}
+          // Example: ticketInfo.presale.price → ticketPresalePrice
+          const varName = `${groupId}${capitalize(fieldId)}${capitalize(subFieldId)}`
+          variables[varName] = String(subFieldValue)
+        })
+      } else {
+        // Simple field: {groupId}{capitalize(fieldId)}
+        // Example: ticketInfo.info → ticketInfo
+        const varName = `${groupId}${capitalize(fieldId)}`
+        variables[varName] = String(fieldValue)
+      }
+    })
+  })
+
+  return variables
+}
+
+/**
+ * Get template variable names from extended data
+ */
+function getExtendedDataVariableNames(extendedData: Record<string, Record<string, any>>): string[] {
+  const variableNames: string[] = []
+
+  Object.entries(extendedData).forEach(([groupId, groupData]) => {
+    if (!groupData || typeof groupData !== 'object') return
+
+    Object.entries(groupData).forEach(([fieldId, fieldValue]) => {
+      if (fieldValue === null || fieldValue === undefined) return
+
+      if (typeof fieldValue === 'object' && !Array.isArray(fieldValue)) {
+        // Nested structure
+        Object.keys(fieldValue).forEach(subFieldId => {
+          const varName = `${groupId}${capitalize(fieldId)}${capitalize(subFieldId)}`
+          variableNames.push(varName)
+        })
+      } else {
+        // Simple field
+        const varName = `${groupId}${capitalize(fieldId)}`
+        variableNames.push(varName)
+      }
+    })
+  })
+
+  return variableNames
+}
+
+/**
+ * Capitalize first letter of string
+ */
+function capitalize(str: string): string {
+  if (!str || str.length === 0) return str
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 

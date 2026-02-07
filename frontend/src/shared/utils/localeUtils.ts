@@ -66,3 +66,50 @@ export const getLocaleDisplayName = (locale: 'en' | 'de' | 'es'): string => {
   }
   return map[locale] || '🇬🇧 English'
 }
+
+/**
+ * Get default currency symbol based on locale
+ * 
+ * @param locale - Valid locale: 'en' | 'de' | 'es' (optional, defaults to 'de')
+ * @returns Currency symbol: '€' | '$'
+ */
+export const getDefaultCurrency = (locale?: 'en' | 'de' | 'es'): string => {
+  const validLocale = locale || 'de'
+  switch (validLocale) {
+    case 'en':
+      return '$'
+    case 'de':
+    case 'es':
+    default:
+      return '€'
+  }
+}
+
+/**
+ * Format price input with currency - auto-add currency if only numbers entered
+ * 
+ * @param inputValue - User input value
+ * @param locale - Valid locale: 'en' | 'de' | 'es' (optional)
+ * @returns Formatted price string with currency
+ */
+export const formatPriceInput = (inputValue: string, locale?: 'en' | 'de' | 'es'): string => {
+  if (!inputValue || inputValue.trim().length === 0) return ''
+  
+  const trimmed = inputValue.trim()
+  
+  // If it's "Coming Soon" or similar text, keep as is
+  if (/^[a-zA-Z\s]+$/i.test(trimmed)) {
+    return trimmed
+  }
+  
+  // Check if already has currency symbol
+  const hasCurrency = /[€$£¥₹₽₩₪₫₨₦₡₵₴₸₷₯₰₱₲₳₶₷₸₹₺₼₽₾₿]/.test(trimmed)
+  
+  // If it's just numbers, add default currency
+  if (!hasCurrency && /^\d+([.,]\d+)?$/.test(trimmed)) {
+    return `${trimmed}${getDefaultCurrency(locale)}`
+  }
+  
+  // Otherwise keep as is (user has already formatted it)
+  return trimmed
+}

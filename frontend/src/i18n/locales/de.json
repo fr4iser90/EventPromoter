@@ -230,12 +230,30 @@
     "update": "Aktualisieren",
     "done": "Fertig",
     "files": "Dateien",
-    "platforms": "Plattformen"
+    "platforms": "Plattformen",
+    "noSelection": "Keine Auswahl",
+    "selected": "Ausgewählt ({{count}}):",
+    "available": "Verfügbar ({{count}}):",
+    "addNew": "Neue Auswahl hinzufügen...",
+    "errorAdding": "Fehler beim Hinzufügen: {{error}}",
+    "allSelected": "Alle ausgewählt",
+    "groupsSelected": "{{count}} Gruppe(n) ausgewählt",
+    "itemsSelected": "{{count}} Element(e) ausgewählt"
   },
   "platform": {
     "selection": "Plattform-Auswahl",
     "enabled": "Plattform aktiviert",
     "settings": "Einstellungen"
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich",
+    "minLength": "Mindestlänge: {{min}} Zeichen",
+    "maxLength": "Maximale Länge: {{max}} Zeichen",
+    "min": "Mindestwert: {{min}}",
+    "max": "Maximalwert: {{max}}",
+    "invalidFormat": "Ungültiges Format",
+    "invalidUrl": "Ungültige URL",
+    "invalid": "Ungültiger Wert"
   },
   "registry": {
     "noPanelConfiguration": "Keine Panel-Konfiguration bereitgestellt",

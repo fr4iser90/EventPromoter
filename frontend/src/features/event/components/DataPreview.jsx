@@ -24,7 +24,10 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  FormControlLabel,
+  Checkbox,
+  InputAdornment
 } from '@mui/material'
 import ImageIcon from '@mui/icons-material/Image'
 import DescriptionIcon from '@mui/icons-material/Description'
@@ -35,6 +38,8 @@ import SaveIcon from '@mui/icons-material/Save'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import { useTranslation } from 'react-i18next'
+import i18n from '../../../i18n'
+import { getDefaultCurrency, formatPriceInput, getUserLocale } from '../../../shared/utils/localeUtils'
 import useStore from '../../../store'
 import DateDisplay from '../../../shared/components/ui/DateDisplay'
 import DateInput from '../../../shared/components/ui/DateInput'
@@ -139,6 +144,92 @@ function Preview() {
     debouncedSaveParsedData(updated)
   }
 
+  // Handle extended data field change (for schema-based fields)
+  const handleExtendedDataChange = (groupId, fieldId, value, isNested = false, parentFieldId = null) => {
+    const updated = { ...editedData }
+    if (!updated.extendedData) {
+      updated.extendedData = {}
+    }
+    if (!updated.extendedData[groupId]) {
+      updated.extendedData[groupId] = {}
+    }
+
+    if (isNested && parentFieldId) {
+      // Nested field (e.g., ticketInfo.presale.price)
+      if (!updated.extendedData[groupId][parentFieldId]) {
+        updated.extendedData[groupId][parentFieldId] = {}
+      }
+      // Remove field if boolean is false or value is empty
+      if (typeof value === 'boolean' && value === false) {
+        delete updated.extendedData[groupId][parentFieldId][fieldId]
+        // Clean up empty parent object
+        if (Object.keys(updated.extendedData[groupId][parentFieldId]).length === 0) {
+          delete updated.extendedData[groupId][parentFieldId]
+        }
+      } else if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+        delete updated.extendedData[groupId][parentFieldId][fieldId]
+        // Clean up empty parent object
+        if (Object.keys(updated.extendedData[groupId][parentFieldId]).length === 0) {
+          delete updated.extendedData[groupId][parentFieldId]
+        }
+      } else {
+        updated.extendedData[groupId][parentFieldId][fieldId] = value
+      }
+    } else {
+      // Simple field
+      // Remove field if boolean is false or value is empty
+      if (typeof value === 'boolean' && value === false) {
+        delete updated.extendedData[groupId][fieldId]
+      } else if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+        delete updated.extendedData[groupId][fieldId]
+      } else {
+        updated.extendedData[groupId][fieldId] = value
+      }
+    }
+
+    // Clean up empty group
+    if (Object.keys(updated.extendedData[groupId]).length === 0) {
+      delete updated.extendedData[groupId]
+    }
+
+    setEditedData(updated)
+    debouncedSaveParsedData(updated)
+  }
+
+  // Get extended data field value
+  const getExtendedDataValue = (groupId, fieldId, parentFieldId = null) => {
+    const groupData = editedData?.extendedData?.[groupId]
+    if (!groupData) return ''
+
+    if (parentFieldId) {
+      const parentData = groupData[parentFieldId]
+      return parentData?.[fieldId] || ''
+    }
+
+    return groupData[fieldId] || ''
+  }
+
+  // Check if group has data
+  const hasGroupData = (groupId) => {
+    const groupData = editedData?.extendedData?.[groupId]
+    if (!groupData) return false
+    return Object.values(groupData).some(value => {
+      if (value === null || value === undefined) return false
+      // Boolean: only true counts as "has data"
+      if (typeof value === 'boolean') return value === true
+      // Objects (nested groups): check nested values
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        return Object.values(value).some(v => {
+          if (v === null || v === undefined) return false
+          if (typeof v === 'boolean') return v === true
+          return String(v).trim().length > 0
+        })
+      }
+      // Strings/numbers: must have non-empty content
+      return String(value).trim().length > 0
+    })
+  }
+
   // Manual save button handler
   const handleManualSave = async () => {
     const success = await updateParsedData(editedData)
@@ -193,9 +284,301 @@ function Preview() {
       })
     }
 
+    // Add extended data placeholders
+    if (editedData.extendedData) {
+      Object.entries(editedData.extendedData).forEach(([groupId, groupData]) => {
+        Object.entries(groupData).forEach(([fieldId, value]) => {
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            // Nested fields
+            Object.keys(value).forEach(subFieldId => {
+              placeholders.push(`${groupId}${capitalize(fieldId)}${capitalize(subFieldId)}`)
+            })
+          } else if (value) {
+            placeholders.push(`${groupId}${capitalize(fieldId)}`)
+          }
+        })
+      })
+    }
+
     return placeholders
   }
 
+  // Helper to capitalize first letter
+  const capitalize = (str) => {
+    if (!str || str.length === 0) return str
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  }
+
+  // Render extended data groups (Ticket-Info, Contact-Info, etc.)
+  const renderExtendedDataGroups = () => {
+    // Schema definition (could be loaded from API in future)
+    const schema = {
+      groups: [
+        {
+          id: 'ticketInfo',
+          label: 'Ticket-Informationen',
+          icon: '🎫',
+          collapsible: true,
+          defaultExpanded: false,
+          showWhenEmpty: true,
+          fields: [
+            {
+              id: 'presale',
+              type: 'group',
+              label: 'Vorkasse / Presale',
+              fields: [
+                { id: 'price', type: 'text', label: 'Preis', placeholder: 'z.B. 25€' },
+                { id: 'url', type: 'url', label: 'Ticket-URL', placeholder: 'https://...' },
+                { id: 'available', type: 'boolean', label: 'Vorkasse verfügbar', default: true },
+                { id: 'until', type: 'date', label: 'Verfügbar bis' }
+              ]
+            },
+            {
+              id: 'boxOffice',
+              type: 'group',
+              label: 'Abendkasse / Box Office',
+              fields: [
+                { id: 'price', type: 'text', label: 'Preis', placeholder: 'z.B. 30€' },
+                { id: 'available', type: 'boolean', label: 'Abendkasse verfügbar', default: true },
+                { id: 'note', type: 'textarea', label: 'Hinweis', placeholder: 'z.B. Teurer als Vorkasse' }
+              ]
+            },
+            { id: 'info', type: 'textarea', label: 'Allgemeine Ticket-Informationen', placeholder: 'Zusätzliche Infos zu Tickets...' },
+            { id: 'url', type: 'url', label: 'Ticket-URL (Allgemein)', placeholder: 'https://tickets.example.com' }
+          ]
+        },
+        {
+          id: 'contactInfo',
+          label: 'Kontakt-Informationen',
+          icon: '📞',
+          collapsible: true,
+          defaultExpanded: false,
+          showWhenEmpty: true,
+          fields: [
+            { id: 'email', type: 'email', label: 'E-Mail', placeholder: 'info@example.com' },
+            { id: 'phone', type: 'tel', label: 'Telefon', placeholder: '+49 341 1234567' },
+            { id: 'contactPerson', type: 'text', label: 'Ansprechpartner', placeholder: 'Max Mustermann' }
+          ]
+        },
+        {
+          id: 'additionalInfo',
+          label: 'Zusätzliche Informationen',
+          icon: 'ℹ️',
+          collapsible: true,
+          defaultExpanded: false,
+          showWhenEmpty: true,
+          fields: [
+            { id: 'ageRestriction', type: 'text', label: 'Altersbeschränkung', placeholder: '18+' },
+            { id: 'dressCode', type: 'text', label: 'Dresscode', placeholder: 'Casual' },
+            { id: 'parking', type: 'textarea', label: 'Parkmöglichkeiten', placeholder: 'Kostenlose Parkplätze verfügbar' },
+            { id: 'accessibility', type: 'textarea', label: 'Barrierefreiheit', placeholder: 'Rollstuhlgerechter Zugang vorhanden' }
+          ]
+        }
+      ]
+    }
+
+    return (
+      <Box sx={{ mt: 3 }}>
+        {schema.groups.map(group => {
+          if (!group.showWhenEmpty && !hasGroupData(group.id)) {
+            return null
+          }
+
+          return (
+            <Accordion
+              key={group.id}
+              defaultExpanded={group.defaultExpanded || hasGroupData(group.id)}
+              sx={{ mb: 2 }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                    {group.icon} {group.label}
+                  </Typography>
+                  {hasGroupData(group.id) && (
+                    <Chip
+                      label="Konfiguriert"
+                      size="small"
+                      color="primary"
+                      sx={{ ml: 'auto' }}
+                    />
+                  )}
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Grid container spacing={2}>
+                  {group.fields.map(field => {
+                    // Handle nested group fields
+                    if (field.type === 'group' && field.fields) {
+                      return (
+                        <Grid item xs={12} md={6} key={field.id}>
+                          <Card variant="outlined" sx={{ p: 2 }}>
+                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                              {field.label}
+                            </Typography>
+                            <Grid container spacing={2}>
+                              {field.fields.map(subField => (
+                                <Grid item xs={12} key={subField.id}>
+                                  {renderField(subField, group.id, field.id)}
+                                </Grid>
+                              ))}
+                            </Grid>
+                          </Card>
+                        </Grid>
+                      )
+                    }
+
+                    // Simple fields
+                    return (
+                      <Grid item xs={12} md={12} key={field.id}>
+                        {renderField(field, group.id)}
+                      </Grid>
+                    )
+                  })}
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+          )
+        })}
+      </Box>
+    )
+  }
+
+  // Get current locale for currency formatting
+  const currentLocale = getUserLocale(i18n)
+
+  // Check if conditional required fields are satisfied
+  const checkConditionalRequired = (groupId, parentFieldId) => {
+    if (groupId !== 'ticketInfo' || !parentFieldId) return { isValid: true, error: null }
+    
+    const available = getExtendedDataValue(groupId, 'available', parentFieldId)
+    if (!available) return { isValid: true, error: null }
+    
+    const price = getExtendedDataValue(groupId, 'price', parentFieldId)
+    const url = getExtendedDataValue(groupId, 'url', parentFieldId)
+    
+    // If available, need either price or url
+    const hasPrice = price && price.trim().length > 0
+    const hasUrl = url && url.trim().length > 0
+    
+    if (!hasPrice && !hasUrl) {
+      return { 
+        isValid: false, 
+        error: 'Bitte Preis oder Ticket-URL angeben (z.B. "Coming Soon" für Preis)' 
+      }
+    }
+    
+    return { isValid: true, error: null }
+  }
+
+  // Render a single field
+  const renderField = (field, groupId, parentFieldId = null) => {
+    const value = getExtendedDataValue(groupId, field.id, parentFieldId)
+    const isNested = parentFieldId !== null
+    
+    // Check conditional required for price/url fields
+    const conditionalValidation = (field.id === 'price' || field.id === 'url') && isNested
+      ? checkConditionalRequired(groupId, parentFieldId)
+      : { isValid: true, error: null }
+
+    switch (field.type) {
+      case 'text':
+      case 'url':
+      case 'email':
+      case 'tel':
+        // Special handling for price fields
+        const isPriceField = field.id === 'price' && isNested
+        
+        return (
+          <TextField
+            fullWidth
+            size="small"
+            label={field.label}
+            placeholder={isPriceField ? `z.B. 25${getDefaultCurrency(currentLocale)}` : field.placeholder}
+            value={value}
+            onChange={(e) => {
+              const inputValue = e.target.value
+              // For price fields, format with currency on blur or when user finishes typing
+              handleExtendedDataChange(groupId, field.id, inputValue, isNested, parentFieldId)
+            }}
+            onBlur={(e) => {
+              // Auto-format price when user leaves the field
+              if (isPriceField && e.target.value && e.target.value.trim().length > 0) {
+                const formatted = formatPriceInput(e.target.value, currentLocale)
+                if (formatted !== e.target.value) {
+                  handleExtendedDataChange(groupId, field.id, formatted, isNested, parentFieldId)
+                }
+              }
+            }}
+            type={field.type === 'email' ? 'email' : field.type === 'tel' ? 'tel' : 'text'}
+            helperText={conditionalValidation.error || field.description || (isPriceField ? `Standard: ${getDefaultCurrency(currentLocale)}` : '')}
+            error={!conditionalValidation.isValid}
+            InputProps={isPriceField ? {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {getDefaultCurrency(currentLocale)}
+                  </Typography>
+                </InputAdornment>
+              )
+            } : undefined}
+          />
+        )
+
+      case 'textarea':
+        return (
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            size="small"
+            label={field.label}
+            placeholder={field.placeholder}
+            value={value}
+            onChange={(e) => handleExtendedDataChange(groupId, field.id, e.target.value, isNested, parentFieldId)}
+            helperText={field.description}
+          />
+        )
+
+      case 'boolean':
+        return (
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={value ?? field.default ?? false}
+                onChange={(e) => handleExtendedDataChange(groupId, field.id, e.target.checked, isNested, parentFieldId)}
+              />
+            }
+            label={field.label}
+          />
+        )
+
+      case 'date':
+        return (
+          <DateInput
+            fullWidth
+            size="small"
+            label={field.label}
+            value={value}
+            onChange={(isoDate) => handleExtendedDataChange(groupId, field.id, isoDate, isNested, parentFieldId)}
+            helperText={field.description}
+          />
+        )
+
+      default:
+        return (
+          <TextField
+            fullWidth
+            size="small"
+            label={field.label}
+            placeholder={field.placeholder}
+            value={value}
+            onChange={(e) => handleExtendedDataChange(groupId, field.id, e.target.value, isNested, parentFieldId)}
+            helperText={field.description}
+          />
+        )
+    }
+  }
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
@@ -549,93 +932,6 @@ function Preview() {
                         </Box>
                       </Grid>
                     )}
-
-                    {/* Hashtags Section - After Description */}
-                    <Grid item xs={12}>
-                      <Accordion 
-                        expanded={hashtagPanelExpanded} 
-                        onChange={() => setHashtagPanelExpanded(!hashtagPanelExpanded)}
-                        sx={{ mt: 2 }}
-                      >
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                              {t('hashtags.title')}
-                            </Typography>
-                            {hashtags.length > 0 && (
-                              <Chip 
-                                label={`${hashtags.length}/30`} 
-                                size="small" 
-                                color="primary" 
-                                sx={{ ml: 'auto' }}
-                              />
-                            )}
-                          </Box>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          <Box sx={{ mb: 2 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                              {t('parser.parsedHashtagsFromFile')}:
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-                              {hashtags.length > 0 ? (
-                                hashtags.map((hashtag) => (
-                                  <Chip
-                                    key={hashtag}
-                                    label={hashtag}
-                                    size="small"
-                                    onDelete={() => {
-                                      const newHashtags = hashtags.filter(h => h !== hashtag)
-                                      setHashtags(newHashtags)
-                                      updateHashtagsInStore(newHashtags)
-                                    }}
-                                    color="primary"
-                                    variant="filled"
-                                  />
-                                ))
-                              ) : (
-                                <Typography variant="body2" color="text.secondary">
-                                  {t('parser.noHashtagsFound')}
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box sx={{ flex: 1 }}></Box>
-                            <Box sx={{ display: 'flex', gap: 1, ml: 2, alignItems: 'center' }}>
-                              <TextField
-                                size="small"
-                                placeholder={t('parser.additionalHashtags')}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    const input = e.target.value.trim()
-                                    if (input) {
-                                      const newTags = input
-                                        .split(',')
-                                        .map(tag => tag.trim())
-                                        .filter(tag => tag.length > 0)
-                                        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-                                      const newHashtags = [...new Set([...hashtags, ...newTags])]
-                                      setHashtags(newHashtags)
-                                      updateHashtagsInStore(newHashtags)
-                                      e.target.value = ''
-                                    }
-                                  }
-                                }}
-                                sx={{ width: 250 }}
-                              />
-                              <Button
-                                size="small"
-                                variant="contained"
-                                onClick={() => setHashtagDialogOpen(true)}
-                              >
-                                {t('parser.manageHashtags')}
-                              </Button>
-                            </Box>
-                          </Box>
-                        </AccordionDetails>
-                      </Accordion>
-                    </Grid>
                   </Grid>
 
                   <Box sx={{ mt: 2, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
@@ -651,6 +947,100 @@ function Preview() {
                   </Box>
                 </CardContent>
               </Card>
+
+              {/* Extended Data Schema Groups */}
+              {renderExtendedDataGroups()}
+
+              {/* Hashtags Section - After Extended Data Groups */}
+              <Box sx={{ mt: 3 }}>
+                <Accordion 
+                  expanded={hashtagPanelExpanded} 
+                  onChange={() => setHashtagPanelExpanded(!hashtagPanelExpanded)}
+                  defaultExpanded={hashtagPanelExpanded || hashtags.length > 0}
+                  sx={{ mb: 2 }}
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        🏷️ {t('hashtags.title')}
+                      </Typography>
+                      {hashtags.length > 0 && (
+                        <Chip
+                          label="Konfiguriert"
+                          size="small"
+                          color="primary"
+                          sx={{ ml: 'auto' }}
+                        />
+                      )}
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            {t('parser.parsedHashtagsFromFile')}:
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                            {hashtags.length > 0 ? (
+                              hashtags.map((hashtag) => (
+                                <Chip
+                                  key={hashtag}
+                                  label={hashtag}
+                                  size="small"
+                                  onDelete={() => {
+                                    const newHashtags = hashtags.filter(h => h !== hashtag)
+                                    setHashtags(newHashtags)
+                                    updateHashtagsInStore(newHashtags)
+                                  }}
+                                  color="primary"
+                                  variant="filled"
+                                />
+                              ))
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                {t('parser.noHashtagsFound')}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
+                          <TextField
+                            size="small"
+                            placeholder={t('parser.additionalHashtags')}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const input = e.target.value.trim()
+                                if (input) {
+                                  const newTags = input
+                                    .split(',')
+                                    .map(tag => tag.trim())
+                                    .filter(tag => tag.length > 0)
+                                    .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+                                  const newHashtags = [...new Set([...hashtags, ...newTags])]
+                                  setHashtags(newHashtags)
+                                  updateHashtagsInStore(newHashtags)
+                                  e.target.value = ''
+                                }
+                              }
+                            }}
+                            sx={{ width: 250 }}
+                          />
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => setHashtagDialogOpen(true)}
+                          >
+                            {t('parser.manageHashtags')}
+                          </Button>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </AccordionDetails>
+                </Accordion>
+              </Box>
             </Box>
           )}
 

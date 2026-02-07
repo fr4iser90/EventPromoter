@@ -186,5 +186,46 @@
   "fileVisibility": {
     "public": "Public",
     "internal": "Internal"
+  },
+  "recipients": {
+    "label": "Recipients for this send",
+    "description": "Select the recipients for this send",
+    "validation": {
+      "required": "At least one recipient must be selected"
+    },
+    "mode": {
+      "label": "Selection Mode",
+      "description": "Choose how recipients should be selected"
+    },
+    "groups": {
+      "label": "Recipient Groups",
+      "description": "Select one or more groups"
+    },
+    "individual": {
+      "label": "Individual Recipients",
+      "description": "Select individual recipients"
+    },
+    "templateLocale": {
+      "label": "🌐 Template Language",
+      "description": "Language for the template (automatically resolved from targets, can be overridden)"
+    },
+    "defaultTemplate": {
+      "label": "Default Template",
+      "description": "Template used for all recipients (if no group mapping exists)"
+    },
+    "templateMapping": {
+      "label": "Template Assignment",
+      "description": "Assign a specific template to each group"
+    },
+    "selected": "Selected ({{count}}):",
+    "available": "Available ({{count}}):",
+    "addNew": "Add new selection...",
+    "noGroupsSelected": "No groups selected",
+    "errorAdding": "Error adding: {{error}}",
+    "summary": {
+      "all": "All recipients",
+      "groups": "{{count}} group(s) selected",
+      "individual": "{{count}} recipient(s) selected"
+    }
   }
 }

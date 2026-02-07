@@ -271,6 +271,9 @@ export class ContentExtractionService {
         parsed.description = descriptionLines.join('\n').trim()
       }
 
+      // Parse extended data from structured text
+      parsed.extendedData = this.parseExtendedData(text)
+
       // Only return if we have at least a title
       return parsed.title ? parsed : null
 
@@ -350,6 +353,9 @@ export class ContentExtractionService {
       }
     }
 
+    // Parse extended data (Ticket-Info, Contact-Info, Social Media, etc.)
+    parsed.extendedData = this.parseExtendedData(rawText)
+
     // Description (remaining text after extracting structured data)
     const structuredLines = [parsed.title, parsed.date, parsed.time, parsed.venue, parsed.city, parsed.website, parsed.price]
       .filter(Boolean)
@@ -366,6 +372,161 @@ export class ContentExtractionService {
     parsed.hash = this.generateEventHash(parsed)
 
     return parsed
+  }
+
+  /**
+   * Parse extended data fields (Ticket-Info, Contact-Info, Social Media, etc.)
+   * Uses regex patterns to extract structured information
+   */
+  private static parseExtendedData(text: string): Record<string, Record<string, any>> {
+    const extendedData: Record<string, Record<string, any>> = {}
+    const lowerText = text.toLowerCase()
+
+    // Ticket Information
+    const ticketInfo: Record<string, any> = {}
+    
+    // Presale/Vorkasse
+    const presaleMatch = text.match(/(?:vorkasse|presale|vorverkauf|early\s*bird)[:\s]*(\d+[,.\d]*)\s*(?:€|EUR|euro)/i)
+    if (presaleMatch) {
+      ticketInfo.presale = {
+        price: presaleMatch[1] + '€',
+        available: true
+      }
+      
+      // Check for presale end date
+      const presaleUntilMatch = text.match(/(?:vorkasse|presale).*?bis\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/i)
+      if (presaleUntilMatch) {
+        const dateResult = this.normalizeDate(presaleUntilMatch[1])
+        if (ticketInfo.presale) {
+          ticketInfo.presale.until = dateResult.normalized
+        }
+      }
+      
+      // Check for presale URL
+      const presaleUrlMatch = text.match(/(?:vorkasse|presale).*?(https?:\/\/[^\s]+|www\.[^\s]+)/i)
+      if (presaleUrlMatch) {
+        if (ticketInfo.presale) {
+          ticketInfo.presale.url = presaleUrlMatch[1].startsWith('http') ? presaleUrlMatch[1] : `https://${presaleUrlMatch[1]}`
+        }
+      }
+    }
+    
+    // Box Office/Abendkasse
+    const boxOfficeMatch = text.match(/(?:abendkasse|box\s*office|tageskasse)[:\s]*(\d+[,.\d]*)\s*(?:€|EUR|euro)/i)
+    if (boxOfficeMatch) {
+      ticketInfo.boxOffice = {
+        price: boxOfficeMatch[1] + '€',
+        available: true
+      }
+      
+      // Check for box office note (e.g., "teurer als Vorkasse")
+      if (lowerText.includes('abendkasse') && (lowerText.includes('teurer') || lowerText.includes('höher'))) {
+        ticketInfo.boxOffice.note = 'Teurer als Vorkasse'
+      }
+    }
+    
+    // General ticket info text
+    const ticketInfoMatch = text.match(/(?:tickets?|karten)[:\s]*(.+?)(?:\n|$)/i)
+    if (ticketInfoMatch && ticketInfoMatch[1].trim().length > 0) {
+      ticketInfo.info = ticketInfoMatch[1].trim()
+    }
+    
+    // General ticket URL
+    const ticketUrlMatch = text.match(/(?:tickets?|karten).*?(https?:\/\/[^\s]+|www\.[^\s]+)/i)
+    if (ticketUrlMatch) {
+      ticketInfo.url = ticketUrlMatch[1].startsWith('http') ? ticketUrlMatch[1] : `https://${ticketUrlMatch[1]}`
+    }
+    
+    if (Object.keys(ticketInfo).length > 0) {
+      extendedData.ticketInfo = ticketInfo
+    }
+
+    // Contact Information
+    const contactInfo: Record<string, any> = {}
+    
+    // Email
+    const emailMatch = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/)
+    if (emailMatch) {
+      contactInfo.email = emailMatch[0]
+    }
+    
+    // Phone
+    const phoneMatch = text.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\+49\s?\d{1,4}\s?\d{1,4}\s?\d{1,9}/)
+    if (phoneMatch) {
+      contactInfo.phone = phoneMatch[0].trim()
+    }
+    
+    // Contact person (look for patterns like "Kontakt:", "Ansprechpartner:")
+    const contactPersonMatch = text.match(/(?:kontakt|ansprechpartner|contact)[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i)
+    if (contactPersonMatch) {
+      contactInfo.contactPerson = contactPersonMatch[1].trim()
+    }
+    
+    if (Object.keys(contactInfo).length > 0) {
+      extendedData.contactInfo = contactInfo
+    }
+
+    // Social Media Links
+    const socialMedia: Record<string, any> = {}
+    
+    // Facebook
+    const facebookMatch = text.match(/(?:facebook|fb)[:\s]*(https?:\/\/[^\s]+|www\.facebook\.com[^\s]+)/i)
+    if (facebookMatch) {
+      socialMedia.facebook = facebookMatch[1].startsWith('http') ? facebookMatch[1] : `https://${facebookMatch[1]}`
+    }
+    
+    // Instagram
+    const instagramMatch = text.match(/(?:instagram|ig)[:\s]*(https?:\/\/[^\s]+|www\.instagram\.com[^\s]+)/i)
+    if (instagramMatch) {
+      socialMedia.instagram = instagramMatch[1].startsWith('http') ? instagramMatch[1] : `https://${instagramMatch[1]}`
+    }
+    
+    // Twitter/X
+    const twitterMatch = text.match(/(?:twitter|x\.com)[:\s]*(https?:\/\/[^\s]+|www\.(?:twitter|x)\.com[^\s]+)/i)
+    if (twitterMatch) {
+      socialMedia.twitter = twitterMatch[1].startsWith('http') ? twitterMatch[1] : `https://${twitterMatch[1]}`
+    }
+    
+    if (Object.keys(socialMedia).length > 0) {
+      extendedData.socialMedia = socialMedia
+    }
+
+    // Additional Information
+    const additionalInfo: Record<string, any> = {}
+    
+    // Age restriction
+    const ageMatch = text.match(/(?:ab\s+)?(\d{1,2})\+?(?:\s*jahre|\s*j\.)?/i)
+    if (ageMatch) {
+      additionalInfo.ageRestriction = ageMatch[1] + '+'
+    }
+    
+    // Dress code
+    const dressCodeMatch = text.match(/(?:dresscode|dress\s*code|kleidung)[:\s]+([^\n]+)/i)
+    if (dressCodeMatch) {
+      additionalInfo.dressCode = dressCodeMatch[1].trim()
+    }
+    
+    // Parking
+    if (lowerText.includes('park') || lowerText.includes('parkplatz')) {
+      const parkingMatch = text.match(/(?:park|parkplatz|parking)[:\s]+([^\n]+)/i)
+      if (parkingMatch) {
+        additionalInfo.parking = parkingMatch[1].trim()
+      }
+    }
+    
+    // Accessibility
+    if (lowerText.includes('barrierefrei') || lowerText.includes('rollstuhl')) {
+      const accessibilityMatch = text.match(/(?:barrierefrei|rollstuhl|accessibility)[:\s]+([^\n]+)/i)
+      if (accessibilityMatch) {
+        additionalInfo.accessibility = accessibilityMatch[1].trim()
+      }
+    }
+    
+    if (Object.keys(additionalInfo).length > 0) {
+      extendedData.additionalInfo = additionalInfo
+    }
+
+    return extendedData
   }
 
   // Generate hash for duplicate detection (Title + Date + Venue + Lineup)

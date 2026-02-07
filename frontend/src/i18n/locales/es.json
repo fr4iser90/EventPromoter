@@ -229,12 +229,30 @@
     "update": "Actualizar",
     "done": "Hecho",
     "files": "Archivos",
-    "platforms": "Plataformas"
+    "platforms": "Plataformas",
+    "noSelection": "Sin selección",
+    "selected": "Seleccionado ({{count}}):",
+    "available": "Disponible ({{count}}):",
+    "addNew": "Agregar nueva selección...",
+    "errorAdding": "Error al agregar: {{error}}",
+    "allSelected": "Todos seleccionados",
+    "groupsSelected": "{{count}} grupo(s) seleccionado(s)",
+    "itemsSelected": "{{count}} elemento(s) seleccionado(s)"
   },
   "platform": {
     "selection": "Selección de Plataforma",
     "enabled": "Plataforma habilitada",
     "settings": "Configuración"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "minLength": "Longitud mínima: {{min}} caracteres",
+    "maxLength": "Longitud máxima: {{max}} caracteres",
+    "min": "Valor mínimo: {{min}}",
+    "max": "Valor máximo: {{max}}",
+    "invalidFormat": "Formato inválido",
+    "invalidUrl": "URL inválida",
+    "invalid": "Valor inválido"
   },
   "registry": {
     "noPanelConfiguration": "No se proporcionó configuración de panel",
