@@ -55,7 +55,10 @@
     "defaultTemplates": "Default templates",
     "customTemplates": "Custom templates",
     "defaultTemplatesNote": "cannot be modified but serve as examples.",
-    "customTemplatesNote": "can be fully edited and deleted."
+    "customTemplatesNote": "can be fully edited and deleted.",
+    "search": "Buscar plantillas...",
+    "selectTemplate": "Seleccionar una plantilla",
+    "selectTemplateHint": "Haz clic en una plantilla para ver la vista previa y los detalles"
   },
   "event": {
     "untitled": "Evento sin título",
@@ -169,7 +172,17 @@
     "localeMultipleGroups": "{{count}} grupos: La configuración regional se resolverá por grupo",
     "localePriority": "Prioridad: Configuración Regional del Destino → Idioma del Usuario ({{locale}})",
     "localeFallback": "Respaldo: Idioma del Usuario ({{locale}})",
-    "availableTranslations": "Traducciones de plantilla disponibles:"
+    "availableTranslations": "Traducciones de plantilla disponibles:",
+    "validationError": "El nombre y la categoría son obligatorios",
+    "saveError": "Error al guardar la plantilla",
+    "unsavedChanges": "Tienes cambios sin guardar",
+    "basicInfo": "Información Básica",
+    "defaultCannotEdit": "Las plantillas predeterminadas no se pueden editar. Crea una copia para editar.",
+    "templateContent": "Contenido de la Plantilla",
+    "variablesHint": "Usa variables entre llaves, ej., {title}, {date}",
+    "noTemplatesFound": "No se encontraron plantillas",
+    "duplicate": "Duplicar",
+    "selectTemplate": "Seleccionar una plantilla"
   },
   "settings": {
     "title": "Configuración",
@@ -241,7 +254,8 @@
     "itemsSelected": "{{count}} elemento(s) seleccionado(s)",
     "deleteConfirm": "¿Está seguro de que desea eliminar \"{{name}}\"?",
     "newEvent": "Nuevo Evento",
-    "resetConfirm": "¿Está seguro de que desea reiniciar y comenzar un nuevo evento? Se perderán todos los datos actuales."
+    "resetConfirm": "¿Está seguro de que desea reiniciar y comenzar un nuevo evento? Se perderán todos los datos actuales.",
+    "saving": "Guardando..."
   },
   "platform": {
     "selection": "Selección de Plataforma",

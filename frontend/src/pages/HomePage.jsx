@@ -9,18 +9,11 @@ import {
   CircularProgress,
   LinearProgress,
   Chip,
-  IconButton,
   useMediaQuery,
-  Select,
-  MenuItem,
-  FormControl,
   Tooltip
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
-import Brightness4Icon from '@mui/icons-material/Brightness4'
-import Brightness7Icon from '@mui/icons-material/Brightness7'
-import SettingsIcon from '@mui/icons-material/Settings'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
@@ -32,6 +25,7 @@ import { DataPreview as Preview } from '../features/event'
 import { Selector as PlatformSelector } from '../features/platform'
 import SettingsModal from '../shared/components/ui/Dialog/Settings'
 import DuplicateDialog from '../shared/components/ui/Dialog/Duplicate'
+import Header from '../shared/components/Header'
 import useStore, { WORKFLOW_STATES } from '../store'
 import { useMultiplePlatformTranslations } from '../features/platform/hooks/usePlatformTranslations'
 import { getApiUrl } from '../shared/utils/api'
@@ -51,7 +45,6 @@ const staticTheme = createTheme({
 
 function HomePage() {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
   const {
     uploadedFileRefs,
     selectedHashtags,
@@ -153,77 +146,15 @@ function HomePage() {
     reset()
   }
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-  }
-
   return (
     <>
       {/* Fixed Header */}
-      <Box sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1100,
-        bgcolor: 'background.paper',
-        borderBottom: 1,
-        borderColor: 'divider',
-        px: 2,
-        py: 1
-      }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%' }}>
-          <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
-            {t('app.title')}
-          </Typography>
-          {/* Publishing Mode Badge (Development Only) */}
-          {process.env.NODE_ENV === 'development' && configuredMode && (
-            <Tooltip title={`Configured publishing mode: ${configuredMode}`} arrow>
-              <Chip
-                label={configuredMode.toUpperCase()}
-                size="small"
-                color={configuredMode === 'auto' ? 'info' : configuredMode === 'n8n' ? 'success' : configuredMode === 'api' ? 'primary' : 'default'}
-                sx={{ mr: 1, fontSize: '0.7rem' }}
-              />
-            </Tooltip>
-          )}
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => navigate('/templates')}
-            sx={{ mr: 1 }}
-          >
-            📝 {t('navigation.templates')}
-          </Button>
-          <FormControl size="small" sx={{ mr: 1, minWidth: 80 }}>
-            <Select
-              value={i18n.language}
-              onChange={(e) => i18n.changeLanguage(e.target.value)}
-              displayEmpty
-              sx={{ color: 'text.primary', '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
-            >
-              <MenuItem value="en">{t('language.english')}</MenuItem>
-              <MenuItem value="de">{t('language.german')}</MenuItem>
-              <MenuItem value="es">{t('language.spanish')}</MenuItem>
-            </Select>
-          </FormControl>
-          <IconButton
-            onClick={() => setSettingsOpen(true)}
-            color="inherit"
-            aria-label="open settings"
-          >
-            <SettingsIcon />
-          </IconButton>
-          <IconButton
-            onClick={toggleDarkMode}
-            color="inherit"
-            aria-label="toggle dark mode"
-          >
-            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-          </IconButton>
-        </Box>
-      </Box>
+      <Header
+        title={t('app.title')}
+        showPublishingMode={true}
+        configuredMode={configuredMode}
+        onSettingsClick={() => setSettingsOpen(true)}
+      />
 
       {/* Workflow Progress Indicator */}
       <Box sx={{

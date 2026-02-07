@@ -55,7 +55,10 @@
     "defaultTemplates": "Default templates",
     "customTemplates": "Custom templates",
     "defaultTemplatesNote": "cannot be modified but serve as examples.",
-    "customTemplatesNote": "can be fully edited and deleted."
+    "customTemplatesNote": "can be fully edited and deleted.",
+    "search": "Vorlagen suchen...",
+    "selectTemplate": "Vorlage auswählen",
+    "selectTemplateHint": "Klicken Sie auf eine Vorlage, um Vorschau und Details zu sehen"
   },
   "event": {
     "untitled": "Unbenanntes Event",
@@ -170,7 +173,17 @@
     "localeMultipleGroups": "{{count}} Gruppen: Locale wird pro Gruppe aufgelöst",
     "localePriority": "Priorität: Target Locale → Benutzer-Sprache ({{locale}})",
     "localeFallback": "Fallback: Benutzer-Sprache ({{locale}})",
-    "availableTranslations": "Verfügbare Template-Übersetzungen:"
+    "availableTranslations": "Verfügbare Template-Übersetzungen:",
+    "validationError": "Name und Kategorie sind erforderlich",
+    "saveError": "Vorlage konnte nicht gespeichert werden",
+    "unsavedChanges": "Sie haben ungespeicherte Änderungen",
+    "basicInfo": "Grundinformationen",
+    "defaultCannotEdit": "Standard-Vorlagen können nicht bearbeitet werden. Erstellen Sie eine Kopie zum Bearbeiten.",
+    "templateContent": "Vorlageninhalt",
+    "variablesHint": "Verwenden Sie Variablen in geschweiften Klammern, z.B. {title}, {date}",
+    "noTemplatesFound": "Keine Vorlagen gefunden",
+    "duplicate": "Duplizieren",
+    "selectTemplate": "Vorlage auswählen"
   },
   "settings": {
     "title": "Einstellungen",
@@ -242,7 +255,8 @@
     "itemsSelected": "{{count}} Element(e) ausgewählt",
     "deleteConfirm": "Möchten Sie \"{{name}}\" wirklich löschen?",
     "newEvent": "Neues Event",
-    "resetConfirm": "Möchten Sie wirklich zurücksetzen und ein neues Event starten? Alle aktuellen Daten gehen verloren."
+    "resetConfirm": "Möchten Sie wirklich zurücksetzen und ein neues Event starten? Alle aktuellen Daten gehen verloren.",
+    "saving": "Speichern..."
   },
   "platform": {
     "selection": "Plattform-Auswahl",

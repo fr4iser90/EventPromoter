@@ -1,36 +1,41 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  Container,
-  Typography,
   Box,
+  Typography,
   Tabs,
   Tab,
   Paper,
-  Button,
-  IconButton,
-  LinearProgress,
-  Chip,
-  useMediaQuery
+  TextField,
+  InputAdornment,
+  useMediaQuery,
+  useTheme
 } from '@mui/material'
-import {
-  ArrowBack as ArrowBackIcon,
-  Settings as SettingsIcon,
-  Brightness4 as Brightness4Icon,
-  Brightness7 as Brightness7Icon
-} from '@mui/icons-material'
-import { useTheme, createTheme } from '@mui/material/styles'
+import SearchIcon from '@mui/icons-material/Search'
 import { List as TemplateList } from '../features/templates'
+import { Preview as TemplatePreview } from '../features/templates'
+import { Editor as TemplateEditor } from '../features/templates'
+import Header from '../shared/components/Header'
 import useStore from '../store'
 import { usePlatforms } from '../features/platform/hooks/usePlatformSchema'
 
+// Right Panel States
+const RIGHT_PANEL_STATES = {
+  EMPTY: 'empty',
+  VIEW: 'view',
+  EDIT: 'edit'
+}
+
 function TemplatePage() {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const { platforms, loading: platformsLoading } = usePlatforms()
   const [selectedPlatform, setSelectedPlatform] = useState(null)
-  const { darkMode, setDarkMode } = useStore()
+  const [selectedTemplate, setSelectedTemplate] = useState(null)
+  const [rightPanelState, setRightPanelState] = useState(RIGHT_PANEL_STATES.EMPTY)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
 
   // Set first platform as default when platforms are loaded
   useEffect(() => {
@@ -39,108 +44,84 @@ function TemplatePage() {
     }
   }, [platforms, selectedPlatform])
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode)
-  }
-
   // Load session data
   useEffect(() => {
     useStore.getState().initialize()
   }, [])
 
+  // Reset selection when platform changes
+  useEffect(() => {
+    setSelectedTemplate(null)
+    setRightPanelState(RIGHT_PANEL_STATES.EMPTY)
+  }, [selectedPlatform])
+
   const handlePlatformChange = (event, newValue) => {
     setSelectedPlatform(newValue)
   }
 
-  const handleBackToMain = () => {
-    navigate('/')
+  const handleTemplateSelect = (template) => {
+    setSelectedTemplate(template)
+    setRightPanelState(RIGHT_PANEL_STATES.VIEW)
+  }
+
+  const handleTemplateEdit = (template) => {
+    setSelectedTemplate(template)
+    setRightPanelState(RIGHT_PANEL_STATES.EDIT)
+  }
+
+  const handleEditCancel = () => {
+    setRightPanelState(RIGHT_PANEL_STATES.VIEW)
+  }
+
+  const handleEditSave = () => {
+    setRightPanelState(RIGHT_PANEL_STATES.VIEW)
+    // TemplateList will reload automatically
   }
 
   return (
     <>
       {/* Fixed Header */}
-      <Box sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1100,
-        bgcolor: 'background.paper',
-        borderBottom: 1,
-        borderColor: 'divider',
-        px: 2,
-        py: 1
-      }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%' }}>
-          <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
-{t('templates.title')}
-          </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => navigate('/')}
-            sx={{ mr: 1 }}
-          >
-            ← {t('navigation.home')}
-          </Button>
-          <IconButton
-            onClick={toggleDarkMode}
-            color="inherit"
-            aria-label="toggle dark mode"
-          >
-            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-          </IconButton>
-        </Box>
-      </Box>
+      <Header title={t('templates.title')} showSettings={false} />
 
-      {/* Content Container */}
+      {/* Content Container - Split View */}
       <Box sx={{
         display: 'flex',
         minHeight: '100vh',
-        pt: 8 // Account for fixed header
+        pt: 8, // Account for fixed header
+        maxWidth: '1400px',
+        mx: 'auto',
+        width: '100%'
       }}>
-        {/* Linke Sidebar - Empty for templates */}
+        {/* Left Panel - Template List (60% on desktop, 100% on mobile) */}
         <Box sx={{
-          flex: 1,
+          flex: isMobile ? 1 : 0.6,
           display: 'flex',
           flexDirection: 'column',
-          p: 2,
-          borderRight: 1,
+          borderRight: isMobile ? 0 : 1,
           borderColor: 'divider',
-          overflow: 'auto'
+          overflow: 'hidden'
         }}>
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            color: 'text.secondary'
-          }}>
-            <Typography variant="body2">
-{t('templates.management')}
-            </Typography>
-          </Box>
-        </Box>
+          {/* Toolbar */}
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <TextField
+                size="small"
+                placeholder={t('templates.search', { defaultValue: 'Search templates...' })}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  )
+                }}
+                sx={{ flex: 1 }}
+              />
+            </Box>
 
-        {/* Main Content - Template Management */}
-        <Box sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          px: 2,
-          py: 2,
-          borderRight: 1,
-          borderColor: 'divider'
-        }}>
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h6" component="h2" color="text.secondary">
-{t('templates.managementSystem')}
-            </Typography>
-          </Box>
-
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
             {/* Platform Tabs */}
-            <Paper sx={{ mb: 4 }}>
+            <Paper sx={{ mb: 2 }}>
               <Tabs
                 value={selectedPlatform}
                 onChange={handlePlatformChange}
@@ -150,7 +131,7 @@ function TemplatePage() {
                   borderBottom: 1,
                   borderColor: 'divider',
                   '& .MuiTab-root': {
-                    minHeight: 64,
+                    minHeight: 48,
                     textTransform: 'none'
                   }
                 }}
@@ -169,52 +150,70 @@ function TemplatePage() {
                 ))}
               </Tabs>
             </Paper>
+          </Box>
 
-            {/* Template Management */}
+          {/* Template List */}
+          <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
             <TemplateList
               platform={selectedPlatform}
-              onSelectTemplate={(template) => {
-                // For now, just show selected template
-                console.log('Selected template:', template)
-              }}
+              searchQuery={searchQuery}
+              selectedCategory={selectedCategory}
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={handleTemplateSelect}
+              onEditTemplate={handleTemplateEdit}
             />
-
-            {/* Footer Info */}
-            <Paper sx={{ mt: 4, p: 3, bgcolor: 'background.default' }}>
-              <Typography variant="h6" gutterBottom>
-{t('templates.usage')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-{t('templates.description')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <strong>{t('templates.defaultTemplates')}</strong> {t('templates.defaultTemplatesNote')}
-                <strong>{t('templates.customTemplates')}</strong> {t('templates.customTemplatesNote')}
-              </Typography>
-            </Paper>
           </Box>
         </Box>
 
-        {/* Rechte Sidebar - Empty for templates */}
-        <Box sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          p: 2,
-          overflow: 'auto'
-        }}>
+        {/* Right Panel - Preview/Editor (40% on desktop, hidden on mobile) */}
+        {!isMobile && (
           <Box sx={{
+            flex: 0.4,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            color: 'text.secondary'
+            flexDirection: 'column',
+            borderLeft: 1,
+            borderColor: 'divider',
+            overflow: 'hidden',
+            bgcolor: 'background.default'
           }}>
-            <Typography variant="body2">
-{t('templates.preview')}
-            </Typography>
+            {rightPanelState === RIGHT_PANEL_STATES.EMPTY && (
+              <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                p: 4,
+                textAlign: 'center',
+                color: 'text.secondary'
+              }}>
+                <Typography variant="h6" gutterBottom>
+                  {t('templates.selectTemplate', { defaultValue: 'Select a template' })}
+                </Typography>
+                <Typography variant="body2">
+                  {t('templates.selectTemplateHint', { defaultValue: 'Click on a template to see preview and details' })}
+                </Typography>
+              </Box>
+            )}
+
+            {rightPanelState === RIGHT_PANEL_STATES.VIEW && selectedTemplate && (
+              <TemplatePreview
+                template={selectedTemplate}
+                platform={selectedPlatform}
+                onEdit={() => handleTemplateEdit(selectedTemplate)}
+              />
+            )}
+
+            {rightPanelState === RIGHT_PANEL_STATES.EDIT && selectedTemplate && (
+              <TemplateEditor
+                template={selectedTemplate}
+                platform={selectedPlatform}
+                onCancel={handleEditCancel}
+                onSave={handleEditSave}
+              />
+            )}
           </Box>
-        </Box>
+        )}
       </Box>
     </>
   )

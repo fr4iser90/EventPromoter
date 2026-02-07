@@ -1,152 +1,117 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Box,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Chip,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
   Alert,
   CircularProgress,
   Paper,
-  Divider
+  Card,
+  CardContent,
+  CardActions,
+  Tooltip
 } from '@mui/material'
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-  Description as TemplateIcon
+  Description as TemplateIcon,
+  Visibility as VisibilityIcon,
+  ContentCopy as DuplicateIcon
 } from '@mui/icons-material'
 import { useTemplates } from '../hooks/useTemplates'
-import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
-import SchemaRenderer from '../../schema/components/Renderer'
-import config from '../../../config'
+import { useTemplateCategories } from '../hooks/useTemplateCategories'
 
-const TemplateList = ({ platform, onSelectTemplate }) => {
+const TemplateList = ({ 
+  platform, 
+  searchQuery = '',
+  selectedCategory = 'all',
+  selectedTemplate = null,
+  onSelectTemplate,
+  onEditTemplate
+}) => {
   const { t } = useTranslation()
-  const { templates, categories, loading, error, createTemplate, updateTemplate, deleteTemplate } = useTemplates(platform)
-  const { schema, loading: schemaLoading } = usePlatformSchema(platform)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState(null)
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    category: '',
-    template: {}
-  })
-  const [saving, setSaving] = useState(false)
+  const { templates, categories, loading, error, deleteTemplate, createTemplate } = useTemplates(platform)
+  const { categories: allCategories } = useTemplateCategories()
 
-  // Handle create new template
-  const handleCreate = () => {
-    setEditingTemplate(null)
-    setFormData({
-      name: '',
-      description: '',
-      category: '',
-      template: getDefaultTemplateStructure(platform)
-    })
-    setDialogOpen(true)
-  }
+  // Filter templates
+  const filteredTemplates = useMemo(() => {
+    let filtered = templates
 
-  // Handle edit template
-  const handleEdit = (template) => {
-    setEditingTemplate(template)
-    setFormData({
-      name: template.name,
-      description: template.description || '',
-      category: template.category,
-      template: { ...template.template }
-    })
-    setDialogOpen(true)
-  }
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(template => 
+        template.name.toLowerCase().includes(query) ||
+        (template.description && template.description.toLowerCase().includes(query)) ||
+        template.variables.some(v => v.toLowerCase().includes(query))
+      )
+    }
 
-  // Handle delete template
-  const handleDelete = async (templateId) => {
+    // Category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(template => template.category === selectedCategory)
+    }
+
+    return filtered
+  }, [templates, searchQuery, selectedCategory])
+
+  // Group templates by category
+  const groupedTemplates = useMemo(() => {
+    return filteredTemplates.reduce((acc, template) => {
+      const category = template.category || 'general'
+      if (!acc[category]) acc[category] = []
+      acc[category].push(template)
+      return acc
+    }, {})
+  }, [filteredTemplates])
+
+  // Create mapping from category ID to translated name
+  const categoryNameMap = useMemo(() => {
+    return (allCategories || categories || []).reduce((acc, cat) => {
+      acc[cat.id] = cat.name
+      return acc
+    }, {})
+  }, [allCategories, categories])
+
+  const handleDelete = async (templateId, event) => {
+    event.stopPropagation()
     if (window.confirm(t('template.deleteConfirm', { defaultValue: 'Are you sure you want to delete this template?' }))) {
       await deleteTemplate(templateId)
     }
   }
 
-  // Handle save template
-  const handleSave = async () => {
-    if (!formData.name.trim() || !formData.category) {
-      return
-    }
-
-    setSaving(true)
+  const handleDuplicate = async (template, event) => {
+    event.stopPropagation()
     try {
       const templateData = {
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        category: formData.category,
-        template: formData.template,
-        variables: extractVariablesFromTemplate(formData.template)
+        name: `${template.name} (Copy)`,
+        description: template.description,
+        category: template.category,
+        template: { ...template.template },
+        variables: template.variables
       }
-
-      if (editingTemplate) {
-        await updateTemplate(editingTemplate.id, templateData)
-      } else {
-        await createTemplate(templateData)
-      }
-
-      setDialogOpen(false)
-      setFormData({ name: '', description: '', category: '', template: {} })
-      setEditingTemplate(null)
-    } catch (error) {
-      console.error('Error saving template:', error)
-    } finally {
-      setSaving(false)
+      await createTemplate(templateData)
+    } catch (err) {
+      console.error('Error duplicating template:', err)
     }
   }
 
-  // ✅ SCHEMA-DRIVEN: Get default template structure from schema
-  const getDefaultTemplateStructure = (platform) => {
-    const templateSchema = schema?.template
-    if (!templateSchema?.defaultStructure) {
-      // Fallback if no schema
-      return { text: '{title} - {description}' }
+  const handleCardClick = (template) => {
+    if (onSelectTemplate) {
+      onSelectTemplate(template)
     }
-
-    // Build default structure from schema
-    const defaultStructure = {}
-    Object.entries(templateSchema.defaultStructure).forEach(([key, field]) => {
-      defaultStructure[key] = field.default || ''
-    })
-    return defaultStructure
   }
 
-  // Extract variables from template content
-  const extractVariablesFromTemplate = (template) => {
-    // Get all template fields (subject, html, text, etc.) and combine them
-    const content = Object.values(template).filter(v => typeof v === 'string').join(' ')
-
-    const variableMatches = content.match(/\{([^}]+)\}/g) || []
-    return [...new Set(variableMatches.map(match => match.slice(1, -1)))]
+  const handleEdit = (template, event) => {
+    event.stopPropagation()
+    if (onEditTemplate) {
+      onEditTemplate(template)
+    }
   }
-
-  // Group templates by category
-  const groupedTemplates = templates.reduce((acc, template) => {
-    const category = template.category || 'general'
-    if (!acc[category]) acc[category] = []
-    acc[category].push(template)
-    return acc
-  }, {})
-
-  // Create mapping from category ID to translated name
-  const categoryNameMap = categories.reduce((acc, cat) => {
-    acc[cat.id] = cat.name
-    return acc
-  }, {})
 
   if (loading) {
     return (
@@ -156,230 +121,173 @@ const TemplateList = ({ platform, onSelectTemplate }) => {
     )
   }
 
-  return (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5">
-          📝 {t('template.platformTemplates', { platform: platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Unknown' })}
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {error}
+      </Alert>
+    )
+  }
+
+  if (filteredTemplates.length === 0) {
+    return (
+      <Box textAlign="center" py={4}>
+        <TemplateIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+        <Typography variant="h6" color="text.secondary">
+          {searchQuery || selectedCategory !== 'all' 
+            ? t('template.noTemplatesFound', { defaultValue: 'No templates found' })
+            : t('template.noTemplates')}
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreate}
-        >
-          {t('template.newTemplate')}
-        </Button>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {Object.keys(groupedTemplates).length === 0 ? (
-        <Box textAlign="center" py={4}>
-          <TemplateIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            {t('template.noTemplates')}
-          </Typography>
+        {!searchQuery && selectedCategory === 'all' && (
           <Typography variant="body2" color="text.secondary" mb={2}>
             {t('template.createFirstTemplate')}
           </Typography>
-          <Button variant="outlined" startIcon={<AddIcon />} onClick={handleCreate}>
-            {t('template.createTemplate')}
-          </Button>
-        </Box>
-      ) : (
-        Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
-          <Box key={category} mb={3}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              {categoryNameMap[category] || category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ')}
-            </Typography>
-            <List>
-              {categoryTemplates.map((template) => (
-                <ListItem
+        )}
+      </Box>
+    )
+  }
+
+  return (
+    <Box>
+      {Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
+        <Box key={category} mb={3}>
+          <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
+            {categoryNameMap[category] || category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ')}
+          </Typography>
+          
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)' },
+            gap: 2 
+          }}>
+            {categoryTemplates.map((template) => {
+              const isSelected = selectedTemplate?.id === template.id
+              
+              return (
+                <Card
                   key={template.id}
+                  onClick={() => handleCardClick(template)}
                   sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    mb: 1,
-                    '&:hover': { backgroundColor: 'action.hover' }
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    border: isSelected ? 2 : 1,
+                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    bgcolor: isSelected ? 'action.selected' : 'background.paper',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      boxShadow: 2,
+                      transform: 'translateY(-2px)'
+                    }
                   }}
                 >
-                  <ListItemText
-                    primary={
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Typography variant="subtitle1">{template.name}</Typography>
-                        {template.isDefault && (
-                          <Chip label={t('template.default')} size="small" color="primary" variant="outlined" />
-                        )}
-                      </Box>
-                    }
-                    secondary={
-                      <Box>
-                        <Typography variant="body2" color="text.secondary">
-                          {template.description || t('template.noDescription')}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {t('template.availableVariables')} {template.variables.join(', ') || t('template.none')}
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      edge="end"
-                      onClick={() => onSelectTemplate && onSelectTemplate(template)}
-                      title={t('template.useTemplate')}
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                      <Typography variant="h6" component="h3" sx={{ flex: 1, mr: 1 }}>
+                        {template.name}
+                      </Typography>
+                      {template.isDefault && (
+                        <Chip 
+                          label={t('template.default')} 
+                          size="small" 
+                          color="primary" 
+                          variant="outlined"
+                          sx={{ ml: 1 }}
+                        />
+                      )}
+                    </Box>
+
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ mb: 2, minHeight: 40 }}
                     >
-                      ✓
-                    </IconButton>
-                    {!template.isDefault && (
-                      <>
-                        <IconButton
-                          edge="end"
-                          onClick={() => handleEdit(template)}
-                          title={t('template.editTemplate')}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          edge="end"
-                          onClick={() => handleDelete(template.id)}
-                          title={t('template.delete')}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </>
+                      {template.description || t('template.noDescription')}
+                    </Typography>
+
+                    {template.variables && template.variables.length > 0 && (
+                      <Box sx={{ mb: 1 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                          {t('template.availableVariables')}:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {template.variables.slice(0, 5).map((variable) => (
+                            <Chip
+                              key={variable}
+                              label={`{${variable}}`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontSize: '0.7rem', height: 20 }}
+                            />
+                          ))}
+                          {template.variables.length > 5 && (
+                            <Chip
+                              label={`+${template.variables.length - 5}`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontSize: '0.7rem', height: 20 }}
+                            />
+                          )}
+                        </Box>
+                      </Box>
                     )}
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
-            </List>
-            {Object.keys(groupedTemplates).length > 1 && <Divider sx={{ mt: 2 }} />}
+                  </CardContent>
+
+                  <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Tooltip title={t('template.preview', { defaultValue: 'Preview' })}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleCardClick(template)
+                          }}
+                          color={isSelected ? 'primary' : 'default'}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title={t('template.editTemplate')}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleEdit(template, e)}
+                          disabled={template.isDefault}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Tooltip title={t('template.duplicate', { defaultValue: 'Duplicate' })}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleDuplicate(template, e)}
+                        >
+                          <DuplicateIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      
+                      {!template.isDefault && (
+                        <Tooltip title={t('template.delete')}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleDelete(template.id, e)}
+                            color="error"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
+                  </CardActions>
+                </Card>
+              )
+            })}
           </Box>
-        ))
-      )}
-
-      {/* Create/Edit Template Dialog */}
-      <Dialog open={dialogOpen} onClose={() => !saving && setDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingTemplate ? t('template.editTemplate') : t('template.createTemplate')}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 1 }}>
-            <TextField
-              fullWidth
-              label={t('template.templateName')}
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              sx={{ mb: 2 }}
-              required
-            />
-
-            <TextField
-              fullWidth
-              label={t('template.description')}
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              sx={{ mb: 2 }}
-              multiline
-              rows={2}
-            />
-
-            <TextField
-              select
-              fullWidth
-              label={t('template.category')}
-              value={formData.category}
-              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-              sx={{ mb: 2 }}
-              required
-            >
-              {categories && categories.length > 0 ? (
-                categories.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.name}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>{t('template.loadingCategories')}</MenuItem>
-              )}
-            </TextField>
-
-            {/* ✅ SCHEMA-DRIVEN: Template fields from schema.template.defaultStructure */}
-            {schema?.template?.defaultStructure ? (
-              <SchemaRenderer
-                fields={Object.entries(schema.template.defaultStructure).map(([key, field]) => ({
-                  name: key,
-                  type: field.type === 'html' ? 'textarea' : field.type === 'rich' ? 'textarea' : field.type,
-                  label: field.label,
-                  description: field.description,
-                  placeholder: field.placeholder || t('template.variablePlaceholder'),
-                  required: field.required,
-                  default: field.default,
-                  ui: { width: 12 }
-                }))}
-                values={formData.template}
-                onChange={(fieldName, value) => setFormData(prev => ({
-                  ...prev,
-                  template: { ...prev.template, [fieldName]: value }
-                }))}
-                errors={{}}
-              />
-            ) : (
-              /* Fallback if no template schema */
-              <TextField
-                fullWidth
-                label={t('template.textContent')}
-                value={formData.template.text || ''}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  template: { ...prev.template, text: e.target.value }
-                }))}
-                multiline
-                rows={4}
-                placeholder={t('template.variablePlaceholder')}
-              />
-            )}
-
-            {/* Show available variables if defined in schema */}
-            {schema?.template?.variables && schema.template.variables.length > 0 && (
-              <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-                <Typography variant="caption" color="text.secondary" gutterBottom>
-                  {t('template.availableVariables')}
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                  {schema.template.variables.map((variable) => (
-                    <Chip
-                      key={variable.name}
-                      label={`{${variable.name}}`}
-                      size="small"
-                      variant="outlined"
-                      title={variable.description || variable.label}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)} disabled={saving}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            disabled={saving || !formData.name.trim() || !formData.category}
-          >
-            {saving ? <CircularProgress size={20} /> : (editingTemplate ? t('common.update', { defaultValue: 'Update' }) : t('template.create'))}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+        </Box>
+      ))}
+    </Box>
   )
 }
 

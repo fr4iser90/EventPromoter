@@ -55,7 +55,10 @@
     "defaultTemplates": "Default templates",
     "customTemplates": "Custom templates",
     "defaultTemplatesNote": "cannot be modified but serve as examples.",
-    "customTemplatesNote": "can be fully edited and deleted."
+    "customTemplatesNote": "can be fully edited and deleted.",
+    "search": "Search templates...",
+    "selectTemplate": "Select a template",
+    "selectTemplateHint": "Click on a template to see preview and details"
   },
   "event": {
     "untitled": "Untitled Event",
@@ -171,7 +174,17 @@
     "localeMultipleGroups": "{{count}} groups: Locale will be resolved per group",
     "localePriority": "Priority: Target Locale → User Language ({{locale}})",
     "localeFallback": "Fallback: User Language ({{locale}})",
-    "availableTranslations": "Available template translations:"
+    "availableTranslations": "Available template translations:",
+    "validationError": "Name and category are required",
+    "saveError": "Failed to save template",
+    "unsavedChanges": "You have unsaved changes",
+    "basicInfo": "Basic Information",
+    "defaultCannotEdit": "Default templates cannot be edited. Create a copy to edit.",
+    "templateContent": "Template Content",
+    "variablesHint": "Use variables in curly braces, e.g., {title}, {date}",
+    "noTemplatesFound": "No templates found",
+    "duplicate": "Duplicate",
+    "selectTemplate": "Select a template"
   },
   "settings": {
     "title": "Settings",
@@ -243,7 +256,8 @@
     "itemsSelected": "{{count}} item(s) selected",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "newEvent": "New Event",
-    "resetConfirm": "Are you sure you want to reset and start a new event? All current data will be lost."
+    "resetConfirm": "Are you sure you want to reset and start a new event? All current data will be lost.",
+    "saving": "Saving..."
   },
   "platform": {
     "selection": "Platform Selection",
