@@ -80,11 +80,13 @@ export class EmailApiPublisher implements EmailPublisher {
       // Handle multiple runs
       const results: PostResult[] = []
       for (const run of runs) {
+        console.log(`📧 Processing template run: ${run.templateId}`)
         const recipients = await this.extractRecipients(run.targets)
         if (recipients.length === 0) {
           console.warn(`No recipients found for template run`)
           continue
         }
+        console.log(`📧 Found ${recipients.length} recipient(s)`)
 
         // ✅ DEKLARATIV: Template MUSS vorhanden sein und re-rendert werden (KEINE FALLBACKS)
         if (!run.templateId) {
@@ -179,7 +181,9 @@ export class EmailApiPublisher implements EmailPublisher {
         const allAttachments = this.mergeAttachments(globalAttachments, specificAttachments)
 
         // Process HTML and attachments for CID embedding
+        console.log(`📧 Processing embedded images...`)
         const { processedHtml, processedAttachments } = this.processEmbeddedImages(html, allAttachments)
+        console.log(`📧 Sending email to ${recipients.length} recipient(s)...`)
 
         // Extract CC and BCC from content (same as n8n)
         const cc = content.cc && Array.isArray(content.cc) && content.cc.length > 0 

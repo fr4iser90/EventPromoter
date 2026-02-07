@@ -27,7 +27,7 @@ export const eventReminderTemplate: EmailTemplate = {
       <p>{title} is tomorrow!</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="details">
       <h3>Your Event Details</h3>
@@ -81,7 +81,7 @@ export const eventReminderTemplate: EmailTemplate = {
       <p>{title} ist morgen!</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="details">
       <h3>Deine Event Details</h3>
@@ -134,7 +134,7 @@ export const eventReminderTemplate: EmailTemplate = {
       <p>¡{title} es mañana!</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="details">
       <h3>Detalles de tu Evento</h3>

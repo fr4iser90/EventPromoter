@@ -23,7 +23,7 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
     <div class="header">
       <h1>📅 {title}</h1>
     </div>
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
     <p>Dear Colleague,</p>
     <p>We are pleased to invite you to join us for an exciting professional event.</p>
     <p><strong>Event Details:</strong></p>
@@ -60,7 +60,7 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
     <div class="header">
       <h1>📅 {title}</h1>
     </div>
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
     <p>Liebe/r Kollege/in,</p>
     <p>Wir freuen uns, Sie zu einem aufregenden professionellen Event einzuladen.</p>
     <p><strong>Event Details:</strong></p>
@@ -96,7 +96,7 @@ export const professionalEventAnnouncementTemplate: EmailTemplate = {
     <div class="header">
       <h1>📅 {title}</h1>
     </div>
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
     <p>Estimado/a Colega,</p>
     <p>Nos complace invitarlo a un emocionante evento profesional.</p>
     <p><strong>Detalles del Evento:</strong></p>

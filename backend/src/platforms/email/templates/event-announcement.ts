@@ -28,7 +28,7 @@ export const eventAnnouncementTemplate: EmailTemplate = {
       <p>You're invited to an amazing event!</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="event-details">
       <h2>Event Details</h2>
@@ -85,7 +85,7 @@ export const eventAnnouncementTemplate: EmailTemplate = {
       <p>Du bist zu einem großartigen Event eingeladen!</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="event-details">
       <h2>Event Details</h2>
@@ -141,7 +141,7 @@ export const eventAnnouncementTemplate: EmailTemplate = {
       <p>¡Estás invitado a un evento increíble!</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="event-details">
       <h2>Detalles del Evento</h2>

@@ -36,7 +36,7 @@ export const personalInvitationTemplate: EmailTemplate = {
       {name}
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="personal-message">
       <p style="margin: 0; font-size: 16px; line-height: 1.6;">
@@ -116,7 +116,7 @@ export const personalInvitationTemplate: EmailTemplate = {
       {name}
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="personal-message">
       <p style="margin: 0; font-size: 16px; line-height: 1.6;">
@@ -195,7 +195,7 @@ export const personalInvitationTemplate: EmailTemplate = {
       {name}
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="personal-message">
       <p style="margin: 0; font-size: 16px; line-height: 1.6;">
