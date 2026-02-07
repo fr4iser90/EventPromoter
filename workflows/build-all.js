@@ -4,6 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+// Whitelist: Nur diese Plattformen werden gebaut
+// Verfügbare Plattformen: email, facebook, twitter, instagram, linkedin, reddit
+const enabled_platforms = ["email"];
+const show_sticky_nodes = false;
 /**
  * Build all workflows in the workflows directory
  */
@@ -37,7 +41,8 @@ function buildAllWorkflows() {
     return;
   }
 
-  console.log(`📂 Found ${workflowDirs.length} workflow(s): ${workflowDirs.join(', ')}\n`);
+  console.log(`📂 Found ${workflowDirs.length} workflow(s): ${workflowDirs.join(', ')}`);
+  console.log(`✅ Enabled platforms: ${enabled_platforms.join(', ')}\n`);
 
   let successCount = 0;
   let failCount = 0;
@@ -62,9 +67,21 @@ function buildAllWorkflows() {
       const hasCoreBuild = fs.existsSync(path.join(workflowPath, 'core', 'build.js'));
       const buildCommand = hasCoreBuild ? 'node core/build.js' : 'node build.js';
 
+      // Set ENABLED_PLATFORMS and SHOW_STICKY_NODES environment variables
+      const env = { ...process.env };
+      if (workflowDir === 'multiplatform-publisher') {
+        env.ENABLED_PLATFORMS = enabled_platforms.join(',');
+        env.SHOW_STICKY_NODES = show_sticky_nodes.toString();
+        console.log(`   📋 Filtering platforms: ${enabled_platforms.join(', ')}`);
+        if (!show_sticky_nodes) {
+          console.log(`   📝 Sticky notes: disabled`);
+        }
+      }
+
       execSync(`cd "${workflowPath}" && ${buildCommand}`, {
         stdio: 'inherit',
-        timeout: 30000
+        timeout: 30000,
+        env: env
       });
       console.log(`✅ ${workflowDir} built successfully\n`);
       successCount++;
@@ -77,7 +94,8 @@ function buildAllWorkflows() {
   console.log(`\n🎉 Build summary:`);
   console.log(`✅ Successful: ${successCount}`);
   console.log(`❌ Failed: ${failCount}`);
-  console.log(`📊 Total: ${workflowDirs.length}`);
+  console.log(`📊 Total workflows: ${workflowDirs.length}`);
+  console.log(`🔧 Enabled platforms: ${enabled_platforms.join(', ')}`);
 
   if (failCount > 0) {
     console.log('\n🔍 Check the error messages above for details');

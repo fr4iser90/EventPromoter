@@ -7,10 +7,13 @@
       "conditions": {
         "boolean": [
           {
-            "value1": "={{ $json.email !== undefined }}",
+            "value1": "={{ $json.body?.email && typeof $json.body.email === 'object' }}",
             "value2": true
           }
         ]
+      },
+      "options": {
+        "alwaysOutputData": true
       }
     },
     "position": [200, 600],
@@ -56,15 +59,26 @@
     "typeVersion": 2
   },
   {
-    "id": "platform-email-split-attachments",
-    "name": "📎 Split Attachments",
-    "type": "n8n-nodes-base.splitOut",
+    "id": "platform-email-filter-attachments",
+    "name": "🔍 Filter Attachments per Group",
+    "type": "code",
+    "script": "email-filter-attachments.js",
     "parameters": {
-      "fieldToSplitOut": "email.attachments",
-      "options": {}
+      "mode": "runOnceForEachItem"
     },
-    "position": [1600, 500],
-    "typeVersion": 1
+    "position": [1000, 500],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-loop-attachments",
+    "name": "🔄 Loop Attachments",
+    "type": "code",
+    "script": "email-loop-attachments.js",
+    "parameters": {
+      "mode": "runOnceForEachItem"
+    },
+    "position": [1200, 500],
+    "typeVersion": 2
   },
   {
     "id": "platform-email-download-attachment",
@@ -72,7 +86,7 @@
     "type": "httpRequest",
     "parameters": {
       "method": "GET",
-      "url": "={{ $json.email.attachments.url }}",
+      "url": "={{ $json.url }}",
       "options": {
         "response": {
           "response": {
@@ -82,52 +96,18 @@
       },
       "authentication": "none"
     },
-    "position": [1600, 500],
+      "position": [1400, 500],
     "typeVersion": 4.2
   },
   {
-    "id": "platform-email-transform-attachment",
-    "name": "🔄 Transform to Base64",
+    "id": "platform-email-merge-attachments",
+    "name": "🔗 Merge Attachments",
     "type": "code",
-    "script": "email-transform-attachment.js",
+    "script": "email-merge-attachments.js",
     "parameters": {
-      "mode": "runOnceForEachItem"
+      "mode": "runOnceForAllItems"
     },
-    "position": [1600, 500],
-    "typeVersion": 2
-  },
-  {
-    "id": "platform-email-aggregate-attachments",
-    "name": "📎 Aggregate Attachments",
-    "type": "n8n-nodes-base.aggregate",
-    "parameters": {
-      "aggregate": "aggregateAllItemData",
-      "destinationFieldName": "processedAttachments",
-      "options": {}
-    },
-    "position": [1600, 500],
-    "typeVersion": 1
-  },
-  {
-    "id": "platform-email-merge-with-attachments",
-    "name": "🔗 Merge Email & Attachments",
-    "type": "n8n-nodes-base.merge",
-    "parameters": {
-      "mode": "mergeByPosition",
-      "options": {}
-    },
-    "position": [2200, 600],
-    "typeVersion": 2.1
-  },
-  {
-    "id": "platform-email-format-attachments",
-    "name": "📎 Format Attachments Array",
-    "type": "code",
-    "script": "email-format-attachments.js",
-    "parameters": {
-      "mode": "runOnceForEachItem"
-    },
-    "position": [2200, 600],
+      "position": [1600, 500],
     "typeVersion": 2
   },
   {
@@ -136,12 +116,19 @@
     "type": "emailSend",
     "parameters": {
       "fromEmail": "noreply@eventpromoter.com",
-      "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
+      "toEmail": "={{ $json.email.recipients || $json.email.group || 'user@example.com' }}",
       "subject": "={{ $json.email.subject }}",
       "html": "={{ $json.email.html }}",
-      "attachments": "={{ $json.attachments }}"
+      "attachments": "",
+      "options": {
+        "attachments": {
+          "binaryProperty": {
+            "__expression": "={{ Object.keys($binary).filter(k => k.startsWith('data')).join(',') || 'data' }}"
+          }
+        }
+      }
     },
-    "position": [2200, 600],
+      "position": [1800, 500],
     "typeVersion": 2.1
   },
   {

@@ -277,9 +277,77 @@ export class EmailN8nService {
           emailPayload.bcc = content.bcc.join(', ')
         }
 
-        // Add attachments if present - transform to URLs for n8n
+        // Collect attachments from both content.attachments and content.globalFiles
+        const allAttachments: any[] = []
+        
+        // Add explicit attachments if present
         if (content.attachments && Array.isArray(content.attachments) && content.attachments.length > 0) {
-          emailPayload.attachments = this.transformAttachmentsToUrls(content.attachments, files, baseUrl)
+          allAttachments.push(...content.attachments)
+        }
+        
+        // Add globalFiles as attachments (map file IDs to attachment format)
+        if (content.globalFiles && Array.isArray(content.globalFiles) && content.globalFiles.length > 0) {
+          for (const globalFile of content.globalFiles) {
+            // Find file in files array by ID or filename
+            const fileId = globalFile.id || globalFile.filename || globalFile.name
+            const file = files.find(f => 
+              f.id === fileId || 
+              f.filename === fileId || 
+              f.name === fileId ||
+              f.id === globalFile.id?.replace(/\.pdf$/, '') || // Handle ID without extension
+              f.filename === globalFile.filename
+            )
+            
+            if (file) {
+              // Convert globalFile to attachment format
+              allAttachments.push({
+                fileId: file.id,
+                id: file.id,
+                name: file.name || globalFile.filename || 'attachment',
+                filename: file.filename || globalFile.filename || 'attachment',
+                type: file.type || globalFile.type || 'application/octet-stream',
+                contentType: file.type || globalFile.type || 'application/octet-stream',
+                size: file.size || 0,
+                url: file.url // Will be transformed to absolute URL below
+              })
+            } else {
+              console.warn(`Global file not found in files array: ${fileId}`, globalFile)
+            }
+          }
+        }
+        
+        // Add template-specific files (specificFiles) as attachments
+        if (templateEntry.specificFiles && Array.isArray(templateEntry.specificFiles) && templateEntry.specificFiles.length > 0) {
+          for (const specificFile of templateEntry.specificFiles) {
+            const fileId = specificFile.id || specificFile.filename || specificFile.name
+            const file = files.find(f => 
+              f.id === fileId || 
+              f.filename === fileId || 
+              f.name === fileId ||
+              f.id === specificFile.id?.replace(/\.pdf$/, '') ||
+              f.filename === specificFile.filename
+            )
+            
+            if (file) {
+              allAttachments.push({
+                fileId: file.id,
+                id: file.id,
+                name: file.name || specificFile.filename || 'attachment',
+                filename: file.filename || specificFile.filename || 'attachment',
+                type: file.type || specificFile.type || 'application/octet-stream',
+                contentType: file.type || specificFile.type || 'application/octet-stream',
+                size: file.size || 0,
+                url: file.url
+              })
+            } else {
+              console.warn(`Specific file not found in files array: ${fileId}`, specificFile)
+            }
+          }
+        }
+        
+        // Transform all attachments to URLs for n8n
+        if (allAttachments.length > 0) {
+          emailPayload.attachments = this.transformAttachmentsToUrls(allAttachments, files, baseUrl)
         }
 
         emails.push(emailPayload)

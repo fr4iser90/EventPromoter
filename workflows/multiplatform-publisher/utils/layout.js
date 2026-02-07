@@ -15,16 +15,14 @@ const LAYOUT_CONFIG = {
     emailPrepare: 14760,
     emailCheckAttachments: 15060,
     emailSave: 15360,
-    emailSplit: 15660,
-    emailDownload: 15960,
-    emailTransform: 15960,
-    emailAggregate: 15960,
-    emailMerge: 16260,
-    emailFormat: 16300,
-    emailSend: 16260,
+    emailFilter: 15660,
+    emailLoop: 15960,
+    emailDownload: 16560,
+    emailMerge: 16860,
+    emailSend: 17160,
     emailSendNoAttachments: 15360,
-    structureResponse: 16660,
-    webhookResponse: 16960
+    structureResponse: 17460,
+    webhookResponse: 17760
   },
   
   // Row positions (Y coordinates) for platforms - based on actual positions
@@ -116,25 +114,19 @@ function calculateNodePosition(node, connections) {
     return [LAYOUT_CONFIG.columns.emailSendNoAttachments, 5940];
   }
   if ((nodeId.includes('email-send') && !nodeId.includes('no-attachments')) || (nodeName.includes('Send Email') && !nodeName.includes('No Attachments'))) {
-    return [LAYOUT_CONFIG.columns.emailSend, LAYOUT_CONFIG.rows.email];
+    return [LAYOUT_CONFIG.columns.emailSend, LAYOUT_CONFIG.rows.emailFlow];
   }
-  if (nodeId.includes('email-format') || nodeName.includes('Format Attachments')) {
-    return [LAYOUT_CONFIG.columns.emailFormat, 5820];
-  }
-  if (nodeId.includes('email-merge') || nodeName.includes('Merge Email')) {
-    return [LAYOUT_CONFIG.columns.emailMerge, 5740];
-  }
-  if (nodeId.includes('email-aggregate') || nodeName.includes('Aggregate Attachments')) {
-    return [LAYOUT_CONFIG.columns.emailAggregate, 6180];
-  }
-  if (nodeId.includes('email-transform') || nodeName.includes('Transform to Base64')) {
-    return [LAYOUT_CONFIG.columns.emailTransform, 6080];
+  if (nodeId.includes('email-merge') && nodeName.includes('Merge Attachments')) {
+    return [LAYOUT_CONFIG.columns.emailMerge, LAYOUT_CONFIG.rows.emailFlow];
   }
   if (nodeId.includes('email-download') || nodeName.includes('Download Attachment')) {
-    return [LAYOUT_CONFIG.columns.emailDownload, 5980];
+    return [LAYOUT_CONFIG.columns.emailDownload, LAYOUT_CONFIG.rows.emailFlow];
   }
-  if (nodeId.includes('email-split') || nodeName.includes('Split Attachments')) {
-    return [LAYOUT_CONFIG.columns.emailSplit, LAYOUT_CONFIG.rows.emailFlow];
+  if (nodeId.includes('email-loop') || nodeName.includes('Loop Attachments')) {
+    return [LAYOUT_CONFIG.columns.emailLoop, LAYOUT_CONFIG.rows.emailFlow];
+  }
+  if (nodeId.includes('email-filter') || nodeName.includes('Filter Attachments per Group')) {
+    return [LAYOUT_CONFIG.columns.emailFilter, LAYOUT_CONFIG.rows.emailFlow];
   }
   if (nodeId.includes('email-save') || nodeName.includes('Save Email Data')) {
     return [LAYOUT_CONFIG.columns.emailSave, LAYOUT_CONFIG.rows.emailFlow];

@@ -182,14 +182,25 @@
       "main": [
         [
           {
-            "node": "📎 Split Attachments",
+            "node": "🔍 Filter Attachments per Group",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "📎 Split Attachments": {
+    "🔍 Filter Attachments per Group": {
+      "main": [
+        [
+          {
+            "node": "🔄 Loop Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔄 Loop Attachments": {
       "main": [
         [
           {
@@ -204,47 +215,14 @@
       "main": [
         [
           {
-            "node": "🔄 Transform to Base64",
+            "node": "🔗 Merge Attachments",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "🔄 Transform to Base64": {
-      "main": [
-        [
-          {
-            "node": "📎 Aggregate Attachments",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📎 Aggregate Attachments": {
-      "main": [
-        [
-          {
-            "node": "🔗 Merge Email & Attachments",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🔗 Merge Email & Attachments": {
-      "main": [
-        [
-          {
-            "node": "📎 Format Attachments Array",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📎 Format Attachments Array": {
+    "🔗 Merge Attachments": {
       "main": [
         [
           {

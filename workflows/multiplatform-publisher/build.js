@@ -50,11 +50,39 @@ function loadNodeFile(filePath) {
 }
 
 /**
+ * Get enabled platforms from environment variable
+ * @returns {Array} Array of enabled platform names
+ */
+function getEnabledPlatforms() {
+  const envPlatforms = process.env.ENABLED_PLATFORMS;
+  if (!envPlatforms) {
+    // If no env var, return all platforms (backward compatibility)
+    return null;
+  }
+  return envPlatforms.split(',').map(p => p.trim()).filter(p => p.length > 0);
+}
+
+/**
+ * Check if a platform file should be loaded
+ * @param {string} fileName - Name of the platform file (e.g., "email.json")
+ * @param {Array|null} enabledPlatforms - Array of enabled platform names or null for all
+ * @returns {boolean} True if platform should be loaded
+ */
+function shouldLoadPlatform(fileName, enabledPlatforms) {
+  if (!enabledPlatforms) {
+    return true; // Load all if no filter
+  }
+  const platformName = fileName.replace('.json', '');
+  return enabledPlatforms.includes(platformName);
+}
+
+/**
  * Load all node files from a directory
  * @param {string} dirPath - Directory path (relative to nodes/ or absolute)
+ * @param {Array|null} enabledPlatforms - Array of enabled platform names or null for all
  * @returns {Array} Array of all nodes from all files in directory
  */
-function loadNodesFromDirectory(dirPath) {
+function loadNodesFromDirectory(dirPath, enabledPlatforms = null) {
   // If relative path, assume it's in nodes/ directory
   if (!path.isAbsolute(dirPath)) {
     dirPath = path.join(__dirname, 'nodes', dirPath);
@@ -69,6 +97,14 @@ function loadNodesFromDirectory(dirPath) {
   const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.json'));
   
   files.forEach(file => {
+    // Filter platforms if we're in the platforms directory
+    const isPlatformsDir = dirPath.includes('platforms');
+    if (isPlatformsDir && !shouldLoadPlatform(file, enabledPlatforms)) {
+      const platformName = file.replace('.json', '');
+      console.log(`⏭️  Skipping platform: ${platformName} (not in enabled list)`);
+      return;
+    }
+    
     const filePath = path.join(dirPath, file);
     console.log(`📦 Loading nodes from: ${file}`);
     try {
@@ -105,6 +141,14 @@ function generateWorkflowUUIDs(config) {
 function buildWorkflow() {
   console.log('🔧 Building workflow...');
 
+  // Get enabled platforms from environment
+  const enabledPlatforms = getEnabledPlatforms();
+  if (enabledPlatforms) {
+    console.log(`✅ Enabled platforms: ${enabledPlatforms.join(', ')}`);
+  } else {
+    console.log(`ℹ️  No platform filter - loading all platforms`);
+  }
+
   // Load configuration
   const configPath = path.join(__dirname, 'config.json');
   if (!fs.existsSync(configPath)) {
@@ -130,7 +174,7 @@ function buildWorkflow() {
   if (config.nodeDirectories && Array.isArray(config.nodeDirectories)) {
     config.nodeDirectories.forEach(dir => {
       console.log(`📂 Loading nodes from directory: ${dir}`);
-      const dirNodes = loadNodesFromDirectory(dir);
+      const dirNodes = loadNodesFromDirectory(dir, enabledPlatforms);
       allNodes.push(...dirNodes);
     });
   }
@@ -206,15 +250,41 @@ function buildWorkflow() {
     return nodeObj;
   });
 
-  // Add sticky notes if they exist
-  if (config.stickyNotes) {
+  // Add sticky notes if they exist and show_sticky_nodes is enabled
+  const showStickyNodes = process.env.SHOW_STICKY_NODES !== 'false';
+  if (config.stickyNotes && showStickyNodes) {
     // Apply auto-layout to sticky notes if enabled
     let processedStickyNotes = config.stickyNotes;
     if (config.autoLayout !== false) {
       processedStickyNotes = applyStickyNotesLayout(config.stickyNotes);
     }
     
+    // Filter sticky notes based on enabled platforms
+    const platformStickyNoteMap = {
+      'email': ['email-credentials'],
+      'facebook': ['facebook-credentials'],
+      'twitter': ['twitter-credentials'],
+      'instagram': ['instagram-credentials'],
+      'linkedin': ['linkedin-credentials'],
+      'reddit': ['reddit-credentials']
+    };
+    
     processedStickyNotes.forEach(note => {
+      // Skip platform-specific sticky notes if platform is not enabled
+      if (enabledPlatforms) {
+        const noteId = note.id || '';
+        const isPlatformNote = Object.values(platformStickyNoteMap).some(ids => ids.includes(noteId));
+        if (isPlatformNote) {
+          const platform = Object.keys(platformStickyNoteMap).find(p => 
+            platformStickyNoteMap[p].includes(noteId)
+          );
+          if (platform && !enabledPlatforms.includes(platform)) {
+            console.log(`⏭️  Skipping sticky note: ${note.name} (platform ${platform} not enabled)`);
+            return;
+          }
+        }
+      }
+      
       // Load content from file if specified, otherwise use inline content
       let content = note.content;
       if (note.file) {
@@ -238,23 +308,80 @@ function buildWorkflow() {
     });
   }
 
+  // Create set of enabled node names for filtering connections
+  const enabledNodeNames = new Set();
+  if (enabledPlatforms) {
+    const platformNodeMap = {
+      'email': ['📧 Has Email Content?', '📧 Prepare Email Data', '📧 Send Email', '📧 Send Email (No Attachments)'],
+      'facebook': ['👥 Has Facebook Content?', '👥 Post to Facebook Page'],
+      'twitter': ['🐦 Has Twitter Content?', '🐦 Post to Twitter/X'],
+      'instagram': ['📸 Has Instagram Content?', '📸 Post to Instagram'],
+      'linkedin': ['💼 Has LinkedIn Content?', '💼 Post to LinkedIn'],
+      'reddit': ['🔴 Has Reddit Content?', '🔴 Post to Reddit']
+    };
+    
+    enabledPlatforms.forEach(platform => {
+      if (platformNodeMap[platform]) {
+        platformNodeMap[platform].forEach(nodeName => enabledNodeNames.add(nodeName));
+      }
+    });
+    
+    // Always include core nodes
+    enabledNodeNames.add('📥 Webhook Trigger (API) - PRE-FORMATTED CONTENT');
+    enabledNodeNames.add('🔧 Structure Response');
+    enabledNodeNames.add('✅ Send Response');
+    // Email-specific nodes (always include if email is enabled)
+    if (enabledPlatforms.includes('email')) {
+      enabledNodeNames.add('📧 Prepare Email Data');
+      enabledNodeNames.add('📎 Has Attachments?');
+      enabledNodeNames.add('💾 Save Email Data');
+      enabledNodeNames.add('🔍 Filter Attachments per Group');
+      enabledNodeNames.add('🔄 Loop Attachments');
+      enabledNodeNames.add('⬇️ Download Attachment');
+      enabledNodeNames.add('🔗 Merge Attachments');
+    }
+  }
+
   // Process connections to use node names (like original n8n export)
   const processedConnections = {};
   if (config.connections) {
     Object.keys(config.connections).forEach(templateKey => {
       // Use node name as connection key (like original n8n JSON)
       const nodeNameKey = nameMapping[templateKey] || templateKey;
-      processedConnections[nodeNameKey] = config.connections[templateKey];
-
-      // Also update node references within connections to use node names
-      if (processedConnections[nodeNameKey].main) {
-        processedConnections[nodeNameKey].main.forEach(path => {
-          path.forEach(connection => {
-            if (connection.node && nameMapping[connection.node]) {
-              connection.node = nameMapping[connection.node];
+      
+      // Filter out connections for disabled platforms
+      if (enabledPlatforms && !enabledNodeNames.has(nodeNameKey)) {
+        console.log(`⏭️  Skipping connection: ${nodeNameKey} (platform not enabled)`);
+        return;
+      }
+      
+      const connection = config.connections[templateKey];
+      const filteredConnection = { ...connection };
+      
+      // Filter connections within main paths
+      if (filteredConnection.main && Array.isArray(filteredConnection.main)) {
+        filteredConnection.main = filteredConnection.main.map(path => {
+          if (!Array.isArray(path)) return path;
+          
+          return path.filter(conn => {
+            const targetNodeName = nameMapping[conn.node] || conn.node;
+            if (enabledPlatforms && !enabledNodeNames.has(targetNodeName)) {
+              return false;
             }
+            return true;
+          }).map(conn => {
+            // Update node references to use node names
+            if (conn.node && nameMapping[conn.node]) {
+              return { ...conn, node: nameMapping[conn.node] };
+            }
+            return conn;
           });
-        });
+        }).filter(path => path.length > 0); // Remove empty paths
+      }
+      
+      // Only add connection if it has valid paths
+      if (!filteredConnection.main || filteredConnection.main.length > 0) {
+        processedConnections[nodeNameKey] = filteredConnection;
       }
     });
   }

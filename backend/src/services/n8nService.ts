@@ -116,7 +116,10 @@ export class N8nService {
           // Use URL API for robust URL construction (handles /files/, /api/files/, etc.)
           file.url = new URL(file.url, baseUrl).toString()
         }
-        return file
+        
+        // Remove sensitive server path before sending to n8n
+        const { path, ...safeFile } = file
+        return safeFile
       })
     }
 

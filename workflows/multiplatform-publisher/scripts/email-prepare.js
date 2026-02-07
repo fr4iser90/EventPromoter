@@ -1,25 +1,20 @@
-// Prepare email data and handle multiple email format
-const input = $input.item.json;
-const emailData = input.email || input.emails;
+// Prepare email data - extract email from body.email
+// Webhook contract: { body: { email: {...} } }
+// Workflow contract: { email: {...} }
 
-// Handle both single email and multiple emails format
-if (Array.isArray(emailData)) {
-  // Multiple emails format: { emails: [...] }
-  return emailData.map(email => ({
-    json: {
-      ...input,
-      email: email
-    }
-  }));
-} else if (emailData) {
-  // Single email format
-  return [{
-    json: {
-      ...input,
-      email: emailData
-    }
-  }];
+const input = $input.item.json;
+
+// If-Node verified: $json.body?.email && typeof $json.body.email === 'object'
+// Email is in body.email (webhook structure)
+const emailData = input.body?.email;
+
+if (!emailData || typeof emailData !== 'object') {
+  throw new Error('Invalid input: email is missing or not an object');
 }
 
-// No email data
-return [];
+// Normalize to workflow contract: { email: {...} }
+return [{
+  json: {
+    email: emailData
+  }
+}];

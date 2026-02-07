@@ -11,7 +11,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16660,
+        17460,
         5080
       ]
     },
@@ -26,7 +26,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        16960,
+        17760,
         5080
       ]
     },
@@ -51,10 +51,13 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.email !== undefined }}",
+              "value1": "={{ $json.body?.email && typeof $json.body.email === 'object' }}",
               "value2": true
             }
           ]
+        },
+        "options": {
+          "alwaysOutputData": true
         }
       },
       "id": "669903d2-b36d-5ec7-4d7d-a5fe796e212a",
@@ -68,7 +71,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Prepare email data and handle multiple email format\nconst input = $input.item.json;\nconst emailData = input.email || input.emails;\n\n// Handle both single email and multiple emails format\nif (Array.isArray(emailData)) {\n  // Multiple emails format: { emails: [...] }\n  return emailData.map(email => ({\n    json: {\n      ...input,\n      email: email\n    }\n  }));\n} else if (emailData) {\n  // Single email format\n  return [{\n    json: {\n      ...input,\n      email: emailData\n    }\n  }];\n}\n\n// No email data\nreturn [];\n"
+        "jsCode": "// Prepare email data - extract email from body.email\n// Webhook contract: { body: { email: {...} } }\n// Workflow contract: { email: {...} }\n\nconst input = $input.item.json;\n\n// If-Node verified: $json.body?.email && typeof $json.body.email === 'object'\n// Email is in body.email (webhook structure)\nconst emailData = input.body?.email;\n\nif (!emailData || typeof emailData !== 'object') {\n  throw new Error('Invalid input: email is missing or not an object');\n}\n\n// Normalize to workflow contract: { email: {...} }\nreturn [{\n  json: {\n    email: emailData\n  }\n}];\n"
       },
       "id": "89cd2d89-838d-c243-47ed-b4721026fbac",
       "name": "📧 Prepare Email Data",
@@ -101,7 +104,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Save email data before splitting attachments\nconst email = $input.item.json.email;\nreturn [{\n  json: {\n    email: email,\n    emailData: email // Store for later merge\n  }\n}];\n"
+        "jsCode": "// Save email data before splitting attachments\nconst input = $input.item.json;\nconst email = input.email;\n\nif (!email) {\n  console.warn('No email data found in input:', Object.keys(input));\n  // Return input as-is to prevent n8n from stopping\n  return [{\n    json: input\n  }];\n}\n\n// Ensure email object has attachments array (even if empty)\nconst emailWithAttachments = {\n  ...email,\n  attachments: email.attachments || []\n};\n\nreturn [{\n  json: {\n    email: emailWithAttachments,\n    emailData: emailWithAttachments // Store for later merge\n  }\n}];\n"
       },
       "id": "f9602cf0-9d3a-ef82-46c2-aa2ecdf988dc",
       "name": "💾 Save Email Data",
@@ -114,13 +117,12 @@
     },
     {
       "parameters": {
-        "fieldToSplitOut": "email.attachments",
-        "options": {}
+        "jsCode": "// Filter attachments based on group rules\n// Supports multiple groups with different attachment rules\n// Also extracts images from HTML and adds them as attachments\nconst item = $input.item;\nconst email = item.json.email || {};\nconst group = email.group || email.recipients?.[0] || 'default';\nconst allAttachments = email.attachments || [];\n\n// Define attachment rules per group\n// 'all' = all attachments, [1,4,6] = specific attachment IDs/indices\nconst attachmentRules = {\n  'vip': [1, 4, 6],\n  'test': 'all',\n  'pa.boe': [1]\n};\n\nconst rule = attachmentRules[group];\nlet filteredAttachments = [];\n\nif (rule === 'all') {\n  // Include all attachments\n  filteredAttachments = allAttachments;\n} else if (Array.isArray(rule)) {\n  // Filter by attachment IDs or indices\n  filteredAttachments = allAttachments.filter((att, index) => {\n    // Support both explicit IDs and index-based (1-based)\n    const attId = att.id || (index + 1);\n    return rule.includes(attId) || rule.includes(index + 1);\n  });\n} else {\n  // No rule found, use all attachments as fallback\n  filteredAttachments = allAttachments;\n}\n\n// Extract images from HTML and add them as attachments\n// Images need to be downloaded and embedded as CID attachments\nconst html = email.html || '';\nconst imageUrls = [];\nconst imageRegex = /<img[^>]+src=[\"']([^\"']+)[\"'][^>]*>/gi;\nlet match;\n\nwhile ((match = imageRegex.exec(html)) !== null) {\n  const imageUrl = match[1];\n  // Only add if it's a URL (not already a CID reference)\n  if (imageUrl && !imageUrl.startsWith('cid:') && !imageUrl.startsWith('data:')) {\n    // Extract filename from URL\n    const urlParts = imageUrl.split('/');\n    const filename = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params\n    \n    // Check if image is already in attachments\n    const isAlreadyAttached = filteredAttachments.some(att => \n      att.url === imageUrl || att.filename === filename\n    );\n    \n    if (!isAlreadyAttached) {\n      imageUrls.push({\n        url: imageUrl,\n        filename: filename,\n        contentType: filename.match(/\\.(jpg|jpeg)$/i) ? 'image/jpeg' : \n                     filename.match(/\\.png$/i) ? 'image/png' : \n                     filename.match(/\\.gif$/i) ? 'image/gif' : 'image/jpeg',\n        _isImage: true // Flag to identify images for CID replacement\n      });\n    }\n  }\n}\n\n// Combine filtered attachments with extracted images\nconst allAttachmentsWithImages = [...filteredAttachments, ...imageUrls];\n\n// No need to embed metadata anymore - Loop node will preserve it\nconst attachmentsWithMetadata = allAttachmentsWithImages;\n\n// Return item with filtered attachments (each containing email metadata)\nreturn [{\n  json: {\n    ...item.json,\n    email: {\n      ...email,\n      attachments: attachmentsWithMetadata,\n      group: group\n    }\n  },\n  binary: item.binary || {}\n}];\n"
       },
-      "id": "dd488718-a091-992e-4529-ba8397f51176",
-      "name": "📎 Split Attachments",
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
+      "id": "d33f59b4-0f75-b775-4148-8a6d928c0b96",
+      "name": "🔍 Filter Attachments per Group",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         15660,
         5880
@@ -128,8 +130,21 @@
     },
     {
       "parameters": {
+        "jsCode": "// Loop over attachments and create one item per attachment\n// This replaces the Split Out node - simpler and more reliable\nconst item = $input.item;\nconst email = item.json.email || {};\nconst attachments = email.attachments || [];\n\n// Create one item per attachment with email metadata preserved\nconst items = attachments.map(attachment => ({\n  json: {\n    email: {\n      subject: email.subject,\n      html: email.html,\n      recipients: email.recipients,\n      group: email.group,\n      templateId: email.templateId,\n      templateName: email.templateName\n    },\n    url: attachment.url,\n    filename: attachment.filename,\n    contentType: attachment.contentType,\n    _isImage: attachment._isImage || false\n  },\n  binary: {}\n}));\n\nreturn items;\n"
+      },
+      "id": "516fc70e-d8b2-1794-4694-a2dd995e378c",
+      "name": "🔄 Loop Attachments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        15960,
+        5880
+      ]
+    },
+    {
+      "parameters": {
         "method": "GET",
-        "url": "={{ $json.email.attachments.url }}",
+        "url": "={{ $json.url }}",
         "options": {
           "response": {
             "response": {
@@ -144,80 +159,45 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        15960,
-        5980
+        16560,
+        5880
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Transform downloaded attachment to n8n emailSend format\n// n8n emailSend expects: { fileName: string, content: string (base64) }\nconst attachment = $input.item.json.email.attachments;\nconst fileData = $input.item.binary;\n\n// Get the binary data key (usually 'data')\nconst binaryKey = Object.keys(fileData)[0];\nconst file = fileData[binaryKey];\n\n// Convert binary to base64\nconst base64Content = file.data;\n\nreturn [{\n  json: {\n    fileName: attachment.filename || attachment.name || 'attachment',\n    content: base64Content,\n    contentType: attachment.contentType || attachment.type || 'application/octet-stream',\n    originalUrl: attachment.url\n  }\n}];\n"
+        "jsCode": "// Merge all attachment items into one item\n// Combines all binary data from multiple items into a single item\n// Binary data will be named: data, data_1, data_2, etc. (n8n default behavior)\n// Also replaces image URLs in HTML with CID references\n// All items have the same email metadata, so we use the first item's metadata\n\nconst items = $input.all();\n\nif (items.length === 0) {\n  return [];\n}\n\n// Use first item's email metadata (all items have the same metadata)\nconst firstItem = items[0];\nconst emailMetadata = firstItem.json.email || {};\nlet html = emailMetadata.html || '';\n\n// Collect all binary data from all items and build filename mapping\n// n8n automatically names them: data, data_1, data_2, etc. when merged\nconst combinedBinary = {};\nconst filenames = new Set(); // Track all filenames for CID replacement\n\nitems.forEach((item, index) => {\n  if (item.binary && item.binary.data) {\n    const binaryKey = index === 0 ? 'data' : `data_${index}`;\n    combinedBinary[binaryKey] = item.binary.data;\n    \n    // Get filename from attachment data\n    const attachmentFilename = item.json.filename || \n                               (item.binary.data.fileName || \n                                item.binary.data.name || \n                                `attachment_${index}`);\n    \n    if (attachmentFilename) {\n      filenames.add(attachmentFilename);\n    }\n  }\n});\n\n// Replace image URLs in HTML with CID references\n// Strategy: Extract filename from URL and replace with cid:filename\n// This works even if URLs differ (localhost vs IP address)\nfilenames.forEach(filename => {\n  // Extract base filename (without path/query params)\n  const baseFilename = filename.split('/').pop().split('?')[0];\n  \n  // Match any URL containing this filename (works with localhost, IP, etc.)\n  // Pattern: <img src=\".../filename.jpg\" ...>\n  // Replace with: <img src=\"cid:filename.jpg\" ...>\n  const regex = new RegExp(\n    `(<img[^>]+src=[\"'])([^\"']*${baseFilename.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}[^\"']*)([\"'][^>]*>)`,\n    'gi'\n  );\n  \n  html = html.replace(regex, `$1cid:${baseFilename}$3`);\n});\n\n// Update email metadata with modified HTML\nconst updatedEmailMetadata = {\n  ...emailMetadata,\n  html: html\n};\n\n// Create attachments array for Email Send Node\n// n8n Email Send Node can use binaryProperty OR attachments array\n// We provide both: binary data AND attachments array with binary property names\nconst attachmentKeys = Object.keys(combinedBinary).filter(k => k.startsWith('data'));\nconst attachmentsArray = attachmentKeys.map(key => {\n  const binary = combinedBinary[key];\n  return {\n    binaryProperty: key,\n    fileName: binary.fileName || binary.name || `attachment_${key}`\n  };\n});\n\n// Return single item with all binaries, updated HTML, and attachments array\nreturn [{\n  json: {\n    email: updatedEmailMetadata,\n    // Provide attachments array for Email Send Node\n    _attachments: attachmentsArray\n  },\n  binary: combinedBinary\n}];\n"
       },
-      "id": "2009aaad-342c-950b-4ff8-ac015ab97aae",
-      "name": "🔄 Transform to Base64",
+      "id": "35cafa04-152e-da45-4e47-82339dc8f457",
+      "name": "🔗 Merge Attachments",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        15960,
-        6080
-      ]
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "processedAttachments",
-        "options": {}
-      },
-      "id": "85be2362-4fc7-5ab4-407f-bcb48c017e51",
-      "name": "📎 Aggregate Attachments",
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        15960,
-        6180
-      ]
-    },
-    {
-      "parameters": {
-        "mode": "mergeByPosition",
-        "options": {}
-      },
-      "id": "25f27203-4363-561d-4840-9a8da1ebb15a",
-      "name": "🔗 Merge Email & Attachments",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 2.1,
-      "position": [
-        16260,
-        5740
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Format attachments array for n8n emailSend node\n// emailSend expects: attachments: [{ fileName: string, content: string (base64) }]\nconst email = $input.item.json.email || $input.item.json[0]?.email;\nconst processedAttachments = $input.item.json.processedAttachments || [];\n\n// Ensure processedAttachments is an array\nconst attachmentsArray = Array.isArray(processedAttachments) \n  ? processedAttachments.map(att => ({\n      fileName: att.fileName || att.filename || 'attachment',\n      content: att.content\n    }))\n  : [];\n\nreturn [{\n  json: {\n    email: email,\n    attachments: attachmentsArray.length > 0 ? attachmentsArray : undefined\n  }\n}];\n"
-      },
-      "id": "8d2fc4c8-5f51-ea1e-46a3-b067bc4a26bd",
-      "name": "📎 Format Attachments Array",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        16300,
-        5820
+        16860,
+        5880
       ]
     },
     {
       "parameters": {
         "fromEmail": "noreply@eventpromoter.com",
-        "toEmail": "={{ $json.email.recipients || 'user@example.com' }}",
+        "toEmail": "={{ $json.email.recipients || $json.email.group || 'user@example.com' }}",
         "subject": "={{ $json.email.subject }}",
         "html": "={{ $json.email.html }}",
-        "attachments": "={{ $json.attachments }}"
+        "attachments": "",
+        "options": {
+          "attachments": {
+            "binaryProperty": {
+              "__expression": "={{ Object.keys($binary).filter(k => k.startsWith('data')).join(',') || 'data' }}"
+            }
+          }
+        }
       },
       "id": "759aad6f-89e1-c521-4728-9c3c10aa5117",
       "name": "📧 Send Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        16260,
-        5680
+        17160,
+        5880
       ]
     },
     {
@@ -235,340 +215,6 @@
         15360,
         5940
       ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.facebook !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "2b3674c3-9ad8-5f3b-4b8a-8844a4829632",
-      "name": "👥 Has Facebook Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        14160,
-        5280
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "post",
-        "message": "={{ $json.facebook.text }}",
-        "additionalFields": {}
-      },
-      "id": "bc4d5d06-12ab-45fd-4c7d-81ec0d2322db",
-      "name": "👥 Post to Facebook Page",
-      "type": "n8n-nodes-base.facebook",
-      "typeVersion": 2.1,
-      "position": [
-        14460,
-        5280
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.instagram !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "780e148d-85b9-639f-4d15-836c6d558325",
-      "name": "📸 Has Instagram Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        14160,
-        5080
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "createPost",
-        "additionalFields": {}
-      },
-      "id": "0088e969-08ca-7f61-457e-9b96c9b9ae29",
-      "name": "📸 Post to Instagram",
-      "type": "n8n-nodes-base.instagram",
-      "typeVersion": 1,
-      "position": [
-        14460,
-        5080
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.linkedin !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "fc65904b-3706-7780-4226-b3416b384a85",
-      "name": "💼 Has LinkedIn Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        14160,
-        5480
-      ]
-    },
-    {
-      "parameters": {
-        "additionalFields": {}
-      },
-      "id": "f9b38ec4-95d1-2ef2-4fa3-90e70845597a",
-      "name": "💼 Post to LinkedIn",
-      "type": "n8n-nodes-base.linkedIn",
-      "typeVersion": 1,
-      "position": [
-        14460,
-        5480
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.reddit !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "a4723b69-5eea-653b-4de3-834ea019da1d",
-      "name": "🔴 Has Reddit Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        14160,
-        6080
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "post",
-        "subreddit": "={{ $json.reddit.subreddit }}",
-        "title": "={{ $json.reddit.title }}",
-        "text": "={{ $json.reddit.text }}",
-        "additionalFields": {}
-      },
-      "id": "ebab7789-9a78-84d0-4746-823b1570e99c",
-      "name": "🔴 Post to Reddit",
-      "type": "n8n-nodes-base.reddit",
-      "typeVersion": 1,
-      "position": [
-        14460,
-        6080
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.twitter !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "9b235081-7c85-c87b-4929-becf7057566d",
-      "name": "🐦 Has Twitter Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        14160,
-        4880
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "tweet",
-        "text": "={{ $json.twitter.text }}",
-        "additionalFields": {}
-      },
-      "id": "2c3fe310-333f-277b-4f32-ab8676d78d8b",
-      "name": "🐦 Post to Twitter/X",
-      "type": "n8n-nodes-base.twitter",
-      "typeVersion": 2,
-      "position": [
-        14460,
-        4880
-      ]
-    },
-    {
-      "parameters": {
-        "content": "# 🚀 Multi-Platform Social Media & Email Publisher\n\n**EN:** This workflow publishes DJ events (or any events) to multiple social media platforms and sends emails simultaneously.\n\n**DE:** Dieser Workflow veröffentlicht DJ-Events (oder beliebige Events) auf mehreren Social-Media-Plattformen und sendet gleichzeitig E-Mails.\n\n## 📋 Supported Platforms / Unterstützte Plattformen\n\n- 🐦 **Twitter/X** - Text + Images\n- 📷 **Instagram** - Images + Captions\n- 👤 **Facebook** - Posts + Images\n- 💼 **LinkedIn** - Professional Posts\n- 🔴 **Reddit** - Subreddit Posts with Flairs\n- 📧 **Email** - HTML + Plain Text\n\n## ⚙️ How to Use / Verwendung\n\n1. **Configure Credentials** - See panels below for each platform\n2. **Send POST request** to webhook with event data\n3. **Enable/Disable platforms** via `publishTo` object\n\n## 📝 Input Format\n\nSee \"📥 Input Format\" panel below for complete example.\n\n---\n\n*(Doppelklick zum Bearbeiten | [n8n Sticky Notes Guide](https://docs.n8n.io/workflows/sticky-notes/))*\n",
-        "height": 900,
-        "width": 800,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        14240,
-        3820
-      ],
-      "id": "overview",
-      "name": "📋 Overview"
-    },
-    {
-      "parameters": {
-        "content": "# 📥 Input Format / Eingabeformat\n\n## Required Fields / Pflichtfelder\n\n```json\n{\n  \"eventTitle\": \"DJ Night @ Club XYZ\",\n  \"eventDate\": \"2025-05-15\",\n  \"venue\": \"Club XYZ\",\n  \"city\": \"Berlin\"\n}\n```\n\n## Complete Example / Vollständiges Beispiel\n\n```json\n{\n  \"eventTitle\": \"Techno Night @ Berghain\",\n  \"eventDate\": \"2025-05-15\",\n  \"eventTime\": \"23:00\",\n  \"venue\": \"Berghain\",\n  \"city\": \"Berlin\",\n  \"description\": \"Join us for an unforgettable night!\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"ticketUrl\": \"https://tickets.example.com\",\n  \"publishTo\": {\n    \"twitter\": true,\n    \"instagram\": true,\n    \"facebook\": true,\n    \"linkedin\": false,\n    \"reddit\": true,\n    \"email\": true\n  },\n  \"emailRecipients\": [\"fan@example.com\"],\n  \"redditSubreddit\": \"DJs\",\n  \"redditFlair\": \"Event\",\n  \"redditNsfw\": false,\n  \"redditSpoiler\": false\n}\n```\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 900,
-        "width": 600,
-        "color": 1
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        12920,
-        3820
-      ],
-      "id": "input-format",
-      "name": "📥 Input Format"
-    },
-    {
-      "parameters": {
-        "content": "# 🔐 Credentials Setup / Credentials einrichten\n\n## ⚠️ WICHTIG: Separate Credentials!\n\n**Jede Plattform benötigt EIGENE Credentials!**\n\n## Checklist / Checkliste\n\n- [ ] **Twitter/X**: `TWITTER_CREDENTIALS_ID`\n- [ ] **Instagram**: `INSTAGRAM_CREDENTIALS_ID`\n- [ ] **Facebook**: `FACEBOOK_CREDENTIALS_ID`\n- [ ] **LinkedIn**: `LINKEDIN_CREDENTIALS_ID`\n- [ ] **Reddit**: `REDDIT_CREDENTIALS_ID`\n- [ ] **Email**: `SMTP_CREDENTIALS_ID`\n\n## 📚 Detailed Instructions\n\nSee individual credential panels below for each platform.\n\nSiehe einzelne Credential-Panels unten für jede Plattform.\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 900,
-        "width": 600,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        14240,
-        3820
-      ],
-      "id": "credentials-overview",
-      "name": "🔐 Credentials Overview"
-    },
-    {
-      "parameters": {
-        "content": "# 🐦 Twitter/X Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://developer.twitter.com/**\n2. Create App → **API Keys & Tokens**\n3. You need:\n   - **API Key** (Consumer Key)\n   - **API Secret** (Consumer Secret)\n   - **Access Token**\n   - **Access Token Secret**\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Twitter OAuth1 API**\n3. Enter all 4 values\n4. Assign to node: **🐦 Post to Twitter/X**\n\n---\n\n**Credential ID:** `TWITTER_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 690,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17140,
-        4220
-      ],
-      "id": "twitter-credentials",
-      "name": "🐦 Twitter Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 📷 Instagram Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n⚠️ **Requires Facebook Business Account**\n\n1. Go to: **https://developers.facebook.com/**\n2. Create **Meta App** (Type: **Business**)\n3. Add **Instagram Graph API** product\n4. You need:\n   - **App ID**\n   - **App Secret**\n   - **Access Token** (with permissions)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Instagram OAuth2 API**\n3. Enter credentials\n4. Assign to node: **📷 Post to Instagram**\n\n---\n\n**Credential ID:** `INSTAGRAM_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 690,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17700,
-        4220
-      ],
-      "id": "instagram-credentials",
-      "name": "📷 Instagram Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 👤 Facebook Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://developers.facebook.com/**\n2. Create **Meta App** (Type: **Business**)\n3. Add **Facebook Login** product\n4. You need:\n   - **App ID**\n   - **App Secret**\n   - **Page Access Token** (with `pages_manage_posts`)\n   - **Page ID** (set as env var `FACEBOOK_PAGE_ID`)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Facebook OAuth2 API**\n3. Enter credentials\n4. Set env var: `FACEBOOK_PAGE_ID=your_page_id`\n5. Assign to node: **👤 Post to Facebook Page**\n\n---\n\n**Credential ID:** `FACEBOOK_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 680,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        18260,
-        4220
-      ],
-      "id": "facebook-credentials",
-      "name": "👤 Facebook Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 💼 LinkedIn Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://www.linkedin.com/developers/apps**\n2. Create new app\n3. You need:\n   - **Client ID**\n   - **Client Secret**\n4. Configure **OAuth Redirect URL**:\n   `https://your-n8n-instance.com/rest/oauth2-credential/callback`\n5. Request permissions: `w_member_social`, `w_organization_social`\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **LinkedIn OAuth2 API**\n3. Enter Client ID and Secret\n4. Complete OAuth flow\n5. Assign to node: **💼 Post to LinkedIn**\n\n---\n\n**Credential ID:** `LINKEDIN_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 700,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        16580,
-        4220
-      ],
-      "id": "linkedin-credentials",
-      "name": "💼 LinkedIn Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 🔴 Reddit Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://www.reddit.com/prefs/apps**\n2. Click **\"create app\"**\n3. Fill in:\n   - **Name**: Your app name\n   - **App type**: **\"script\"**\n   - **Redirect URI**: `http://localhost:8080`\n4. Note:\n   - **Client ID** (under app name)\n   - **Client Secret** (only shown once!)\n5. Get OAuth Token:\n   - Use: https://not-an-aardvark.github.io/reddit-oauth-helper/\n   - Token format: `Bearer YOUR_ACCESS_TOKEN`\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **HTTP Header Auth**\n3. Configure:\n   - **Name**: `Authorization`\n   - **Value**: `Bearer YOUR_ACCESS_TOKEN`\n4. Assign to node: **🔴 Post to Reddit**\n\n---\n\n**Credential ID:** `REDDIT_CREDENTIALS_ID`\n\n**Reddit Fields:**\n- `redditSubreddit`: Required (e.g., \"DJs\")\n- `redditFlair`: Optional\n- `redditNsfw`: true/false\n- `redditSpoiler`: true/false\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 960,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        18820,
-        4220
-      ],
-      "id": "reddit-credentials",
-      "name": "🔴 Reddit Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 📧 Email (SMTP) Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n### Gmail:\n1. Enable **2-Factor Authentication**\n2. Go to: **https://myaccount.google.com/apppasswords**\n3. Generate **App Password** for \"Mail\"\n4. Use this password (not your regular password)\n\n### SMTP Settings:\n- **Host**: `smtp.gmail.com`\n- **Port**: `587` (TLS) or `465` (SSL)\n- **User**: your-email@gmail.com\n- **Password**: App Password (for Gmail)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **SMTP**\n3. Enter SMTP settings\n4. Optional: Set `EMAIL_FROM` env var\n5. Assign to node: **📧 Send Email**\n\n---\n\n**Credential ID:** `SMTP_CREDENTIALS_ID`\n\n**Other Providers:**\n- Outlook: `smtp.office365.com`\n- Custom: Use your provider's SMTP settings\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 870,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17140,
-        4960
-      ],
-      "id": "email-credentials",
-      "name": "📧 Email Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 📢 Discord & Telegram Notifications\n\n## Discord Webhook Setup\n\n1. **Go to your Discord server**\n2. **Right-click on a channel** → **Edit Channel** → **Integrations** → **Webhooks**\n3. **Create new Webhook** with a name (e.g., \"n8n-workflow\")\n4. **Copy the Webhook URL**\n\n## In n8n Environment Variables:\n```bash\nDISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN\n```\n\n## Telegram Bot Setup\n\n1. **Message @BotFather** on Telegram\n2. **Send:** `/newbot`\n3. **Follow instructions** to create your bot\n4. **Get your Bot Token** from BotFather\n\n## In n8n Environment Variables:\n```bash\nTELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\nTELEGRAM_CHAT_ID=123456789\n```\n\n### How to get Chat ID:\n1. **Message your bot** with any text\n2. **Visit:** `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`\n3. **Find your chat ID** in the response\n\n## Features:\n- ✅ **Rich Discord embeds** with colors and formatting\n- ✅ **HTML Telegram messages** with markup\n- ✅ **Success/Failure indicators** with colors\n- ✅ **Performance metrics** included\n- ✅ **Automatic fallbacks** to console logging\n\n## Example Notification:\n\n**Discord:** Rich embed with event details, success rates, and timing\n**Telegram:** Formatted message with HTML markup and statistics\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 1300,
-        "width": 700,
-        "color": 6
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17700,
-        4960
-      ],
-      "id": "discord-telegram-setup",
-      "name": "📢 Discord & Telegram Setup"
     }
   ],
   "connections": {
@@ -576,124 +222,7 @@
       "main": [
         [
           {
-            "node": "🐦 Has Twitter Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "📸 Has Instagram Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "👥 Has Facebook Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "💼 Has LinkedIn Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "📧 Has Email Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "🔴 Has Reddit Content?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🐦 Has Twitter Content?": {
-      "main": [
-        [
-          {
-            "node": "🐦 Post to Twitter/X",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "🐦 Post to Twitter/X": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📸 Has Instagram Content?": {
-      "main": [
-        [
-          {
-            "node": "📸 Post to Instagram",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "📸 Post to Instagram": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "👥 Has Facebook Content?": {
-      "main": [
-        [
-          {
-            "node": "👥 Post to Facebook Page",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "👥 Post to Facebook Page": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "💼 Has LinkedIn Content?": {
-      "main": [
-        [
-          {
-            "node": "💼 Post to LinkedIn",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "💼 Post to LinkedIn": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
@@ -708,8 +237,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     },
     "📧 Prepare Email Data": {
@@ -745,14 +273,25 @@
       "main": [
         [
           {
-            "node": "📎 Split Attachments",
+            "node": "🔍 Filter Attachments per Group",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "📎 Split Attachments": {
+    "🔍 Filter Attachments per Group": {
+      "main": [
+        [
+          {
+            "node": "🔄 Loop Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔄 Loop Attachments": {
       "main": [
         [
           {
@@ -767,47 +306,14 @@
       "main": [
         [
           {
-            "node": "🔄 Transform to Base64",
+            "node": "🔗 Merge Attachments",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "🔄 Transform to Base64": {
-      "main": [
-        [
-          {
-            "node": "📎 Aggregate Attachments",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📎 Aggregate Attachments": {
-      "main": [
-        [
-          {
-            "node": "🔗 Merge Email & Attachments",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🔗 Merge Email & Attachments": {
-      "main": [
-        [
-          {
-            "node": "📎 Format Attachments Array",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📎 Format Attachments Array": {
+    "🔗 Merge Attachments": {
       "main": [
         [
           {
@@ -830,29 +336,6 @@
       ]
     },
     "📧 Send Email (No Attachments)": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🔴 Has Reddit Content?": {
-      "main": [
-        [
-          {
-            "node": "🔴 Post to Reddit",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "🔴 Post to Reddit": {
       "main": [
         [
           {
