@@ -193,6 +193,12 @@ export interface HistoryEntry {
   eventData?: EventData
   files?: UploadedFile[] // Files associated with this event
   stats?: Record<string, any>
+  publishResults?: Record<string, { // Platform-specific publish results
+    postId?: string
+    url?: string
+    publishedAt?: string
+    method?: 'n8n' | 'api' | 'playwright'
+  }>
 }
 
 export interface History {

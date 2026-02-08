@@ -13,6 +13,7 @@ import templateRoutes from './templates.js'
 import translationRoutes from './translations.js'
 import hashtagRoutes from './hashtags.js'
 import helperRoutes from './helpers.js'
+import telemetryRoutes from './telemetry.js'
 
 const router = Router()
 
@@ -29,6 +30,7 @@ router.use('/templates', templateRoutes)
 router.use('/translations', translationRoutes)
 router.use('/hashtags', hashtagRoutes)
 router.use('/helpers', helperRoutes)
+router.use('/telemetry', telemetryRoutes)
 
 // Health check (could be moved to a health controller)
 router.get('/health', (req, res) => {

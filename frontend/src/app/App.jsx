@@ -6,6 +6,8 @@ import '../i18n' // Initialize i18n
 import '../shared/utils/axiosConfig' // Initialize axios interceptors (language headers)
 import HomePage from '../pages/HomePage'
 import TemplatePage from '../pages/templates'
+import HistoryPage from '../features/history/components/HistoryPage'
+import EventDetailPage from '../features/history/components/EventDetailPage'
 import useStore from '../store'
 import { getApiUrl } from '../shared/utils/api'
 
@@ -52,6 +54,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/templates" element={<TemplatePage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/history/:eventId" element={<EventDetailPage />} />
         </Routes>
       </Router>
     </ThemeProvider>

@@ -75,7 +75,8 @@
   },
   "navigation": {
     "home": "Start",
-    "templates": "Vorlagen"
+    "templates": "Vorlagen",
+    "history": "Verlauf"
   },
   "fileUpload": {
     "title": "Dateien hochladen",
@@ -328,5 +329,40 @@
     "selectedStandardAttachments": "Ausgewählte Standard-Anhänge:",
     "maxFilesReached": "Maximale Dateianzahl erreicht.",
     "noCompatibleFiles": "Keine kompatiblen Dateien hochgeladen."
+  },
+  "history": {
+    "title": "Event-Verlauf",
+    "events": "Events",
+    "search": "Events suchen...",
+    "status": "Status",
+    "platform": "Plattform",
+    "all": "Alle",
+    "published": "Veröffentlicht",
+    "draft": "Entwurf",
+    "archived": "Archiviert",
+    "refresh": "Aktualisieren",
+    "noEvents": "Keine Events gefunden",
+    "untitled": "Unbenanntes Event",
+    "viewStats": "Statistiken anzeigen",
+    "back": "Zurück zum Verlauf",
+    "refreshStats": "Statistiken aktualisieren",
+    "eventDetails": "Event-Details",
+    "files": "Dateien",
+    "noPlatforms": "Keine Plattformen für dieses Event veröffentlicht",
+    "statistics": "Statistiken",
+    "viewPost": "Beitrag ansehen",
+    "lastUpdated": "Zuletzt aktualisiert",
+    "noTelemetry": "Keine Telemetrie-Daten für diese Plattform verfügbar",
+    "telemetryUnavailable": "Telemetrie für diese Plattform nicht verfügbar",
+    "noMetrics": "Noch keine Metriken verfügbar",
+    "views": "Aufrufe",
+    "likes": "Likes",
+    "upvotes": "Upvotes",
+    "comments": "Kommentare",
+    "shares": "Shares",
+    "retweets": "Retweets",
+    "reactions": "Reaktionen",
+    "openRate": "Öffnungsrate",
+    "clickRate": "Klickrate"
   }
 }

@@ -1,10 +1,33 @@
 // Filter i18next locize.com spam messages
+const filterI18nextSpam = (args: any[]): boolean => {
+  return args.some(arg => 
+    typeof arg === 'string' && arg.includes('i18next is maintained')
+  );
+};
+
 const originalLog = console.log;
+const originalInfo = console.info;
+const originalWarn = console.warn;
+const originalError = console.error;
+
 console.log = (...args: any[]) => {
-  if (typeof args[0] === 'string' && args[0].includes('i18next is maintained')) {
-    return; // filtert den Banner aus
-  }
+  if (filterI18nextSpam(args)) return;
   originalLog(...args);
+};
+
+console.info = (...args: any[]) => {
+  if (filterI18nextSpam(args)) return;
+  originalInfo(...args);
+};
+
+console.warn = (...args: any[]) => {
+  if (filterI18nextSpam(args)) return;
+  originalWarn(...args);
+};
+
+console.error = (...args: any[]) => {
+  if (filterI18nextSpam(args)) return;
+  originalError(...args);
 };
 
 import i18next from 'i18next'
@@ -35,7 +58,8 @@ i18next
     },
     interpolation: {
       escapeValue: false
-    }
+    },
+    debug: false
   })
 
 export default i18next

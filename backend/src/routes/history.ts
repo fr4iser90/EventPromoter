@@ -14,6 +14,15 @@ router.post('/', HistoryController.addEvent)
 // GET /api/history/analytics - Get analytics
 router.get('/analytics', HistoryController.getAnalytics)
 
+// GET /api/history/:eventId - Get single event
+router.get('/:eventId', HistoryController.getEvent)
+
+// GET /api/history/:eventId/telemetry - Get telemetry for event
+router.get('/:eventId/telemetry', HistoryController.getTelemetry)
+
+// POST /api/history/:eventId/telemetry/refresh - Refresh telemetry
+router.post('/:eventId/telemetry/refresh', HistoryController.refreshTelemetry)
+
 // PATCH /api/history/:eventId - Update Event
 router.patch('/:eventId', HistoryController.updateEvent)
 

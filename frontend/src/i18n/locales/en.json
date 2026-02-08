@@ -75,7 +75,8 @@
   },
   "navigation": {
     "home": "Home",
-    "templates": "Templates"
+    "templates": "Templates",
+    "history": "History"
   },
   "fileUpload": {
     "title": "Upload Files",
@@ -329,5 +330,40 @@
     "selectedStandardAttachments": "Selected Standard Attachments:",
     "maxFilesReached": "Maximum number of files reached.",
     "noCompatibleFiles": "No compatible files uploaded."
+  },
+  "history": {
+    "title": "Event History",
+    "events": "events",
+    "search": "Search events...",
+    "status": "Status",
+    "platform": "Platform",
+    "all": "All",
+    "published": "Published",
+    "draft": "Draft",
+    "archived": "Archived",
+    "refresh": "Refresh",
+    "noEvents": "No events found",
+    "untitled": "Untitled Event",
+    "viewStats": "View statistics",
+    "back": "Back to History",
+    "refreshStats": "Refresh Stats",
+    "eventDetails": "Event Details",
+    "files": "Files",
+    "noPlatforms": "No platforms published for this event",
+    "statistics": "Statistics",
+    "viewPost": "View Post",
+    "lastUpdated": "Last updated",
+    "noTelemetry": "No telemetry data available for this platform",
+    "telemetryUnavailable": "Telemetry not available for this platform",
+    "noMetrics": "No metrics available yet",
+    "views": "Views",
+    "likes": "Likes",
+    "upvotes": "Upvotes",
+    "comments": "Comments",
+    "shares": "Shares",
+    "retweets": "Retweets",
+    "reactions": "Reactions",
+    "openRate": "Open Rate",
+    "clickRate": "Click Rate"
   }
 }

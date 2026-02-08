@@ -103,6 +103,9 @@ export class HistoryService {
     const eventData = await EventService.getEventData(eventId)
     const displayTitle = eventData?.title || parsedData.title || `Event ${eventId}`
     
+    // Load publish results from latest session
+    const publishResults = await this.getPublishResults(eventId)
+    
     return {
       id: eventId,
       title: displayTitle,
@@ -122,7 +125,8 @@ export class HistoryService {
         platformCount: platforms.length,
         createdAt: eventStats.birthtime.toISOString(),
         modifiedAt: eventStats.mtime.toISOString()
-      }
+      },
+      publishResults // Add publish results (postId, url per platform)
     }
   }
 
@@ -139,6 +143,63 @@ export class HistoryService {
       'md': 'text/markdown'
     }
     return mimeTypes[ext || ''] || 'application/octet-stream'
+  }
+
+  /**
+   * Get publish results from latest session
+   */
+  private static async getPublishResults(eventId: string): Promise<Record<string, { postId?: string; url?: string; publishedAt?: string }>> {
+    try {
+      const { PublishTrackingService } = await import('./publishTrackingService.js')
+      const latestSession = PublishTrackingService.getLatestSessionForEvent(eventId)
+      
+      if (!latestSession) {
+        // Try to load from file
+        const eventDir = path.join(process.cwd(), 'events', eventId)
+        if (fs.existsSync(eventDir)) {
+          const sessionFiles = fs.readdirSync(eventDir)
+            .filter(f => f.startsWith('publish-session-') && f.endsWith('.json'))
+            .sort()
+            .reverse() // Most recent first
+          
+          if (sessionFiles.length > 0) {
+            const latestFile = sessionFiles[0]
+            const sessionData = JSON.parse(fs.readFileSync(path.join(eventDir, latestFile), 'utf8'))
+            
+            const publishResults: Record<string, { postId?: string; url?: string; publishedAt?: string }> = {}
+            for (const result of sessionData.results || []) {
+              if (result.success && result.data) {
+                publishResults[result.platform] = {
+                  postId: result.data.postId,
+                  url: result.data.url,
+                  publishedAt: result.data.submittedAt || result.data.sentAt
+                }
+              }
+            }
+            return publishResults
+          }
+        }
+        
+        return {}
+      }
+      
+      // Extract postId and url from latest session
+      const publishResults: Record<string, { postId?: string; url?: string; publishedAt?: string }> = {}
+      for (const result of latestSession.results) {
+        if (result.success && result.data) {
+          publishResults[result.platform] = {
+            postId: result.data.postId,
+            url: result.data.url,
+            publishedAt: result.data.submittedAt || result.data.sentAt || latestSession.timestamp
+          }
+        }
+      }
+      
+      return publishResults
+    } catch (error) {
+      console.warn(`Failed to load publish results for ${eventId}:`, error)
+      return {}
+    }
   }
 
   static async saveHistory(history: History): Promise<boolean> {

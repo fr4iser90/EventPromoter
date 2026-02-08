@@ -38,6 +38,7 @@ const Header = ({
 
   const isHomePage = location.pathname === '/'
   const isTemplatesPage = location.pathname === '/templates'
+  const isHistoryPage = location.pathname.startsWith('/history')
 
   const handleSettingsClick = () => {
     if (onSettingsClick) {
@@ -95,6 +96,17 @@ const Header = ({
             sx={{ mr: 1 }}
           >
             📝 {t('navigation.templates')}
+          </Button>
+        )}
+        
+        {!isHistoryPage && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => navigate('/history')}
+            sx={{ mr: 1 }}
+          >
+            📊 {t('navigation.history')}
           </Button>
         )}
 
