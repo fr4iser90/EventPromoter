@@ -16,10 +16,10 @@ import {
 } from '@mui/material'
 import PublishIcon from '@mui/icons-material/Publish'
 import axios from 'axios'
-import useStore from '../../store'
-import { getApiUrl } from '../../shared/utils/api'
-import Results as PublishResults from '../publish/Results.jsx'
-import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
+import useStore from '../../../store'
+import { getApiUrl } from '../../../shared/utils/api'
+import { Results as PublishResults } from '../../publish'
+import { usePlatforms } from '../../platform/hooks/usePlatformSchema'
 
 function PublishParser() {
   const { t } = useTranslation()

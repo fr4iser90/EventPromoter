@@ -45,7 +45,7 @@ import useStore from '../../../store'
 import DateDisplay from '../../../shared/components/ui/DateDisplay'
 import DateInput from '../../../shared/components/ui/DateInput'
 import TimeInput from '../../../shared/components/ui/TimeInput'
-import HashtagBuilder from '../../../flows/parser/HashtagBuilder'
+import { ParserHashtagBuilder } from '../../parser'
 import axios from 'axios'
 import config from '../../../config'
 import { getApiUrl, getFileUrl } from '../../../shared/utils/api'
@@ -1234,7 +1234,7 @@ function Preview() {
       >
         <DialogTitle>{t('parser.hashtagBuilder')}</DialogTitle>
         <DialogContent>
-          <HashtagBuilder
+          <ParserHashtagBuilder
             eventData={editedData}
             onHashtagsChange={(newHashtags) => {
               setHashtags(newHashtags)

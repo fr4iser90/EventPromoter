@@ -1,6 +1,6 @@
 // TODO: Platform Data Management - email recipients / subreddits etc
 // Data comes from backend as always
-export default function PlatformsPage() {
+export default function PlatformSettingsPage() {
   return (
     <div>
       <h1>Platform Data Management</h1>
@@ -8,4 +8,3 @@ export default function PlatformsPage() {
     </div>
   )
 }
-

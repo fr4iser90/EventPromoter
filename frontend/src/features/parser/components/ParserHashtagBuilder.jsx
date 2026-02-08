@@ -33,10 +33,10 @@ import {
   AutoAwesome as AutoAwesomeIcon
 } from '@mui/icons-material'
 import axios from 'axios'
-import config from '../../config'
-import { getApiUrl } from '../../shared/utils/api'
+import config from '../../../config'
+import { getApiUrl } from '../../../shared/utils/api'
 
-function HashtagBuilder({ eventData, onHashtagsChange }) {
+function ParserHashtagBuilder({ eventData, onHashtagsChange }) {
   const [available, setAvailable] = useState([])
   const [groups, setGroups] = useState({})
   const [selected, setSelected] = useState([])
@@ -388,4 +388,4 @@ function HashtagBuilder({ eventData, onHashtagsChange }) {
   )
 }
 
-export default HashtagBuilder
+export default ParserHashtagBuilder

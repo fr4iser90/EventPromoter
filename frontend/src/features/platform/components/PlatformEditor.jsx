@@ -29,7 +29,7 @@ import FileSelectionBlock from './blocks/FileSelectionBlock'
 import { usePlatformSchema } from '../hooks/usePlatformSchema'
 import SchemaRenderer from '../../schema/components/Renderer'
 import CompositeRenderer from '../../schema/components/CompositeRenderer'
-import { Selector as TemplateSelector } from '../../templates'
+import { TemplateSelector } from '../../templates'
 import { useTemplates } from '../../templates/hooks/useTemplates'
 import useStore from '../../../store'
 import { 

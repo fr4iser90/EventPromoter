@@ -24,8 +24,8 @@ import {
   Schedule as TimeIcon
 } from '@mui/icons-material'
 import axios from 'axios'
-import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
-import { getApiUrl } from '../../shared/utils/api'
+import { usePlatforms } from '../../platform/hooks/usePlatformSchema'
+import { getApiUrl } from '../../../shared/utils/api'
 
 const PublishResults = ({ open, onClose, publishSessionId }) => {
   const [results, setResults] = useState(null)

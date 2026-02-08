@@ -19,8 +19,8 @@ import {
   AutoAwesome as TemplateIcon,
   Settings as SettingsIcon
 } from '@mui/icons-material'
-import Editor from './Editor'
-import Preview from './Preview'
+import PlatformEditor from './PlatformEditor'
+import PlatformPreview from './PlatformPreview'
 import BulkApplier from '../../templates/components/BulkApplier'
 import { usePlatforms } from '../hooks/usePlatformSchema'
 import { useTemplateCategories } from '../../templates/hooks/useTemplateCategories'
@@ -73,7 +73,7 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
     }
 
     return (
-      <Editor
+      <PlatformEditor
         platform={platformId}
         content={content}
         onChange={onChange}
@@ -89,7 +89,7 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
     const content = platformContent[platformId] || {}
 
     return (
-      <Preview
+      <PlatformPreview
         platform={platformId}
         content={content}
         isActive={true}

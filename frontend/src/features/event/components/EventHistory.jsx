@@ -12,7 +12,7 @@ import {
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
-import HistoryCard from './HistoryCard'
+import EventHistoryCard from './EventHistoryCard'
 import useStore, { WORKFLOW_STATES } from '../../../store'
 import { getApiUrl } from '../../../shared/utils/api'
 
@@ -158,7 +158,7 @@ function EventHistory() {
 
               <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
                 {filteredEvents.map(event => (
-                  <HistoryCard
+                  <EventHistoryCard
                     key={event.id}
                     event={event}
                     onLoadFiles={handleLoadEventFiles}

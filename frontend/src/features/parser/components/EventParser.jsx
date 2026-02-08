@@ -21,11 +21,10 @@ import SaveIcon from '@mui/icons-material/Save'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import useStore from '../../store'
-import { Editor as GenericPlatformEditor } from '../../features/platform'
-import { Preview as PlatformPreview } from '../../features/platform'
-import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
-import config from '../../config'
+import useStore from '../../../store'
+import { PlatformEditor as GenericPlatformEditor, PlatformPreview } from '../../platform'
+import { usePlatforms } from '../../platform/hooks/usePlatformSchema'
+import config from '../../../config'
 
 // Platform Preview Component - GENERIC
 function PlatformPreviewComponent({ platform, content, isActive }) {

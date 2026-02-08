@@ -9,7 +9,7 @@
 import React, { useMemo } from 'react'
 import { Box, Typography, CircularProgress } from '@mui/material'
 import { useTranslation } from 'react-i18next'
-import PlatformPreview from '../../../platform/components/Preview'
+import { PlatformPreview } from '../../../platform'
 import { blocksToSchemaFormat } from '../utils/schemaConverter'
 
 /**

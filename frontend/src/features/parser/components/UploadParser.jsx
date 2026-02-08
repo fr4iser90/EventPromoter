@@ -34,17 +34,16 @@ import {
   InputLabel,
   Select
 } from '@mui/material'
-import { usePlatforms } from '../../features/platform/hooks/usePlatformSchema'
-import { Editor as GenericPlatformEditor } from '../../features/platform'
-import { Preview as PlatformPreview } from '../../features/platform'
+import { usePlatforms } from '../../platform/hooks/usePlatformSchema'
+import { PlatformEditor as GenericPlatformEditor, PlatformPreview } from '../../platform'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import SaveIcon from '@mui/icons-material/Save'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
-import useStore from '../../store'
-import { getApiUrl } from '../../shared/utils/api'
-import { formatDateForDisplay } from '../../shared/utils/dateUtils'
+import useStore from '../../../store'
+import { getApiUrl } from '../../../shared/utils/api'
+import { formatDateForDisplay } from '../../../shared/utils/dateUtils'
 
 function UploadParser() {
   const { t, i18n } = useTranslation()

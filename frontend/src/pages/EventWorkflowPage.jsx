@@ -18,11 +18,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
 import { createTheme } from '@mui/material/styles'
-import { History as EventHistory } from '../features/event'
-import FileUpload from '../flows/upload/FileUpload'
-import { Container as ContentEditor } from '../features/platform'
-import { DataPreview as Preview } from '../features/event'
-import { Selector as PlatformSelector } from '../features/platform'
+import { EventHistory, EventDataPreview } from '../features/event'
+import { FileUpload } from '../features/upload'
+import { Container as ContentEditor, PlatformSelector } from '../features/platform'
 import SettingsModal from '../shared/components/ui/Dialog/Settings'
 import DuplicateDialog from '../shared/components/ui/Dialog/Duplicate'
 import Header from '../shared/components/Header'
@@ -43,7 +41,7 @@ const staticTheme = createTheme({
   },
 })
 
-function HomePage() {
+function EventWorkflowPage() {
   const { t, i18n } = useTranslation()
   const {
     uploadedFileRefs,
@@ -227,7 +225,7 @@ function HomePage() {
             </Box>
 
             <Box sx={{ mb: 4 }}>
-              <Preview files={safeUploadedFileRefs} />
+              <EventDataPreview files={safeUploadedFileRefs} />
             </Box>
 
             <Box sx={{ mb: 4 }}>
@@ -361,4 +359,4 @@ function HomePage() {
   )
 }
 
-export default HomePage
+export default EventWorkflowPage

@@ -1,11 +1,3 @@
-/**
- * Event Detail Page
- * 
- * Detailed view of an event with platform statistics
- * 
- * @module features/history/components/EventDetailPage
- */
-
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -19,20 +11,17 @@ import {
   Tabs,
   Tab,
   Grid,
-  Chip,
-  IconButton,
-  Tooltip
+  Chip
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
   Refresh as RefreshIcon,
   CalendarToday as CalendarIcon,
-  LocationOn as LocationIcon,
-  OpenInNew as OpenInNewIcon
+  LocationOn as LocationIcon
 } from '@mui/icons-material'
-import { getApiUrl } from '../../../shared/utils/api'
-import Header from '../../../shared/components/Header'
-import PlatformStatsCard from './PlatformStatsCard'
+import { getApiUrl } from '../shared/utils/api'
+import Header from '../shared/components/Header'
+import { PlatformStatsCard } from '../features/event'
 
 function EventDetailPage() {
   const { eventId } = useParams()
@@ -80,7 +69,6 @@ function EventDetailPage() {
       }
     } catch (err) {
       console.warn('Failed to load telemetry:', err)
-      // Don't set error - telemetry is optional
     }
   }
 
@@ -104,7 +92,7 @@ function EventDetailPage() {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <CircularProgress />
       </Box>
     )
@@ -112,12 +100,18 @@ function EventDetailPage() {
 
   if (error || !event) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error || 'Event not found'}</Alert>
-        <Button sx={{ mt: 2 }} onClick={() => navigate('/history')}>
-          {t('history.back', { defaultValue: 'Back to History' })}
-        </Button>
-      </Box>
+      <>
+        <Header 
+          title={t('history.untitled', { defaultValue: 'Untitled Event' })}
+          showSettings={false}
+        />
+        <Box sx={{ pt: 8, p: 3 }}>
+          <Alert severity="error">{error || 'Event not found'}</Alert>
+          <Button sx={{ mt: 2 }} onClick={() => navigate('/history')}>
+            {t('history.back', { defaultValue: 'Back to History' })}
+          </Button>
+        </Box>
+      </>
     )
   }
 
@@ -129,13 +123,12 @@ function EventDetailPage() {
         showSettings={false}
       />
       
-      <Box sx={{ pt: 8, p: 3 }}>
+      <Box sx={{ pt: 8, px: 3, pb: 3 }}>
         {/* Back Button */}
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/history')}
-            sx={{ mb: 2 }}
           >
             {t('history.back', { defaultValue: 'Back to History' })}
           </Button>
@@ -179,81 +172,81 @@ function EventDetailPage() {
           </Box>
         </Box>
 
-      {/* Platform Statistics Tabs */}
-      {event.platforms && event.platforms.length > 0 ? (
-        <Paper sx={{ mb: 3 }}>
-          <Tabs
-            value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
-          >
-            {event.platforms.map((platform, index) => (
-              <Tab
-                key={platform}
-                label={platform.charAt(0).toUpperCase() + platform.slice(1)}
-                id={`platform-tab-${index}`}
-                aria-controls={`platform-panel-${index}`}
-              />
-            ))}
-          </Tabs>
-          {event.platforms.map((platform, index) => (
-            <Box
-              key={platform}
-              role="tabpanel"
-              hidden={activeTab !== index}
-              id={`platform-panel-${index}`}
-              aria-labelledby={`platform-tab-${index}`}
-              sx={{ p: 3 }}
+        {/* Platform Statistics Tabs */}
+        {event.platforms && event.platforms.length > 0 ? (
+          <Paper sx={{ mb: 3 }}>
+            <Tabs
+              value={activeTab}
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
             >
-              <PlatformStatsCard
-                platform={platform}
-                telemetry={telemetry?.telemetry?.[platform]}
-                event={event}
-              />
-            </Box>
-          ))}
-        </Paper>
-      ) : (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography color="text.secondary">
-            {t('history.noPlatforms', { defaultValue: 'No platforms published for this event' })}
-          </Typography>
-        </Paper>
-      )}
-
-      {/* Event Details */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          {t('history.eventDetails', { defaultValue: 'Event Details' })}
-        </Typography>
-        <Grid container spacing={2}>
-          {event.eventData?.description && (
-            <Grid item xs={12}>
-              <Typography variant="body2" color="text.secondary">
-                {event.eventData.description}
-              </Typography>
-            </Grid>
-          )}
-          {event.files && event.files.length > 0 && (
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" gutterBottom>
-                {t('history.files', { defaultValue: 'Files' })} ({event.files.length})
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {event.files.map((file) => (
-                  <Chip
-                    key={file.id || file.name}
-                    label={file.name}
-                    size="small"
-                    variant="outlined"
-                  />
-                ))}
+              {event.platforms.map((platform, index) => (
+                <Tab
+                  key={platform}
+                  label={platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  id={`platform-tab-${index}`}
+                  aria-controls={`platform-panel-${index}`}
+                />
+              ))}
+            </Tabs>
+            {event.platforms.map((platform, index) => (
+              <Box
+                key={platform}
+                role="tabpanel"
+                hidden={activeTab !== index}
+                id={`platform-panel-${index}`}
+                aria-labelledby={`platform-tab-${index}`}
+                sx={{ p: 3 }}
+              >
+                <PlatformStatsCard
+                  platform={platform}
+                  telemetry={telemetry?.telemetry?.[platform]}
+                  event={event}
+                />
               </Box>
-            </Grid>
-          )}
-        </Grid>
-      </Paper>
+            ))}
+          </Paper>
+        ) : (
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography color="text.secondary">
+              {t('history.noPlatforms', { defaultValue: 'No platforms published for this event' })}
+            </Typography>
+          </Paper>
+        )}
+
+        {/* Event Details */}
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            {t('history.eventDetails', { defaultValue: 'Event Details' })}
+          </Typography>
+          <Grid container spacing={2}>
+            {event.eventData?.description && (
+              <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary">
+                  {event.eventData.description}
+                </Typography>
+              </Grid>
+            )}
+            {event.files && event.files.length > 0 && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  {t('history.files', { defaultValue: 'Files' })} ({event.files.length})
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {event.files.map((file) => (
+                    <Chip
+                      key={file.id || file.name}
+                      label={file.name}
+                      size="small"
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+              </Grid>
+            )}
+          </Grid>
+        </Paper>
       </Box>
     </>
   )

@@ -13,8 +13,7 @@ import {
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import { List as TemplateList } from '../features/templates'
-import { Preview as TemplatePreview } from '../features/templates'
-import { Editor as TemplateEditor } from '../features/templates'
+import { TemplatePreview, TemplateEditor } from '../features/templates'
 import Header from '../shared/components/Header'
 import useStore from '../store'
 import { usePlatforms } from '../features/platform/hooks/usePlatformSchema'
@@ -26,7 +25,7 @@ const RIGHT_PANEL_STATES = {
   EDIT: 'edit'
 }
 
-function TemplatePage() {
+function TemplateManagementPage() {
   const { t, i18n } = useTranslation()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -217,4 +216,4 @@ function TemplatePage() {
   )
 }
 
-export default TemplatePage
+export default TemplateManagementPage

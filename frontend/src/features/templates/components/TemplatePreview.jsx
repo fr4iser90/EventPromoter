@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useTemplateCategories } from '../hooks/useTemplateCategories'
 import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
-import PlatformPreview from '../../platform/components/Preview'
+import { PlatformPreview } from '../../platform'
 import { replaceTemplateVariables } from '../../../shared/utils/templateUtils'
 import { getUserLocale } from '../../../shared/utils/localeUtils'
 

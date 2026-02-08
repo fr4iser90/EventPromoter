@@ -23,8 +23,8 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
-import HelperIcon from '../../shared/components/ui/HelperIcon'
-import useStore, { WORKFLOW_STATES } from '../../store'
+import HelperIcon from '../../../shared/components/ui/HelperIcon'
+import useStore, { WORKFLOW_STATES } from '../../../store'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ACCEPTED_TYPES = {
