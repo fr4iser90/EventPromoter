@@ -19,6 +19,8 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import WarningIcon from '@mui/icons-material/Warning'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import ErrorIcon from '@mui/icons-material/Error'
 import useStore from '../../../store'
 import SettingsModal from './SettingsModal'
 import config from '../../../config'
@@ -237,41 +239,73 @@ function PlatformSelector({ disabled = false }) {
                       </Typography>
                     )}
 
-                    {/* Debugging badges for available publishing modes */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <Box sx={{ mt: 1, mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {(() => {
-                          const modes = platformModes[platform.id] || platform.availableModes || []
-                          const modeStatus = {
-                            n8n: { label: 'n8n', color: modes.includes('n8n') ? 'success' : 'default', 
-                                   tooltip: platform.id === 'email' ? 'Working, but needs CID image improvements' : 'Available' },
-                            api: { label: 'API', color: modes.includes('api') ? 'success' : 'default', 
-                                   tooltip: 'Available' },
-                            playwright: { label: 'Playwright', color: modes.includes('playwright') ? 'warning' : 'default',
-                                         tooltip: platform.id === 'email' ? 'Not yet implemented/tested' : modes.includes('playwright') ? 'Available' : 'Not available' }
+                    {/* Publishing mode status badges */}
+                    <Box sx={{ mt: 1, mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(() => {
+                        const modes = platformModes[platform.id] || platform.availableModes || []
+                        const modeStatuses = platform.publishingModeStatus || {}
+                        
+                        const getModeConfig = (modeKey) => {
+                          const statusInfo = modeStatuses[modeKey]
+                          const status = statusInfo?.status || 'not-implemented'
+                          const message = statusInfo?.message || ''
+                          const isAvailable = modes.includes(modeKey)
+                          
+                          const configs = {
+                            'working': { 
+                              color: 'success', 
+                              icon: <CheckCircleIcon sx={{ fontSize: 14 }} />,
+                              tooltip: message || 'Fully functional'
+                            },
+                            'partial': { 
+                              color: 'warning', 
+                              icon: <WarningIcon sx={{ fontSize: 14 }} />,
+                              tooltip: message || 'Works with limitations'
+                            },
+                            'not-tested': { 
+                              color: 'default', 
+                              icon: <HelpOutlineIcon sx={{ fontSize: 14 }} />,
+                              tooltip: message || 'Not yet tested'
+                            },
+                            'not-implemented': { 
+                              color: 'default', 
+                              icon: undefined,
+                              tooltip: message || 'Not implemented'
+                            },
+                            'broken': { 
+                              color: 'error', 
+                              icon: <ErrorIcon sx={{ fontSize: 14 }} />,
+                              tooltip: message || 'Not working'
+                            }
                           }
                           
-                          return Object.entries(modeStatus).map(([key, status]) => {
-                            const isAvailable = modes.includes(key)
-                            return (
-                              <Tooltip key={key} title={status.tooltip} arrow>
-                                <Chip
-                                  size="small"
-                                  label={status.label}
-                                  color={isAvailable ? status.color : 'default'}
-                                  icon={isAvailable ? <CheckCircleIcon sx={{ fontSize: 14 }} /> : undefined}
-                                  sx={{ 
-                                    fontSize: '0.65rem',
-                                    height: '20px',
-                                    opacity: isAvailable ? 1 : 0.5
-                                  }}
-                                />
-                              </Tooltip>
-                            )
-                          })
-                        })()}
-                      </Box>
-                    )}
+                          return {
+                            ...configs[status],
+                            isAvailable,
+                            label: modeKey.toUpperCase()
+                          }
+                        }
+                        
+                        return ['n8n', 'api', 'playwright'].map((modeKey) => {
+                          const config = getModeConfig(modeKey)
+                          return (
+                            <Tooltip key={modeKey} title={config.tooltip} arrow>
+                              <Chip
+                                size="small"
+                                label={config.label}
+                                color={config.color}
+                                icon={config.icon}
+                                sx={{ 
+                                  fontSize: '0.65rem',
+                                  height: '20px',
+                                  opacity: config.isAvailable ? 1 : 0.5
+                                }}
+                              />
+                            </Tooltip>
+                          )
+                        })
+                      })()}
+                    </Box>
 
                     {isSelected && (
                       <Typography variant="caption" color="text.secondary">

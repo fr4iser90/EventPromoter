@@ -29,8 +29,12 @@ export const FacebookPlatformModule: PlatformModule = {
     color: '#1877F2',
     description: 'Share events on Facebook with rich content',
     author: 'EventPromoter',
-    license: 'MIT',
-    dataSource: 'groups.json'
+    dataSource: 'groups.json',
+    publishingModeStatus: {
+      n8n: { status: 'not-tested', message: 'Not yet tested' },
+      api: { status: 'not-tested', message: 'Not yet tested' },
+      playwright: { status: 'not-tested', message: 'Not yet tested' }
+    }
   },
   schema: facebookSchema,
   capabilities: {

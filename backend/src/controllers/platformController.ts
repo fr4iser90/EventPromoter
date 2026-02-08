@@ -150,7 +150,8 @@ export class PlatformController {
           },
           templates: platform.templates ? Object.keys(platform.templates) : [],
           hasSchema: !!platform.schema,
-          availableModes // Add available publishing modes
+          availableModes, // Add available publishing modes
+          publishingModeStatus: platform.metadata.publishingModeStatus || {} // Add publishing mode status
         }
       }))
 
@@ -287,7 +288,8 @@ export class PlatformController {
           templates: platform.templates || {},
           config: platform.config,
           uiConfig: platform.uiConfig,
-          availableModes // Add available publishing modes
+          availableModes, // Add available publishing modes
+          publishingModeStatus: platform.metadata.publishingModeStatus || {} // Add publishing mode status
         }
       })
     } catch (error: any) {

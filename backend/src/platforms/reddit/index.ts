@@ -29,8 +29,12 @@ export const RedditPlatformModule: PlatformModule = {
     color: '#FF4500',
     description: 'Share events on Reddit with text posts and images',
     author: 'EventPromoter',
-    license: 'MIT',
-    dataSource: 'subreddits.json'
+    dataSource: 'subreddits.json',
+    publishingModeStatus: {
+      n8n: { status: 'not-tested', message: 'Not yet tested' },
+      api: { status: 'not-tested', message: 'Not yet tested' },
+      playwright: { status: 'not-tested', message: 'Not yet tested' }
+    }
   },
   schema: redditSchema,
   capabilities: {

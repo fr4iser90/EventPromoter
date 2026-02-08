@@ -25,6 +25,7 @@ const Header = ({
   showSettings = true, 
   showPublishingMode = false, 
   configuredMode = null,
+  selectedPlatforms = [],
   onSettingsClick = null
 }) => {
   const { t } = useTranslation()
@@ -64,8 +65,22 @@ const Header = ({
           {title || t('app.title')}
         </Typography>
         
-        {/* Publishing Mode Badge (Development Only) */}
-        {showPublishingMode && process.env.NODE_ENV === 'development' && configuredMode && (
+        {/* Platform Badges */}
+        {selectedPlatforms.length > 0 && (
+          <Box sx={{ display: 'flex', gap: 0.5, mr: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+            {selectedPlatforms.map(platformId => (
+              <Chip
+                key={platformId}
+                label={platformId}
+                size="small"
+                sx={{ fontSize: '0.7rem', height: '24px' }}
+              />
+            ))}
+          </Box>
+        )}
+
+        {/* Publishing Mode Badge */}
+        {showPublishingMode && configuredMode && (
           <Tooltip title={`Configured publishing mode: ${configuredMode}`} arrow>
             <Chip
               label={configuredMode.toUpperCase()}

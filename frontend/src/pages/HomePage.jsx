@@ -153,6 +153,7 @@ function HomePage() {
         title={t('app.title')}
         showPublishingMode={true}
         configuredMode={configuredMode}
+        selectedPlatforms={selectedPlatforms}
         onSettingsClick={() => setSettingsOpen(true)}
       />
 

@@ -11,6 +11,33 @@ import { PlatformPlugin, PlatformParser, PlatformService, ContentValidator, Cont
 import { PlatformSchema } from '@/types/schema/index.js'
 
 /**
+ * Publishing mode status
+ */
+export type PublishingModeStatus = 'working' | 'partial' | 'not-tested' | 'not-implemented' | 'broken'
+
+/**
+ * Publishing mode status information
+ */
+export interface PublishingModeStatusInfo {
+  /** Status of the publishing mode */
+  status: PublishingModeStatus
+  /** Optional message describing the status */
+  message?: string
+}
+
+/**
+ * Publishing mode statuses for all modes
+ */
+export interface PublishingModeStatuses {
+  /** N8N publishing mode status */
+  n8n?: PublishingModeStatusInfo
+  /** API publishing mode status */
+  api?: PublishingModeStatusInfo
+  /** Playwright publishing mode status */
+  playwright?: PublishingModeStatusInfo
+}
+
+/**
  * Platform metadata information
  */
 export interface PlatformMetadata {
@@ -34,6 +61,8 @@ export interface PlatformMetadata {
   license?: string
   /** Data source filename (e.g., 'recipients.json', 'subreddits.json') - stored in platforms/{id}/data/ */
   dataSource?: string
+  /** Publishing mode status information */
+  publishingModeStatus?: PublishingModeStatuses
 }
 
 /**

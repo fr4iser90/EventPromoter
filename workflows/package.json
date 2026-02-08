@@ -17,7 +17,7 @@
     "javascript"
   ],
   "author": "fr4iser",
-  "license": "MIT",
+  "license": "GPL-2.0",
   "engines": {
     "node": ">=14.0.0"
   },

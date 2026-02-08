@@ -25,7 +25,7 @@
     "posting"
   ],
   "author": "Multi-Platform Publisher",
-  "license": "MIT",
+  "license": "GPL-2.0",
   "engines": {
     "node": ">=16.0.0"
   },

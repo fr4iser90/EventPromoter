@@ -29,8 +29,21 @@ export const EmailPlatformModule: PlatformModule = {
     color: '#EA4335',
     description: 'Send event announcements via email with rich HTML content',
     author: 'EventPromoter',
-    license: 'MIT',
-    dataSource: 'recipients.json'
+    dataSource: 'recipients.json',
+    publishingModeStatus: {
+      n8n: {
+        status: 'partial',
+        message: 'Working, but needs CID image improvements'
+      },
+      api: {
+        status: 'working',
+        message: 'Fully functional'
+      },
+      playwright: {
+        status: 'not-implemented',
+        message: 'Not yet implemented'
+      }
+    }
   },
   schema: emailSchema,
   capabilities: {

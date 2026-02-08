@@ -29,8 +29,12 @@ export const LinkedInPlatformModule: PlatformModule = {
     color: '#0A66C2',
     description: 'Share events on LinkedIn with professional content',
     author: 'EventPromoter',
-    license: 'MIT',
-    dataSource: 'connections.json'
+    dataSource: 'connections.json',
+    publishingModeStatus: {
+      n8n: { status: 'not-tested', message: 'Not yet tested' },
+      api: { status: 'not-tested', message: 'Not yet tested' },
+      playwright: { status: 'not-tested', message: 'Not yet tested' }
+    }
   },
   schema: linkedinSchema,
   capabilities: {

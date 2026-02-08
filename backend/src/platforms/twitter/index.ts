@@ -29,8 +29,12 @@ export const TwitterPlatformModule: PlatformModule = {
     color: '#1DA1F2',
     description: 'Share events on Twitter/X with character-limited posts',
     author: 'EventPromoter',
-    license: 'MIT',
-    dataSource: 'accounts.json'
+    dataSource: 'accounts.json',
+    publishingModeStatus: {
+      n8n: { status: 'not-tested', message: 'Not yet tested' },
+      api: { status: 'not-tested', message: 'Not yet tested' },
+      playwright: { status: 'not-tested', message: 'Not yet tested' }
+    }
   },
   schema: twitterSchema,
   capabilities: {
