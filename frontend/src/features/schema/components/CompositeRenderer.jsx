@@ -383,12 +383,12 @@ function CompositeRenderer({ block, value, onChange, platform }) {
                 {/* Only show label if it's not the same as block label */}
                 {field.label !== block.label && (
                   <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
-                    {field.label}
+                    {t(field.label)}
                   </Typography>
                 )}
                 {field.description && (
                   <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                    {field.description}
+                    {t(field.description)}
                   </Typography>
                 )}
 

@@ -426,11 +426,11 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                       <Card sx={{ mb: 2 }}>
                         <CardContent>
                           <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                            {targetsBlock.label || t('template.targets')}
+                            {t(targetsBlock.label) || t('template.targets')}
                           </Typography>
                           {targetsBlock.description && (
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                              {targetsBlock.description}
+                              {t(targetsBlock.description)}
                             </Typography>
                           )}
                           <CompositeRenderer
@@ -620,11 +620,11 @@ const TemplateSelector = ({ platform, onSelectTemplate, currentContent = '', glo
                   <Card sx={{ mb: 2 }}>
                     <CardContent>
                       <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        {targetsBlock.label || t('template.targets')}
+                        {t(targetsBlock.label) || t('template.targets')}
                       </Typography>
                       {targetsBlock.description && (
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                          {targetsBlock.description}
+                          {t(targetsBlock.description)}
                         </Typography>
                       )}
                       <CompositeRenderer

@@ -448,11 +448,11 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
 
     return (
       <FormControl key={block.id} fullWidth sx={{ mb: 2 }}>
-        <InputLabel>{block.label}</InputLabel>
+        <InputLabel>{t(block.label)}</InputLabel>
         <Select
           value={fieldValue || ''}
           onChange={(e) => onChange(block.id, e.target.value)}
-          label={block.label}
+          label={t(block.label)}
           renderValue={(selected) => {
             if (!selected) return 'No image selected'
             const selectedFile = availableImages.find(img => {
@@ -484,7 +484,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         </Select>
         {block.description && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            {block.description}
+            {t(block.description)}
           </Typography>
         )}
       </FormControl>
