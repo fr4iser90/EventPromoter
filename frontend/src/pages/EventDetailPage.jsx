@@ -105,11 +105,17 @@ function EventDetailPage() {
           title={t('history.untitled', { defaultValue: 'Untitled Event' })}
           showSettings={false}
         />
-        <Box sx={{ pt: 8, p: 3 }}>
-          <Alert severity="error">{error || 'Event not found'}</Alert>
-          <Button sx={{ mt: 2 }} onClick={() => navigate('/history')}>
-            {t('history.back', { defaultValue: 'Back to History' })}
-          </Button>
+        <Box sx={{
+          pt: 8, // Account for fixed header
+          minHeight: '100vh',
+          width: '100%'
+        }}>
+          <Box sx={{ px: 3, pb: 3 }}>
+            <Alert severity="error">{error || 'Event not found'}</Alert>
+            <Button sx={{ mt: 2 }} onClick={() => navigate('/history')}>
+              {t('history.back', { defaultValue: 'Back to History' })}
+            </Button>
+          </Box>
         </Box>
       </>
     )
@@ -123,9 +129,15 @@ function EventDetailPage() {
         showSettings={false}
       />
       
-      <Box sx={{ pt: 8, px: 3, pb: 3 }}>
-        {/* Back Button */}
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+      {/* Content Container */}
+      <Box sx={{
+        pt: 8, // Account for fixed header
+        minHeight: '100vh',
+        width: '100%'
+      }}>
+        <Box sx={{ px: 3, pb: 3 }}>
+          {/* Back Button */}
+          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/history')}
@@ -247,6 +259,7 @@ function EventDetailPage() {
             )}
           </Grid>
         </Paper>
+        </Box>
       </Box>
     </>
   )

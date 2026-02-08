@@ -464,20 +464,18 @@ export class PlatformController {
       // Get actual values from environment variables or stored config
       const envSettings = await ConfigService.getPlatformSettings(platformId)
       
-      // ✅ SECURITY: Mask all secrets before sending to frontend
-      const { maskSecrets } = await import('../utils/secretsManager.js')
-      const maskedSettings = maskSecrets(envSettings)
-      
+      // ✅ SECURITY: Do NOT send credential values to frontend (even masked)
+      // Only send a boolean indicator that credentials are configured
       const hasCredentials = Object.keys(envSettings).length > 0
 
       res.json({
         success: true,
         platform: platformId,
         settings: {
-          credentialsConfig, // ✅ New key
-          config: settingsConfig, // ✅ Renamed from panel
-          values: maskedSettings, // ✅ Only masked values sent to frontend
-          hasCredentials,
+          credentialsConfig, // ✅ Schema definition
+          config: settingsConfig, // ✅ Settings schema
+          values: {}, // ✅ SECURITY: No credential values sent to frontend
+          hasCredentials, // ✅ Only boolean indicator
           configured: hasCredentials
         }
       })

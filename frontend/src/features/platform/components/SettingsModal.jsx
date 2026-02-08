@@ -32,6 +32,7 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
   const [schema, setSchema] = useState(null)
   const [credentialsValues, setCredentialsValues] = useState({})
   const [settingsValues, setSettingsValues] = useState({})
+  const [hasCredentials, setHasCredentials] = useState(false) // Track if credentials are configured
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [validating, setValidating] = useState(false)
@@ -65,6 +66,7 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
         setDataLoaded(false)
         setCredentialsValues({})
         setSettingsValues({})
+        setHasCredentials(false)
         setError(null)
         setErrors({})
       }
@@ -114,7 +116,7 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
           credentials: enrichedCredentials
         })
 
-        // Load credentials values
+        // Load credentials status (no values sent for security)
         const credsResponse = await fetch(getApiUrl(`platforms/${platformId}/settings`))
         const initialValues = {}
         
@@ -129,18 +131,10 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
         
         if (credsResponse.ok) {
           const credsData = await credsResponse.json()
-          if (credsData.success && credsData.settings && credsData.settings.values) {
-            // Merge saved values with defaults
-            Object.keys(credsData.settings.values).forEach(key => {
-              const field = enrichedCredentials?.fields?.find(f => f.name === key)
-              const savedValue = credsData.settings.values[key]
-              // Convert number fields to numbers
-              if (field?.type === 'number' && savedValue !== undefined && savedValue !== null && savedValue !== '') {
-                initialValues[key] = Number(savedValue)
-              } else if (savedValue !== undefined && savedValue !== null && savedValue !== '') {
-                initialValues[key] = savedValue
-              }
-            })
+          if (credsData.success && credsData.settings) {
+            // ✅ SECURITY: No credential values are sent from backend
+            // Only check if credentials are configured
+            setHasCredentials(credsData.settings.hasCredentials || credsData.settings.configured || false)
           }
         }
         
@@ -327,8 +321,28 @@ function SettingsModal({ platformId, open, onClose, onSave }) {
               <Box>
                 {schema?.credentials ? (
                   <>
+                    {/* ✅ SECURITY: Show indicator if credentials are configured */}
+                    {hasCredentials && (
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        ✓ Credentials are configured. Enter new values to update specific fields.
+                      </Alert>
+                    )}
                     <SchemaRenderer
-                      fields={schema.credentials.fields}
+                      fields={schema.credentials.fields.map(field => {
+                        // ✅ SECURITY: Add placeholder for sensitive fields if credentials are configured
+                        const sensitiveKeywords = ['password', 'secret', 'token', 'key', 'apiKey', 'apiSecret', 'clientSecret', 'accessToken']
+                        const isSensitive = sensitiveKeywords.some(keyword => 
+                          field.name.toLowerCase().includes(keyword.toLowerCase())
+                        )
+                        
+                        if (isSensitive && hasCredentials && !field.placeholder) {
+                          return {
+                            ...field,
+                            placeholder: '•••••••• (configured)'
+                          }
+                        }
+                        return field
+                      })}
                       values={credentialsValues}
                       onChange={(f, v) => {
                         // For number fields, ensure we store the value properly

@@ -296,7 +296,7 @@ export function maskSecrets(settings: Record<string, any>, sensitiveFields?: str
 
 /**
  * Merge new settings with existing settings, preserving masked values
- * If a new value is masked (unchanged), keep the existing value
+ * If a new value is masked (unchanged), empty, null, or undefined, keep the existing value
  */
 export function mergeSettings(
   existing: Record<string, any>,
@@ -319,7 +319,7 @@ export function mergeSettings(
   ]
   
   const fieldsToCheck = sensitiveFields || defaultSensitiveFields
-  const merged = { ...existing, ...newSettings }
+  const merged = { ...existing }
   
   for (const [key, newValue] of Object.entries(newSettings)) {
     // Check if field is sensitive
@@ -334,9 +334,20 @@ export function mergeSettings(
       if (isMasked(newValue) && existingValue && !isMasked(existingValue)) {
         merged[key] = existingValue
       }
-      // If new value is empty string and existing has value, keep existing
-      else if (newValue === '' && existingValue) {
+      // If new value is empty string, null, or undefined and existing has value, keep existing
+      else if ((newValue === '' || newValue === null || newValue === undefined) && existingValue) {
         merged[key] = existingValue
+      }
+      // Otherwise, use new value (actually changed)
+      else if (newValue !== undefined && newValue !== null && newValue !== '') {
+        merged[key] = newValue
+      }
+    } else {
+      // For non-sensitive fields, use new value if provided, otherwise keep existing
+      if (newValue !== undefined && newValue !== null && newValue !== '') {
+        merged[key] = newValue
+      } else if (existing[key] !== undefined) {
+        merged[key] = existing[key]
       }
     }
   }
@@ -345,7 +356,8 @@ export function mergeSettings(
 }
 
 /**
- * Extract only changed values (non-masked) from settings
+ * Extract only changed values (non-masked, non-empty) from settings
+ * Empty, null, or undefined values are treated as "not changed" (partial update)
  */
 export function extractChangedValues(
   existing: Record<string, any>,
@@ -377,19 +389,24 @@ export function extractChangedValues(
     
     const existingValue = existing[key]
     
-    // For sensitive fields: only include if not masked (actually changed)
+    // For sensitive fields: only include if actually changed (not masked, not empty)
     if (isSensitive) {
-      if (!isMasked(newValue) && newValue !== existingValue) {
-        changed[key] = newValue
+      // Skip if masked (unchanged placeholder)
+      if (isMasked(newValue)) {
+        continue
       }
-      // If explicitly set to empty, include it
-      else if (newValue === '' && existingValue) {
+      // Skip if empty, null, or undefined (partial update - keep existing)
+      if (newValue === '' || newValue === null || newValue === undefined) {
+        continue
+      }
+      // Only include if actually different from existing
+      if (newValue !== existingValue) {
         changed[key] = newValue
       }
     }
-    // For non-sensitive fields: include if changed
+    // For non-sensitive fields: include if changed and not empty
     else {
-      if (newValue !== existingValue) {
+      if (newValue !== undefined && newValue !== null && newValue !== '' && newValue !== existingValue) {
         changed[key] = newValue
       }
     }
