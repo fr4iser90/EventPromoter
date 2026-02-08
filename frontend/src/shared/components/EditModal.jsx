@@ -29,6 +29,7 @@ const EditModal = ({
   const [schema, setSchema] = useState(null);
   const [formData, setFormData] = useState({});
   const [fieldOptions, setFieldOptions] = useState({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -177,6 +178,53 @@ const EditModal = ({
     }
   };
 
+  const handleDelete = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemId || !schema) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      // Find delete action to get the endpoint
+      const deleteAction = schema.actions?.find(action => action.type === 'delete');
+      if (!deleteAction || !deleteAction.endpoint) {
+        throw new Error('Delete endpoint not found in schema');
+      }
+
+      // Resolve endpoint with platformId and id
+      let deleteEndpoint = deleteAction.endpoint
+        .replace(':platformId', platformId)
+        .replace(':id', itemId);
+
+      const url = getApiUrl(deleteEndpoint);
+      const response = await fetch(url, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to delete: ${response.statusText}`);
+      }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error deleting item');
+      }
+
+      setDeleteDialogOpen(false);
+      onSaveSuccess && onSaveSuccess();
+      onClose();
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      setError(err.message);
+      setDeleteDialogOpen(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!open) return null;
 
   return (
@@ -211,18 +259,52 @@ const EditModal = ({
         )}
       </DialogContent>
       <DialogActions>
-        {schema && schema.actions && schema.actions.map((action) => (
-          <Button
-            key={action.id}
-            onClick={action.type === 'submit' ? handleSubmit : onClose}
-            color={action.ui?.color || 'primary'}
-            variant={action.ui?.variant || 'text'}
-            disabled={loading}
-          >
-            {action.label}
-          </Button>
-        ))}
+        {schema && schema.actions && schema.actions.map((action) => {
+          // Only show delete button if itemId exists (editing existing item, not creating new)
+          if (action.type === 'delete' && !itemId) {
+            return null;
+          }
+
+          let onClickHandler;
+          if (action.type === 'submit') {
+            onClickHandler = handleSubmit;
+          } else if (action.type === 'delete') {
+            onClickHandler = handleDelete;
+          } else {
+            onClickHandler = onClose;
+          }
+
+          return (
+            <Button
+              key={action.id}
+              onClick={onClickHandler}
+              color={action.ui?.color || 'primary'}
+              variant={action.ui?.variant || 'text'}
+              disabled={loading}
+            >
+              {action.label}
+            </Button>
+          );
+        })}
       </DialogActions>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Delete {schema?.title?.replace('Edit ', '') || 'Item'}</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this item? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={loading}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 };

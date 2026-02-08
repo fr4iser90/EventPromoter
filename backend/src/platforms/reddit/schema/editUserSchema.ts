@@ -93,6 +93,17 @@ const redditUserEditSchema: FormSchema = {
       },
     },
     {
+      id: 'delete',
+      type: 'delete',
+      label: 'Delete',
+      method: 'DELETE',
+      endpoint: 'platforms/:platformId/targets/:id',
+      ui: {
+        variant: 'contained',
+        color: 'error',
+      },
+    },
+    {
       id: 'cancel',
       type: 'button',
       label: 'Cancel',

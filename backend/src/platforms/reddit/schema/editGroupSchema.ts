@@ -55,6 +55,17 @@ const redditGroupEditSchema: FormSchema = {
       },
     },
     {
+      id: 'delete',
+      type: 'delete',
+      label: 'Delete',
+      method: 'DELETE',
+      endpoint: 'platforms/:platformId/target-groups/:id',
+      ui: {
+        variant: 'contained',
+        color: 'error',
+      },
+    },
+    {
       id: 'cancel',
       type: 'button',
       label: 'Cancel',
