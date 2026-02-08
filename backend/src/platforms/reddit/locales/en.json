@@ -17,6 +17,47 @@
   },
   "metadata": {
     "description": "Share events on Reddit with text posts and images"
+  },
+  "subreddits": {
+    "label": "Subreddits for this post",
+    "description": "Select the subreddits for this post",
+    "validation": {
+      "required": "At least one subreddit must be selected"
+    },
+    "mode": {
+      "label": "Selection Mode",
+      "description": "Choose how subreddits should be selected"
+    },
+    "groups": {
+      "label": "Subreddit Groups",
+      "description": "Select one or more subreddit groups"
+    },
+    "individual": {
+      "label": "Individual Subreddits",
+      "description": "Select individual subreddits"
+    },
+    "templateLocale": {
+      "label": "🌐 Template Language",
+      "description": "Language for the template (automatically resolved from targets, can be overridden)"
+    },
+    "defaultTemplate": {
+      "label": "Default Template",
+      "description": "Template used for all subreddits (if no group mapping exists)"
+    },
+    "templateMapping": {
+      "label": "Template Mapping",
+      "description": "Assign a specific template to each subreddit"
+    },
+    "selected": "Selected ({{count}}):",
+    "available": "Available ({{count}}):",
+    "addNew": "Add new selection...",
+    "noGroupsSelected": "No groups selected",
+    "errorAdding": "Error adding: {{error}}",
+    "summary": {
+      "all": "All Subreddits",
+      "groups": "{{count}} group(s) selected",
+      "individual": "{{count}} subreddit(s) selected"
+    }
   }
 }
 

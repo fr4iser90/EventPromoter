@@ -8,9 +8,17 @@
  */
 
 import { Router } from 'express'
+import { RedditController } from './controller.js'
 
 const router = Router()
 
-// No platform-specific routes needed - all handled by generic routes
+// Subreddit modes endpoint (for composite block)
+router.get('/subreddit-modes', RedditController.getSubredditModes)
+
+// Locales endpoint (for composite block)
+router.get('/locales', RedditController.getLocales)
+
+// Templates endpoint (for composite block)
+router.get('/templates', RedditController.getTemplates)
 
 export default router

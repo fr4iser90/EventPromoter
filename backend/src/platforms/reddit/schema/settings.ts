@@ -21,16 +21,16 @@ export const redditSettingsSchema: SettingsSchema = {
     {
       id: 'subreddits',
       label: 'Subreddits',
-      sections: ['subreddit-list', 'add-subreddit', 'edit-subreddit']
+      sections: ['subreddit-list']
     },
     {
       id: 'users',
       label: 'Users',
-      sections: ['user-list', 'add-user', 'edit-user']
+      sections: ['user-list']
     },
     {
       id: 'groups',
-      label: 'Gruppen',
+      label: 'Groups',
       sections: ['group-management']
     },
     {
@@ -42,14 +42,42 @@ export const redditSettingsSchema: SettingsSchema = {
   sections: [
     {
       id: 'subreddit-list',
-      title: 'Subreddits',
-      description: 'Verwaltung der Subreddits',
+      title: 'Management of Your Subreddits',
+      description: 'Management of Your Subreddits',
       fields: [
+        {
+          name: 'subredditSearch',
+          type: 'text',
+          label: 'Search subreddits...',
+          placeholder: 'Search subreddits...',
+          ui: {
+            width: 9,
+            order: 1,
+            isFilterFor: 'targets' // Link search to table
+          }
+        },
+        {
+          name: 'newSubredditButton',
+          type: 'button',
+          label: '+ New Subreddit',
+          action: {
+            id: 'new-subreddit-action',
+            type: 'open-edit-modal',
+            schemaId: 'editSubredditSchema',
+            endpoint: 'platforms/:platformId/targets',
+            method: 'POST',
+            onSuccess: 'reload'
+          },
+          ui: {
+            width: 3,
+            order: 2,
+          }
+        },
         {
           name: 'targets',
           type: 'target-list',
-          label: 'Subreddits',
-          description: 'Liste aller Subreddits mit Custom Fields',
+          label: 'Subreddit Name',
+          description: 'Overview of all subreddits with details.',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=subreddit',
@@ -58,116 +86,69 @@ export const redditSettingsSchema: SettingsSchema = {
           },
           ui: {
             width: 12,
-            order: 1
+            order: 3,
+            renderAsTable: true,
+            tableColumns: [
+              {
+                id: 'subreddit',
+                label: 'Subreddit Name',
+                clickable: true,
+                action: {
+                  id: 'subreddit-edit-action',
+                  type: 'open-edit-modal',
+                  schemaId: 'editSubredditSchema',
+                  dataEndpoint: 'platforms/:platformId/targets/:id',
+                  saveEndpoint: 'platforms/:platformId/targets/:id',
+                  method: 'PUT',
+                  onSuccess: 'reload'
+                }
+              },
+              { id: 'description', label: 'Description' },
+              { id: 'tags', label: 'Tags' },
+              { id: 'active', label: 'Active', type: 'boolean' }
+            ]
           }
         }
-      ]
-    },
-    {
-      id: 'add-subreddit',
-      title: 'Neues Subreddit hinzufügen',
-      description: 'Füge ein neues Subreddit mit optionalen Custom Fields hinzu',
-      fields: [
-        {
-          name: 'subreddit',
-          type: 'text',
-          label: 'Subreddit Name',
-          placeholder: 'z.B. electronicmusic',
-          required: true,
-          validation: [
-            { type: 'required', message: 'Subreddit-Name ist erforderlich' },
-            { 
-              type: 'pattern', 
-              value: '^[a-z0-9_]{3,21}$', 
-              message: 'Subreddit-Name muss 3-21 Zeichen lang sein und nur Buchstaben, Zahlen und Unterstriche enthalten' 
-            }
-          ],
-          action: {
-            endpoint: 'platforms/:platformId/targets',
-            method: 'POST',
-            trigger: 'submit',
-            onSuccess: 'reload',
-            reloadOptions: true
-          },
-          ui: {
-            width: 12,
-            order: 1
-          }
-        },
-        {
-          name: 'targetType',
-          type: 'text',
-          label: 'Target Type',
-          default: 'subreddit',
-          readOnly: true,
-          ui: {
-            hidden: true
-          }
-        },
-        {
-          name: 'description',
-          type: 'textarea',
-          label: 'Beschreibung',
-          placeholder: 'z.B. Community für elektronische Musik',
-          required: false,
-          validation: [
-            { type: 'maxLength', value: 500, message: 'Beschreibung darf maximal 500 Zeichen lang sein' }
-          ],
-          ui: {
-            width: 12,
-            order: 2
-          }
-        },
-        {
-          name: 'tags',
-          type: 'multiselect',
-          label: 'Tags',
-          required: false,
-          options: [
-            { label: 'Music', value: 'music' },
-            { label: 'Events', value: 'events' },
-            { label: 'Local', value: 'local' }
-          ],
-          ui: {
-            width: 12,
-            order: 3
-          }
-        }
-      ]
-    },
-    {
-      id: 'edit-subreddit',
-      title: 'Subreddit bearbeiten',
-      description: 'Bearbeite ein bestehendes Subreddit',
-      fields: [
-        {
-          name: 'selectedTarget',
-          type: 'select',
-          label: 'Subreddit auswählen',
-          required: true,
-          optionsSource: {
-            endpoint: 'platforms/:platformId/targets?type=subreddit',
-            method: 'GET',
-            responsePath: 'options'
-          },
-          ui: {
-            width: 12,
-            order: 1
-          }
-        }
-        // Note: Custom fields werden dynamisch basierend auf targetSchema geladen
       ]
     },
     {
       id: 'user-list',
-      title: 'Users',
-      description: 'Verwaltung der Reddit Users für Direct Messages',
+      title: 'Management of Your Reddit Users',
+      description: 'Management of Your Reddit Users',
       fields: [
         {
-          name: 'targets',
+          name: 'userSearch',
+          type: 'text',
+          label: 'Search users...',
+          placeholder: 'Search users...',
+          ui: {
+            width: 9,
+            order: 1,
+            isFilterFor: 'userTargets' // Link search to table
+          }
+        },
+        {
+          name: 'newUserButton',
+          type: 'button',
+          label: '+ New User',
+          action: {
+            id: 'new-user-action',
+            type: 'open-edit-modal',
+            schemaId: 'editUserSchema',
+            endpoint: 'platforms/:platformId/targets',
+            method: 'POST',
+            onSuccess: 'reload'
+          },
+          ui: {
+            width: 3,
+            order: 2,
+          }
+        },
+        {
+          name: 'userTargets',
           type: 'target-list',
-          label: 'Users',
-          description: 'Liste aller Reddit Users mit Custom Fields',
+          label: 'Reddit Username',
+          description: 'Overview of all Reddit users with details.',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=user',
@@ -176,163 +157,104 @@ export const redditSettingsSchema: SettingsSchema = {
           },
           ui: {
             width: 12,
-            order: 1
+            order: 3,
+            renderAsTable: true,
+            tableColumns: [
+              {
+                id: 'username',
+                label: 'Reddit Username',
+                clickable: true,
+                action: {
+                  id: 'user-edit-action',
+                  type: 'open-edit-modal',
+                  schemaId: 'editUserSchema',
+                  dataEndpoint: 'platforms/:platformId/targets/:id',
+                  saveEndpoint: 'platforms/:platformId/targets/:id',
+                  method: 'PUT',
+                  onSuccess: 'reload'
+                }
+              },
+              { id: 'displayName', label: 'Display Name' },
+              { id: 'notes', label: 'Notes' },
+              { id: 'active', label: 'Active', type: 'boolean' }
+            ]
           }
         }
-      ]
-    },
-    {
-      id: 'add-user',
-      title: 'Neuen User hinzufügen',
-      description: 'Füge einen neuen Reddit User für Direct Messages hinzu',
-      fields: [
-        {
-          name: 'username',
-          type: 'text',
-          label: 'Reddit Username',
-          placeholder: 'z.B. username123',
-          required: true,
-          validation: [
-            { type: 'required', message: 'Username ist erforderlich' },
-            { 
-              type: 'pattern', 
-              value: '^[a-zA-Z0-9_-]{3,20}$', 
-              message: 'Username muss 3-20 Zeichen lang sein und nur Buchstaben, Zahlen, Unterstriche und Bindestriche enthalten' 
-            }
-          ],
-          action: {
-            endpoint: 'platforms/:platformId/targets',
-            method: 'POST',
-            trigger: 'submit',
-            onSuccess: 'reload',
-            reloadOptions: true
-          },
-          ui: {
-            width: 12,
-            order: 1
-          }
-        },
-        {
-          name: 'targetType',
-          type: 'text',
-          label: 'Target Type',
-          default: 'user',
-          readOnly: true,
-          ui: {
-            hidden: true
-          }
-        },
-        {
-          name: 'displayName',
-          type: 'text',
-          label: 'Display Name',
-          placeholder: 'z.B. John Doe',
-          required: false,
-          ui: {
-            width: 12,
-            order: 2
-          }
-        },
-        {
-          name: 'notes',
-          type: 'textarea',
-          label: 'Notizen',
-          placeholder: 'z.B. Wichtiger Kontakt für Events',
-          required: false,
-          validation: [
-            { type: 'maxLength', value: 500, message: 'Notizen dürfen maximal 500 Zeichen lang sein' }
-          ],
-          ui: {
-            width: 12,
-            order: 3
-          }
-        },
-        {
-          name: 'active',
-          type: 'boolean',
-          label: 'Aktiv',
-          required: false,
-          default: true,
-          ui: {
-            width: 6,
-            order: 4
-          }
-        }
-      ]
-    },
-    {
-      id: 'edit-user',
-      title: 'User bearbeiten',
-      description: 'Bearbeite einen bestehenden Reddit User',
-      fields: [
-        {
-          name: 'selectedTarget',
-          type: 'select',
-          label: 'User auswählen',
-          required: true,
-          optionsSource: {
-            endpoint: 'platforms/:platformId/targets?type=user',
-            method: 'GET',
-            responsePath: 'options'
-          },
-          ui: {
-            width: 12,
-            order: 1
-          }
-        }
-        // Note: Custom fields werden dynamisch basierend auf targetSchema geladen
       ]
     },
     {
       id: 'group-management',
-      title: 'Subreddit-Gruppen',
-      description: 'Verwaltung von Subreddit-Gruppen mit Target-IDs',
+      title: 'Management of Your Reddit Groups',
+      description: 'Management of Your Reddit Groups (can contain Subreddits and Users)',
       fields: [
         {
-          name: 'groupName',
+          name: 'groupSearch',
           type: 'text',
-          label: 'Gruppenname',
-          placeholder: 'z.B. Music Events, Local Events, etc.',
-          required: false,
+          label: 'Search groups...',
+          placeholder: 'Search groups...',
           ui: {
-            width: 6,
-            order: 1
+            width: 9,
+            order: 1,
+            isFilterFor: 'groupsOverview' // Link search to table
           }
         },
         {
-          name: 'groupTargets',
-          type: 'multiselect',
-          label: 'Subreddits auswählen',
-          description: 'Wähle die Subreddits for diese Gruppe',
-          required: false,
-          optionsSource: {
-            endpoint: 'platforms/:platformId/targets',
-            method: 'GET',
-            responsePath: 'options'
-          },
-          ui: {
-            width: 12,
-            order: 2
-          }
-        },
-        {
-          name: 'createGroup',
+          name: 'newGroupButton',
           type: 'button',
-          label: 'Gruppe erstellen',
+          label: '+ New Group',
           action: {
+            id: 'new-group-action',
+            type: 'open-edit-modal',
+            schemaId: 'editGroupSchema',
             endpoint: 'platforms/:platformId/target-groups',
             method: 'POST',
-            trigger: 'submit',
-            bodyMapping: {
-              groupName: 'groupName',
-              targetIds: 'groupTargets'
-            },
-            onSuccess: 'reload',
-            reloadOptions: true
+            onSuccess: 'reload'
+          },
+          ui: {
+            width: 3,
+            order: 2,
+          }
+        },
+        {
+          name: 'groupsOverview',
+          type: 'target-list',
+          label: 'Group Name',
+          description: 'Overview of all Reddit groups and their member counts (Subreddits and Users).',
+          optionsSource: {
+            endpoint: 'platforms/:platformId/target-groups',
+            method: 'GET',
+            responsePath: 'groups',
           },
           ui: {
             width: 12,
-            order: 3
+            order: 3,
+            renderAsTable: true,
+            tableColumns: [
+              {
+                id: 'name',
+                label: 'Group Name',
+                clickable: true,
+                action: {
+                  id: 'group-edit-action',
+                  type: 'open-edit-modal',
+                  schemaId: 'editGroupSchema',
+                  dataEndpoint: 'platforms/:platformId/target-groups/:id',
+                  saveEndpoint: 'platforms/:platformId/target-groups/:id',
+                  method: 'PUT',
+                  onSuccess: 'reload'
+                }
+              },
+              {
+                id: 'memberCount',
+                label: 'Members',
+                type: 'number'
+              },
+              {
+                id: 'memberValues',
+                label: 'Members',
+                type: 'text'
+              }
+            ]
           }
         }
       ]

@@ -36,8 +36,12 @@ export class RedditPlaywrightPublisher implements RedditPublisher {
   async publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean }
   ): Promise<PostResult> {
+    // DRY MODE ist standardmäßig AKTIV - nur Formular ausfüllen, kein Posten
+    const dryMode = options?.dryMode ?? true
+    
     try {
       const credentials = await this.getCredentials()
 
@@ -52,7 +56,8 @@ export class RedditPlaywrightPublisher implements RedditPublisher {
       const title = content.title || content.text?.substring(0, 300) || 'Event Post'
       const text = content.text || content.body || ''
 
-      this.browser = await chromium.launch({ headless: true })
+      // DRY MODE: headless false, damit User sehen kann was passiert
+      this.browser = await chromium.launch({ headless: false })
       const page = await this.browser.newPage()
 
       try {
@@ -91,20 +96,29 @@ export class RedditPlaywrightPublisher implements RedditPublisher {
           }
         }
 
-        // Submit post
-        await page.click('button:has-text("Post")')
-        await page.waitForTimeout(3000)
-
-        // Try to get post URL
-        const postUrl = await this.extractPostUrl(page, subreddit)
-
+        // DRY MODE: Stoppe hier, User kann selbst posten
+        // Automatisches Posten kommt später - jetzt nur Formular ausfüllen
+        console.log('🔍 DRY MODE: Formular ausgefüllt, Browser bleibt offen. User kann jetzt selbst posten.')
+        // Browser NICHT schließen, damit User den Post-Button selbst drücken kann
         return {
           success: true,
-          url: postUrl,
-          postId: this.extractPostId(postUrl)
+          url: page.url(),
+          postId: undefined
         }
+
+        // TODO: Automatisches Posten kommt später
+        // Submit post (nur wenn NICHT dry mode)
+        // await page.click('button:has-text("Post")')
+        // await page.waitForTimeout(3000)
+        // const postUrl = await this.extractPostUrl(page, subreddit)
+        // return {
+        //   success: true,
+        //   url: postUrl,
+        //   postId: this.extractPostId(postUrl)
+        // }
       } finally {
-        await page.close()
+        // DRY MODE: Browser NICHT schließen, damit User sehen kann was passiert
+        // Browser bleibt offen für manuelles Posten
       }
     } catch (error: any) {
       return {
@@ -112,10 +126,9 @@ export class RedditPlaywrightPublisher implements RedditPublisher {
         error: error.message || 'Failed to publish to Reddit via Playwright'
       }
     } finally {
-      if (this.browser) {
-        await this.browser.close()
-        this.browser = null
-      }
+      // DRY MODE: Browser NICHT schließen, damit User sehen kann was passiert
+      // Browser bleibt offen für manuelles Posten
+      console.log('🔍 DRY MODE: Browser bleibt offen. Schließe manuell wenn fertig.')
     }
   }
 

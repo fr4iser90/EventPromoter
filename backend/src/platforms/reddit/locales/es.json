@@ -17,6 +17,47 @@
   },
   "metadata": {
     "description": "Comparte eventos en Reddit con publicaciones de texto e imágenes"
+  },
+  "subreddits": {
+    "label": "Subreddits para esta publicación",
+    "description": "Selecciona los subreddits para esta publicación",
+    "validation": {
+      "required": "Debe seleccionarse al menos un subreddit"
+    },
+    "mode": {
+      "label": "Modo de selección",
+      "description": "Elige cómo se deben seleccionar los subreddits"
+    },
+    "groups": {
+      "label": "Grupos de Subreddits",
+      "description": "Selecciona uno o más grupos de subreddits"
+    },
+    "individual": {
+      "label": "Subreddits individuales",
+      "description": "Selecciona subreddits individuales"
+    },
+    "templateLocale": {
+      "label": "🌐 Idioma de la plantilla",
+      "description": "Idioma para la plantilla (se resuelve automáticamente desde los objetivos, se puede sobrescribir)"
+    },
+    "defaultTemplate": {
+      "label": "Plantilla predeterminada",
+      "description": "Plantilla utilizada para todos los subreddits (si no existe mapeo de grupo)"
+    },
+    "templateMapping": {
+      "label": "Asignación de plantillas",
+      "description": "Asigna una plantilla específica a cada subreddit"
+    },
+    "selected": "Seleccionado ({{count}}):",
+    "available": "Disponible ({{count}}):",
+    "addNew": "Agregar nueva selección...",
+    "noGroupsSelected": "No se seleccionaron grupos",
+    "errorAdding": "Error al agregar: {{error}}",
+    "summary": {
+      "all": "Todos los Subreddits",
+      "groups": "{{count}} grupo(s) seleccionado(s)",
+      "individual": "{{count}} subreddit(s) seleccionado(s)"
+    }
   }
 }
 

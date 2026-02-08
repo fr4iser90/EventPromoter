@@ -17,6 +17,47 @@
   },
   "metadata": {
     "description": "Teile Events auf Reddit mit Text-Posts und Bildern"
+  },
+  "subreddits": {
+    "label": "Subreddits für diesen Post",
+    "description": "Wähle die Subreddits für diesen Post",
+    "validation": {
+      "required": "Mindestens ein Subreddit muss ausgewählt sein"
+    },
+    "mode": {
+      "label": "Auswahl-Modus",
+      "description": "Wähle wie Subreddits ausgewählt werden sollen"
+    },
+    "groups": {
+      "label": "Subreddit-Gruppen",
+      "description": "Wähle eine oder mehrere Subreddit-Gruppen"
+    },
+    "individual": {
+      "label": "Einzelne Subreddits",
+      "description": "Wähle einzelne Subreddits aus"
+    },
+    "templateLocale": {
+      "label": "🌐 Template-Sprache",
+      "description": "Sprache für das Template (wird automatisch aus Targets aufgelöst, kann überschrieben werden)"
+    },
+    "defaultTemplate": {
+      "label": "Standard-Template",
+      "description": "Template das für alle Subreddits verwendet wird (falls keine Gruppen-Mapping vorhanden)"
+    },
+    "templateMapping": {
+      "label": "Template-Zuordnung",
+      "description": "Weise jedem Subreddit ein spezifisches Template zu"
+    },
+    "selected": "Ausgewählt ({{count}}):",
+    "available": "Verfügbar ({{count}}):",
+    "addNew": "Neue Auswahl hinzufügen...",
+    "noGroupsSelected": "Keine Gruppen ausgewählt",
+    "errorAdding": "Fehler beim Hinzufügen: {{error}}",
+    "summary": {
+      "all": "Alle Subreddits",
+      "groups": "{{count}} Gruppe(n) ausgewählt",
+      "individual": "{{count}} Subreddit(s) ausgewählt"
+    }
   }
 }
 
