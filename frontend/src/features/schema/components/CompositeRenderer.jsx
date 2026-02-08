@@ -32,6 +32,7 @@ import CloseIcon from '@mui/icons-material/Close'
 import SchemaRenderer from './Renderer'
 import { getApiUrl } from '../../../shared/utils/api'
 import { getUserLocale } from '../../../shared/utils/localeUtils'
+import { usePlatformTranslations } from '../../platform/hooks/usePlatformTranslations'
 import axios from 'axios'
 
 /**
@@ -87,7 +88,18 @@ function renderMappingField(field, value, onChange, options, groups, t) {
  */
 function CompositeRenderer({ block, value, onChange, platform }) {
   const { t, i18n } = useTranslation()
+  // ✅ Load platform translations
+  const { loaded: translationsLoaded } = usePlatformTranslations(platform, i18n.language)
   const [loading, setLoading] = useState(true)
+  
+  console.log('[CompositeRenderer] Render', {
+    platform,
+    language: i18n.language,
+    translationsLoaded,
+    blockLabel: block.label,
+    blockLabelTranslation: block.label ? t(block.label) : null,
+    isKey: block.label ? t(block.label) === block.label : null
+  })
   const [error, setError] = useState(null)
   const [data, setData] = useState({})
   const [compositeValues, setCompositeValues] = useState(value || {})
@@ -258,12 +270,30 @@ function CompositeRenderer({ block, value, onChange, platform }) {
     // Convert schema to fields for SchemaRenderer
     const fields = Object.entries(schema).map(([fieldKey, fieldSchema]) => {
       const sourceData = data[fieldSchema.source] || []
+      
+      const labelKey = fieldSchema.label
+      const labelTranslation = labelKey ? t(labelKey) : null
+      const isLabelKey = labelKey && labelTranslation === labelKey
+      
+      const descKey = fieldSchema.description
+      const descTranslation = descKey ? t(descKey) : null
+      const isDescKey = descKey && descTranslation === descKey
+      
+      console.log('[CompositeRenderer] Field translation check', {
+        fieldKey,
+        labelKey,
+        labelTranslation,
+        isLabelKey,
+        descKey,
+        descTranslation,
+        isDescKey
+      })
 
       return {
       name: fieldKey,
       type: fieldSchema.fieldType === 'mapping' ? 'mapping' : fieldSchema.fieldType,
-      label: fieldSchema.label ? t(fieldSchema.label, fieldSchema.label) : fieldSchema.label,
-      description: fieldSchema.description ? t(fieldSchema.description, fieldSchema.description) : fieldSchema.description,
+      label: fieldSchema.label, // ✅ KEIN t() hier - nur Key speichern, wird beim Rendern übersetzt!
+      description: fieldSchema.description, // ✅ KEIN t() hier - nur Key speichern, wird beim Rendern übersetzt!
       required: fieldSchema.required,
       default: fieldSchema.default,
       visibleWhen: fieldSchema.visibleWhen, // Support for conditional visibility

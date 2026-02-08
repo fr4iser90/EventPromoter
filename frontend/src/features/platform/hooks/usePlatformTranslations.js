@@ -21,6 +21,7 @@ export function usePlatformTranslations(platformId, lang) {
     if (!platformId || !lang) return
 
     const loadTranslations = async () => {
+      console.log('[usePlatformTranslations] START loading', { platformId, lang })
       // Check if already loaded for this platform+lang combination
       const resourceKey = `platform_${platformId}`
       // Normalize language code: 'en-US' → 'en', 'de-DE' → 'de', etc.
@@ -29,6 +30,7 @@ export function usePlatformTranslations(platformId, lang) {
 
       // Skip if already loaded
       if (i18n.hasResourceBundle(currentLang, resourceKey)) {
+        console.log('[usePlatformTranslations] Already loaded', { platformId, lang, currentLang })
         setLoaded(true)
         return
       }
@@ -37,9 +39,17 @@ export function usePlatformTranslations(platformId, lang) {
         setLoading(true)
         setError(null)
 
+        console.log('[usePlatformTranslations] Fetching from', getApiUrl(`translations/${platformId}/${currentLang}`))
         const response = await axios.get(
           getApiUrl(`translations/${platformId}/${currentLang}`)
         )
+
+        console.log('[usePlatformTranslations] Response received', {
+          success: response.data.success,
+          hasTranslations: !!response.data.translations,
+          translationKeys: response.data.translations ? Object.keys(response.data.translations) : [],
+          sampleTranslation: response.data.translations?.recipients?.label
+        })
 
         if (response.data.success && response.data.translations) {
           // Add platform translations to i18n with namespace
@@ -60,6 +70,14 @@ export function usePlatformTranslations(platformId, lang) {
               [platformId]: response.data.translations
             }
           }
+          console.log('[usePlatformTranslations] Merging translations', {
+            currentLang,
+            platformId,
+            mergedStructure: Object.keys(mergedTranslations.platform[platformId] || {}),
+            testKey: `platform.${platformId}.recipients.label`,
+            testValue: mergedTranslations.platform[platformId]?.recipients?.label
+          })
+          
           i18n.addResourceBundle(
             currentLang,
             'translation',
@@ -68,12 +86,23 @@ export function usePlatformTranslations(platformId, lang) {
             false // don't overwrite existing common translations
           )
 
+          // DEBUG: Check if translation is available after merge
+          const testKey = `platform.${platformId}.recipients.label`
+          const testTranslation = i18n.t(testKey)
+          console.log('[usePlatformTranslations] After merge check', {
+            testKey,
+            testTranslation,
+            isKey: testTranslation === testKey,
+            i18nStore: i18n.store.data[currentLang]?.translation?.platform?.[platformId] ? 'EXISTS' : 'MISSING'
+          })
+
           setLoaded(true)
+          console.log('[usePlatformTranslations] Loaded and merged', { platformId, lang, loaded: true })
         } else {
           throw new Error('Invalid response format')
         }
       } catch (err) {
-        console.warn(`Failed to load translations for platform ${platformId}:`, err)
+        console.warn(`[usePlatformTranslations] Failed to load translations for platform ${platformId}:`, err)
         setError(err.message)
         // Don't fail completely - just log warning
         setLoaded(true)

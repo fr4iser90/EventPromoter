@@ -42,30 +42,47 @@ export async function getPlatformTranslations(
     const platformPath = join(__dirname, '../platforms', platformId)
     const localesPath = join(platformPath, 'locales')
     
+    console.log('[translationLoader] Loading translations', {
+      platformId,
+      lang,
+      __dirname,
+      platformPath,
+      localesPath
+    })
+    
     // Check if locales directory exists
     try {
       await access(localesPath)
+      console.log('[translationLoader] Locales directory exists', { localesPath })
     } catch {
       // No locales directory, return empty object
+      console.warn(`[translationLoader] No locales directory for platform ${platformId}, language ${lang}`, { localesPath })
       translationCache.set(cacheKey, {})
       return {}
     }
 
     // Load translation file
     const translationFile = join(localesPath, `${lang}.json`)
+    console.log('[translationLoader] Loading file', { translationFile })
     try {
       const content = await readFile(translationFile, 'utf-8')
       const translations = JSON.parse(content)
+      console.log('[translationLoader] Loaded translations', {
+        platformId,
+        lang,
+        keys: Object.keys(translations),
+        hasRecipients: !!translations.recipients
+      })
       translationCache.set(cacheKey, translations)
       return translations
     } catch (error) {
       // File doesn't exist or is invalid, return empty object
-      console.warn(`Failed to load translations for platform ${platformId}, language ${lang}:`, error)
+      console.warn(`[translationLoader] Failed to load translations for platform ${platformId}, language ${lang}:`, error)
       translationCache.set(cacheKey, {})
       return {}
     }
   } catch (error) {
-    console.error(`Error loading translations for platform ${platformId}, language ${lang}:`, error)
+    console.error(`[translationLoader] Error loading translations for platform ${platformId}, language ${lang}:`, error)
     return {}
   }
 }

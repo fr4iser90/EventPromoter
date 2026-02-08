@@ -72,6 +72,11 @@ RUN mkdir -p /app/backend/dist/platforms && \
       mkdir -p "/app/backend/dist/platforms/$platform" && \
       cp -r "$dir" "/app/backend/dist/platforms/$platform/data"; \
     done && \
+    find /app/backend/src/platforms -type d -name "locales" | while read dir; do \
+      platform=$(echo "$dir" | sed 's|.*/platforms/\([^/]*\)/locales|\1|'); \
+      mkdir -p "/app/backend/dist/platforms/$platform" && \
+      cp -r "$dir" "/app/backend/dist/platforms/$platform/locales"; \
+    done && \
     rm -rf /app/backend/src
 
 WORKDIR /app/backend

@@ -38,9 +38,6 @@ router.get('/:platformId/available-modes', PlatformController.getAvailableModes)
 
 // Get platform schema
 
-// Get platform translations
-router.get('/:platformId/i18n/:lang', PlatformController.getPlatformTranslations)
-
 // Get available languages for platform
 router.get('/:platformId/i18n', PlatformController.getPlatformLanguages)
 
