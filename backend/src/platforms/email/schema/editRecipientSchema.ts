@@ -16,6 +16,16 @@ const emailRecipientEditSchema: FormSchema = {
       },
     },
     {
+      name: 'targetType',
+      type: 'text',
+      label: 'Target Type',
+      default: 'email',
+      readOnly: true,
+      ui: {
+        hidden: true,
+      },
+    },
+    {
       name: 'email',
       type: 'email',
       label: 'Email Address',

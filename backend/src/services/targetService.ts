@@ -52,6 +52,7 @@ export abstract class BaseTargetService {
     if (type) {
       // Filter by targetType (multi-target support)
       if (this.targetSchemas[type]) {
+        // Only filter by targetType - no legacy support needed
         return targets.filter(target => target.targetType === type);
       }
       return [];
@@ -92,8 +93,24 @@ export abstract class BaseTargetService {
    * Add a new target
    */
   async addTarget(targetData: Record<string, any>): Promise<{ success: boolean; target?: Target; error?: string }> {
-    // Determine target type (for multi-target support)
+    // targetType is REQUIRED - no auto-detection, no fallbacks
     const targetType = targetData.targetType;
+    
+    if (!targetType || typeof targetType !== 'string') {
+      return { 
+        success: false, 
+        error: 'targetType is required. Must be one of: ' + Object.keys(this.targetSchemas).join(', ')
+      }
+    }
+    
+    // Validate that targetType exists in schemas
+    if (!this.targetSchemas[targetType]) {
+      return { 
+        success: false, 
+        error: `Invalid targetType: '${targetType}'. Must be one of: ` + Object.keys(this.targetSchemas).join(', ')
+      }
+    }
+    
     const schema = this.getTargetSchema(targetType);
     
     // Validate base field
@@ -129,7 +146,7 @@ export abstract class BaseTargetService {
     // Create target object
     const target: Target = {
       id: this.generateTargetId(),
-      ...(targetType && { targetType }), // Add targetType if specified
+      targetType, // Always set targetType (required, no longer optional)
       [baseField]: baseValue,
       ...this.extractCustomFields(targetData, schema),
       createdAt: new Date().toISOString(),

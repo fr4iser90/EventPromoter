@@ -2,11 +2,13 @@
   "targets": [
     {
       "id": "d5f93338-21bc-49b7-b91d-56b50fd1a2a8",
+      "targetType": "email",
       "email": "test.test@holio.com",
       "createdAt": "2026-01-20T22:58:55.835Z"
     },
     {
       "id": "000e59a3-ac14-48d6-bbc0-345efb9e74bc",
+      "targetType": "email",
       "email": "pa.boe90@gmail.com",
       "createdAt": "2026-01-20T22:58:55.836Z",
       "firstName": "Patrick",
@@ -17,11 +19,13 @@
     },
     {
       "id": "9e1d4c1d-4012-46f8-83ee-c0dddf625f8a",
+      "targetType": "email",
       "email": "test.test@ji5.de",
       "createdAt": "2026-01-20T22:58:55.836Z"
     },
     {
       "id": "a2ab961a-40dd-432a-987d-ef6f8caf24fa",
+      "targetType": "email",
       "email": "test.test@ji6.com",
       "createdAt": "2026-01-20T22:58:55.836Z"
     }

@@ -991,7 +991,12 @@ export class ContentExtractionService {
       // Handle multi-target support: each target may have different baseField based on targetType
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
-        const baseField = target.targetType ? service.getBaseField(target.targetType) : service.getBaseField()
+        if (!target.targetType) {
+          console.error(`Target ${target.id} missing targetType - this should not happen`)
+          targetNameMap[target.id] = target.id
+          return
+        }
+        const baseField = service.getBaseField(target.targetType)
         // ✅ Always use baseField (e.g., email) for display, not target.name
         targetNameMap[target.id] = target[baseField] || target.id
       })

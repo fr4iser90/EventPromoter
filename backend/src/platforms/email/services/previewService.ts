@@ -415,11 +415,15 @@ export async function renderMultiPreview(
   const targetService = new EmailTargetService()
   const targets = await targetService.getTargets()
   const groups = await targetService.getGroups()
-  // Generic: use baseField instead of hardcoded .email
+  // targetType is REQUIRED - no fallbacks
   const allRecipients = targets.map((t: any) => {
-    const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+    if (!t.targetType) {
+      console.error(`Target ${t.id} missing targetType - this should not happen`)
+      return undefined
+    }
+    const baseField = targetService.getBaseField(t.targetType)
     return t[baseField]
-  })
+  }).filter((email: string | undefined): email is string => email !== undefined)
 
   // Import template service
   const { TemplateService } = await import('../../../services/templateService.js')
@@ -471,9 +475,13 @@ export async function renderMultiPreview(
       const group = groups.find(g => g.name === groupIdentifier || g.id === groupIdentifier)
       if (!group) continue
 
-      // Get emails for this group (generic - uses baseField)
+      // Get emails for this group (targetType is REQUIRED)
       const targetMap = new Map(targets.map((t: any) => {
-        const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+        if (!t.targetType) {
+          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          return [t.id, undefined]
+        }
+        const baseField = targetService.getBaseField(t.targetType)
         return [t.id, t[baseField]]
       }))
       const groupEmails = group.targetIds
@@ -518,9 +526,13 @@ export async function renderMultiPreview(
       })
     }
   } else if (recipients.mode === 'individual' && recipients.individual && recipients.individual.length > 0) {
-    // Generic: use baseField instead of hardcoded .email
+    // targetType is REQUIRED - no fallbacks
     const targetMap = new Map(targets.map((t: any) => {
-      const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+      if (!t.targetType) {
+        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        return [t.id, undefined]
+      }
+      const baseField = targetService.getBaseField(t.targetType)
       return [t.id, t[baseField]]
     }))
     const individualEmails = recipients.individual

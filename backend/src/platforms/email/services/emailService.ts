@@ -156,16 +156,24 @@ export class EmailService {
     const targets = await service.getTargets()
     const groups = await service.getGroups()
     
-    // Generic: use baseField instead of hardcoded .email
+    // targetType is REQUIRED - no fallbacks
     const available = targets.map((t: any) => {
-      const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+      if (!t.targetType) {
+        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        return undefined
+      }
+      const baseField = service.getBaseField(t.targetType)
       return t[baseField]
-    })
+    }).filter((email: string | undefined): email is string => email !== undefined)
     
     // Convert groups from Array to { [groupName]: [email] } or { [groupId]: [email] }
     const groupEmails: Record<string, string[]> = {}
     const targetMap = new Map(targets.map((t: any) => {
-      const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+      if (!t.targetType) {
+        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        return [t.id, undefined]
+      }
+      const baseField = service.getBaseField(t.targetType)
       return [t.id, t[baseField]]
     }))
     
@@ -546,7 +554,11 @@ export class EmailService {
         const allTargets = await this.getTargetService().getTargets()
         const targetService = this.getTargetService()
         const targetMap = new Map(allTargets.map((t: any) => {
-          const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+          if (!t.targetType) {
+            console.error(`Target ${t.id} missing targetType - this should not happen`)
+            return undefined
+          }
+          const baseField = targetService.getBaseField(t.targetType)
           return [t.id, t[baseField]]
         }))
         const groupEmails = group.targetIds

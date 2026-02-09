@@ -35,16 +35,22 @@ export class TargetController {
       const groupsArray = Array.isArray(groups) ? groups : Object.values(groups);
 
       // Transform targets to options format for multiselect components
-      // Use type-specific baseField if type is provided, otherwise use default
-      const baseField = targetType ? service.getBaseField(targetType) : service.getBaseField()
+      // targetType is REQUIRED - no fallbacks
       const options = targets.map((target: Target) => {
-        const targetBaseField = target.targetType ? service.getBaseField(target.targetType) : baseField;
-        const baseValue = target[targetBaseField] || target[baseField] || target.id;
-        const displayName = target.name || target.displayName || '';
+        if (!target.targetType) {
+          console.error(`Target ${target.id} missing targetType - this should not happen`)
+          return {
+            label: target.id,
+            value: target.id
+          }
+        }
+        const targetBaseField = service.getBaseField(target.targetType)
+        const baseValue = target[targetBaseField] || target.id
+        const displayName = target.name || target.displayName || ''
         return {
           label: `${baseValue}${displayName ? ` (${displayName})` : ''}`,
           value: target.id
-        };
+        }
       })
 
       return res.json({
@@ -225,10 +231,14 @@ export class TargetController {
       const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
 
       // Resolve target IDs to baseField values for display (generic)
-      // Handle multi-target support: each target may have different baseField based on targetType
+      // targetType is REQUIRED - no fallbacks
       const targets = await service.getTargets()
       const targetMap = new Map(targets.map((t: Target) => {
-        const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+        if (!t.targetType) {
+          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          return [t.id, t.id]
+        }
+        const baseField = service.getBaseField(t.targetType)
         return [t.id, t[baseField] || t.id]
       }))
 
@@ -292,10 +302,14 @@ export class TargetController {
       }
 
       // Resolve target IDs to baseField values for display (generic)
-      // Handle multi-target support: each target may have different baseField based on targetType
+      // targetType is REQUIRED - no fallbacks
       const targets = await service.getTargets()
       const targetMap = new Map(targets.map((t: Target) => {
-        const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+        if (!t.targetType) {
+          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          return [t.id, t.id]
+        }
+        const baseField = service.getBaseField(t.targetType)
         return [t.id, t[baseField] || t.id]
       }))
       

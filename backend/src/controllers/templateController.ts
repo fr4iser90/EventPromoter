@@ -573,9 +573,13 @@ export class TemplateController {
               })
               
               if (missing.length > 0) {
-                // Generic: use baseField instead of hardcoded .email
+                // targetType is REQUIRED - no fallbacks
                 const missingDisplay = missing.map(t => {
-                  const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                  if (!t.targetType) {
+                    console.error(`Target ${t.id} missing targetType - this should not happen`)
+                    return t.id
+                  }
+                  const baseField = service.getBaseField(t.targetType)
                   return t[baseField] || t.id
                 }).join(', ')
                 return res.status(400).json({
@@ -583,7 +587,11 @@ export class TemplateController {
                   error: `Template requires target fields: ${requiredFields.join(', ')}`,
                   details: `${missing.length} target(s) missing required fields: ${missingDisplay}`,
                   missingTargets: missing.map(t => {
-                    const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                    if (!t.targetType) {
+                      console.error(`Target ${t.id} missing targetType - this should not happen`)
+                      return { id: t.id }
+                    }
+                    const baseField = service.getBaseField(t.targetType)
                     return { id: t.id, [baseField]: t[baseField] }
                   })
                 })
@@ -618,9 +626,13 @@ export class TemplateController {
                 })
                 
                 if (missing.length > 0) {
-                  // Generic: use baseField instead of hardcoded .email
+                  // targetType is REQUIRED - no fallbacks
                   const missingDisplay = missing.map(t => {
-                    const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                    if (!t.targetType) {
+                      console.error(`Target ${t.id} missing targetType - this should not happen`)
+                      return t.id
+                    }
+                    const baseField = service.getBaseField(t.targetType)
                     return t[baseField] || t.id
                   }).join(', ')
                   return res.status(400).json({
@@ -628,7 +640,11 @@ export class TemplateController {
                     error: `Template requires target fields: ${requiredFields.join(', ')}`,
                     details: `Group "${group.name}" has ${missing.length} target(s) missing required fields: ${missingDisplay}`,
                     missingTargets: missing.map(t => {
-                      const baseField = t.targetType ? service.getBaseField(t.targetType) : service.getBaseField()
+                      if (!t.targetType) {
+                        console.error(`Target ${t.id} missing targetType - this should not happen`)
+                        return { id: t.id }
+                      }
+                      const baseField = service.getBaseField(t.targetType)
                       return { id: t.id, [baseField]: t[baseField] }
                     })
                   })

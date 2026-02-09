@@ -689,7 +689,12 @@ export class EventService {
       // Handle multi-target support: each target may have different baseField based on targetType
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
-        const baseField = target.targetType ? service.getBaseField(target.targetType) : service.getBaseField()
+        if (!target.targetType) {
+          console.error(`Target ${target.id} missing targetType - this should not happen`)
+          targetNameMap[target.id] = target.id
+          return
+        }
+        const baseField = service.getBaseField(target.targetType)
         // ✅ Always use baseField (e.g., email) for display, not target.name
         targetNameMap[target.id] = target[baseField] || target.id
       })
@@ -715,9 +720,13 @@ export class EventService {
         // Resolve target names
         if (templateEntry.targets.mode === 'all') {
           // For 'all' mode, include ALL available targets
-          // Handle multi-target support: each target may have different baseField based on targetType
+          // targetType is REQUIRED - no fallbacks
           targetsWithNames.targetNames = targets.map((target: any) => {
-            const baseField = target.targetType ? service.getBaseField(target.targetType) : service.getBaseField()
+            if (!target.targetType) {
+              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              return target.id
+            }
+            const baseField = service.getBaseField(target.targetType)
             // ✅ Always use baseField (e.g., email) for display
             return target[baseField] || target.id
           })

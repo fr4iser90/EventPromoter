@@ -46,7 +46,7 @@ export interface ValidationRule {
 
 export interface ActionSchema {
   id: string;
-  type?: 'open-edit-modal' | 'custom' | 'submit' | 'button';
+  type?: 'open-edit-modal' | 'custom' | 'submit' | 'button' | 'delete';
   schemaId?: string;
   dataEndpoint?: string;
   saveEndpoint?: string;

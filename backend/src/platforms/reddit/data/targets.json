@@ -2,53 +2,70 @@
   "targets": [
     {
       "id": "6156190f-0225-4dcb-a1af-7cfba10e1937",
+      "targetType": "subreddit",
       "subreddit": "djs",
       "createdAt": "2026-01-20T22:58:55.837Z"
     },
     {
       "id": "e550f4b8-3539-4275-8475-067616967feb",
+      "targetType": "subreddit",
       "subreddit": "techno",
       "createdAt": "2026-01-20T22:58:55.837Z"
     },
     {
       "id": "ed5e05e2-7b7e-47eb-81d2-b726b1bd4f5e",
+      "targetType": "subreddit",
       "subreddit": "housemusic",
       "createdAt": "2026-01-20T22:58:55.837Z"
     },
     {
       "id": "4ff4256e-45f1-4d7d-9430-4dba593d2177",
+      "targetType": "subreddit",
       "subreddit": "edm",
       "createdAt": "2026-01-20T22:58:55.837Z"
     },
     {
       "id": "1fbb9b8b-6ade-4d87-a5a4-07c5b95c4d3c",
+      "targetType": "subreddit",
       "subreddit": "berlin",
       "createdAt": "2026-01-20T22:58:55.837Z"
     },
     {
       "id": "41c797cb-eb26-4424-b714-799ae8135018",
+      "targetType": "subreddit",
       "subreddit": "eventpromoters",
       "createdAt": "2026-01-20T22:58:55.837Z"
     },
     {
       "id": "f3a06d5e-7858-4014-9353-1902c5aaac52",
+      "targetType": "subreddit",
       "subreddit": "musicevents",
       "createdAt": "2026-01-20T22:58:55.838Z"
     },
     {
       "id": "16c68065-4f8b-4df1-b60b-2268884c8063",
+      "targetType": "subreddit",
       "subreddit": "leipzig",
       "createdAt": "2026-01-20T22:58:55.838Z"
     },
     {
       "id": "daf32ce2-ee13-477a-9d87-49d36068509e",
+      "targetType": "subreddit",
       "subreddit": "dresden",
       "createdAt": "2026-01-20T22:58:55.838Z"
     },
     {
       "id": "c99b2c95-3f2c-46b4-8633-8f2f18ac25af",
+      "targetType": "subreddit",
       "subreddit": "hamburg",
       "createdAt": "2026-01-20T22:58:55.838Z"
+    },
+    {
+      "id": "3d1a230e-d141-401f-a670-9825d062f197",
+      "targetType": "subreddit",
+      "subreddit": "test",
+      "createdAt": "2026-02-08T23:51:19.209Z",
+      "updatedAt": "2026-02-08T23:51:19.209Z"
     }
   ],
   "groups": {}

@@ -92,11 +92,15 @@ export class EmailN8nService {
     const targetService = new EmailTargetService()
     const allTargets = await targetService.getTargets()
     const groups = await targetService.getGroups()
-    // Generic: use baseField instead of hardcoded .email
+    // targetType is REQUIRED - no fallbacks
     const allRecipients = allTargets.map((t: any) => {
-      const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+      if (!t.targetType) {
+        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        return undefined
+      }
+      const baseField = targetService.getBaseField(t.targetType)
       return t[baseField]
-    })
+    }).filter((email: string | undefined): email is string => email !== undefined)
 
     if (targetsConfig.mode === 'all') {
       return allRecipients
@@ -108,12 +112,16 @@ export class EmailN8nService {
         const group = groups.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier)
         if (!group) continue
         
-        // Convert target IDs to emails (generic - uses baseField)
+        // Convert target IDs to emails (targetType is REQUIRED)
         const groupEmails = group.targetIds
           .map((targetId: string) => {
             const target = allTargets.find((t: any) => t.id === targetId)
             if (!target) return undefined
-            const baseField = target.targetType ? targetService.getBaseField(target.targetType) : targetService.getBaseField()
+            if (!target.targetType) {
+              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              return undefined
+            }
+            const baseField = targetService.getBaseField(target.targetType)
             return target[baseField]
           })
           .filter((email: string | undefined): email is string => email !== undefined)
@@ -121,9 +129,13 @@ export class EmailN8nService {
       }
       return [...new Set(emails)] // Remove duplicates
     } else if (targetsConfig.mode === 'individual' && targetsConfig.individual && Array.isArray(targetsConfig.individual)) {
-      // Generic: use baseField instead of hardcoded .email
+      // targetType is REQUIRED - no fallbacks
       const targetMap = new Map(allTargets.map((t: any) => {
-        const baseField = t.targetType ? targetService.getBaseField(t.targetType) : targetService.getBaseField()
+        if (!t.targetType) {
+          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          return [t.id, undefined]
+        }
+        const baseField = targetService.getBaseField(t.targetType)
         return [t.id, t[baseField]]
       }))
       const individualEmails: string[] = targetsConfig.individual
