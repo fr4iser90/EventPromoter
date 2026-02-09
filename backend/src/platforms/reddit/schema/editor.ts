@@ -21,7 +21,7 @@ export const redditEditorSchema: EditorSchema = {
       description: 'platform.reddit.subreddits.description',
       required: true,
       constraints: {
-        minTargets: 1
+        minItems: 1
       },
       validation: [
         { type: 'required', message: 'platform.reddit.subreddits.validation.required' }

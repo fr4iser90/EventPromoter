@@ -553,14 +553,17 @@ export class EmailService {
         // Get emails for this group (generic - uses baseField)
         const allTargets = await this.getTargetService().getTargets()
         const targetService = this.getTargetService()
-        const targetMap = new Map(allTargets.map((t: any) => {
-          if (!t.targetType) {
-            console.error(`Target ${t.id} missing targetType - this should not happen`)
-            return undefined
-          }
-          const baseField = targetService.getBaseField(t.targetType)
-          return [t.id, t[baseField]]
-        }))
+        const targetMap = new Map(allTargets
+          .map((t: any) => {
+            if (!t.targetType) {
+              console.error(`Target ${t.id} missing targetType - this should not happen`)
+              return undefined
+            }
+            const baseField = targetService.getBaseField(t.targetType)
+            return [t.id, t[baseField]] as [string, string]
+          })
+          .filter((entry): entry is [string, string] => entry !== undefined)
+        )
         const groupEmails = group.targetIds
           .map((targetId: string) => targetMap.get(targetId))
           .filter((email: string | undefined): email is string => email !== undefined)
