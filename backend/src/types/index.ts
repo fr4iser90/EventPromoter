@@ -182,6 +182,7 @@ export interface PostResult {
   postId?: string
   url?: string
   error?: string
+  message?: string
 }
 
 export interface HistoryEntry {

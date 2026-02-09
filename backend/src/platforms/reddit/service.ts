@@ -1,14 +1,155 @@
 // Reddit platform service
 
-import { RedditContent, RedditConfig } from './types.js'
+import { RedditContent, RedditConfig, RedditTargets } from './types.js'
 import { RedditValidator } from './validator.js'
 import { renderRedditPreview } from './preview.js'
+import { RedditTargetService } from './services/targetService.js'
 
 export class RedditService {
   private config: RedditConfig
 
   constructor(config: RedditConfig = {}) {
     this.config = config
+  }
+
+  /**
+   * Extract user names from targets configuration
+   * Helper function to convert targets (mode/groups/individual) to user name array
+   */
+  async extractUsersFromTargets(targetsConfig: RedditTargets): Promise<string[]> {
+    if (!targetsConfig) return []
+
+    const targetService = new RedditTargetService()
+    const allTargets = await targetService.getTargets('user')
+    const groups = await targetService.getGroups()
+
+    // targetType is REQUIRED - no fallbacks
+    const allUsers = allTargets.map((t: any) => {
+      if (!t.targetType) {
+        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        return undefined
+      }
+      const baseField = targetService.getBaseField(t.targetType)
+      return t[baseField]
+    }).filter((username: string | undefined): username is string => username !== undefined)
+
+    if (targetsConfig.mode === 'all') {
+      return allUsers
+    } else if (targetsConfig.mode === 'groups' && targetsConfig.groups && Array.isArray(targetsConfig.groups)) {
+      // Collect all users from selected groups
+      const users: string[] = []
+      const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
+      for (const groupIdentifier of targetsConfig.groups) {
+        // Find group by ID or name
+        const group = groupsArray.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier) as any
+        if (!group || !group.targetIds || !Array.isArray(group.targetIds)) continue
+        
+        // Convert target IDs to usernames (only user type targets)
+        const groupUsers = group.targetIds
+          .map((targetId: string) => {
+            const target = allTargets.find((t: any) => t.id === targetId && t.targetType === 'user')
+            if (!target) return undefined
+            if (!target.targetType) {
+              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              return undefined
+            }
+            const baseField = targetService.getBaseField(target.targetType)
+            return target[baseField]
+          })
+          .filter((username: string | undefined): username is string => username !== undefined)
+        users.push(...groupUsers)
+      }
+      return [...new Set(users)] // Remove duplicates
+    } else if (targetsConfig.mode === 'individual' && targetsConfig.individual && Array.isArray(targetsConfig.individual)) {
+      // targetType is REQUIRED - no fallbacks
+      const targetMapEntries: [string, string][] = []
+      for (const t of allTargets) {
+        if (!t.targetType) {
+          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          continue
+        }
+        const baseField = targetService.getBaseField(t.targetType)
+        const baseValue = t[baseField]
+        if (baseValue) {
+          targetMapEntries.push([t.id, baseValue])
+        }
+      }
+      const targetMap = new Map(targetMapEntries)
+      
+      const individualUsers: string[] = targetsConfig.individual
+        .map((targetId: string) => targetMap.get(targetId))
+        .filter((username: string | undefined): username is string => username !== undefined)
+      return [...new Set(individualUsers)]
+    }
+
+    return []
+  }
+
+  /**
+   * Extract subreddit names from targets configuration
+   * Helper function to convert targets (mode/groups/individual) to subreddit name array
+   */
+  async extractSubredditsFromTargets(targetsConfig: RedditTargets): Promise<string[]> {
+    if (!targetsConfig) return []
+
+    const targetService = new RedditTargetService()
+    const allTargets = await targetService.getTargets('subreddit')
+    const groups = await targetService.getGroups()
+
+    // targetType is REQUIRED - no fallbacks
+    const allSubreddits = allTargets.map((t: any) => {
+      if (!t.targetType) {
+        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        return undefined
+      }
+      const baseField = targetService.getBaseField(t.targetType)
+      return t[baseField]
+    }).filter((subreddit: string | undefined): subreddit is string => subreddit !== undefined)
+
+    if (targetsConfig.mode === 'all') {
+      return allSubreddits
+    } else if (targetsConfig.mode === 'groups' && targetsConfig.groups && Array.isArray(targetsConfig.groups)) {
+      // Collect all subreddits from selected groups
+      const subreddits: string[] = []
+      for (const groupIdentifier of targetsConfig.groups) {
+        // Find group by ID or name
+        const group = Object.values(groups).find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier)
+        if (!group) continue
+        
+        // Convert target IDs to subreddit names (only subreddit type targets)
+        const groupSubreddits = group.targetIds
+          .map((targetId: string) => {
+            const target = allTargets.find((t: any) => t.id === targetId && t.targetType === 'subreddit')
+            if (!target) return undefined
+            if (!target.targetType) {
+              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              return undefined
+            }
+            const baseField = targetService.getBaseField(target.targetType)
+            return target[baseField]
+          })
+          .filter((subreddit: string | undefined): subreddit is string => subreddit !== undefined)
+        subreddits.push(...groupSubreddits)
+      }
+      return [...new Set(subreddits)] // Remove duplicates
+    } else if (targetsConfig.mode === 'individual' && targetsConfig.individual && Array.isArray(targetsConfig.individual)) {
+      // targetType is REQUIRED - no fallbacks
+      const targetMap = new Map(allTargets.map((t: any) => {
+        if (!t.targetType) {
+          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          return [t.id, undefined]
+        }
+        const baseField = targetService.getBaseField(t.targetType)
+        return [t.id, t[baseField]]
+      }).filter((entry): entry is [string, string] => entry[1] !== undefined))
+      
+      const individualSubreddits: string[] = targetsConfig.individual
+        .map((targetId: string) => targetMap.get(targetId))
+        .filter((subreddit: string | undefined): subreddit is string => subreddit !== undefined)
+      return [...new Set(individualSubreddits)]
+    }
+
+    return []
   }
 
   validateContent(content: RedditContent) {
@@ -23,13 +164,32 @@ export class RedditService {
     return RedditValidator.getSubredditUrl(subreddit)
   }
 
-  transformForAPI(content: RedditContent) {
-    return {
-      title: content.title,
-      text: content.text,
-      sr: content.subreddit,
-      ...(content.link && { url: content.link }),
-      ...(content.image && { media: content.image })
+  async transformForAPI(content: RedditContent) {
+    // ✅ Support both subreddits AND users
+    if (content.subreddits) {
+      const subreddits = await this.extractSubredditsFromTargets(content.subreddits)
+      if (subreddits.length === 0) {
+        throw new Error('No subreddits found in targets configuration')
+      }
+      const subreddit = subreddits[0]
+      
+      return {
+        title: content.title,
+        text: content.text,
+        sr: subreddit,
+        ...(content.link && { url: content.link }),
+        ...(content.image && { media: content.image })
+      }
+    } else if (content.users) {
+      // ✅ User DMs - different API endpoint
+      const users = await this.extractUsersFromTargets(content.users)
+      if (users.length === 0) {
+        throw new Error('No users found in targets configuration')
+      }
+      // TODO: Implement DM API call
+      throw new Error('User DMs not yet implemented in API publisher')
+    } else {
+      throw new Error('Either subreddits or users target configuration is required')
     }
   }
 
@@ -48,12 +208,12 @@ export class RedditService {
     return {
       maxTitleLength: 300,
       supports: ['text', 'image', 'link'],
-      required: ['title', 'text', 'subreddit'],
+      required: ['title', 'text', 'targets'], // ✅ GENERIC: targets (subreddits OR users)
       recommended: ['image', 'link', 'detailed-description']
     }
   }
 
-  getOptimizationTips(content: RedditContent): string[] {
+  async getOptimizationTips(content: RedditContent): Promise<string[]> {
     const tips: string[] = []
     const validation = this.validateContent(content)
 
@@ -77,11 +237,15 @@ export class RedditService {
       tips.push('Add an image or link to make your post more engaging')
     }
 
-    // Subreddit-specific tips
-    if (content.subreddit) {
-      const sub = content.subreddit.toLowerCase()
-      if (sub.includes('event') || sub.includes('party')) {
-        tips.push('This appears to be an event subreddit - ensure you follow posting rules')
+    // Subreddit-specific tips (extract from targets)
+    if (content.subreddits) {
+      const subreddits = await this.extractSubredditsFromTargets(content.subreddits)
+      for (const sub of subreddits) {
+        const subLower = sub.toLowerCase()
+        if (subLower.includes('event') || subLower.includes('party')) {
+          tips.push(`Subreddit '${sub}' appears to be an event subreddit - ensure you follow posting rules`)
+          break // Only add once
+        }
       }
     }
 
@@ -104,14 +268,24 @@ export class RedditService {
 
   /**
    * Extract human-readable target from Reddit content
-   * Returns subreddit with r/ prefix
+   * Returns subreddits with r/ prefix
    */
-  extractTarget(content: RedditContent): string {
-    if (content.subreddit) {
-      const subreddit = content.subreddit.toString()
-      return subreddit.startsWith('r/') ? subreddit : `r/${subreddit}`
+  async extractTarget(content: RedditContent): Promise<string> {
+    if (content.subreddits) {
+      const subreddits = await this.extractSubredditsFromTargets(content.subreddits)
+      if (subreddits.length > 0) {
+        const formatted = subreddits.map(s => s.startsWith('r/') ? s : `r/${s}`).join(', ')
+        return subreddits.length === 1 ? formatted : `${subreddits.length} subreddits: ${formatted}`
+      }
     }
-    return 'No subreddit'
+    if (content.users) {
+      const users = await this.extractUsersFromTargets(content.users)
+      if (users.length > 0) {
+        const formatted = users.map(u => `u/${u}`).join(', ')
+        return users.length === 1 ? formatted : `${users.length} users: ${formatted}`
+      }
+    }
+    return 'No targets'
   }
 
   /**

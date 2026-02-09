@@ -1,9 +1,19 @@
 // Reddit-specific types
 
+export interface RedditTargets {
+  mode: 'all' | 'groups' | 'individual'
+  groups?: string[]
+  individual?: string[]
+  templateLocale?: string
+  defaultTemplate?: string
+  templateMapping?: Record<string, string>
+}
+
 export interface RedditContent {
   title: string
   text: string
-  subreddit: string
+  subreddits?: RedditTargets  // Optional - für Posts zu Subreddits
+  users?: RedditTargets        // Optional - für DMs zu Usern
   link?: string
   image?: string
 }

@@ -446,7 +446,10 @@ export class EmailApiPublisher implements EmailPublisher {
       auth: {
         user: credentials.username,
         pass: credentials.password
-      }
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     })
 
     const nodemailerAttachments = attachments.map(file => {
@@ -481,11 +484,26 @@ export class EmailApiPublisher implements EmailPublisher {
       mailOptions.bcc = bcc
     }
 
-    const result = await transporter.sendMail(mailOptions)
+    console.log(`[Email API] Calling transporter.sendMail()...`)
+    try {
+      const sendMailPromise = transporter.sendMail(mailOptions)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('SMTP timeout after 30s')), 30000)
+      })
+      
+      const result = await Promise.race([sendMailPromise, timeoutPromise]) as any
+      console.log(`[Email API] sendMail() completed: ${result.messageId}`)
 
-    return {
-      success: true,
-      postId: result.messageId
+      return {
+        success: true,
+        postId: result.messageId
+      }
+    } catch (error: any) {
+      console.error(`[Email API] sendMail() failed:`, error.message)
+      return {
+        success: false,
+        error: error.message || 'Failed to send email via SMTP'
+      }
     }
   }
 

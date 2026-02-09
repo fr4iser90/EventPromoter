@@ -8,6 +8,8 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import { RedditTargetService } from '../services/targetService.js'
+import { RedditTargets } from '../types.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -63,6 +65,78 @@ export class RedditApiPublisher implements RedditPublisher {
     return data.access_token
   }
 
+  /**
+   * Extract subreddit names from targets configuration
+   */
+  private async extractSubredditsFromTargets(targetsConfig: RedditTargets): Promise<string[]> {
+    if (!targetsConfig) return []
+
+    const targetService = new RedditTargetService()
+    const allTargets = await targetService.getTargets('subreddit')
+    const groups = await targetService.getGroups()
+
+    // targetType is REQUIRED - no fallbacks
+    const allSubreddits = allTargets.map((t: any) => {
+      if (!t.targetType) {
+        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        return undefined
+      }
+      const baseField = targetService.getBaseField(t.targetType)
+      return t[baseField]
+    }).filter((subreddit: string | undefined): subreddit is string => subreddit !== undefined)
+
+    if (targetsConfig.mode === 'all') {
+      return allSubreddits
+    } else if (targetsConfig.mode === 'groups' && targetsConfig.groups && Array.isArray(targetsConfig.groups)) {
+      // Collect all subreddits from selected groups
+      const subreddits: string[] = []
+      const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
+      for (const groupIdentifier of targetsConfig.groups) {
+        // Find group by ID or name
+        const group = groupsArray.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier) as any
+        if (!group || !group.targetIds || !Array.isArray(group.targetIds)) continue
+        
+        // Convert target IDs to subreddit names (only subreddit type targets)
+        const groupSubreddits = group.targetIds
+          .map((targetId: string) => {
+            const target = allTargets.find((t: any) => t.id === targetId && t.targetType === 'subreddit')
+            if (!target) return undefined
+            if (!target.targetType) {
+              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              return undefined
+            }
+            const baseField = targetService.getBaseField(target.targetType)
+            return target[baseField]
+          })
+          .filter((subreddit: string | undefined): subreddit is string => subreddit !== undefined)
+        subreddits.push(...groupSubreddits)
+      }
+      return [...new Set(subreddits)] // Remove duplicates
+    } else if (targetsConfig.mode === 'individual' && targetsConfig.individual && Array.isArray(targetsConfig.individual)) {
+      // targetType is REQUIRED - no fallbacks
+      const targetMapEntries: [string, string][] = []
+      for (const t of allTargets) {
+        if (!t.targetType) {
+          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          continue
+        }
+        const baseField = targetService.getBaseField(t.targetType)
+        const baseValue = t[baseField]
+        if (baseValue) {
+          targetMapEntries.push([t.id, baseValue])
+        }
+      }
+      const targetMap = new Map(targetMapEntries)
+      
+      const individualSubreddits: string[] = targetsConfig.individual
+        .map((targetId: string) => targetMap.get(targetId))
+        .filter((subreddit: string | undefined): subreddit is string => subreddit !== undefined)
+      return [...new Set(individualSubreddits)]
+    }
+
+    return []
+  }
+
   async publish(
     content: any,
     files: any[],
@@ -78,106 +152,197 @@ export class RedditApiPublisher implements RedditPublisher {
         }
       }
 
-      const subreddit = content.subreddit || 'test' // Default to test subreddit
-      const title = content.title || content.text?.substring(0, 300) || 'Event Post'
-      const text = content.text || content.body || ''
+      // ✅ GENERIC: Validate that AT LEAST ONE target type is present
+      if (!content.subreddits && !content.users) {
+        return {
+          success: false,
+          error: 'At least one target configuration is required (subreddits or users)'
+        }
+      }
 
-      // Get access token
-      const accessToken = await this.getAccessToken(credentials)
+      // ✅ NO FALLBACKS - Validate required fields
+      if (!content.title || content.title.trim().length === 0) {
+        return {
+          success: false,
+          error: 'Title is required'
+        }
+      }
 
-      // Determine post type and handle images
-      let payload: any
+      if (!content.text || content.text.trim().length === 0) {
+        return {
+          success: false,
+          error: 'Text is required'
+        }
+      }
 
-      if (files.length > 0) {
-        const file = files[0]
+      const title = content.title
+      const text = content.text
+
+      // ✅ Support subreddits (posts) OR users (DMs)
+      if (content.subreddits) {
+        const subreddits = await this.extractSubredditsFromTargets(content.subreddits)
+        if (subreddits.length === 0) {
+          return {
+            success: false,
+            error: 'No subreddits found in targets configuration'
+          }
+        }
+
+        // Get access token once for all posts
+        const accessToken = await this.getAccessToken(credentials)
+
+        // ✅ Post to ALL subreddits
+        const results: Array<{ subreddit: string; success: boolean; postId?: string; url?: string; error?: string }> = []
         
-        // Check if it's an image file
-        const isImage = file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
-                       file.type?.startsWith('image/')
-
-        if (isImage) {
-          // Image post using Reddit's 3-step lease-based upload system
+        for (const subreddit of subreddits) {
           try {
-            const mediaAssetId = await this.uploadImageToReddit(file, accessToken, credentials.userAgent)
-            
-            payload = {
-              kind: 'image',
-              sr: subreddit,
-              title: title,
-              media_asset_id: mediaAssetId,
-              resubmit: true,
-              api_type: 'json'
+            // Determine post type and handle images
+            let payload: any
+
+            if (files.length > 0) {
+              const file = files[0]
+              
+              // Check if it's an image file
+              const isImage = file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i) || 
+                             file.type?.startsWith('image/')
+
+              if (isImage) {
+                // Image post using Reddit's 3-step lease-based upload system
+                try {
+                  const mediaAssetId = await this.uploadImageToReddit(file, accessToken, credentials.userAgent)
+                  
+                  payload = {
+                    kind: 'image',
+                    sr: subreddit,
+                    title: title,
+                    media_asset_id: mediaAssetId,
+                    resubmit: true,
+                    api_type: 'json'
+                  }
+                } catch (error: any) {
+                  results.push({
+                    subreddit,
+                    success: false,
+                    error: `Failed to upload image: ${error.message}`
+                  })
+                  continue
+                }
+              } else {
+                // Link post (non-image file) - use URL if available
+                if (file.url) {
+                  payload = {
+                    kind: 'link',
+                    sr: subreddit,
+                    title: title,
+                    url: file.url,
+                    text: text || undefined,
+                    api_type: 'json'
+                  }
+                } else {
+                  results.push({
+                    subreddit,
+                    success: false,
+                    error: 'Non-image files require a URL for Reddit link posts'
+                  })
+                  continue
+                }
+              }
+            } else {
+              // Text post
+              payload = {
+                kind: 'self',
+                sr: subreddit,
+                title: title,
+                text: text,
+                api_type: 'json'
+              }
+            }
+
+            const response = await fetch('https://oauth.reddit.com/api/submit', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': credentials.userAgent
+              },
+              body: new URLSearchParams(payload as any)
+            })
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}))
+              results.push({
+                subreddit,
+                success: false,
+                error: errorData.error || `Reddit API error: ${response.status} ${response.statusText}`
+              })
+              continue
+            }
+
+            const data = await response.json()
+            const postId = data.json?.data?.name || data.json?.data?.id
+
+            if (!postId) {
+              results.push({
+                subreddit,
+                success: false,
+                error: 'Failed to get post ID from Reddit response'
+              })
+              continue
+            }
+
+            // Extract actual post ID from Reddit's format (e.g., "t3_abc123")
+            const actualPostId = postId.replace('t3_', '')
+
+            results.push({
+              subreddit,
+              success: true,
+              postId: actualPostId,
+              url: `https://reddit.com/r/${subreddit}/comments/${actualPostId}/`
+            })
+
+            // Rate limiting: wait 2 seconds between posts to avoid hitting Reddit's rate limits
+            if (subreddits.indexOf(subreddit) < subreddits.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 2000))
             }
           } catch (error: any) {
-            return {
+            results.push({
+              subreddit,
               success: false,
-              error: `Failed to upload image to Reddit: ${error.message}`
-            }
+              error: error.message || 'Unknown error'
+            })
           }
-        } else {
-          // Link post (non-image file) - use URL if available
-          if (file.url) {
-            payload = {
-              kind: 'link',
-              sr: subreddit,
-              title: title,
-              url: file.url,
-              text: text || undefined,
-              api_type: 'json'
-            }
-          } else {
-            return {
-              success: false,
-              error: 'Non-image files require a URL for Reddit link posts'
-            }
+        }
+
+        // Return aggregated result
+        const successful = results.filter(r => r.success)
+        const failed = results.filter(r => !r.success)
+
+        if (successful.length === 0) {
+          return {
+            success: false,
+            error: `Failed to post to all subreddits. Errors: ${failed.map(f => `${f.subreddit}: ${f.error}`).join('; ')}`
           }
+        }
+
+        // Return first successful post as primary result, but include all results in message
+        const firstSuccess = successful[0]
+        return {
+          success: true,
+          postId: firstSuccess.postId,
+          url: firstSuccess.url,
+          message: `Posted to ${successful.length}/${subreddits.length} subreddits. ${failed.length > 0 ? `Failed: ${failed.map(f => f.subreddit).join(', ')}` : 'All successful.'}`
+        }
+      } else if (content.users) {
+        // ✅ User DMs - not yet implemented
+        return {
+          success: false,
+          error: 'User DMs not yet implemented in API publisher'
         }
       } else {
-        // Text post
-        payload = {
-          kind: 'self',
-          sr: subreddit,
-          title: title,
-          text: text,
-          api_type: 'json'
-        }
-      }
-
-      const response = await fetch('https://oauth.reddit.com/api/submit', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': credentials.userAgent
-        },
-        body: new URLSearchParams(payload as any)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
         return {
           success: false,
-          error: errorData.error || `Reddit API error: ${response.status} ${response.statusText}`
+          error: 'Either subreddits or users target configuration is required'
         }
-      }
-
-      const data = await response.json()
-      const postId = data.json?.data?.name || data.json?.data?.id
-
-      if (!postId) {
-        return {
-          success: false,
-          error: 'Failed to get post ID from Reddit response'
-        }
-      }
-
-      // Extract actual post ID from Reddit's format (e.g., "t3_abc123")
-      const actualPostId = postId.replace('t3_', '')
-
-      return {
-        success: true,
-        postId: actualPostId,
-        url: `https://reddit.com/r/${subreddit}/comments/${actualPostId}/`
       }
     } catch (error: any) {
       return {

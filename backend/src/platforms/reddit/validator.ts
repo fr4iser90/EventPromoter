@@ -15,8 +15,36 @@ export class RedditValidator {
       errors.push('Post title is required')
     }
 
-    if (!content.subreddit || content.subreddit.trim().length === 0) {
-      errors.push('Subreddit is required')
+    // ✅ GENERIC: Validate that AT LEAST ONE target type is present (subreddits OR users)
+    const hasSubreddits = content.subreddits && content.subreddits.mode
+    const hasUsers = content.users && content.users.mode
+    
+    if (!hasSubreddits && !hasUsers) {
+      errors.push('At least one target configuration is required (subreddits or users)')
+    } else {
+      // Validate subreddits if present
+      if (hasSubreddits) {
+        const targets = content.subreddits!
+        if (!targets.mode) {
+          errors.push('Subreddits mode is required')
+        } else if (targets.mode === 'individual' && (!targets.individual || !Array.isArray(targets.individual) || targets.individual.length === 0)) {
+          errors.push('Individual subreddits array is required when mode is "individual"')
+        } else if (targets.mode === 'groups' && (!targets.groups || !Array.isArray(targets.groups) || targets.groups.length === 0)) {
+          errors.push('Groups array is required when mode is "groups"')
+        }
+      }
+      
+      // Validate users if present
+      if (hasUsers) {
+        const targets = content.users!
+        if (!targets.mode) {
+          errors.push('Users mode is required')
+        } else if (targets.mode === 'individual' && (!targets.individual || !Array.isArray(targets.individual) || targets.individual.length === 0)) {
+          errors.push('Individual users array is required when mode is "individual"')
+        } else if (targets.mode === 'groups' && (!targets.groups || !Array.isArray(targets.groups) || targets.groups.length === 0)) {
+          errors.push('Groups array is required when mode is "groups"')
+        }
+      }
     }
 
     if (!content.text || content.text.trim().length === 0) {
@@ -41,31 +69,6 @@ export class RedditValidator {
 
       if (upperCaseRatio > 0.5) {
         errors.push('Title appears to be in ALL CAPS - consider proper capitalization')
-      }
-    }
-
-    // Subreddit validation
-    if (content.subreddit) {
-      const subreddit = content.subreddit.trim()
-
-      // Remove r/ prefix if present for validation
-      const cleanSubreddit = subreddit.startsWith('r/') ? subreddit.slice(2) : subreddit
-
-      if (cleanSubreddit.length === 0) {
-        errors.push('Subreddit name cannot be empty')
-      } else if (cleanSubreddit.length > 21) {
-        errors.push(`Subreddit name too long: ${cleanSubreddit.length}/21 characters`)
-      }
-
-      // Check for valid characters (letters, numbers, underscores)
-      if (!/^[a-zA-Z0-9_]+$/.test(cleanSubreddit)) {
-        errors.push('Subreddit name can only contain letters, numbers, and underscores')
-      }
-
-      // Reserved subreddits
-      const reservedSubs = ['all', 'popular', 'home', 'mod']
-      if (reservedSubs.includes(cleanSubreddit.toLowerCase())) {
-        errors.push(`'${cleanSubreddit}' is a reserved subreddit name`)
       }
     }
 
