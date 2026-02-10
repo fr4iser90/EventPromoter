@@ -45,14 +45,23 @@ export class SubmitController {
       const platformContent = await EventService.getAllPlatformContent(eventId)
       console.log('Loaded platform content for:', Object.keys(platformContent))
 
-      // 3. Get selected platforms from event data
-      if (!eventData.selectedPlatforms || !Array.isArray(eventData.selectedPlatforms) || eventData.selectedPlatforms.length === 0) {
+      // 3. Get selected platforms: from request body (for retry) or from event data
+      let selectedPlatforms: string[] = []
+      if (req.body.platforms && typeof req.body.platforms === 'object') {
+        // ✅ Retry: Use platforms from request body (filter enabled platforms)
+        selectedPlatforms = Object.keys(req.body.platforms).filter(p => req.body.platforms[p] === true)
+        console.log(`[Retry] Publishing only to platforms: ${selectedPlatforms.join(', ')}`)
+      } else if (eventData.selectedPlatforms && Array.isArray(eventData.selectedPlatforms) && eventData.selectedPlatforms.length > 0) {
+        // Normal publish: Use platforms from event data
+        selectedPlatforms = eventData.selectedPlatforms
+      }
+      
+      if (selectedPlatforms.length === 0) {
         return res.status(400).json({
           error: 'No platforms selected',
           details: 'Please select at least one platform before publishing'
         })
       }
-      const selectedPlatforms = eventData.selectedPlatforms
 
       // 4. Get files from event data
       if (!eventData.uploadedFileRefs || !Array.isArray(eventData.uploadedFileRefs) || eventData.uploadedFileRefs.length === 0) {
@@ -128,7 +137,8 @@ export class SubmitController {
         eventData: parsedData // Use parsed data for eventData
       }
 
-      const publishResult = await PublishingService.publish(publishRequest, baseUrl)
+      // Pass sessionId for real-time event feedback
+      const publishResult = await PublishingService.publish(publishRequest, baseUrl, publishSessionId)
 
       // Save to history
       try {

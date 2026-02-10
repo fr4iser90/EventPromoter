@@ -101,7 +101,7 @@ export interface PlatformService {
   transformForAPI?(content: any): any
   generateHashtags?(baseTags: string[]): string[]
   getRequirements?(): any
-  getOptimizationTips?(content: any): string[]
+  getOptimizationTips?(content: any): string[] | Promise<string[]>
 
   // Content processing methods
   processContentForSave?(content: any): any
@@ -137,7 +137,7 @@ export interface PlatformService {
   post?(content: any, credentials: any): Promise<PostResult>
 
   // Publishing feedback methods
-  extractTarget?(content: any): string // Extract human-readable target from content
+  extractTarget?(content: any): string | Promise<string> // Extract human-readable target from content
   extractResponseData?(response: any): { postId?: string, url?: string, success: boolean, error?: string } // Extract response data from n8n/API/Playwright response
 }
 

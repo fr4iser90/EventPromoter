@@ -16,11 +16,9 @@ export const redditCredentialsSchema: CredentialsSchema = {
     {
       name: 'clientId',
       type: 'text',
-      label: 'Client ID',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Client ID is required' }
-      ],
+      label: 'Client ID (for API only)',
+      required: false,
+      description: 'Required only for Reddit API publishing. Not needed for Playwright.',
       ui: {
         width: 12,
         order: 1
@@ -29,11 +27,9 @@ export const redditCredentialsSchema: CredentialsSchema = {
     {
       name: 'clientSecret',
       type: 'password',
-      label: 'Client Secret',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Client Secret is required' }
-      ],
+      label: 'Client Secret (for API only)',
+      required: false,
+      description: 'Required only for Reddit API publishing. Not needed for Playwright.',
       ui: {
         width: 12,
         order: 2
@@ -42,8 +38,9 @@ export const redditCredentialsSchema: CredentialsSchema = {
     {
       name: 'username',
       type: 'text',
-      label: 'Username',
+      label: 'Reddit Username',
       required: true,
+      description: 'Required for both API and Playwright publishing',
       validation: [
         { type: 'required', message: 'Username is required' }
       ],
@@ -55,8 +52,9 @@ export const redditCredentialsSchema: CredentialsSchema = {
     {
       name: 'password',
       type: 'password',
-      label: 'Password',
+      label: 'Reddit Password',
       required: true,
+      description: 'Required for both API and Playwright publishing',
       validation: [
         { type: 'required', message: 'Password is required' }
       ],
@@ -68,10 +66,17 @@ export const redditCredentialsSchema: CredentialsSchema = {
   ],
   groups: [
     {
-      id: 'credentials',
-      title: 'Reddit API Credentials',
-      description: 'Configure your Reddit API credentials',
-      fields: ['clientId', 'clientSecret', 'username', 'password'],
+      id: 'api-credentials',
+      title: 'Reddit API Credentials (Optional)',
+      description: 'Only required if you want to use Reddit API publishing. Leave empty if you only use Playwright.',
+      fields: ['clientId', 'clientSecret'],
+      collapsible: true
+    },
+    {
+      id: 'login-credentials',
+      title: 'Reddit Login Credentials (Required)',
+      description: 'Required for both API and Playwright publishing',
+      fields: ['username', 'password'],
       collapsible: false
     }
   ]

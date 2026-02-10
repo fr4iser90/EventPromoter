@@ -957,14 +957,18 @@ const useStore = create((set, get) => ({
       console.log('Sending submit request for event:', eventId)
 
       // Send to backend (which loads everything from storage and publishes)
+      // Note: For long-running operations (Playwright), use SSE stream for real-time feedback
       const response = await axios.post(getApiUrl('submit'), payload, {
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: 30000 // 30 second timeout
+        timeout: 300000 // 5 minutes timeout for Playwright operations
       })
 
       console.log('Backend response:', response.data)
+      
+      // Return sessionId for SSE stream connection
+      const sessionId = response.data?.publishSessionId
 
       // Save to history after successful publish
       try {

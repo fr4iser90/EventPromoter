@@ -20,6 +20,7 @@ import useStore from '../../../store'
 import { getApiUrl } from '../../../shared/utils/api'
 import { Results as PublishResults } from '../../publish'
 import { usePlatforms } from '../../platform/hooks/usePlatformSchema'
+import PublisherProgress from '../../publish/components/PublisherProgress'
 
 function PublishParser() {
   const { t } = useTranslation()
@@ -141,6 +142,47 @@ function PublishParser() {
     }
   }
 
+  // Handle completion of publishing
+  const handlePublishComplete = (data) => {
+    console.log('Publishing completed:', data)
+    // Results will be shown automatically
+  }
+
+  // ✅ Retry failed platform
+  const handleRetryPlatform = async (platformId) => {
+    console.log(`🔄 Retrying publish for platform: ${platformId}`)
+    
+    try {
+      const eventId = useStore.getState().currentEvent?.id
+      if (!eventId) {
+        throw new Error('No current event found')
+      }
+
+      // Create a new session for retry
+      const payload = {
+        eventId: eventId,
+        platforms: { [platformId]: true } // Only retry this platform
+      }
+
+      const response = await axios.post(getApiUrl('submit'), payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 300000 // 5 minutes timeout
+      })
+
+      const newSessionId = response.data?.publishSessionId
+      if (newSessionId) {
+        setPublishSessionId(newSessionId)
+        setShowResults(true)
+        console.log(`✅ Retry started for ${platformId}, new session: ${newSessionId}`)
+      }
+    } catch (error) {
+      console.error(`Failed to retry platform ${platformId}:`, error)
+      setValidationErrors([`Failed to retry ${platformId}: ${error.message}`])
+    }
+  }
+
   // Get platform status
   const getPlatformStatus = () => {
     return selectedPlatforms.map(platform => {
@@ -202,7 +244,15 @@ function PublishParser() {
       )}
 
       {/* Processing Status */}
-      {isProcessing && (
+      {isProcessing && publishSessionId && (
+        <PublisherProgress 
+          sessionId={publishSessionId} 
+          onComplete={handlePublishComplete}
+          onRetry={handleRetryPlatform}
+        />
+      )}
+      
+      {isProcessing && !publishSessionId && (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <CircularProgress size={20} />
@@ -223,6 +273,14 @@ function PublishParser() {
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
+      )}
+
+      {/* Real-time Progress (SSE) */}
+      {isProcessing && publishSessionId && (
+        <PublisherProgress 
+          sessionId={publishSessionId} 
+          onComplete={handlePublishComplete}
+        />
       )}
 
       {/* Publish Button */}

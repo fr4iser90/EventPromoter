@@ -5,6 +5,7 @@ import { ConfigService } from './configService.js'
 import { getPlatformRegistry, initializePlatformRegistry } from './platformRegistry.js'
 import { PostResult } from '../types/index.js'
 import { PublishingFeedbackService, PublishingFeedback } from './publishingFeedbackService.js'
+import { PublisherEventService, EventAwarePublisher } from './publisherEventService.js'
 
 export type PublishingMode = 'n8n' | 'api' | 'playwright' | 'auto'
 
@@ -34,8 +35,9 @@ export class PublishingService {
    * Main publish method - routes to appropriate publisher based on config
    * @param request - Publish request with files, platforms, content, etc.
    * @param baseUrl - Base URL derived from request (for file URL transformation)
+   * @param sessionId - Optional session ID for real-time event feedback
    */
-  static async publish(request: PublishRequest, baseUrl?: string): Promise<PublishResult> {
+  static async publish(request: PublishRequest, baseUrl?: string, sessionId?: string): Promise<PublishResult> {
     const appConfig = await ConfigService.getAppConfig()
     const publishingMode = appConfig?.publishingMode || 'auto'
     const n8nEnabled = appConfig?.n8nEnabled !== false // Default to true if not set
@@ -60,19 +62,29 @@ export class PublishingService {
       mode = publishingMode
     }
 
+    // Get event emitter if sessionId provided
+    const eventEmitter = sessionId ? PublisherEventService.getInstance(sessionId) : undefined
+    
+    // Generate correlation ID for this publishing run
+    // Format: sessionId-platformId-timestamp (or just timestamp if no sessionId)
+    const publishRunId = sessionId ? `${sessionId}-${Date.now()}` : `publish-${Date.now()}`
+    
+    // ✅ LOG: Start publishing mit publishRunId
+    console.log(`[${publishRunId}] 🚀 Starting publish process (mode: ${mode}, platforms: ${Object.keys(request.platforms).filter(p => request.platforms[p]).join(', ')})`)
+
     // Route to specific publisher
     switch (mode) {
       case 'n8n':
         if (!n8nUrl) {
           throw new Error('N8N webhook URL not configured')
         }
-        return await this.publishViaN8n(request, n8nUrl, baseUrl)
+        return await this.publishViaN8n(request, n8nUrl, baseUrl, eventEmitter, publishRunId)
 
       case 'api':
-        return await this.publishViaAPI(request)
+        return await this.publishViaAPI(request, eventEmitter, publishRunId)
 
       case 'playwright':
-        return await this.publishViaPlaywright(request)
+        return await this.publishViaPlaywright(request, eventEmitter, publishRunId)
 
       default:
         throw new Error(`Unknown publishing mode: ${mode}`)
@@ -84,8 +96,10 @@ export class PublishingService {
    * @param request - Publish request
    * @param webhookUrl - N8N webhook URL
    * @param baseUrl - Base URL for file URL transformation (from request)
+   * @param eventEmitter - Optional event emitter for real-time feedback
+   * @param publishRunId - Correlation ID for this publishing run
    */
-  private static async publishViaN8n(request: PublishRequest, webhookUrl: string, baseUrl?: string): Promise<PublishResult> {
+  private static async publishViaN8n(request: PublishRequest, webhookUrl: string, baseUrl?: string, eventEmitter?: PublisherEventService, publishRunId?: string): Promise<PublishResult> {
     const n8nPayload = await N8nService.transformPayloadForN8n(
       request.files,
       request.platforms,
@@ -155,9 +169,121 @@ export class PublishingService {
   }
 
   /**
-   * Publish via direct API calls using platform services
+   * Execute a publisher function with automatic event wrapping
+   * This provides observability for ALL publishers without requiring them to implement events
+   * 
+   * @param platformId - Platform identifier
+   * @param method - Publishing method (api, playwright, n8n)
+   * @param stepName - Human-readable step name
+   * @param publishRunId - Correlation ID for this publishing run
+   * @param eventEmitter - Optional event emitter
+   * @param publisherFn - Publisher function to execute
+   * @returns Result from publisher function
    */
-  private static async publishViaAPI(request: PublishRequest): Promise<PublishResult> {
+  private static async executeWithEvents<T>(
+    platformId: string,
+    method: 'api' | 'playwright' | 'n8n',
+    stepName: string,
+    publishRunId: string,
+    eventEmitter: PublisherEventService | undefined,
+    publisherFn: () => Promise<T>
+  ): Promise<T> {
+    const startTime = Date.now()
+    
+    // ✅ LOG: publishRunId für besseres Debugging
+    console.log(`[${publishRunId}] Starting ${stepName} for ${platformId} via ${method}`)
+    
+    // Emit step_started (standardized base event)
+    if (eventEmitter) {
+      eventEmitter.stepStarted(platformId, method, stepName, `Starting ${stepName}`, publishRunId)
+    }
+    
+    try {
+      // Execute publisher function
+      const result = await publisherFn()
+      const duration = Date.now() - startTime
+      
+      // ✅ LOG: Success mit publishRunId
+      console.log(`[${publishRunId}] ✅ ${stepName} completed for ${platformId} in ${duration}ms`)
+      
+      // Emit step_completed (standardized base event)
+      if (eventEmitter) {
+        eventEmitter.stepCompleted(platformId, method, stepName, duration, publishRunId)
+      }
+      
+      return result
+    } catch (error: any) {
+      const duration = Date.now() - startTime
+      
+      // Determine error code and retryability
+      const errorCode = this.getErrorCode(error)
+      const retryable = this.isRetryableError(error)
+      
+      // ✅ LOG: Error mit publishRunId, errorCode und retryable
+      console.error(`[${publishRunId}] ❌ ${stepName} failed for ${platformId}: ${error.message} (${errorCode}, retryable: ${retryable})`)
+      
+      // Emit step_failed (standardized base event)
+      if (eventEmitter) {
+        eventEmitter.stepFailed(
+          platformId,
+          method,
+          stepName,
+          error.message || 'Unknown error',
+          errorCode,
+          retryable,
+          publishRunId
+        )
+      }
+      
+      throw error
+    }
+  }
+
+  /**
+   * Extract standardized error code from error
+   */
+  private static getErrorCode(error: any): string {
+    if (error.code) return error.code
+    if (error.status) return `HTTP_${error.status}`
+    if (error.type) return error.type
+    return 'UNKNOWN_ERROR'
+  }
+
+  /**
+   * Determine if error is retryable
+   */
+  private static isRetryableError(error: any): boolean {
+    // Network errors are usually retryable
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+      return true
+    }
+    
+    // HTTP 5xx errors are retryable
+    if (error.status >= 500 && error.status < 600) {
+      return true
+    }
+    
+    // HTTP 429 (Rate Limit) is retryable
+    if (error.status === 429) {
+      return true
+    }
+    
+    // HTTP 4xx errors (except 429) are usually not retryable
+    if (error.status >= 400 && error.status < 500) {
+      return false
+    }
+    
+    // Default: not retryable
+    return false
+  }
+
+  /**
+   * Publish via direct API calls using platform services
+   * @param request - Publish request
+   * @param eventEmitter - Optional event emitter for real-time feedback
+   * @param publishRunId - Correlation ID for this publishing run
+   */
+  private static async publishViaAPI(request: PublishRequest, eventEmitter?: PublisherEventService, publishRunId?: string): Promise<PublishResult> {
     const registry = getPlatformRegistry()
     if (!registry.isInitialized()) {
       await initializePlatformRegistry()
@@ -168,7 +294,12 @@ export class PublishingService {
 
     // Publish to each platform using its service
     for (const platformId of platformList) {
+      const stepName = `Publishing to ${platformId} via API`
+      
       try {
+        if (eventEmitter) {
+          eventEmitter.stepStarted(platformId, 'api', stepName, `Starting API publish for ${platformId}`)
+        }
         const platformModule = registry.getPlatform(platformId.toLowerCase())
         if (!platformModule) {
           results[platformId] = {
@@ -184,17 +315,37 @@ export class PublishingService {
           // Try to use platform publisher if available
           const publisher = await this.getPlatformPublisher(platformId, 'api')
           if (publisher) {
+            // Set event emitter if publisher supports it
+            if (eventEmitter && 'setEventEmitter' in publisher) {
+              (publisher as EventAwarePublisher).setEventEmitter(eventEmitter)
+            }
+            
             const content = request.content[platformId] || request.content
+            const startTime = Date.now()
             const result = await publisher.publish(content, request.files, request.hashtags)
+            const duration = Date.now() - startTime
+            
             results[platformId] = {
               ...result,
               method: 'api'
+            }
+            
+            if (eventEmitter) {
+              if (result.success) {
+                eventEmitter.stepCompleted(platformId, 'api', stepName, duration)
+                eventEmitter.success(platformId, 'api', `Successfully published to ${platformId}`, { postId: result.postId, url: result.url })
+              } else {
+                eventEmitter.error(platformId, 'api', stepName, result.error || 'Unknown error')
+              }
             }
           } else {
             results[platformId] = {
               success: false,
               error: `Platform ${platformId} does not support direct API publishing`,
               method: 'api'
+            }
+            if (eventEmitter) {
+              eventEmitter.error(platformId, 'api', stepName, `Platform ${platformId} does not support direct API publishing`)
             }
           }
           continue
@@ -205,7 +356,9 @@ export class PublishingService {
         const platformContent = request.content[platformId] || request.content
 
         // Use platform service post method
+        const startTime = Date.now()
         const postResult: PostResult = await service.post(platformContent, settings)
+        const duration = Date.now() - startTime
 
         results[platformId] = {
           success: postResult.success,
@@ -214,11 +367,23 @@ export class PublishingService {
           error: postResult.error,
           method: 'api'
         }
+        
+        if (eventEmitter) {
+          if (postResult.success) {
+            eventEmitter.stepCompleted(platformId, 'api', stepName, duration)
+            eventEmitter.success(platformId, 'api', `Successfully published to ${platformId}`, { postId: postResult.postId, url: postResult.url })
+          } else {
+            eventEmitter.error(platformId, 'api', stepName, postResult.error || 'Unknown error')
+          }
+        }
       } catch (error: any) {
         results[platformId] = {
           success: false,
           error: error.message || 'Unknown error',
           method: 'api'
+        }
+        if (eventEmitter) {
+          eventEmitter.error(platformId, 'api', stepName, error.message || 'Unknown error')
         }
       }
     }
@@ -243,8 +408,11 @@ export class PublishingService {
 
   /**
    * Publish via Playwright (browser automation)
+   * @param request - Publish request
+   * @param eventEmitter - Optional event emitter for real-time feedback
+   * @param publishRunId - Correlation ID for this publishing run
    */
-  private static async publishViaPlaywright(request: PublishRequest): Promise<PublishResult> {
+  private static async publishViaPlaywright(request: PublishRequest, eventEmitter?: PublisherEventService, publishRunId?: string): Promise<PublishResult> {
     const registry = getPlatformRegistry()
     if (!registry.isInitialized()) {
       await initializePlatformRegistry()
@@ -255,6 +423,9 @@ export class PublishingService {
 
     // Publish to each platform using Playwright
     for (const platformId of platformList) {
+      const stepName = `Publishing to ${platformId} via Playwright`
+      const platformRunId = publishRunId ? `${publishRunId}-${platformId}` : undefined
+      
       try {
         const publisher = await this.getPlatformPublisher(platformId, 'playwright')
         if (!publisher) {
@@ -263,20 +434,52 @@ export class PublishingService {
             error: `Platform ${platformId} does not support Playwright publishing`,
             method: 'playwright'
           }
+          if (eventEmitter) {
+            eventEmitter.stepFailed(platformId, 'playwright', stepName, `Platform ${platformId} does not support Playwright publishing`, 'PUBLISHER_NOT_AVAILABLE', false, platformRunId)
+          }
           continue
         }
 
+        // Set event emitter if publisher supports it (for detailed events like Step 1-6)
+        if (eventEmitter && 'setEventEmitter' in publisher) {
+          (publisher as EventAwarePublisher).setEventEmitter(eventEmitter)
+        }
+
         const content = request.content[platformId] || request.content
-        const result = await publisher.publish(content, request.files, request.hashtags)
+        
+        // ✅ AUTOMATIC EVENT WRAPPING: Publisher wird automatisch mit Events gewrappt
+        // Publisher kann zusätzlich detaillierte Events emitten (z.B. Playwright Steps 1-6)
+        const result = await this.executeWithEvents(
+          platformId,
+          'playwright',
+          stepName,
+          platformRunId || `${platformId}-${Date.now()}`,
+          eventEmitter,
+          async () => {
+            return await publisher.publish(content, request.files, request.hashtags)
+          }
+        )
+        
         results[platformId] = {
           ...result,
           method: 'playwright'
+        }
+        
+        // Emit success event with result data
+        if (eventEmitter && result.success) {
+          eventEmitter.success(platformId, 'playwright', `Successfully published to ${platformId}`, { postId: result.postId, url: result.url }, platformRunId)
         }
       } catch (error: any) {
         results[platformId] = {
           success: false,
           error: error.message || 'Unknown error',
           method: 'playwright'
+        }
+        // Error is already handled by executeWithEvents, but we log it here too
+        if (eventEmitter) {
+          const errorCode = this.getErrorCode(error)
+          const retryable = this.isRetryableError(error)
+          eventEmitter.stepFailed(platformId, 'playwright', stepName, error.message || 'Unknown error', errorCode, retryable, platformRunId)
         }
       }
     }

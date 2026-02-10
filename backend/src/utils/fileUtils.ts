@@ -27,8 +27,68 @@ export async function readConfig(filename: string): Promise<any> {
       return null // File doesn't exist
     }
     if (error instanceof SyntaxError) {
-      console.warn(`❌ Invalid JSON in ${filename}, returning null: ${error.message}`)
-      return null // Invalid JSON
+      console.warn(`❌ Invalid JSON in ${filename}: ${error.message}`)
+      
+      // ✅ Try to recover: Find first valid JSON object in the file
+      try {
+        const filePath = path.join(CONFIG_DIR, filename)
+        const data = await fs.readFile(filePath, 'utf8')
+        
+        // Try to extract first valid JSON object
+        const firstBrace = data.indexOf('{')
+        if (firstBrace !== -1) {
+          // Find matching closing brace
+          let braceCount = 0
+          let endPos = firstBrace
+          for (let i = firstBrace; i < data.length; i++) {
+            if (data[i] === '{') braceCount++
+            if (data[i] === '}') braceCount--
+            if (braceCount === 0) {
+              endPos = i + 1
+              break
+            }
+          }
+          
+          if (endPos > firstBrace) {
+            const partialJson = data.substring(firstBrace, endPos)
+            const recovered = JSON.parse(partialJson)
+            console.warn(`⚠️ Recovered partial config from ${filename} (first JSON object only)`)
+            
+            // Create backup of broken file
+            const backupPath = `${filePath}.broken.${Date.now()}`
+            await fs.writeFile(backupPath, data).catch(() => {})
+            console.warn(`💾 Backup of broken file saved to: ${path.basename(backupPath)}`)
+            
+            return recovered
+          }
+        }
+      } catch (recoveryError) {
+        console.warn(`❌ Could not recover config from ${filename}`)
+      }
+      
+      // ✅ Last resort: Try to load from backup file
+      try {
+        const backupFiles = await fs.readdir(CONFIG_DIR)
+        const backupFile = backupFiles
+          .filter(f => f.startsWith(filename) && f.includes('.broken.'))
+          .sort()
+          .reverse()[0] // Get most recent backup
+        
+        if (backupFile) {
+          const backupPath = path.join(CONFIG_DIR, backupFile)
+          const backupData = await fs.readFile(backupPath, 'utf8')
+          const backupConfig = JSON.parse(backupData)
+          console.warn(`⚠️ Loaded config from backup: ${backupFile}`)
+          return backupConfig
+        }
+      } catch (backupError) {
+        // No backup available
+      }
+      
+      // If all recovery attempts fail, return empty object instead of null
+      // This prevents data loss when merging configs
+      console.warn(`⚠️ Returning empty config for ${filename} to prevent data loss`)
+      return {}
     }
     throw error
   }

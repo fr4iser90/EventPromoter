@@ -3,6 +3,9 @@ import { PublishController } from '../controllers/publishController.js'
 
 const router = Router()
 
+// SSE stream for real-time publisher feedback
+router.get('/stream/:sessionId', PublishController.streamEvents)
+
 // Get publish session results
 router.get('/results/:eventId/:sessionId', PublishController.getPublishResults)
 
