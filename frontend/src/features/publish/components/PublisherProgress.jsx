@@ -11,6 +11,7 @@ import {
   Typography,
   Box,
   LinearProgress,
+  CircularProgress,
   Chip,
   Alert,
   Collapse,
@@ -19,7 +20,9 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-  Button
+  Button,
+  Divider,
+  useTheme
 } from '@mui/material'
 import {
   CheckCircle,
@@ -29,7 +32,8 @@ import {
   ExpandMore,
   ExpandLess,
   Refresh,
-  Code
+  Code,
+  Sensors
 } from '@mui/icons-material'
 import { getApiUrl } from '../../../shared/utils/api'
 import { usePlatforms } from '../../platform/hooks/usePlatformSchema'
@@ -43,6 +47,7 @@ const STEP_STATUS = {
 }
 
 function PublisherProgress({ sessionId, onComplete, onRetry }) {
+  const theme = useTheme()
   const [events, setEvents] = useState([])
   const [steps, setSteps] = useState(new Map())
   const [platforms, setPlatforms] = useState(new Map()) // Group by platform (tracking state)
@@ -60,7 +65,7 @@ function PublisherProgress({ sessionId, onComplete, onRetry }) {
   // Get platform info from backend - GENERIC (schema-based)
   const getPlatformInfo = (platformId) => {
     if (!platformList || platformList.length === 0) {
-      return { name: platformId, icon: '📝', color: '#666' }
+      return { name: platformId, icon: '📝', color: theme.palette.grey[600] }
     }
     
     const platform = platformList.find(p => p.id === platformId)
@@ -68,15 +73,15 @@ function PublisherProgress({ sessionId, onComplete, onRetry }) {
       return {
         name: platform.name || platform.metadata?.displayName || platformId,
         icon: platform.icon || platform.metadata?.icon || '📝',
-        color: platform.color || platform.metadata?.color || '#666'
+        color: platform.color || platform.metadata?.color || theme.palette.primary.main
       }
     }
     
-    return { name: platformId, icon: '📝', color: '#666' }
+    return { name: platformId, icon: '📝', color: theme.palette.grey[600] }
   }
 
   useEffect(() => {
-    if (!sessionId) return
+    if (!sessionId || sessionId === "active-session") return
 
     // Connect to SSE stream
     const eventSource = new EventSource(`${getApiUrl('publish')}/stream/${sessionId}`)
@@ -85,6 +90,7 @@ function PublisherProgress({ sessionId, onComplete, onRetry }) {
     eventSource.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data)
+        console.log('📥 [SSE In] Received event:', data)
         
         // Handle connection
         if (data.type === 'connected') {
@@ -289,19 +295,19 @@ function PublisherProgress({ sessionId, onComplete, onRetry }) {
         eventSourceRef.current.close()
       }
     }
-  }, [sessionId, onComplete])
+  }, [sessionId, onComplete, theme])
 
   const getStepIcon = (status) => {
     switch (status) {
       case STEP_STATUS.COMPLETED:
-        return <CheckCircle color="success" />
+        return <CheckCircle color="success" fontSize="small" />
       case STEP_STATUS.FAILED:
       case STEP_STATUS.ERROR:
-        return <ErrorIcon color="error" />
+        return <ErrorIcon color="error" fontSize="small" />
       case STEP_STATUS.RUNNING:
-        return <PlayArrow color="primary" />
+        return <PlayArrow color="primary" fontSize="small" />
       default:
-        return <Info color="disabled" />
+        return <Info color="disabled" fontSize="small" />
     }
   }
 
@@ -340,157 +346,202 @@ function PublisherProgress({ sessionId, onComplete, onRetry }) {
   const stepsArray = Array.from(steps.values())
 
   return (
-    <Paper elevation={2} sx={{ p: 3, mt: 2 }}>
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        p: 2, 
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+        bgcolor: theme.palette.background.default,
+        transition: 'all 0.3s ease'
+      }}
+    >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">
-          📊 Publishing Progress
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Sensors color={overallStatus === 'running' ? 'primary' : 'disabled'} sx={{ animation: overallStatus === 'running' ? 'pulse 2s infinite' : 'none' }} />
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+            Publishing Progress
+          </Typography>
+        </Box>
         <IconButton onClick={() => setExpanded(!expanded)} size="small">
           {expanded ? <ExpandLess /> : <ExpandMore />}
         </IconButton>
       </Box>
 
       {/* Overall Progress */}
-      <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Overall Progress
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
+          <Typography variant="caption" component="div" color="text.secondary" sx={{ fontWeight: 'medium', textTransform: 'uppercase', letterSpacing: 1 }}>
+            Status: {overallStatus.toUpperCase()}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" component="div" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
               {Math.round(overallProgress)}%
             </Typography>
             {overallStatus === 'failed' && (
-              <Chip 
-                label="Failed" 
-                size="small" 
-                color="error" 
-                icon={<ErrorIcon />}
-              />
+              <Chip label="Failed" size="small" color="error" variant="filled" sx={{ height: 20, fontSize: '0.7rem' }} />
             )}
             {overallStatus === 'completed' && (
-              <Chip 
-                label="Completed" 
-                size="small" 
-                color="success" 
-                icon={<CheckCircle />}
-              />
+              <Chip label="Done" size="small" color="success" variant="filled" sx={{ height: 20, fontSize: '0.7rem' }} />
             )}
           </Box>
         </Box>
         <LinearProgress 
           variant="determinate" 
           value={overallProgress} 
-          color={overallStatus === 'failed' ? 'error' : overallStatus === 'completed' ? 'success' : 'primary'}
-          sx={{ height: 8, borderRadius: 4 }}
+          sx={{ 
+            height: 6, 
+            borderRadius: 3,
+            bgcolor: theme.palette.action.hover,
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 3,
+              bgcolor: overallStatus === 'failed' ? theme.palette.error.main : 
+                       overallStatus === 'completed' ? theme.palette.success.main : 
+                       theme.palette.primary.main
+            }
+          }}
         />
       </Box>
 
-      {/* Current Step */}
+      {/* Current Step Alert */}
       {currentStep && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            <strong>Current:</strong> {currentStep}
+        <Box sx={{ 
+          mb: 2, 
+          p: 1, 
+          borderRadius: 1, 
+          bgcolor: theme.palette.primary.main + '10', 
+          borderLeft: `4px solid ${theme.palette.primary.main}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5
+        }}>
+          <CircularProgress size={16} thickness={6} />
+          <Typography variant="body2" sx={{ color: theme.palette.primary.dark, fontWeight: 'medium' }}>
+            {currentStep}
           </Typography>
-        </Alert>
+        </Box>
       )}
 
-      {/* Error */}
+      {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" variant="outlined" sx={{ mb: 2, py: 0 }}>
           {error}
         </Alert>
       )}
 
       {/* Multi-Platform View */}
       <Collapse in={expanded}>
-        {Array.from(platforms.values()).length > 0 ? (
-          <Box>
-            {Array.from(platforms.values()).map((platform) => {
-              const isExpanded = expandedPlatforms.has(platform.platform)
-              const platformSteps = stepsArray.filter(s => s.platform === platform.platform)
-              const hasRetryableErrors = platformSteps.some(s => s.retryable === true)
-              
-              return (
-                <Box key={platform.platform} sx={{ mb: 2, border: '1px solid #e0e0e0', borderRadius: 2, p: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <IconButton size="small" onClick={() => togglePlatform(platform.platform)}>
-                        {isExpanded ? <ExpandLess /> : <ExpandMore />}
-                      </IconButton>
-                      {/* ✅ GENERIC: Platform icon from schema */}
-                      <Chip
-                        icon={<span>{getPlatformInfo(platform.platform).icon}</span>}
-                        label={getPlatformInfo(platform.platform).name}
-                        size="small"
-                        sx={{ bgcolor: getPlatformInfo(platform.platform).color, color: 'white', fontWeight: 'bold' }}
-                      />
-                      <Chip 
-                        label={platform.method.toUpperCase()} 
-                        size="small" 
-                        color={platform.status === 'completed' ? 'success' : platform.status === 'failed' ? 'error' : 'primary'}
-                        variant="outlined"
-                      />
-                      {platform.status === 'completed' && <CheckCircle color="success" fontSize="small" />}
-                      {platform.status === 'failed' && <ErrorIcon color="error" fontSize="small" />}
-                      {platform.status === 'running' && <PlayArrow color="primary" fontSize="small" />}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {Array.from(platforms.values()).map((platform) => {
+            const isExpanded = expandedPlatforms.has(platform.platform)
+            const platformSteps = stepsArray.filter(s => s.platform === platform.platform)
+            const hasRetryableErrors = platformSteps.some(s => s.retryable === true)
+            const info = getPlatformInfo(platform.platform)
+            
+            return (
+              <Box 
+                key={platform.platform} 
+                sx={{ 
+                  border: `1px solid ${theme.palette.divider}`, 
+                  borderRadius: 1.5, 
+                  overflow: 'hidden',
+                  bgcolor: theme.palette.background.paper
+                }}
+              >
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  p: 1.5,
+                  bgcolor: theme.palette.action.hover
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <IconButton size="small" onClick={() => togglePlatform(platform.platform)} sx={{ p: 0.5 }}>
+                      {isExpanded ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+                    </IconButton>
+                    
+                    <Box sx={{ 
+                      width: 32, 
+                      height: 32, 
+                      borderRadius: '50%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      bgcolor: info.color,
+                      color: '#fff',
+                      fontSize: '1.2rem',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                      {info.icon}
                     </Box>
+                    
+                    <Box>
+                      <Typography variant="body2" component="div" sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>
+                        {info.name}
+                      </Typography>
+                      <Typography variant="caption" component="div" color="text.secondary" sx={{ display: 'block' }}>
+                        via {platform.method?.toUpperCase() || 'UNKNOWN'}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {platform.status === 'completed' && <CheckCircle color="success" fontSize="small" />}
+                    {platform.status === 'failed' && <ErrorIcon color="error" fontSize="small" />}
+                    {platform.status === 'running' && <CircularProgress size={14} thickness={6} />}
+                    
                     {hasRetryableErrors && onRetry && (
                       <Button
                         size="small"
-                        variant="outlined"
+                        variant="contained"
                         color="warning"
                         startIcon={<Refresh />}
                         onClick={() => onRetry(platform.platform)}
+                        sx={{ height: 24, fontSize: '0.65rem', px: 1 }}
                       >
                         Retry
                       </Button>
                     )}
                   </Box>
-                  
-                  <Collapse in={isExpanded}>
-                    <List dense>
-                      {platformSteps.map((step, index) => (
-                        <ListItem key={`${step.platform}-${step.step}-${index}`}>
-                          <ListItemIcon>
+                </Box>
+                
+                <Collapse in={isExpanded}>
+                  <Divider />
+                  <List dense sx={{ py: 0 }}>
+                    {platformSteps.length > 0 ? platformSteps.map((step, index) => (
+                      <React.Fragment key={`${step.platform}-${step.step}-${index}`}>
+                        <ListItem sx={{ py: 1, px: 2 }}>
+                          <ListItemIcon sx={{ minWidth: 32 }}>
                             {getStepIcon(step.status)}
                           </ListItemIcon>
                           <ListItemText
+                            primaryTypographyProps={{ component: 'div' }}
+                            secondaryTypographyProps={{ component: 'div' }}
                             primary={
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                <Typography variant="body2" component="span">
+                              <Box component="div" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                <Typography variant="body2" component="span" sx={{ fontWeight: step.status === 'running' ? 'bold' : 'normal' }}>
                                   {step.step}
                                 </Typography>
                                 {step.duration && (
-                                  <Chip 
-                                    label={formatDuration(step.duration)} 
-                                    size="small" 
-                                    variant="outlined"
-                                  />
+                                  <Typography variant="caption" component="span" sx={{ color: theme.palette.text.disabled }}>
+                                    • {formatDuration(step.duration)}
+                                  </Typography>
                                 )}
                                 {step.errorCode && (
                                   <Chip 
-                                    icon={<Code />}
                                     label={step.errorCode} 
                                     size="small" 
                                     color="error"
                                     variant="outlined"
-                                  />
-                                )}
-                                {step.retryable && (
-                                  <Chip 
-                                    label="Retryable" 
-                                    size="small" 
-                                    color="warning"
-                                    variant="outlined"
+                                    sx={{ height: 16, fontSize: '0.6rem' }}
                                   />
                                 )}
                               </Box>
                             }
                             secondary={
-                              <Box>
+                              <Box component="div" sx={{ mt: 0.5 }}>
                                 {step.message && (
-                                  <Typography variant="caption" color="text.secondary">
+                                  <Typography variant="caption" component="div" color="text.secondary">
                                     {step.message}
                                   </Typography>
                                 )}
@@ -498,11 +549,11 @@ function PublisherProgress({ sessionId, onComplete, onRetry }) {
                                   <LinearProgress 
                                     variant="determinate" 
                                     value={step.progress} 
-                                    sx={{ mt: 0.5, height: 4, borderRadius: 2 }}
+                                    sx={{ mt: 0.5, height: 3, borderRadius: 1 }}
                                   />
                                 )}
                                 {step.error && (
-                                  <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                                  <Typography variant="caption" component="div" color="error" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic' }}>
                                     {step.error}
                                   </Typography>
                                 )}
@@ -510,91 +561,39 @@ function PublisherProgress({ sessionId, onComplete, onRetry }) {
                             }
                           />
                         </ListItem>
-                      ))}
-                    </List>
-                  </Collapse>
-                </Box>
-              )
-            })}
-          </Box>
-        ) : (
-          <List>
-            {stepsArray.map((step, index) => (
-              <ListItem key={`${step.platform}-${step.step}-${index}`}>
-                <ListItemIcon>
-                  {getStepIcon(step.status)}
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" component="span">
-                        {step.step}
-                      </Typography>
-                      <Chip 
-                        label={step.method.toUpperCase()} 
-                        size="small" 
-                        color={getStepColor(step.status)}
-                        variant="outlined"
-                      />
-                      {step.duration && (
-                        <Chip 
-                          label={formatDuration(step.duration)} 
-                          size="small" 
-                          variant="outlined"
-                        />
-                      )}
-                      {step.errorCode && (
-                        <Chip 
-                          icon={<Code />}
-                          label={step.errorCode} 
-                          size="small" 
-                          color="error"
-                          variant="outlined"
-                        />
-                      )}
-                      {step.retryable && (
-                        <Chip 
-                          label="Retryable" 
-                          size="small" 
-                          color="warning"
-                          variant="outlined"
-                        />
-                      )}
-                    </Box>
-                  }
-                  secondary={
-                    <Box>
-                      {step.message && (
-                        <Typography variant="caption" color="text.secondary">
-                          {step.message}
-                        </Typography>
-                      )}
-                      {step.status === STEP_STATUS.RUNNING && step.progress > 0 && (
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={step.progress} 
-                          sx={{ mt: 0.5, height: 4, borderRadius: 2 }}
-                        />
-                      )}
-                      {step.error && (
-                        <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                          {step.error}
-                        </Typography>
-                      )}
-                    </Box>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-        )}
+                        {index < platformSteps.length - 1 && <Divider variant="inset" component="li" sx={{ ml: 6 }} />}
+                      </React.Fragment>
+                    )) : (
+                      <ListItem sx={{ py: 2, justifyContent: 'center' }}>
+                        <Typography variant="caption" color="text.disabled">No steps recorded yet</Typography>
+                      </ListItem>
+                    )}
+                  </List>
+                </Collapse>
+              </Box>
+            )
+          })}
+        </Box>
       </Collapse>
 
       {stepsArray.length === 0 && (
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-          Waiting for publisher events...
-        </Typography>
+        <Box sx={{ textAlign: 'center', py: 4, opacity: 0.6 }}>
+          <Sensors sx={{ fontSize: 40, color: theme.palette.action.disabled, mb: 1 }} />
+          <Typography variant="body2" color="text.secondary">
+            Waiting for publisher events...
+          </Typography>
+        </Box>
       )}
+
+      <style>
+        {`
+          @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+          }
+        `}
+      </style>
     </Paper>
   )
 }

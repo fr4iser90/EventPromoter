@@ -36,26 +36,39 @@ export interface PublisherEventEmitter {
  * Can be used by any publisher (API, Playwright, etc.)
  */
 export class PublisherEventService extends EventEmitter {
-  private static instances: Map<string, PublisherEventService> = new Map()
+  private eventBuffer: PublisherEvent[] = []
+
+  // ✅ FIX: Use global to ensure singleton across different import paths/modules
+  private static getInstancesMap(): Map<string, PublisherEventService> {
+    const globalAny = global as any
+    if (!globalAny._publisherEventInstances) {
+      globalAny._publisherEventInstances = new Map<string, PublisherEventService>()
+    }
+    return globalAny._publisherEventInstances
+  }
 
   /**
    * Get or create event service instance for a session
    */
   static getInstance(sessionId: string): PublisherEventService {
-    if (!this.instances.has(sessionId)) {
-      this.instances.set(sessionId, new PublisherEventService(sessionId))
+    const instances = this.getInstancesMap()
+    if (!instances.has(sessionId)) {
+      console.log(`[EventService] Creating new instance for session: ${sessionId}`)
+      instances.set(sessionId, new PublisherEventService(sessionId))
     }
-    return this.instances.get(sessionId)!
+    return instances.get(sessionId)!
   }
 
   /**
    * Remove instance when session is complete
    */
   static removeInstance(sessionId: string): void {
-    const instance = this.instances.get(sessionId)
+    const instances = this.getInstancesMap()
+    const instance = instances.get(sessionId)
     if (instance) {
+      console.log(`[EventService] Removing instance for session: ${sessionId}`)
       instance.removeAllListeners()
-      this.instances.delete(sessionId)
+      instances.delete(sessionId)
     }
   }
 
@@ -68,6 +81,13 @@ export class PublisherEventService extends EventEmitter {
   }
 
   /**
+   * Get all buffered events for this session
+   */
+  getBufferedEvents(): PublisherEvent[] {
+    return [...this.eventBuffer]
+  }
+
+  /**
    * Emit a publisher event
    */
   emitEvent(event: Omit<PublisherEvent, 'timestamp'>): void {
@@ -75,6 +95,15 @@ export class PublisherEventService extends EventEmitter {
       ...event,
       timestamp: Date.now()
     }
+    
+    // ✅ BUFFER EVENT: Store event so late-connecting clients can see it
+    this.eventBuffer.push(fullEvent)
+    
+    // Limit buffer size to prevent memory leaks (keep last 100 events)
+    if (this.eventBuffer.length > 100) {
+      this.eventBuffer.shift()
+    }
+
     this.emit('publisher_event', fullEvent)
   }
 

@@ -42,18 +42,25 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
 
   setEventEmitter(emitter: PublisherEventService): void {
     this.eventEmitter = emitter
-    // Generate publishRunId for correlation (will be used in all events)
-    this.publishRunId = `reddit-${Date.now()}`
+    // ✅ FIX: publishRunId wird jetzt von PublishingService übergeben, nicht hier generiert
+    // this.publishRunId wird via setPublishRunId() gesetzt
+  }
+
+  // ✅ FIX: Neue Methode zum Setzen der publishRunId
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
   }
 
   async publish(
     content: any,
     files: any[],
     hashtags: string[],
-    options?: { dryMode?: boolean }
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
     // DRY MODE ist standardmäßig AKTIV - nur Formular ausfüllen, kein Posten
     const dryMode = options?.dryMode ?? true
+    // ✅ FIX: Use sessionId from options (which is the base publishRunId)
+    const currentPublishRunId = options?.sessionId || this.publishRunId
     
     try {
       const credentials = await getCredentials()
@@ -105,12 +112,19 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
           }
         }
 
-        // ✅ BEST PRACTICE: Persistenter Browser-Context mit userDataDir
+        // ✅ FIX: Use home directory in development to prevent Vite reloads
         const path = await import('path')
-        const { getConfigPath } = await import('../../../../utils/fileUtils.js')
-        const userDataDir = path.join(path.dirname(getConfigPath('dummy')), 'reddit-browser-data')
+        const os = await import('os')
+        let userDataDir;
+
+        if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+          userDataDir = path.join(os.homedir(), '.event-promoter', 'reddit-browser-data')
+        } else {
+          const { getConfigPath } = await import('../../../../utils/fileUtils.js')
+          userDataDir = path.join(path.dirname(getConfigPath('dummy')), 'reddit-browser-data')
+        }
         
-        console.log(`🔍 Using persistent browser context: ${userDataDir}`)
+        console.log(`🔍 Using browser context: ${userDataDir} (Mode: ${process.env.NODE_ENV || 'development'})`)
         
         // DRY MODE: headless false, damit User sehen kann was passiert
         // ✅ BEST PRACTICE: Persistenter Context speichert Cookies, localStorage, etc. automatisch
@@ -124,16 +138,10 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
           // ✅ STEP 1: Login/Login-Check (with orchestration)
           // Note: Base events (started/completed) are handled by PublishingService.executeWithEvents
           // These are additional detailed events for granular tracking
-          if (this.eventEmitter) {
-            this.eventEmitter.stepStarted('reddit', 'playwright', 'Step 1: Login/Login-Check', 'Checking login status...', this.publishRunId)
-          }
           const step1Start = Date.now()
           await executeStep(page, 'Step 1: Login/Login-Check', async () => {
             await step1_LoginCheck(page, credentials)
-          })
-          if (this.eventEmitter) {
-            this.eventEmitter.stepCompleted('reddit', 'playwright', 'Step 1: Login/Login-Check', Date.now() - step1Start, this.publishRunId)
-          }
+          }, this.eventEmitter, currentPublishRunId)
 
           console.log(`\n✅ Step 1 complete. Starting form filling process...`)
           console.log(`📋 Subreddits to process: ${subreddits.join(', ')}`)
@@ -151,69 +159,39 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
               console.log(`\n🔹 Processing subreddit: r/${subreddit}`)
               
               if (this.eventEmitter) {
-                this.eventEmitter.info('reddit', 'playwright', `Processing subreddit: r/${subreddit}`, undefined, this.publishRunId)
+                this.eventEmitter.info('reddit', 'playwright', `Processing subreddit: r/${subreddit}`, undefined, currentPublishRunId)
               }
               
               // ✅ STEP 2: Navigate to submit page (with orchestration)
               // Note: These are detailed sub-steps within the main "Publishing to reddit via Playwright" step
-              if (this.eventEmitter) {
-                this.eventEmitter.stepStarted('reddit', 'playwright', `Step 2: Navigate to r/${subreddit}/submit`, `Navigating to submit page...`, this.publishRunId)
-              }
               const step2Start = Date.now()
               await executeStep(page, `Step 2: Navigate to r/${subreddit}/submit`, async () => {
                 await step2_NavigateToSubmitPage(page, subreddit)
-              })
-              if (this.eventEmitter) {
-                this.eventEmitter.stepCompleted('reddit', 'playwright', `Step 2: Navigate to r/${subreddit}/submit`, Date.now() - step2Start, this.publishRunId)
-              }
+              }, this.eventEmitter, currentPublishRunId)
 
               // ✅ STEP 3: Select post type (with orchestration)
-              if (this.eventEmitter) {
-                this.eventEmitter.stepStarted('reddit', 'playwright', 'Step 3: Select post type', 'Selecting post type...', this.publishRunId)
-              }
               const step3Start = Date.now()
               await executeStep(page, 'Step 3: Select post type', async () => {
                 await step3_SelectPostType(page, files.length > 0 && !!files[0].url)
-              })
-              if (this.eventEmitter) {
-                this.eventEmitter.stepCompleted('reddit', 'playwright', 'Step 3: Select post type', Date.now() - step3Start, this.publishRunId)
-              }
+              }, this.eventEmitter, currentPublishRunId)
 
               // ✅ STEP 4: Enter title (with orchestration)
-              if (this.eventEmitter) {
-                this.eventEmitter.stepStarted('reddit', 'playwright', 'Step 4: Enter title', 'Entering title...', this.publishRunId)
-              }
               const step4Start = Date.now()
               await executeStep(page, 'Step 4: Enter title', async () => {
                 await step4_EnterTitle(page, title)
-              })
-              if (this.eventEmitter) {
-                this.eventEmitter.stepCompleted('reddit', 'playwright', 'Step 4: Enter title', Date.now() - step4Start, this.publishRunId)
-              }
+              }, this.eventEmitter, currentPublishRunId)
 
               // ✅ STEP 5: Enter content (with orchestration)
-              if (this.eventEmitter) {
-                this.eventEmitter.stepStarted('reddit', 'playwright', 'Step 5: Enter content', 'Entering content...', this.publishRunId)
-              }
               const step5Start = Date.now()
               await executeStep(page, 'Step 5: Enter content', async () => {
                 await step5_EnterContent(page, files, text)
-              })
-              if (this.eventEmitter) {
-                this.eventEmitter.stepCompleted('reddit', 'playwright', 'Step 5: Enter content', Date.now() - step5Start, this.publishRunId)
-              }
+              }, this.eventEmitter, currentPublishRunId)
 
               // ✅ STEP 6: Submit (with orchestration)
-              if (this.eventEmitter) {
-                this.eventEmitter.stepStarted('reddit', 'playwright', 'Step 6: Submit', dryMode ? 'Preparing form (dry mode)...' : 'Submitting post...', this.publishRunId)
-              }
               const step6Start = Date.now()
               const step6Result = await executeStep(page, 'Step 6: Submit', async () => {
                 return await step6_Submit(page, subreddit, dryMode)
-              })
-              if (this.eventEmitter) {
-                this.eventEmitter.stepCompleted('reddit', 'playwright', 'Step 6: Submit', Date.now() - step6Start, this.publishRunId)
-              }
+              }, this.eventEmitter, currentPublishRunId)
 
               // Handle results
               if (dryMode) {

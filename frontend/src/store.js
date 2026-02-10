@@ -392,6 +392,7 @@ const useStore = create((set, get) => ({
   publishing: false,
   published: false,
   autoSaving: false,
+  publishSessionId: null,
   
   // Initialization state (prevents duplicate initialization calls)
   initializing: false,
@@ -969,6 +970,7 @@ const useStore = create((set, get) => ({
       
       // Return sessionId for SSE stream connection
       const sessionId = response.data?.publishSessionId
+      set({ publishSessionId: sessionId })
 
       // Save to history after successful publish
       try {
@@ -991,8 +993,9 @@ const useStore = create((set, get) => ({
         // Load current history and add new entry
         const historyResponse = await axios.get(getApiUrl('history'))
         const historyData = historyResponse.data
+        const currentEvents = Array.isArray(historyData?.Events) ? historyData.Events : []
         const updatedHistory = {
-          Events: [historyEntry, ...historyData.Events]
+          Events: [historyEntry, ...currentEvents]
         }
 
         await axios.post(getApiUrl('history'), updatedHistory)

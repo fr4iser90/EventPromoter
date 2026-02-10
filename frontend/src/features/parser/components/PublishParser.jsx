@@ -30,7 +30,8 @@ function PublishParser() {
     submit,
     isProcessing,
     error,
-    successMessage
+    successMessage,
+    publishSessionId: storeSessionId
   } = useStore()
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -38,6 +39,13 @@ function PublishParser() {
   const [showResults, setShowResults] = useState(false)
   const [publishSessionId, setPublishSessionId] = useState(null)
   const { platforms } = usePlatforms()
+
+  // Sync store session ID to local state for components
+  useEffect(() => {
+    if (storeSessionId && storeSessionId !== publishSessionId) {
+      setPublishSessionId(storeSessionId)
+    }
+  }, [storeSessionId, publishSessionId])
 
   // Get platform info from backend - GENERIC
   const getPlatformInfo = (platformId) => {
@@ -200,6 +208,24 @@ function PublishParser() {
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
+      {/* --- FEEDBACK BLOCK GANZ OBEN --- */}
+      <Box sx={{ mb: 4, p: 2, border: '3px solid #2196F3', borderRadius: 2, bgcolor: '#f0f7ff' }}>
+        <Typography variant="h6" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          📡 Live Publishing Feedback
+        </Typography>
+        <PublisherProgress 
+          sessionId={publishSessionId || "active-session"} 
+          onComplete={handlePublishComplete}
+          onRetry={handleRetryPlatform}
+        />
+        {!publishSessionId && (
+          <Typography variant="caption" color="text.secondary">
+            Bereit zum Senden. Klicken Sie unten auf "Publish", um den Live-Status zu starten.
+          </Typography>
+        )}
+      </Box>
+      {/* -------------------------------------- */}
+
       <Typography variant="h5" gutterBottom>
         🚀 Publish Parser - Manual Finalization
       </Typography>
@@ -243,24 +269,6 @@ function PublishParser() {
         </Alert>
       )}
 
-      {/* Processing Status */}
-      {isProcessing && publishSessionId && (
-        <PublisherProgress 
-          sessionId={publishSessionId} 
-          onComplete={handlePublishComplete}
-          onRetry={handleRetryPlatform}
-        />
-      )}
-      
-      {isProcessing && !publishSessionId && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <CircularProgress size={20} />
-            <Typography>Publishing to platforms...</Typography>
-          </Box>
-        </Alert>
-      )}
-
       {/* Success Message */}
       {successMessage && (
         <Alert severity="success" sx={{ mb: 3 }}>
@@ -273,14 +281,6 @@ function PublishParser() {
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
-      )}
-
-      {/* Real-time Progress (SSE) */}
-      {isProcessing && publishSessionId && (
-        <PublisherProgress 
-          sessionId={publishSessionId} 
-          onComplete={handlePublishComplete}
-        />
       )}
 
       {/* Publish Button */}

@@ -1,21 +1,24 @@
 import { Page } from 'playwright'
 import { waitForPageFullyLoaded } from './waitForPageFullyLoaded.js'
+import { PublisherEventService } from '../../../../../../services/publisherEventService.js'
 
 /**
  * ✅ STEP ORCHESTRATION: Automatically waits AFTER each step
  * This ensures the page is fully loaded after the step completes.
- * 
- * Why only AFTER?
- * - After actions (goto, click, fill) the page is new/changed → must wait
- * - Before actions, the page is usually already loaded from previous step
- * - Waiting BEFORE is usually redundant and slows things down
  */
 export async function executeStep<T>(
   page: Page,
   stepName: string,
-  stepFunction: () => Promise<T>
+  stepFunction: () => Promise<T>,
+  eventEmitter?: PublisherEventService,
+  publishRunId?: string
 ): Promise<T> {
+  const startTime = Date.now()
   console.log(`\n🔄 [Step Orchestration] Starting step: ${stepName}`)
+  
+  if (eventEmitter) {
+    eventEmitter.stepStarted('reddit', 'playwright', stepName, `Starting ${stepName}`, publishRunId)
+  }
   
   // ✅ EXECUTE STEP
   console.log(`▶️ [Step Orchestration] Executing step: ${stepName}`)
@@ -24,6 +27,12 @@ export async function executeStep<T>(
   // ✅ AFTER STEP: Wait for page to be fully loaded (this is the critical part)
   await waitForPageFullyLoaded(page, `After step: ${stepName}`)
   
-  console.log(`✅ [Step Orchestration] Step completed: ${stepName}`)
+  const duration = Date.now() - startTime
+  console.log(`✅ [Step Orchestration] Step completed: ${stepName} (${duration}ms)`)
+  
+  if (eventEmitter) {
+    eventEmitter.stepCompleted('reddit', 'playwright', stepName, duration, publishRunId)
+  }
+  
   return result
 }

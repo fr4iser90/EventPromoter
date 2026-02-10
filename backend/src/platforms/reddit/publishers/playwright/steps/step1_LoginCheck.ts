@@ -107,8 +107,10 @@ export async function step1_LoginCheck(page: Page, credentials: any): Promise<vo
         // Ignore
       }
     } else {
-      console.warn('⚠️ [Step 1] Could not determine logged in user, attempting login...')
-      needsLogin = true
+      // ✅ FIX: Wenn Username nicht extrahiert werden kann, aber isLoggedIn() true ist,
+      // dann sind wir trotzdem eingeloggt - KEIN Login-Versuch!
+      console.log(`✅ [Step 1] Already logged in (username detection failed, but login markers present)`)
+      needsLogin = false  // ✅ WICHTIG: Nicht versuchen zu loggen!
     }
   }
   

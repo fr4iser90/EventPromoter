@@ -84,6 +84,10 @@ export class PublishingService {
         return await this.publishViaAPI(request, eventEmitter, publishRunId)
 
       case 'playwright':
+        // ✅ FIX: Ensure registry is initialized before getting publisher
+        if (!getPlatformRegistry().isInitialized()) {
+          await initializePlatformRegistry()
+        }
         return await this.publishViaPlaywright(request, eventEmitter, publishRunId)
 
       default:
@@ -318,6 +322,10 @@ export class PublishingService {
             // Set event emitter if publisher supports it
             if (eventEmitter && 'setEventEmitter' in publisher) {
               (publisher as EventAwarePublisher).setEventEmitter(eventEmitter)
+              // ✅ FIX: publishRunId auch für API-Publisher übergeben
+              if ('setPublishRunId' in publisher && publishRunId) {
+                (publisher as any).setPublishRunId(publishRunId)
+              }
             }
             
             const content = request.content[platformId] || request.content
@@ -424,7 +432,7 @@ export class PublishingService {
     // Publish to each platform using Playwright
     for (const platformId of platformList) {
       const stepName = `Publishing to ${platformId} via Playwright`
-      const platformRunId = publishRunId ? `${publishRunId}-${platformId}` : undefined
+      const platformRunId = publishRunId // ✅ FIX: Use base publishRunId for all platforms so SSE stream receives them
       
       try {
         const publisher = await this.getPlatformPublisher(platformId, 'playwright')
@@ -443,6 +451,10 @@ export class PublishingService {
         // Set event emitter if publisher supports it (for detailed events like Step 1-6)
         if (eventEmitter && 'setEventEmitter' in publisher) {
           (publisher as EventAwarePublisher).setEventEmitter(eventEmitter)
+          // ✅ FIX: publishRunId übergeben, damit Publisher die gleiche ID verwendet
+          if ('setPublishRunId' in publisher && platformRunId) {
+            (publisher as any).setPublishRunId(platformRunId)
+          }
         }
 
         const content = request.content[platformId] || request.content
@@ -456,7 +468,10 @@ export class PublishingService {
           platformRunId || `${platformId}-${Date.now()}`,
           eventEmitter,
           async () => {
-            return await publisher.publish(content, request.files, request.hashtags)
+            return await publisher.publish(content, request.files, request.hashtags, { 
+              dryMode: true,  // ✅ DRY MODE wieder aktivieren
+              sessionId: platformRunId || publishRunId  // ✅ FIX: sessionId übergeben
+            })
           }
         )
         
@@ -508,7 +523,7 @@ export class PublishingService {
   private static async getPlatformPublisher(
     platformId: string,
     type: 'api' | 'playwright'
-  ): Promise<{ publish: (content: any, files: any[], hashtags: string[]) => Promise<PostResult> } | null> {
+  ): Promise<{ publish: (content: any, files: any[], hashtags: string[], options?: { dryMode?: boolean; sessionId?: string }) => Promise<PostResult> } | null> {
     try {
       // Try to load publisher from platform directory
       // Use dynamic import with proper path resolution

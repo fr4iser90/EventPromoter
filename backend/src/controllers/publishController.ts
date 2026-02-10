@@ -106,9 +106,19 @@ export class PublishController {
     // Send initial connection message
     res.write(`data: ${JSON.stringify({ type: 'connected', sessionId, timestamp: Date.now() })}\n\n`)
 
+    // ✅ SEND BUFFERED EVENTS: Send any events that happened before the client connected
+    const bufferedEvents = eventService.getBufferedEvents()
+    if (bufferedEvents.length > 0) {
+      console.log(`[SSE] Sending ${bufferedEvents.length} buffered events to session ${sessionId}`)
+      for (const event of bufferedEvents) {
+        res.write(`data: ${JSON.stringify(event)}\n\n`)
+      }
+    }
+
     // Listen for publisher events
     const eventHandler = (event: any) => {
       try {
+        console.log(`[SSE Out] Session: ${sessionId}, Type: ${event.type}, Platform: ${event.platform}, Step: ${event.step || 'N/A'}`)
         res.write(`data: ${JSON.stringify(event)}\n\n`)
       } catch (error) {
         console.error('Error writing SSE event:', error)

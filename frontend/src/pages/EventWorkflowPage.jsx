@@ -27,6 +27,7 @@ import Header from '../shared/components/Header'
 import useStore, { WORKFLOW_STATES } from '../store'
 import { useMultiplePlatformTranslations } from '../features/platform/hooks/usePlatformTranslations'
 import { getApiUrl } from '../shared/utils/api'
+import PublisherProgress from '../features/publish/components/PublisherProgress'
 
 // Static theme for media queries (needed before component renders)
 const staticTheme = createTheme({
@@ -64,6 +65,17 @@ function EventWorkflowPage() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [configuredMode, setConfiguredMode] = useState(null)
+  const [publishSessionId, setPublishSessionId] = useState(null)
+
+  // Handle completion of publishing
+  const handlePublishComplete = (data) => {
+    console.log('✅ Publishing completed:', data)
+    useStore.getState().set({ isProcessing: false, publishing: false })
+  }
+
+  const handleRetryPlatform = async (platformId) => {
+    // Retry logic
+  }
 
   // Load session data
   useEffect(() => {
@@ -137,7 +149,10 @@ function EventWorkflowPage() {
   const safeUploadedFileRefs = Array.isArray(uploadedFileRefs) ? uploadedFileRefs : []
 
   const handleSubmit = async () => {
-    await submit()
+    const sessionId = await submit()
+    if (sessionId) {
+      setPublishSessionId(sessionId)
+    }
   }
 
   const handleReset = () => {
@@ -271,6 +286,20 @@ function EventWorkflowPage() {
                 {successMessage}
               </Alert>
             )}
+
+            {/* --- FEEDBACK BLOCK --- */}
+            <Box sx={{ mt: 4, mb: 2 }}>
+              <PublisherProgress 
+                sessionId={publishSessionId || "active-session"} 
+                onComplete={handlePublishComplete}
+                onRetry={handleRetryPlatform}
+              />
+              {!publishSessionId && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
+                  Bereit zum Senden. Klicken Sie unten auf "Publish", um den Live-Status zu starten.
+                </Typography>
+              )}
+            </Box>
 
             <Box sx={{ mt: 6, mb: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
               <Button

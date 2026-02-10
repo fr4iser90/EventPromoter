@@ -17,7 +17,8 @@ export interface RedditPublisher {
   publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult>
 }
 
@@ -140,7 +141,8 @@ export class RedditApiPublisher implements RedditPublisher {
   async publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
     try {
       const credentials = await this.getCredentials()

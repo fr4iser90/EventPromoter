@@ -48,8 +48,11 @@ export class EmailPlaywrightPublisher implements EmailPublisher, EventAwarePubli
 
   setEventEmitter(emitter: PublisherEventService): void {
     this.eventEmitter = emitter
-    // Generate publishRunId for correlation (will be used in all events)
-    this.publishRunId = `email-playwright-${Date.now()}`
+  }
+
+  // ✅ FIX: Neue Methode zum Setzen der publishRunId (wie bei Reddit)
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
   }
 
   async publish(
@@ -59,14 +62,14 @@ export class EmailPlaywrightPublisher implements EmailPublisher, EventAwarePubli
   ): Promise<PostResult> {
     const platformId = 'email'
     const method = 'playwright'
-    const sessionId = this.publishRunId || 'unknown'
+    const currentPublishRunId = this.publishRunId || `email-${Date.now()}`
 
     try {
       const credentials = await getCredentials()
 
       if (!credentials.email || !credentials.password) {
         if (this.eventEmitter) {
-          this.eventEmitter.error(platformId, method, 'Credentials Check', 'Email credentials not configured for Playwright publishing', this.publishRunId)
+          this.eventEmitter.stepFailed(platformId, method, 'Credentials Check', 'Email credentials not configured for Playwright publishing', 'MISSING_CREDENTIALS', false, currentPublishRunId)
         }
         return {
           success: false,
@@ -78,20 +81,19 @@ export class EmailPlaywrightPublisher implements EmailPublisher, EventAwarePubli
       const templates = content._templates || []
       if (templates.length === 0) {
         if (this.eventEmitter) {
-          this.eventEmitter.error(platformId, method, 'Template Check', 'Email content must use _templates format with targets configuration. Legacy recipients format is no longer supported.', this.publishRunId)
+          this.eventEmitter.stepFailed(platformId, method, 'Template Check', 'Email content must use _templates format', 'INVALID_CONTENT', false, currentPublishRunId)
         }
         return {
           success: false,
-          error: 'Email content must use _templates format with targets configuration. Legacy recipients format is no longer supported.'
+          error: 'Email content must use _templates format'
         }
       }
       
       // For Playwright, we'll use the first template's recipients
-      // (Playwright typically sends to one recipient at a time)
       const firstTemplate = templates[0]
       if (!firstTemplate.targets) {
         if (this.eventEmitter) {
-          this.eventEmitter.error(platformId, method, 'Targets Check', 'Template targets configuration is required', this.publishRunId)
+          this.eventEmitter.stepFailed(platformId, method, 'Targets Check', 'Template targets configuration is required', 'INVALID_TARGETS', false, currentPublishRunId)
         }
         return {
           success: false,
@@ -99,30 +101,28 @@ export class EmailPlaywrightPublisher implements EmailPublisher, EventAwarePubli
         }
       }
       
-      // Extract recipients from first template (simplified for Playwright)
-      // Note: Playwright publisher may need to be refactored to handle multiple templates
-      const recipients: string[] = []
-      // This is a simplified extraction - full extraction would require EmailTargetService
-      if (firstTemplate.targets.mode === 'individual' && firstTemplate.targets.individual) {
-        // We can't resolve target IDs to emails here without EmailTargetService
-        // For now, return error suggesting to use API publisher instead
+      // ✅ RESOLVE RECIPIENTS: Use extractRecipients utility (same as API publisher)
+      const { extractRecipients } = await import('../api/utils/extractRecipients.js')
+      const recipients = await extractRecipients(firstTemplate.targets)
+
+      if (recipients.length === 0) {
         if (this.eventEmitter) {
-          this.eventEmitter.error(platformId, method, 'Recipients Extraction', 'Playwright publisher does not fully support _templates format. Please use API publisher instead.', this.publishRunId)
+          this.eventEmitter.stepFailed(platformId, method, 'Recipients Extraction', 'No recipients found for the selected targets.', 'NO_RECIPIENTS', false, currentPublishRunId)
         }
         return {
           success: false,
-          error: 'Playwright publisher does not fully support _templates format. Please use API publisher instead.'
+          error: 'No recipients found for the selected targets.'
         }
       }
 
       // ✅ STEP 1: Launch Browser
       if (this.eventEmitter) {
-        this.eventEmitter.stepStarted(platformId, method, 'Step 1: Launch Browser', 'Launching browser...', this.publishRunId)
+        this.eventEmitter.stepStarted(platformId, method, 'Step 1: Launch Browser', 'Launching browser...', currentPublishRunId)
       }
       const step1Start = Date.now()
       this.browser = await step1_LaunchBrowser()
       if (this.eventEmitter) {
-        this.eventEmitter.stepCompleted(platformId, method, 'Step 1: Launch Browser', Date.now() - step1Start, this.publishRunId)
+        this.eventEmitter.stepCompleted(platformId, method, 'Step 1: Launch Browser', Date.now() - step1Start, currentPublishRunId)
       }
 
       const page = await this.browser.newPage()
@@ -130,100 +130,100 @@ export class EmailPlaywrightPublisher implements EmailPublisher, EventAwarePubli
       try {
         // ✅ STEP 2: Navigate to Webmail
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 2: Navigate to Webmail', `Navigating to ${credentials.webmailProvider}...`, this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 2: Navigate to Webmail', `Navigating to ${credentials.webmailProvider}...`, currentPublishRunId)
         }
         const step2Start = Date.now()
         await step2_NavigateToWebmail(page, credentials.webmailProvider)
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 2: Navigate to Webmail', Date.now() - step2Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 2: Navigate to Webmail', Date.now() - step2Start, currentPublishRunId)
         }
 
         // ✅ STEP 3: Login
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 3: Login', 'Logging into webmail...', this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 3: Login', 'Logging into webmail...', currentPublishRunId)
         }
         const step3Start = Date.now()
         await step3_Login(page, credentials)
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 3: Login', Date.now() - step3Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 3: Login', Date.now() - step3Start, currentPublishRunId)
         }
 
         // ✅ STEP 4: Compose Email
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 4: Compose Email', 'Opening compose window...', this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 4: Compose Email', 'Opening compose window...', currentPublishRunId)
         }
         const step4Start = Date.now()
         await step4_ComposeEmail(page)
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 4: Compose Email', Date.now() - step4Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 4: Compose Email', Date.now() - step4Start, currentPublishRunId)
         }
 
         // ✅ STEP 5: Enter Recipients
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 5: Enter Recipients', 'Entering recipient addresses...', this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 5: Enter Recipients', 'Entering recipient addresses...', currentPublishRunId)
         }
         const step5Start = Date.now()
         await step5_EnterRecipients(page, recipients)
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 5: Enter Recipients', Date.now() - step5Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 5: Enter Recipients', Date.now() - step5Start, currentPublishRunId)
         }
 
         // ✅ STEP 6: Enter Subject
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 6: Enter Subject', 'Entering email subject...', this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 6: Enter Subject', 'Entering email subject...', currentPublishRunId)
         }
         const step6Start = Date.now()
         await step6_EnterSubject(page, content.subject || 'Event Notification')
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 6: Enter Subject', Date.now() - step6Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 6: Enter Subject', Date.now() - step6Start, currentPublishRunId)
         }
 
         // ✅ STEP 7: Enter Body
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 7: Enter Body', 'Entering email body...', this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 7: Enter Body', 'Entering email body...', currentPublishRunId)
         }
         const step7Start = Date.now()
         const html = content.html || content.body || ''
         await step7_EnterBody(page, html)
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 7: Enter Body', Date.now() - step7Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 7: Enter Body', Date.now() - step7Start, currentPublishRunId)
         }
 
         // ✅ STEP 8: Attach Files
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 8: Attach Files', `Attaching ${files.length} file(s)...`, this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 8: Attach Files', `Attaching ${files.length} file(s)...`, currentPublishRunId)
         }
         const step8Start = Date.now()
         await step8_AttachFiles(page, files)
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 8: Attach Files', Date.now() - step8Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 8: Attach Files', Date.now() - step8Start, currentPublishRunId)
         }
 
         // ✅ STEP 9: Send Email
         if (this.eventEmitter) {
-          this.eventEmitter.stepStarted(platformId, method, 'Step 9: Send Email', 'Sending email...', this.publishRunId)
+          this.eventEmitter.stepStarted(platformId, method, 'Step 9: Send Email', 'Sending email...', currentPublishRunId)
         }
         const step9Start = Date.now()
         await step9_SendEmail(page)
         if (this.eventEmitter) {
-          this.eventEmitter.stepCompleted(platformId, method, 'Step 9: Send Email', Date.now() - step9Start, this.publishRunId)
+          this.eventEmitter.stepCompleted(platformId, method, 'Step 9: Send Email', Date.now() - step9Start, currentPublishRunId)
         }
 
         if (this.eventEmitter) {
-          this.eventEmitter.success(platformId, method, 'Successfully sent email via Playwright', { postId: `email-${Date.now()}` }, this.publishRunId)
+          this.eventEmitter.success(platformId, method, 'Successfully sent email via Playwright', { postId: `email-${Date.now()}` }, currentPublishRunId)
         }
 
         return {
           success: true,
           postId: `email-${Date.now()}`,
-          url: undefined // Emails don't have URLs
+          url: undefined
         }
       } finally {
         await page.close()
       }
     } catch (error: any) {
       if (this.eventEmitter) {
-        this.eventEmitter.error(platformId, method, 'Email Playwright Publish', error.message || 'Failed to send email via Playwright', this.publishRunId)
+        this.eventEmitter.stepFailed(platformId, method, 'Email Playwright Publish', error.message || 'Failed to send email via Playwright', 'PUBLISH_ERROR', false, currentPublishRunId)
       }
       return {
         success: false,

@@ -137,61 +137,87 @@ export class SubmitController {
         eventData: parsedData // Use parsed data for eventData
       }
 
-      // Pass sessionId for real-time event feedback
-      const publishResult = await PublishingService.publish(publishRequest, baseUrl, publishSessionId)
-
-      // Save to history
-      try {
-        const historyEntry = {
-          id: `published-${Date.now()}`,
-          title: parsedData.title,
-          status: 'published' as const,
-          platforms: selectedPlatforms,
-          publishedAt: new Date().toISOString(),
-          eventData: {
+      // ✅ FIX: Start publishing in background and return sessionId immediately
+      // This allows the frontend to connect to the SSE stream BEFORE events are fired
+      console.log(`[Submit] Starting background publishing for session: ${publishSessionId}`)
+      
+      // We don't await this!
+      PublishingService.publish(publishRequest, baseUrl, publishSessionId).then(async (publishResult) => {
+        console.log(`[Submit] Background publishing completed for session: ${publishSessionId}`)
+        
+        // Save to history
+        try {
+          const historyEntry = {
+            id: `published-${Date.now()}`,
             title: parsedData.title,
-            date: parsedData.date,
-            time: parsedData.time,
-            venue: parsedData.venue,
-            city: parsedData.city
-          },
-          stats: {} // Will be updated later with actual metrics
+            status: 'published' as const,
+            platforms: selectedPlatforms,
+            publishedAt: new Date().toISOString(),
+            eventData: {
+              title: parsedData.title,
+              date: parsedData.date,
+              time: parsedData.time,
+              venue: parsedData.venue,
+              city: parsedData.city
+            },
+            stats: {} // Will be updated later with actual metrics
+          }
+
+          await HistoryService.addEvent(historyEntry)
+          console.log('Event saved to history')
+        } catch (historyError) {
+          console.warn('Failed to save to history:', historyError)
         }
 
-        await HistoryService.addEvent(historyEntry)
-        console.log('Event saved to history')
-      } catch (historyError) {
-        console.warn('Failed to save to history:', historyError)
-        // Don't fail the whole submission if history save fails
-      }
-
-      // Add tracking for all platforms
-      if (publishSessionId) {
-        for (const platform of selectedPlatforms) {
-          const platformResult = publishResult.results[platform]
-          if (platformResult) {
-            const result: PublishResult = {
-              platform,
-              success: platformResult.success,
-              data: {
-                status: platformResult.success ? 'published' : 'failed',
-                method: platformResult.method,
-                submittedAt: new Date().toISOString(),
-                postId: platformResult.postId,
-                url: platformResult.url,
-                error: platformResult.error
+        // Add tracking for all platforms
+        if (publishSessionId) {
+          for (const platform of selectedPlatforms) {
+            const platformResult = publishResult.results[platform]
+            if (platformResult) {
+              const result: PublishResult = {
+                platform,
+                success: platformResult.success,
+                data: {
+                  status: platformResult.success ? 'published' : 'failed',
+                  method: platformResult.method,
+                  submittedAt: new Date().toISOString(),
+                  postId: platformResult.postId,
+                  url: platformResult.url,
+                  error: platformResult.error
+                }
               }
+              PublishTrackingService.addPublishResult(publishSessionId, result)
             }
-            PublishTrackingService.addPublishResult(publishSessionId, result)
           }
         }
-      }
+      }).catch(async (error: any) => {
+        console.error(`[Submit] Background publishing failed for session: ${publishSessionId}`, error)
+        
+        // Track the error in publish session
+        if (publishSessionId && eventId) {
+          try {
+            for (const platform of selectedPlatforms) {
+              const result: PublishResult = {
+                platform,
+                success: false,
+                error: error.message,
+                data: {
+                  status: 'failed',
+                  failedAt: new Date().toISOString()
+                }
+              }
+              PublishTrackingService.addPublishResult(publishSessionId, result)
+            }
+          } catch (trackError) {
+            console.warn('Failed to track background error:', trackError)
+          }
+        }
+      })
 
-      res.json({
-        success: publishResult.success,
-        results: publishResult.results,
-        message: publishResult.message,
-        historySaved: true,
+      // Return immediately with the sessionId
+      return res.json({
+        success: true,
+        message: 'Publishing started in background',
         publishSessionId
       })
 
