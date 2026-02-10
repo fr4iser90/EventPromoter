@@ -208,20 +208,20 @@ function PlatformSelector({ disabled = false }) {
                 >
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={isSelected}
-                            onChange={() => handlePlatformToggle(platform.id)}
-                            disabled={disabled}
-                            sx={{
-                              color: platform.color,
-                              '&.Mui-checked': {
-                                color: platform.color,
-                              },
-                            }}
-                          />
-                        }
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={isSelected}
+                                  onChange={() => handlePlatformToggle(platform.id)}
+                                  disabled={false}
+                                  sx={{
+                                    color: platform.color,
+                                    '&.Mui-checked': {
+                                      color: platform.color,
+                                    },
+                                  }}
+                                />
+                              }
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <PlatformIcon icon={platform.icon} color={platform.color} size={24} />
@@ -306,7 +306,8 @@ function PlatformSelector({ disabled = false }) {
                         
                         return ['n8n', 'api', 'playwright'].map((modeKey) => {
                           const config = getModeConfig(modeKey)
-                          const isBroken = config.status === 'broken'
+                          // Trust the metadata status: if it's not broken or not-implemented, it's selectable
+                          const isSelectable = config.status !== 'broken' && config.status !== 'not-implemented'
                           const isCustomMode = globalPublishingMode === 'custom'
 
                           return (
@@ -319,22 +320,22 @@ function PlatformSelector({ disabled = false }) {
                                 icon={config.isManualOverride ? <PersonIcon sx={{ fontSize: 14 }} /> : (config.isActive && !config.isLocked ? <AutoAwesomeIcon sx={{ fontSize: 14 }} /> : (config.isLocked ? <LockIcon sx={{ fontSize: 12 }} /> : config.icon))}
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  if (isCustomMode && config.isAvailable && !isBroken) {
+                                  if (isCustomMode && isSelectable) {
                                     setPlatformOverride(platform.id, modeKey)
                                   }
                                 }}
                                 sx={{ 
                                   fontSize: '0.65rem',
                                   height: '20px',
-                                  cursor: (isCustomMode && config.isAvailable && !isBroken) ? 'pointer' : 'default',
+                                  cursor: (isCustomMode && isSelectable) ? 'pointer' : 'default',
                                   opacity: config.isActive ? 1 : (config.isLocked ? 0.3 : 0.4),
                                   border: config.isActive ? `2px solid` : '1px solid',
                                   borderColor: config.isActive ? 'inherit' : 'divider',
                                   transition: 'all 0.2s ease',
                                   bgcolor: 'transparent',
                                   '&:hover': {
-                                    opacity: (isCustomMode && config.isAvailable && !isBroken) ? 1 : undefined,
-                                    bgcolor: (isCustomMode && config.isAvailable && !isBroken) ? 'action.hover' : 'transparent'
+                                    opacity: (isCustomMode && isSelectable) ? 1 : 0.4,
+                                    bgcolor: (isCustomMode && isSelectable) ? 'action.hover' : 'transparent'
                                   }
                                 }}
                               />

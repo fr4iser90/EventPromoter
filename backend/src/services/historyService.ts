@@ -2,7 +2,9 @@
 
 import { History, HistoryEntry } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
+import { PathConfig } from '../utils/pathConfig.js'
 import { EventService } from './eventService.js'
+import { SchemaResolver } from './schemaResolver.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -12,6 +14,7 @@ export class HistoryService {
   static async getHistory(): Promise<History> {
     try {
       const events = await this.scanEventsDirectory()
+      // Return flat structure as discussed
       return { Events: events }
     } catch (error) {
       console.warn('Failed to scan events directory:', error)
@@ -20,16 +23,20 @@ export class HistoryService {
   }
 
   private static async scanEventsDirectory(): Promise<HistoryEntry[]> {
-    const eventsDir = path.join(process.cwd(), 'events')
+    const eventsDir = PathConfig.getEventsRoot()
+    console.log(`[HistoryService] Scanning directory: ${eventsDir}`)
 
     if (!fs.existsSync(eventsDir)) {
+      console.error(`[HistoryService] Directory NOT FOUND: ${eventsDir}`)
       return []
     }
 
     const eventFolders = fs.readdirSync(eventsDir)
       .filter(item => {
         const itemPath = path.join(eventsDir, item)
-        return fs.statSync(itemPath).isDirectory() && item !== 'templates'
+        const isDir = fs.statSync(itemPath).isDirectory()
+        const isValid = isDir && item !== 'templates' && item !== 'example' && !item.startsWith('.')
+        return isValid
       })
       .sort((a, b) => {
         // Sort by creation time (newest first)
@@ -38,95 +45,73 @@ export class HistoryService {
         return fs.statSync(bPath).mtime.getTime() - fs.statSync(aPath).mtime.getTime()
       })
 
+    console.log(`[HistoryService] Found ${eventFolders.length} potential event folders:`, eventFolders)
+
     const events: HistoryEntry[] = []
 
     for (const eventId of eventFolders) {
       try {
+        console.log(`[HistoryService] Processing event folder: ${eventId}`)
         const eventEntry = await this.createHistoryEntryFromEvent(eventId)
         if (eventEntry) {
+          console.log(`[HistoryService] Successfully created entry for ${eventId}`)
           events.push(eventEntry)
+        } else {
+          console.warn(`[HistoryService] Event ${eventId} returned null (missing event.json?)`)
         }
       } catch (error) {
-        console.warn(`Failed to process event ${eventId}:`, error)
+        console.error(`[HistoryService] Error processing event ${eventId}:`, error)
       }
     }
 
+    console.log(`[HistoryService] Final event list count: ${events.length}`)
     return events
   }
 
   private static async createHistoryEntryFromEvent(eventId: string): Promise<HistoryEntry | null> {
-    const eventDir = path.join(process.cwd(), 'events', eventId)
-
-    // Load parsed data
-    const parsedDataPath = path.join(eventDir, 'parsed-data.json')
-    let parsedData: any = {}
-    if (fs.existsSync(parsedDataPath)) {
-      try {
-        parsedData = JSON.parse(fs.readFileSync(parsedDataPath, 'utf8'))
-      } catch (error) {
-        console.warn(`Failed to parse parsed-data.json for ${eventId}:`, error)
-      }
-    }
-
-    // Load platform content to determine used platforms
-    const platformContentDir = path.join(eventDir, 'platforms')
-    let platforms: string[] = []
-    if (fs.existsSync(platformContentDir)) {
-      platforms = fs.readdirSync(platformContentDir)
-        .filter(file => file.endsWith('.json'))
-        .map(file => file.replace('.json', ''))
-    }
-
-    // Get files
-    const filesDir = path.join(eventDir, 'files')
-    let files: any[] = []
-    if (fs.existsSync(filesDir)) {
-      const fileNames = fs.readdirSync(filesDir)
-      files = fileNames.map(fileName => {
-        const filePath = path.join(filesDir, fileName)
-        const stats = fs.statSync(filePath)
-
-        return {
-          id: fileName,
-          name: fileName,
-          size: stats.size,
-          type: this.getMimeType(fileName),
-          uploadedAt: stats.mtime.toISOString()
-        }
-      })
-    }
-
-    // Get event stats
-    const eventStats = fs.statSync(eventDir)
-
-    // ✅ event.title ist Single Source of Truth
+    // 1. Load central event data (Schema-Driven!)
     const eventData = await EventService.getEventData(eventId)
-    const displayTitle = eventData?.title || parsedData.title || `Event ${eventId}`
-    
-    // Load publish results from latest session
+    if (!eventData) {
+      console.warn(`[HistoryService] Event data (event.json) missing for ${eventId}`)
+      return null
+    }
+
+    // 2. Load parsed data for event details (date, venue, etc.)
+    const parsedData = await EventService.getParsedData(eventId) || {}
+
+    // 3. Load publish results from latest session
     const publishResults = await this.getPublishResults(eventId)
     
-    return {
-      id: eventId,
-      title: displayTitle,
-      status: platforms.length > 0 ? 'published' : 'draft',
-      platforms,
-      publishedAt: platforms.length > 0 ? eventStats.mtime.toISOString() : undefined,
-      eventData: {
-        title: parsedData.title,
-        date: parsedData.date,
-        time: parsedData.time,
-        venue: parsedData.venue,
-        city: parsedData.city
-      },
-      files,
-      stats: {
-        fileCount: files.length,
-        platformCount: platforms.length,
-        createdAt: eventStats.birthtime.toISOString(),
-        modifiedAt: eventStats.mtime.toISOString()
-      },
-      publishResults // Add publish results (postId, url per platform)
+    console.log(`[HistoryService] Mapping data for ${eventId} using SchemaResolver`)
+    
+    // 4. Map schema to history entry
+    try {
+      const entry = SchemaResolver.resolveAndEnrich({
+        ...eventData,
+        id: eventData.id,
+        title: eventData.title,
+        status: eventData.status || (eventData.selectedPlatforms?.length > 0 ? 'published' : 'draft'),
+        platforms: eventData.selectedPlatforms || [],
+        publishedAt: eventData.updatedAt,
+        eventData: {
+          ...parsedData,
+          ...eventData,
+          title: eventData.title || parsedData.title
+        },
+        files: eventData.uploadedFileRefs || [],
+        stats: {
+          fileCount: eventData.uploadedFileRefs?.length || 0,
+          platformCount: eventData.selectedPlatforms?.length || 0,
+          createdAt: eventData.createdAt,
+          modifiedAt: eventData.updatedAt
+        },
+        publishResults
+      } as any, { id: eventId }) as unknown as HistoryEntry
+      
+      return entry
+    } catch (resolverError) {
+      console.error(`[HistoryService] SchemaResolver FAILED for ${eventId}:`, resolverError)
+      throw resolverError // No fallback!
     }
   }
 
@@ -155,7 +140,7 @@ export class HistoryService {
       
       if (!latestSession) {
         // Try to load from file
-        const eventDir = path.join(process.cwd(), 'events', eventId)
+        const eventDir = PathConfig.getEventDir(eventId)
         if (fs.existsSync(eventDir)) {
           const sessionFiles = fs.readdirSync(eventDir)
             .filter(f => f.startsWith('publish-session-') && f.endsWith('.json'))
@@ -208,9 +193,16 @@ export class HistoryService {
 
   static async addEvent(Event: HistoryEntry): Promise<boolean> {
     const history = await this.getHistory()
+    
+    // ✅ FIX: Ensure we have a flat array and no nested objects
+    let currentEvents: HistoryEntry[] = []
+    if (history && Array.isArray(history.Events)) {
+      currentEvents = history.Events.filter(e => e && typeof e === 'object' && !('Events' in e))
+    }
+    
     // Add new Event at the beginning (most recent first)
-    history.Events = [Event, ...history.Events]
-    return await this.saveHistory(history)
+    const updatedEvents = [Event, ...currentEvents]
+    return await this.saveHistory({ Events: updatedEvents })
   }
 
   static async updateEvent(eventId: string, updates: Partial<HistoryEntry>): Promise<boolean> {
@@ -239,7 +231,7 @@ export class HistoryService {
     }
 
     // ✅ Delete event directory (includes event.json, parsed-data.json, files/, platforms/)
-    const eventDir = path.join(process.cwd(), 'events', eventId)
+    const eventDir = PathConfig.getEventDir(eventId)
     if (fs.existsSync(eventDir)) {
       try {
         fs.rmSync(eventDir, { recursive: true, force: true })

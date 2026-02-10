@@ -32,7 +32,8 @@ function EventHistory() {
         const response = await fetch(getApiUrl('history'))
         if (response.ok) {
           const data = await response.json()
-          setEvents(data.Events || [])
+          // Strict flat structure: data.history.Events
+          setEvents(data.history?.Events || [])
           setError(null)
         } else {
           throw new Error('Failed to load events')

@@ -2,6 +2,7 @@
 
 import fs from 'fs'
 import path from 'path'
+import { PathConfig } from '../utils/pathConfig.js'
 import { UploadedFile } from '../types/index.js'
 
 export class UploadService {
@@ -21,8 +22,8 @@ export class UploadService {
 
   // Move files from temp to final location
   static moveFilesToEvent(files: Express.Multer.File[], eventId: string): UploadedFile[] {
-    const eventDir = path.join(process.cwd(), 'events', eventId)
-    const filesDir = path.join(eventDir, 'files')
+    const eventDir = PathConfig.getEventDir(eventId)
+    const filesDir = PathConfig.getFilesDir(eventId)
 
     if (!fs.existsSync(filesDir)) {
       fs.mkdirSync(filesDir, { recursive: true })

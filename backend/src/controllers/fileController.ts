@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
-import { getFilePath } from '../middleware/upload.js'
+import { PathConfig } from '../utils/pathConfig.js'
 import { EventService } from '../services/eventService.js'
 import { ContentExtractionService } from '../services/parsing/contentParsingService.js'
 import { UploadService } from '../services/uploadService.js'
@@ -143,8 +143,8 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
-      // getFilePath maps to events/EVENT_ID/files/FILENAME
-      const filePath = getFilePath(eventId, filename)
+      // PathConfig maps to events/EVENT_ID/files/FILENAME
+      const filePath = path.join(PathConfig.getFilesDir(eventId), filename)
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -204,7 +204,7 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
-      const filePath = getFilePath(eventId, filename)
+      const filePath = path.join(PathConfig.getFilesDir(eventId), filename)
 
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
@@ -277,7 +277,7 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID required' })
       }
 
-      const EventDir = path.join(process.cwd(), 'events', eventId, 'files')
+      const EventDir = PathConfig.getFilesDir(eventId)
 
       if (!fs.existsSync(EventDir)) {
         return res.json({ files: [] })
@@ -319,7 +319,7 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
-      const filePath = getFilePath(eventId, filename)
+      const filePath = path.join(PathConfig.getFilesDir(eventId), filename)
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {

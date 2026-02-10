@@ -10,7 +10,7 @@ Um die Umsetzung übersichtlich zu halten, ist das Projekt in folgende Teilaufga
 
 1.  **[Task 1: Header & Globaler FastSwitch](task_1_header.md)** ➔ Globale Steuerung & Store-Anbindung.
 2.  **[Task 2: Plattform-Card Badges](task_2_badges.md)** ➔ Interaktive Chips & Local Overrides.
-3.  **[Task 3: Settings Modal](task_3_modal.md)** ➔ Priority Queue & Custom Routes.
+3.  **[Task 3: Persistence](task_3_persistence.md)** ➔ Speicherung der Einstellungen.
 4.  **[Task 4: Backend Integration](task_4_backend.md)** ➔ Routing-Logik & Fallbacks.
 
 ---

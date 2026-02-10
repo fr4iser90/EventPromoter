@@ -29,7 +29,8 @@ function EventCard({ event, onClick }) {
 
   // Get first image from files
   const firstImage = event.files?.find(f => f.type?.startsWith('image/'))
-  const imageUrl = firstImage ? `/api/files/${event.id}/${firstImage.name}` : null
+  // Use backend provided URL if available, otherwise construct it
+  const imageUrl = firstImage?.url || (firstImage ? `/api/files/${event.id}/${firstImage.name}` : null)
 
   // Format date
   const formatDate = (dateStr) => {

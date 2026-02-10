@@ -2,6 +2,7 @@
 
 import { EventWorkspace, Event, UploadedFile } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
+import { PathConfig } from '../utils/pathConfig.js'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -60,7 +61,7 @@ export class EventService {
 
   // Get event data from specific event directory
   static async getEventData(eventId: string): Promise<Event | null> {
-    const eventFilePath = path.join(process.cwd(), 'events', eventId, 'event.json')
+    const eventFilePath = PathConfig.getEventJsonPath(eventId)
     try {
       const data = fs.readFileSync(eventFilePath, 'utf8')
       const event = JSON.parse(data) as any
@@ -105,8 +106,8 @@ export class EventService {
 
   // Save event data to specific event directory
   static async saveEventData(eventId: string, eventData: Event): Promise<boolean> {
-    const eventDir = path.join(process.cwd(), 'events', eventId)
-    const eventFilePath = path.join(eventDir, 'event.json')
+    const eventDir = PathConfig.getEventDir(eventId)
+    const eventFilePath = PathConfig.getEventJsonPath(eventId)
 
     if (!fs.existsSync(eventDir)) {
       fs.mkdirSync(eventDir, { recursive: true })
@@ -183,8 +184,8 @@ export class EventService {
 
   // Parsed Data Management
   static async saveParsedData(eventId: string, parsedData: any): Promise<boolean> {
-    const eventDir = path.join(process.cwd(), 'events', eventId)
-    const parsedDataFilePath = path.join(eventDir, 'parsed-data.json')
+    const eventDir = PathConfig.getEventDir(eventId)
+    const parsedDataFilePath = PathConfig.getParsedDataPath(eventId)
 
     // Ensure event directory exists
     if (!fs.existsSync(eventDir)) {
@@ -201,7 +202,7 @@ export class EventService {
   }
 
   static async getParsedData(eventId: string): Promise<any | null> {
-    const parsedDataFilePath = path.join(process.cwd(), 'events', eventId, 'parsed-data.json')
+    const parsedDataFilePath = PathConfig.getParsedDataPath(eventId)
     try {
       const data = fs.readFileSync(parsedDataFilePath, 'utf8')
       return JSON.parse(data)
@@ -213,7 +214,7 @@ export class EventService {
 
   // Platform Content Management
   static async savePlatformContent(eventId: string, platform: string, content: any): Promise<boolean> {
-    const platformsDir = path.join(process.cwd(), 'events', eventId, 'platforms')
+    const platformsDir = PathConfig.getPlatformsDir(eventId)
     const platformFilePath = path.join(platformsDir, `${platform}.json`)
 
     // Ensure platforms directory exists
@@ -231,7 +232,7 @@ export class EventService {
   }
 
   static async getPlatformContent(eventId: string, platform: string): Promise<any | null> {
-    const platformFilePath = path.join(process.cwd(), 'events', eventId, 'platforms', `${platform}.json`)
+    const platformFilePath = path.join(PathConfig.getPlatformsDir(eventId), `${platform}.json`)
     
     try {
       const data = fs.readFileSync(platformFilePath, 'utf8')
@@ -246,7 +247,7 @@ export class EventService {
   }
 
   static async getAllPlatformContent(eventId: string): Promise<Record<string, any>> {
-    const platformsDir = path.join(process.cwd(), 'events', eventId, 'platforms')
+    const platformsDir = PathConfig.getPlatformsDir(eventId)
     const platformContent: Record<string, any> = {}
 
     try {
@@ -300,7 +301,7 @@ export class EventService {
   }
 
   static async loadEventFiles(eventId: string, fileIds: string[]): Promise<UploadedFile[]> {
-    const eventDir = path.join(process.cwd(), 'events', eventId, 'files')
+    const eventDir = PathConfig.getFilesDir(eventId)
 
     if (!fs.existsSync(eventDir)) {
       throw new Error(`Event directory not found: ${eventDir}`)
@@ -334,7 +335,7 @@ export class EventService {
   }
 
   static async getEventFiles(eventId: string): Promise<UploadedFile[]> {
-    const eventDir = path.join(process.cwd(), 'events', eventId, 'files')
+    const eventDir = PathConfig.getFilesDir(eventId)
 
     if (!fs.existsSync(eventDir)) {
       return [] // Return empty array if no files directory exists
@@ -507,8 +508,8 @@ export class EventService {
 
   // Migrate event folder from temp to final location
   static async migrateEventFolder(oldEventId: string, newEventId: string): Promise<void> {
-    const oldEventDir = path.join(process.cwd(), 'events', oldEventId)
-    const newEventDir = path.join(process.cwd(), 'events', newEventId)
+    const oldEventDir = PathConfig.getEventDir(oldEventId)
+    const newEventDir = PathConfig.getEventDir(newEventId)
 
     if (!fs.existsSync(oldEventDir)) {
       throw new Error(`Source event directory does not exist: ${oldEventDir}`)
@@ -573,10 +574,10 @@ export class EventService {
       platforms: eventData.selectedPlatforms || []
     })
 
-    const eventDir = path.join(process.cwd(), 'events', eventId)
+    const eventDir = PathConfig.getEventDir(eventId)
 
     // Load parsed data
-    const parsedDataPath = path.join(eventDir, 'parsed-data.json')
+    const parsedDataPath = PathConfig.getParsedDataPath(eventId)
     let parsedData = null
     if (fs.existsSync(parsedDataPath)) {
       try {
@@ -587,7 +588,7 @@ export class EventService {
     }
 
     // Load platform content
-    const platformContentDir = path.join(eventDir, 'platforms')
+    const platformContentDir = PathConfig.getPlatformsDir(eventId)
     let platformContent: Record<string, any> = {}
     if (fs.existsSync(platformContentDir)) {
       const platformFiles = fs.readdirSync(platformContentDir)

@@ -3,6 +3,7 @@ import { createWorker } from 'tesseract.js'
 let pdfParse: any = null
 import fs from 'fs'
 import path from 'path'
+import { PathConfig } from '../../utils/pathConfig.js'
 import crypto from 'crypto'
 import yaml from 'js-yaml'
 import { UploadedFile, ParsedEventData } from '../../types/index.js'
@@ -683,7 +684,7 @@ export class ContentExtractionService {
 
   // Check for duplicates in existing events
   static async checkForDuplicates(eventHash: string, currentEventId?: string): Promise<DuplicateCheckResult> {
-    const eventsDir = path.join(process.cwd(), 'events')
+    const eventsDir = PathConfig.getEventsRoot()
 
     if (!fs.existsSync(eventsDir)) {
       return { isDuplicate: false, similarity: 0 }
@@ -719,8 +720,8 @@ export class ContentExtractionService {
 
   // Save parsed data to event folder (without platformContent - stored separately)
   static async saveParsedData(eventId: string, parsedData: ParsedEventData): Promise<void> {
-    const eventDir = path.join(process.cwd(), 'events', eventId)
-    const parsedDataPath = path.join(eventDir, 'parsed-data.json')
+      const eventDir = PathConfig.getEventDir(eventId)
+      const parsedDataPath = PathConfig.getParsedDataPath(eventId)
 
     // Ensure event directory exists
     if (!fs.existsSync(eventDir)) {
@@ -803,7 +804,7 @@ export class ContentExtractionService {
 
   // Load parsed data from event folder
   static async loadParsedData(eventId: string): Promise<ParsedEventData | null> {
-    const parsedDataPath = path.join(process.cwd(), 'events', eventId, 'parsed-data.json')
+    const parsedDataPath = PathConfig.getParsedDataPath(eventId)
 
     if (!fs.existsSync(parsedDataPath)) {
       return null
@@ -827,7 +828,7 @@ export class ContentExtractionService {
 
   // Load platform content from separate files
   static async loadPlatformContent(eventId: string): Promise<Record<string, any> | null> {
-    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platforms')
+    const platformContentDir = PathConfig.getPlatformsDir(eventId)
 
     if (!fs.existsSync(platformContentDir)) {
       return null
@@ -877,7 +878,7 @@ export class ContentExtractionService {
 
   // Save platform content to separate file
   static async savePlatformContent(eventId: string, platform: string, content: any): Promise<void> {
-    const platformContentDir = path.join(process.cwd(), 'events', eventId, 'platforms')
+    const platformContentDir = PathConfig.getPlatformsDir(eventId)
     const platformFile = path.join(platformContentDir, `${platform}.json`)
 
     // Ensure directory exists

@@ -2,6 +2,7 @@ import multer from 'multer'
 import path from 'path'
 import fs from 'fs'
 import { Request } from 'express'
+import { PathConfig } from '../utils/pathConfig.js'
 
 // Create temp upload directory
 const createTempUploadDir = (): string => {
@@ -70,5 +71,5 @@ export const getFileUrl = (eventId: string, filename: string): string => {
 
 // Get file path helper
 export const getFilePath = (eventId: string, filename: string): string => {
-  return path.join(process.cwd(), 'events', eventId, 'files', filename)
+  return path.join(PathConfig.getFilesDir(eventId), filename)
 }

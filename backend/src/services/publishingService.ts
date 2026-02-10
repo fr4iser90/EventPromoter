@@ -7,7 +7,7 @@ import { PostResult } from '../types/index.js'
 import { PublishingFeedbackService, PublishingFeedback } from './publishingFeedbackService.js'
 import { PublisherEventService, EventAwarePublisher } from './publisherEventService.js'
 
-export type PublishingMode = 'n8n' | 'api' | 'playwright' | 'auto'
+export type PublishingMode = 'n8n' | 'api' | 'playwright' | 'custom'
 
 export interface PublishRequest {
   files: any[]
@@ -15,6 +15,8 @@ export interface PublishRequest {
   content: Record<string, any>
   hashtags: string[]
   eventData?: any
+  globalMode?: PublishingMode
+  overrides?: Record<string, 'n8n' | 'api' | 'playwright'>
 }
 
 export interface PublishResult {
@@ -32,67 +34,112 @@ export interface PublishResult {
 
 export class PublishingService {
   /**
-   * Main publish method - routes to appropriate publisher based on config
-   * @param request - Publish request with files, platforms, content, etc.
+   * Main publish method - routes to appropriate publisher based on explicit routes from frontend
+   * @param request - Publish request with files, platforms, content, and EXPLICIT routes
    * @param baseUrl - Base URL derived from request (for file URL transformation)
    * @param sessionId - Optional session ID for real-time event feedback
    */
   static async publish(request: PublishRequest, baseUrl?: string, sessionId?: string): Promise<PublishResult> {
     const appConfig = await ConfigService.getAppConfig()
-    const publishingMode = appConfig?.publishingMode || 'auto'
-    const n8nEnabled = appConfig?.n8nEnabled !== false // Default to true if not set
     const n8nUrl = appConfig?.n8nWebhookUrl
-
-    // Determine which publishing method to use
-    let mode: 'n8n' | 'api' | 'playwright' = 'api'
-
-    if (publishingMode === 'auto') {
-      // Try n8n first if enabled and URL is configured
-      if (n8nEnabled && n8nUrl) {
-        try {
-          return await this.publishViaN8n(request, n8nUrl, baseUrl)
-        } catch (error: any) {
-          console.warn('N8N publishing failed, falling back to API:', error.message)
-          mode = 'api'
-        }
-      } else {
-        mode = 'api'
-      }
-    } else {
-      mode = publishingMode
-    }
+    const explicitRoutes = request.overrides || {} // In this new model, overrides ARE the selected routes
 
     // Get event emitter if sessionId provided
     const eventEmitter = sessionId ? PublisherEventService.getInstance(sessionId) : undefined
     
     // Generate correlation ID for this publishing run
-    // Format: sessionId-platformId-timestamp (or just timestamp if no sessionId)
     const publishRunId = sessionId ? `${sessionId}-${Date.now()}` : `publish-${Date.now()}`
     
-    // ✅ LOG: Start publishing mit publishRunId
-    console.log(`[${publishRunId}] 🚀 Starting publish process (mode: ${mode}, platforms: ${Object.keys(request.platforms).filter(p => request.platforms[p]).join(', ')})`)
+    console.log(`[${publishRunId}] 🚀 Starting publish process (WYSIWYG Mode)`)
 
-    // Route to specific publisher
-    switch (mode) {
-      case 'n8n':
-        if (!n8nUrl) {
-          throw new Error('N8N webhook URL not configured')
-        }
-        return await this.publishViaN8n(request, n8nUrl, baseUrl, eventEmitter, publishRunId)
+    const platformList = Object.keys(request.platforms).filter(p => request.platforms[p])
+    const results: Record<string, any> = {}
 
-      case 'api':
-        return await this.publishViaAPI(request, eventEmitter, publishRunId)
-
-      case 'playwright':
-        // ✅ FIX: Ensure registry is initialized before getting publisher
-        if (!getPlatformRegistry().isInitialized()) {
-          await initializePlatformRegistry()
-        }
-        return await this.publishViaPlaywright(request, eventEmitter, publishRunId)
-
-      default:
-        throw new Error(`Unknown publishing mode: ${mode}`)
+    // Initialize registry
+    if (!getPlatformRegistry().isInitialized()) {
+      await initializePlatformRegistry()
     }
+
+    // Process each platform individually based on the route sent by the frontend
+    for (const platformId of platformList) {
+      // The frontend MUST send the route. If not, we default to 'api' but log a warning.
+      const method = explicitRoutes[platformId] || 'api'
+
+      console.log(`[${publishRunId}] Platform ${platformId} will use EXPLICIT method: ${method}`)
+
+      try {
+        let platformResult: any
+
+        // Route to specific publisher for this platform
+        switch (method) {
+          case 'n8n':
+            if (!n8nUrl) throw new Error('N8N webhook URL not configured')
+            platformResult = await this.publishSingleViaN8n(platformId, request, n8nUrl, baseUrl, eventEmitter, publishRunId)
+            break
+          case 'api':
+            platformResult = await this.publishSingleViaAPI(platformId, request, eventEmitter, publishRunId)
+            break
+          case 'playwright':
+            platformResult = await this.publishSingleViaPlaywright(platformId, request, eventEmitter, publishRunId)
+            break
+          default:
+            throw new Error(`Unsupported publishing method: ${method}`)
+        }
+
+        results[platformId] = {
+          ...platformResult,
+          method
+        }
+      } catch (error: any) {
+        results[platformId] = {
+          success: false,
+          method,
+          error: error.message || 'Publishing failed'
+        }
+      }
+    }
+
+    const allSuccess = Object.values(results).every(r => r.success)
+    const publishResult = {
+      success: allSuccess,
+      results,
+      message: allSuccess ? 'Successfully published to all platforms' : 'Some platforms failed to publish'
+    }
+
+    // Generate feedback
+    const feedback = await PublishingFeedbackService.generateFeedback(request, publishResult)
+
+    return {
+      ...publishResult,
+      feedback
+    }
+  }
+
+  /**
+   * Internal helper to publish to a single platform via N8N
+   */
+  private static async publishSingleViaN8n(platformId: string, request: PublishRequest, n8nUrl: string, baseUrl?: string, eventEmitter?: PublisherEventService, publishRunId?: string): Promise<any> {
+    const singlePlatformRequest = { ...request, platforms: { [platformId]: true } }
+    const result = await this.publishViaN8n(singlePlatformRequest, n8nUrl, baseUrl, eventEmitter, publishRunId)
+    return result.results[platformId]
+  }
+
+  /**
+   * Internal helper to publish to a single platform via API
+   */
+  private static async publishSingleViaAPI(platformId: string, request: PublishRequest, eventEmitter?: PublisherEventService, publishRunId?: string): Promise<any> {
+    const singlePlatformRequest = { ...request, platforms: { [platformId]: true } }
+    const result = await this.publishViaAPI(singlePlatformRequest, eventEmitter, publishRunId)
+    return result.results[platformId]
+  }
+
+  /**
+   * Internal helper to publish to a single platform via Playwright
+   */
+  private static async publishSingleViaPlaywright(platformId: string, request: PublishRequest, eventEmitter?: PublisherEventService, publishRunId?: string): Promise<any> {
+    const singlePlatformRequest = { ...request, platforms: { [platformId]: true } }
+    const result = await this.publishViaPlaywright(singlePlatformRequest, eventEmitter, publishRunId)
+    return result.results[platformId]
   }
 
   /**
