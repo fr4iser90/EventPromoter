@@ -356,12 +356,15 @@ function EventDetailPage() {
                                   variant="outlined" 
                                   sx={{ 
                                     p: 2, 
-                                    bgcolor: 'grey.50', 
+                                    bgcolor: 'background.default', 
+                                    color: 'text.primary',
                                     fontFamily: 'monospace',
                                     fontSize: '0.875rem',
                                     whiteSpace: 'pre-wrap',
                                     maxHeight: '400px',
-                                    overflow: 'auto'
+                                    overflow: 'auto',
+                                    border: '1px solid',
+                                    borderColor: 'divider'
                                   }}
                                 >
                                   {content}
