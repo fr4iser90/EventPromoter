@@ -1,19 +1,19 @@
 # 🏗 Task 1: Header Integration & Globaler FastSwitch
 
 ## 🎯 Ziel
-Implementierung einer globalen Steuerung im App-Header, um die Publishing-Methode für alle Plattformen gleichzeitig zu setzen oder den Auto-Modus zu aktivieren.
+Implementierung einer globalen Steuerung im App-Header, um die Publishing-Methode für alle Plattformen gleichzeitig zu setzen (FORCED) oder den CUSTOM-Modus (mit Overrides) zu aktivieren.
 
 ## 🛠 Teilaufgaben
-- [ ] **Store Erweiterung (`store.js`):**
-    - `globalPublishingMode`: ('auto' | 'n8n' | 'api' | 'playwright' | 'custom')
-    - `setGlobalPublishingMode(mode)` Action erstellen.
-- [ ] **Header UI Komponente:**
-    - Integration einer Toggle-Group oder eines Dropdowns im Header.
-    - Icons für die verschiedenen Modi (🔗, 📡, 🤖, ✨).
-- [ ] **Logik:**
-    - Wenn der globale Modus geändert wird, sollten (optional) alle Plattform-Overrides zurückgesetzt werden, um Konsistenz zu gewährleisten.
-- [ ] **Visualisierung:**
-    - Badge im Header, der den aktuell aktiven globalen Status anzeigt.
+- [x] **Store Erweiterung (`store.js`):**
+    - `globalPublishingMode`: ('custom' | 'n8n' | 'api' | 'playwright')
+    - `setGlobalPublishingMode(mode)` Action erstellt.
+- [x] **Header UI Komponente:**
+    - Integration einer Toggle-Group im Header.
+    - Modi: **CUSTOM** (🔗), **n8n** (🔗), **api** (📡), **playwright** (🤖).
+- [x] **Logik:**
+    - Wenn der globale Modus geändert wird, werden alle Plattform-Overrides zurückgesetzt.
+- [x] **Visualisierung:**
+    - Interaktive ToggleButtonGroup im Header.
 
 ---
 🔙 Zurück zur [Roadmap](task.md)

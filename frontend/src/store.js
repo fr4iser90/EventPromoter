@@ -424,6 +424,29 @@ const useStore = create((set, get) => ({
 
   // UI state
   darkMode: false,           // Dark mode toggle
+  globalPublishingMode: 'custom', // 'custom' | 'n8n' | 'api' | 'playwright'
+  platformOverrides: {},       // { platformId: 'n8n' | 'api' | 'playwright' }
+
+  setGlobalPublishingMode: (mode) => {
+    set({ globalPublishingMode: mode, platformOverrides: {} })
+    console.log(`Global publishing mode set to: ${mode} (Overrides reset)`)
+  },
+
+  setPlatformOverride: (platformId, route) => {
+    set(state => {
+      const currentOverride = state.platformOverrides[platformId]
+      const newOverrides = { ...state.platformOverrides }
+      
+      if (currentOverride === route) {
+        delete newOverrides[platformId] // Toggle off -> back to global logic
+      } else {
+        newOverrides[platformId] = route
+      }
+      
+      return { platformOverrides: newOverrides }
+    })
+  },
+
   setUploadedFileRefs: (fileRefs) => {
     set({ uploadedFileRefs: Array.isArray(fileRefs) ? fileRefs : [] })
     get().saveEventWorkspace()

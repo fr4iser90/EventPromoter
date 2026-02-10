@@ -11,30 +11,41 @@ import {
   MenuItem,
   IconButton,
   Chip,
-  Tooltip
+  Tooltip,
+  ToggleButtonGroup,
+  ToggleButton
 } from '@mui/material'
 import {
   Settings as SettingsIcon,
   Brightness4 as Brightness4Icon,
-  Brightness7 as Brightness7Icon
+  Brightness7 as Brightness7Icon,
+  SettingsInputComponent as CustomIcon,
+  Link as N8nIcon,
+  Send as ApiIcon,
+  SmartToy as PlaywrightIcon
 } from '@mui/icons-material'
 import useStore from '../../store'
 
 const Header = ({ 
   title, 
   showSettings = true, 
-  showPublishingMode = false, 
-  configuredMode = null,
+  showPublishingMode = true, 
   selectedPlatforms = [],
   onSettingsClick = null
 }) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  const { darkMode, setDarkMode } = useStore()
+  const { darkMode, setDarkMode, globalPublishingMode, setGlobalPublishingMode } = useStore()
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
+  }
+
+  const handleModeChange = (event, newMode) => {
+    if (newMode !== null) {
+      setGlobalPublishingMode(newMode)
+    }
   }
 
   const isHomePage = location.pathname === '/'
@@ -79,16 +90,54 @@ const Header = ({
           </Box>
         )}
 
-        {/* Publishing Mode Badge */}
-        {showPublishingMode && configuredMode && (
-          <Tooltip title={`Configured publishing mode: ${configuredMode}`} arrow>
-            <Chip
-              label={configuredMode.toUpperCase()}
+        {/* Global Publishing Mode FastSwitch */}
+        {showPublishingMode && (
+          <Box sx={{ mr: 2 }}>
+            <ToggleButtonGroup
+              value={globalPublishingMode}
+              exclusive
+              onChange={handleModeChange}
               size="small"
-              color={configuredMode === 'auto' ? 'info' : configuredMode === 'n8n' ? 'success' : configuredMode === 'api' ? 'primary' : 'default'}
-              sx={{ mr: 1, fontSize: '0.7rem' }}
-            />
-          </Tooltip>
+              aria-label="publishing mode"
+              sx={{ 
+                height: 32,
+                bgcolor: 'background.default',
+                '& .MuiToggleButton-root': {
+                  px: 1,
+                  py: 0,
+                  borderColor: 'divider',
+                  '&.Mui-selected': {
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                    }
+                  }
+                }
+              }}
+            >
+              <Tooltip title="CUSTOM Mode (Manual Overrides)" arrow>
+                <ToggleButton value="custom" aria-label="custom">
+                  <CustomIcon sx={{ fontSize: 18 }} />
+                </ToggleButton>
+              </Tooltip>
+              <Tooltip title="n8n Integration" arrow>
+                <ToggleButton value="n8n" aria-label="n8n">
+                  <N8nIcon sx={{ fontSize: 18 }} />
+                </ToggleButton>
+              </Tooltip>
+              <Tooltip title="Direct API" arrow>
+                <ToggleButton value="api" aria-label="api">
+                  <ApiIcon sx={{ fontSize: 18 }} />
+                </ToggleButton>
+              </Tooltip>
+              <Tooltip title="Playwright Automation" arrow>
+                <ToggleButton value="playwright" aria-label="playwright">
+                  <PlaywrightIcon sx={{ fontSize: 18 }} />
+                </ToggleButton>
+              </Tooltip>
+            </ToggleButtonGroup>
+          </Box>
         )}
 
         {/* Navigation Buttons */}

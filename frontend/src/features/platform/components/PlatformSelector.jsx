@@ -21,6 +21,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import WarningIcon from '@mui/icons-material/Warning'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import ErrorIcon from '@mui/icons-material/Error'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import PersonIcon from '@mui/icons-material/Person'
+import LockIcon from '@mui/icons-material/Lock'
 import useStore from '../../../store'
 import SettingsModal from './SettingsModal'
 import config from '../../../config'
@@ -56,7 +59,13 @@ function PlatformIcon({ icon, color, size = 24 }) {
 
 function PlatformSelector({ disabled = false }) {
   const { t } = useTranslation()
-  const { selectedPlatforms, setSelectedPlatforms } = useStore()
+  const { 
+    selectedPlatforms, 
+    setSelectedPlatforms, 
+    globalPublishingMode, 
+    platformOverrides, 
+    setPlatformOverride 
+  } = useStore()
   const [settingsDialog, setSettingsDialog] = useState({ open: false, platform: null })
   const [platforms, setPlatforms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -245,60 +254,88 @@ function PlatformSelector({ disabled = false }) {
                         const modes = platformModes[platform.id] || platform.availableModes || []
                         const modeStatuses = platform.publishingModeStatus || {}
                         
+                        // Determine which route is active by "CUSTOM" logic (Default fallback)
+                        const getBestDefaultRoute = () => {
+                          const priority = ['api', 'n8n', 'playwright']
+                          return priority.find(p => {
+                            const status = modeStatuses[p]?.status || 'not-implemented'
+                            return modes.includes(p) && status !== 'broken'
+                          }) || modes[0]
+                        }
+                        const bestDefaultRoute = getBestDefaultRoute()
+                        
                         const getModeConfig = (modeKey) => {
                           const statusInfo = modeStatuses[modeKey]
                           const status = statusInfo?.status || 'not-implemented'
                           const message = statusInfo?.message || ''
                           const isAvailable = modes.includes(modeKey)
                           
+                          // 1. Global Mode Context
+                          const isCustomMode = globalPublishingMode === 'custom'
+                          const isForcedMode = ['n8n', 'api', 'playwright'].includes(globalPublishingMode)
+                          const isForcedToThis = globalPublishingMode === modeKey
+                          
+                          // 2. Decision Layer
+                          const isManualOverride = isCustomMode && platformOverrides[platform.id] === modeKey
+                          const isDefaultChoice = isCustomMode && !platformOverrides[platform.id] && bestDefaultRoute === modeKey
+                          
+                          // 3. Activity Layer
+                          const isActive = isManualOverride || isDefaultChoice || (isForcedMode && isForcedToThis)
+                          
                           const configs = {
-                            'working': { 
-                              color: 'success', 
-                              icon: <CheckCircleIcon sx={{ fontSize: 14 }} />,
-                              tooltip: message || 'Fully functional'
-                            },
-                            'partial': { 
-                              color: 'warning', 
-                              icon: <WarningIcon sx={{ fontSize: 14 }} />,
-                              tooltip: message || 'Works with limitations'
-                            },
-                            'not-tested': { 
-                              color: 'default', 
-                              icon: <HelpOutlineIcon sx={{ fontSize: 14 }} />,
-                              tooltip: message || 'Not yet tested'
-                            },
-                            'not-implemented': { 
-                              color: 'default', 
-                              icon: undefined,
-                              tooltip: message || 'Not implemented'
-                            },
-                            'broken': { 
-                              color: 'error', 
-                              icon: <ErrorIcon sx={{ fontSize: 14 }} />,
-                              tooltip: message || 'Not working'
-                            }
+                            'working': { color: 'success', icon: <CheckCircleIcon sx={{ fontSize: 14 }} /> },
+                            'partial': { color: 'warning', icon: <WarningIcon sx={{ fontSize: 14 }} /> },
+                            'not-tested': { color: 'default', icon: <HelpOutlineIcon sx={{ fontSize: 14 }} /> },
+                            'not-implemented': { color: 'default', icon: undefined },
+                            'broken': { color: 'error', icon: <ErrorIcon sx={{ fontSize: 14 }} /> }
                           }
                           
+                          const baseConfig = configs[status]
+                          
                           return {
-                            ...configs[status],
+                            ...baseConfig,
                             isAvailable,
-                            label: modeKey.toUpperCase()
+                            label: modeKey.toUpperCase(),
+                            tooltip: `${modeKey.toUpperCase()}: ${message || status}${isDefaultChoice ? ' (Active via CUSTOM Default)' : ''}${isManualOverride ? ' (Manual Override)' : ''}${isForcedMode && !isForcedToThis ? ' (Disabled by Global Force)' : ''}`,
+                            isActive,
+                            isManualOverride,
+                            isLocked: isForcedMode && !isForcedToThis,
+                            status
                           }
                         }
                         
                         return ['n8n', 'api', 'playwright'].map((modeKey) => {
                           const config = getModeConfig(modeKey)
+                          const isBroken = config.status === 'broken'
+                          const isCustomMode = globalPublishingMode === 'custom'
+
                           return (
                             <Tooltip key={modeKey} title={config.tooltip} arrow>
                               <Chip
                                 size="small"
                                 label={config.label}
                                 color={config.color}
-                                icon={config.icon}
+                                variant="outlined"
+                                icon={config.isManualOverride ? <PersonIcon sx={{ fontSize: 14 }} /> : (config.isActive && !config.isLocked ? <AutoAwesomeIcon sx={{ fontSize: 14 }} /> : (config.isLocked ? <LockIcon sx={{ fontSize: 12 }} /> : config.icon))}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (isCustomMode && config.isAvailable && !isBroken) {
+                                    setPlatformOverride(platform.id, modeKey)
+                                  }
+                                }}
                                 sx={{ 
                                   fontSize: '0.65rem',
                                   height: '20px',
-                                  opacity: config.isAvailable ? 1 : 0.5
+                                  cursor: (isCustomMode && config.isAvailable && !isBroken) ? 'pointer' : 'default',
+                                  opacity: config.isActive ? 1 : (config.isLocked ? 0.3 : 0.4),
+                                  border: config.isActive ? `2px solid` : '1px solid',
+                                  borderColor: config.isActive ? 'inherit' : 'divider',
+                                  transition: 'all 0.2s ease',
+                                  bgcolor: 'transparent',
+                                  '&:hover': {
+                                    opacity: (isCustomMode && config.isAvailable && !isBroken) ? 1 : undefined,
+                                    bgcolor: (isCustomMode && config.isAvailable && !isBroken) ? 'action.hover' : 'transparent'
+                                  }
                                 }}
                               />
                             </Tooltip>

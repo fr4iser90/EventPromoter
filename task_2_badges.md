@@ -1,21 +1,23 @@
 # 🎴 Task 2: Plattform-Card Badge-Management
 
 ## 🎯 Ziel
-Die Badges in den einzelnen Plattform-Karten (`PlatformSelector.jsx`) interaktiv machen, um spezifische Overrides pro Plattform zu ermöglichen.
+Die Badges in den einzelnen Plattform-Karten (`PlatformSelector.jsx`) interaktiv machen, um spezifische Overrides im **CUSTOM** Modus zu ermöglichen.
 
 ## 🛠 Teilaufgaben
-- [ ] **Refactoring `PlatformSelector.jsx`:**
-    - Umwandlung der statischen Chips in klickbare Toggle-Buttons.
+- [x] **Refactoring `PlatformSelector.jsx`:**
+    - Umwandlung der statischen Chips in klickbare Toggle-Buttons (im CUSTOM Modus).
     - Integration der `platformOverrides` aus dem Store.
-- [ ] **Badge-Logik:**
-    - **Klick auf Badge:** Setzt die Methode für diese Plattform fest (Override).
-    - **Long Press / Toggle:** Zurücksetzen auf "Auto" (folgt dann wieder der globalen Prio).
-- [ ] **Visuelles Feedback:**
-    - **Blau:** Manuell gepinnt.
-    - **Grün:** Aktiv durch Auto-Modus.
-    - **Ausgegraut:** Methode für diese Plattform nicht verfügbar/konfiguriert.
-- [ ] **Tooltip-Erweiterung:**
-    - Anzeige, *warum* eine Methode gerade aktiv ist (z.B. "Aktiv via Global Auto").
+- [x] **Badge-Logik:**
+    - **Klick auf Badge:** Setzt die Route für diese Plattform fest (Manual Override).
+    - **Toggle:** Erneuter Klick entfernt den Override (zurück zu CUSTOM Default).
+- [x] **Visuelles Feedback (Outline Design):**
+    - **Aktiv (User/System):** Kräftiger 2px Border + Opacity 1.
+    - **Inaktiv:** Blass (Opacity 0.4) + 1px Border.
+    - **Gesperrt (FORCED):** Sehr blass (Opacity 0.3) + Lock-Icon (🔒).
+- [x] **Icons:**
+    - ✨ (**AutoAwesome**): System-Wahl im CUSTOM Modus.
+    - 👤 (**Person**): Manuelle Wahl (Override).
+    - 🔒 (**Lock**): Durch globalen FORCED-Modus gesperrt.
 
 ---
 🔙 Zurück zur [Roadmap](task.md)
