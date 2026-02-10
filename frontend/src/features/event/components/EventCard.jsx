@@ -24,13 +24,22 @@ import {
   Visibility as VisibilityIcon
 } from '@mui/icons-material'
 
+import { getFileUrl } from '../../../shared/utils/api'
+
 function EventCard({ event, onClick }) {
   const { t } = useTranslation()
 
   // Get first image from files
-  const firstImage = event.files?.find(f => f.type?.startsWith('image/'))
-  // Use backend provided URL if available, otherwise construct it
-  const imageUrl = firstImage?.url || (firstImage ? `/api/files/${event.id}/${firstImage.name}` : null)
+  const firstImage = event.files?.find(f => f.type?.startsWith('image/') || f.isImage)
+  
+  // Use the central getFileUrl helper like all other components
+  const imageUrl = getFileUrl(firstImage?.url || (firstImage ? `/api/files/${event.id}/${firstImage.filename || firstImage.name}` : null))
+
+  // LOGGING IM FRONTEND
+  console.log(`[EventCard] Rendering event: ${event.title}`, {
+    id: event.id,
+    imageUrl: imageUrl
+  });
 
   // Format date
   const formatDate = (dateStr) => {

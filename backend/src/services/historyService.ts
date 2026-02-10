@@ -82,7 +82,15 @@ export class HistoryService {
     // 3. Load publish results from latest session
     const publishResults = await this.getPublishResults(eventId)
     
-    console.log(`[HistoryService] Mapping data for ${eventId} using SchemaResolver`)
+    // Ensure all files have correct URLs before resolver
+    const filesWithUrls = (eventData.uploadedFileRefs || []).map(file => ({
+      ...file,
+      url: `/api/files/${eventId}/${file.filename || file.name}`
+    }))
+
+    console.log(`[HistoryService] BEFORE Resolver - Event: ${eventId}, Files:`, 
+      filesWithUrls.map(f => ({ name: f.name, url: f.url }))
+    )
     
     // 4. Map schema to history entry
     try {
@@ -98,15 +106,19 @@ export class HistoryService {
           ...eventData,
           title: eventData.title || parsedData.title
         },
-        files: eventData.uploadedFileRefs || [],
+        files: filesWithUrls,
         stats: {
-          fileCount: eventData.uploadedFileRefs?.length || 0,
+          fileCount: filesWithUrls.length || 0,
           platformCount: eventData.selectedPlatforms?.length || 0,
           createdAt: eventData.createdAt,
           modifiedAt: eventData.updatedAt
         },
         publishResults
       } as any, { id: eventId }) as unknown as HistoryEntry
+      
+      console.log(`[HistoryService] AFTER Resolver - Event: ${eventId}, Files:`, 
+        entry.files?.map(f => ({ name: f.name, url: f.url }))
+      )
       
       return entry
     } catch (resolverError) {
