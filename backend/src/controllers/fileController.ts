@@ -138,23 +138,16 @@ export class FileController {
   static async getFile(req: Request, res: Response) {
     try {
       const { eventId, filename } = req.params
-      console.log(`[FileController] GET request for: ${filename} (Event: ${eventId})`);
 
       if (!eventId || !filename) {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
       // PathConfig maps to events/EVENT_ID/files/FILENAME
-      const filesDir = PathConfig.getFilesDir(eventId);
-      const filePath = path.join(filesDir, filename)
-      console.log(`[FileController] Path: ${filePath}`);
+      const filePath = path.join(PathConfig.getFilesDir(eventId), filename)
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {
-        console.error(`[FileController] 404 NOT FOUND: ${filePath}`);
-        if (fs.existsSync(filesDir)) {
-          console.log(`[FileController] Directory content:`, fs.readdirSync(filesDir));
-        }
         return res.status(404).json({ error: 'File not found' })
       }
 

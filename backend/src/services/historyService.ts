@@ -24,10 +24,8 @@ export class HistoryService {
 
   private static async scanEventsDirectory(): Promise<HistoryEntry[]> {
     const eventsDir = PathConfig.getEventsRoot()
-    console.log(`[HistoryService] Scanning directory: ${eventsDir}`)
 
     if (!fs.existsSync(eventsDir)) {
-      console.error(`[HistoryService] Directory NOT FOUND: ${eventsDir}`)
       return []
     }
 
@@ -45,26 +43,19 @@ export class HistoryService {
         return fs.statSync(bPath).mtime.getTime() - fs.statSync(aPath).mtime.getTime()
       })
 
-    console.log(`[HistoryService] Found ${eventFolders.length} potential event folders:`, eventFolders)
-
     const events: HistoryEntry[] = []
 
     for (const eventId of eventFolders) {
       try {
-        console.log(`[HistoryService] Processing event folder: ${eventId}`)
         const eventEntry = await this.createHistoryEntryFromEvent(eventId)
         if (eventEntry) {
-          console.log(`[HistoryService] Successfully created entry for ${eventId}`)
           events.push(eventEntry)
-        } else {
-          console.warn(`[HistoryService] Event ${eventId} returned null (missing event.json?)`)
         }
       } catch (error) {
         console.error(`[HistoryService] Error processing event ${eventId}:`, error)
       }
     }
 
-    console.log(`[HistoryService] Final event list count: ${events.length}`)
     return events
   }
 
@@ -72,7 +63,6 @@ export class HistoryService {
     // 1. Load central event data (Schema-Driven!)
     const eventData = await EventService.getEventData(eventId)
     if (!eventData) {
-      console.warn(`[HistoryService] Event data (event.json) missing for ${eventId}`)
       return null
     }
 
@@ -87,10 +77,6 @@ export class HistoryService {
       ...file,
       url: `/api/files/${eventId}/${file.filename || file.name}`
     }))
-
-    console.log(`[HistoryService] BEFORE Resolver - Event: ${eventId}, Files:`, 
-      filesWithUrls.map(f => ({ name: f.name, url: f.url }))
-    )
     
     // 4. Map schema to history entry
     try {
@@ -115,10 +101,6 @@ export class HistoryService {
         },
         publishResults
       } as any, { id: eventId }) as unknown as HistoryEntry
-      
-      console.log(`[HistoryService] AFTER Resolver - Event: ${eventId}, Files:`, 
-        entry.files?.map(f => ({ name: f.name, url: f.url }))
-      )
       
       return entry
     } catch (resolverError) {

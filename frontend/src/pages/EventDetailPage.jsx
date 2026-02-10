@@ -11,15 +11,25 @@ import {
   Tabs,
   Tab,
   Grid,
-  Chip
+  Chip,
+  Card,
+  CardMedia,
+  CardContent,
+  Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material'
 import {
   ArrowBack as ArrowBackIcon,
   Refresh as RefreshIcon,
   CalendarToday as CalendarIcon,
-  LocationOn as LocationIcon
+  LocationOn as LocationIcon,
+  Description as DescriptionIcon,
+  Image as ImageIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material'
-import { getApiUrl } from '../shared/utils/api'
+import { getApiUrl, getFileUrl } from '../shared/utils/api'
 import Header from '../shared/components/Header'
 import { PlatformStatsCard } from '../features/event'
 
@@ -33,11 +43,45 @@ function EventDetailPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState(0)
+  const [fileContents, setFileContents] = useState({})
+  const [loadingContents, setLoadingContents] = useState({})
 
   useEffect(() => {
     loadEvent()
     loadTelemetry()
   }, [eventId])
+
+  // Load text content for .txt and .md files
+  useEffect(() => {
+    if (event?.files) {
+      const textFiles = event.files.filter(f => {
+        const ext = f.name?.split('.').pop()?.toLowerCase()
+        return ['txt', 'md'].includes(ext)
+      })
+
+      textFiles.forEach(file => {
+        loadFileContent(file)
+      })
+    }
+  }, [event?.files])
+
+  const loadFileContent = async (file) => {
+    const fileName = file.filename || file.name
+    if (fileContents[fileName]) return
+
+    try {
+      setLoadingContents(prev => ({ ...prev, [fileName]: true }))
+      const response = await fetch(getApiUrl(`files/${eventId}/${fileName}/content`))
+      if (response.ok) {
+        const data = await response.json()
+        setFileContents(prev => ({ ...prev, [fileName]: data.content }))
+      }
+    } catch (err) {
+      console.error(`Failed to load content for ${fileName}:`, err)
+    } finally {
+      setLoadingContents(prev => ({ ...prev, [fileName]: false }))
+    }
+  }
 
   const loadEvent = async () => {
     try {
@@ -228,35 +272,132 @@ function EventDetailPage() {
         )}
 
         {/* Event Details */}
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            {t('history.eventDetails', { defaultValue: 'Event Details' })}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            🎯 {t('history.eventDetails', { defaultValue: 'Event Details' })}
           </Typography>
-          <Grid container spacing={2}>
+          
+          <Grid container spacing={3}>
+            {/* Description */}
             {event.eventData?.description && (
               <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  {event.eventData.description}
+                <Typography variant="subtitle2" color="primary" gutterBottom>
+                  📝 {t('event.description', { defaultValue: 'Description' })}
                 </Typography>
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'action.hover' }}>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {event.eventData.description}
+                  </Typography>
+                </Paper>
               </Grid>
             )}
-            {event.files && event.files.length > 0 && (
+
+            {/* Images Gallery */}
+            {event.files?.some(f => f.type?.startsWith('image/') || f.isImage) && (
               <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  {t('history.files', { defaultValue: 'Files' })} ({event.files.length})
+                <Typography variant="subtitle2" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <ImageIcon fontSize="small" /> {t('preview.images', { defaultValue: 'Images' })}
                 </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {event.files.map((file) => (
-                    <Chip
-                      key={file.id || file.name}
-                      label={file.name}
-                      size="small"
-                      variant="outlined"
-                    />
-                  ))}
-                </Box>
+                <Grid container spacing={2}>
+                  {event.files
+                    .filter(f => f.type?.startsWith('image/') || f.isImage)
+                    .map((file) => (
+                      <Grid item xs={12} sm={6} md={4} lg={3} key={file.id || file.name}>
+                        <Card variant="outlined">
+                          <CardMedia
+                            component="img"
+                            height="160"
+                            image={getFileUrl(file.url || `/api/files/${eventId}/${file.filename || file.name}`)}
+                            alt={file.name}
+                            sx={{ objectFit: 'cover', cursor: 'pointer' }}
+                            onClick={() => window.open(getFileUrl(file.url || `/api/files/${eventId}/${file.filename || file.name}`), '_blank')}
+                          />
+                          <CardContent sx={{ py: 1, px: 1.5 }}>
+                            <Typography variant="caption" noWrap display="block">
+                              {file.name}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                </Grid>
               </Grid>
             )}
+
+            {/* Text Contents */}
+            {event.files?.some(f => ['txt', 'md'].includes(f.name?.split('.').pop()?.toLowerCase())) && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                  <DescriptionIcon fontSize="small" /> {t('preview.sourceFiles', { defaultValue: 'Source Files' })}
+                </Typography>
+                <Grid container spacing={2}>
+                  {event.files
+                    .filter(f => ['txt', 'md'].includes(f.name?.split('.').pop()?.toLowerCase()))
+                    .map((file) => {
+                      const fileName = file.filename || file.name
+                      const content = fileContents[fileName]
+                      const isLoading = loadingContents[fileName]
+                      
+                      return (
+                        <Grid item xs={12} key={file.id || file.name}>
+                          <Accordion defaultExpanded={event.files.filter(f => ['txt', 'md'].includes(f.name?.split('.').pop()?.toLowerCase())).length === 1}>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                📄 {file.name}
+                              </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                              {isLoading ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                                  <CircularProgress size={24} />
+                                </Box>
+                              ) : content ? (
+                                <Paper 
+                                  variant="outlined" 
+                                  sx={{ 
+                                    p: 2, 
+                                    bgcolor: 'grey.50', 
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.875rem',
+                                    whiteSpace: 'pre-wrap',
+                                    maxHeight: '400px',
+                                    overflow: 'auto'
+                                  }}
+                                >
+                                  {content}
+                                </Paper>
+                              ) : (
+                                <Typography variant="caption" color="text.secondary">
+                                  No content available or failed to load.
+                                </Typography>
+                              )}
+                            </AccordionDetails>
+                          </Accordion>
+                        </Grid>
+                      )
+                    })}
+                </Grid>
+              </Grid>
+            )}
+
+            {/* Other Files (as Chips) */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 1 }}>
+                📎 {t('history.allFiles', { defaultValue: 'All Files' })}
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {event.files.map((file) => (
+                  <Chip
+                    key={file.id || file.name}
+                    label={file.name}
+                    size="small"
+                    variant="outlined"
+                    onClick={() => window.open(getFileUrl(file.url || `/api/files/${eventId}/${file.filename || file.name}`), '_blank')}
+                    icon={file.type?.startsWith('image/') || file.isImage ? <ImageIcon /> : <DescriptionIcon />}
+                  />
+                ))}
+              </Box>
+            </Grid>
           </Grid>
         </Paper>
         </Box>

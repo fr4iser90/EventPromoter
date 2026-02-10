@@ -35,12 +35,6 @@ function EventCard({ event, onClick }) {
   // Use the central getFileUrl helper like all other components
   const imageUrl = getFileUrl(firstImage?.url || (firstImage ? `/api/files/${event.id}/${firstImage.filename || firstImage.name}` : null))
 
-  // LOGGING IM FRONTEND
-  console.log(`[EventCard] Rendering event: ${event.title}`, {
-    id: event.id,
-    imageUrl: imageUrl
-  });
-
   // Format date
   const formatDate = (dateStr) => {
     if (!dateStr) return ''
