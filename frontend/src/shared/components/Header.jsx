@@ -91,7 +91,7 @@ const Header = ({
         )}
 
         {/* Global Publishing Mode FastSwitch */}
-        {showPublishingMode && (
+        {showPublishingMode && isHomePage && (
           <Box sx={{ mr: 2 }}>
             <ToggleButtonGroup
               value={globalPublishingMode}
