@@ -133,7 +133,7 @@ const redditUserEditSchema: FormSchema = {
     {
       id: 'save',
       type: 'submit',
-      label: 'Save',
+      label: 'platform.reddit.actions.save',
       method: 'PUT',
       ui: {
         variant: 'contained',
@@ -143,7 +143,7 @@ const redditUserEditSchema: FormSchema = {
     {
       id: 'delete',
       type: 'delete',
-      label: 'Delete',
+      label: 'platform.reddit.actions.delete',
       method: 'DELETE',
       endpoint: 'platforms/:platformId/targets/:id',
       ui: {
@@ -154,7 +154,7 @@ const redditUserEditSchema: FormSchema = {
     {
       id: 'cancel',
       type: 'button',
-      label: 'Cancel',
+      label: 'platform.reddit.actions.cancel',
       ui: {
         variant: 'outlined',
       },

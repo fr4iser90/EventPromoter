@@ -100,6 +100,12 @@
       "target.firstName": "Nombre (Destinatario)",
       "target.lastName": "Apellido (Destinatario)"
     },
+    "actions": {
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "cancel": "Cancelar",
+      "validate": "Validar"
+    },
     "options": {
       "gender": {
         "not_specified": "No especificado",

@@ -100,6 +100,12 @@
       "target.firstName": "First Name (Recipient)",
       "target.lastName": "Last Name (Recipient)"
     },
+    "actions": {
+      "save": "Save",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "validate": "Validate"
+    },
     "options": {
       "gender": {
         "not_specified": "Not specified",

@@ -15,6 +15,12 @@
       "target.firstName": "Vorname (Empfänger)",
       "target.lastName": "Nachname (Empfänger)"
     },
+    "actions": {
+      "save": "Speichern",
+      "delete": "Löschen",
+      "cancel": "Abbrechen",
+      "validate": "Validieren"
+    },
     "options": {
       "gender": {
         "not_specified": "Nicht angegeben",

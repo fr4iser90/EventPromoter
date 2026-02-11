@@ -116,7 +116,7 @@ const emailRecipientEditSchema: FormSchema = {
     {
       id: 'save',
       type: 'submit',
-      label: 'Save',
+      label: 'platform.email.actions.save',
       method: 'PUT',
       ui: {
         variant: 'contained',
@@ -126,7 +126,7 @@ const emailRecipientEditSchema: FormSchema = {
     {
       id: 'delete',
       type: 'delete',
-      label: 'Delete',
+      label: 'platform.email.actions.delete',
       method: 'DELETE',
       endpoint: 'platforms/:platformId/targets/:id',
       ui: {
@@ -137,7 +137,7 @@ const emailRecipientEditSchema: FormSchema = {
     {
       id: 'cancel',
       type: 'button',
-      label: 'Cancel',
+      label: 'platform.email.actions.cancel',
       ui: {
         variant: 'outlined',
       },
