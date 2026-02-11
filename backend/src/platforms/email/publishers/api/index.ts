@@ -110,38 +110,43 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
             this.eventEmitter.stepCompleted(platformId, method, `Step 5: Extract Recipients (${run.templateId})`, Date.now() - step5Start, this.publishRunId)
           }
 
-          // ✅ STEP 6: Render Template
-          if (this.eventEmitter) {
-            this.eventEmitter.stepStarted(platformId, method, `Step 6: Render Template (${run.templateId})`, 'Rendering template with variables...', this.publishRunId)
-          }
-          const step6Start = Date.now()
-          const { html, subject } = await step4_RenderTemplate(run, content)
-          if (this.eventEmitter) {
-            this.eventEmitter.stepCompleted(platformId, method, `Step 6: Render Template (${run.templateId})`, Date.now() - step6Start, this.publishRunId)
-          }
+          // Loop through recipients to send personalized emails
+          for (const recipient of recipients) {
+            const recipientEmail = recipient.email
+            console.log(`📧 Processing recipient: ${recipientEmail}`)
 
-          // ✅ STEP 7: Process Attachments
-          if (this.eventEmitter) {
-            this.eventEmitter.stepStarted(platformId, method, `Step 7: Process Attachments (${run.templateId})`, 'Processing attachments and embedded images...', this.publishRunId)
-          }
-          const step7Start = Date.now()
-          const { processedHtml, processedAttachments } = step5_ProcessAttachments(run, files, globalAttachments, html)
-          console.log(`📧 Processing embedded images...`)
-          if (this.eventEmitter) {
-            this.eventEmitter.stepCompleted(platformId, method, `Step 7: Process Attachments (${run.templateId})`, Date.now() - step7Start, this.publishRunId)
-          }
+            // ✅ STEP 6: Render Template (Personalized)
+            if (this.eventEmitter) {
+              this.eventEmitter.stepStarted(platformId, method, `Step 6: Render Template (${run.templateId})`, `Rendering personalized template for ${recipientEmail}...`, this.publishRunId)
+            }
+            const step6Start = Date.now()
+            const { html, subject } = await step4_RenderTemplate(run, content, recipient)
+            if (this.eventEmitter) {
+              this.eventEmitter.stepCompleted(platformId, method, `Step 6: Render Template (${run.templateId})`, Date.now() - step6Start, this.publishRunId)
+            }
 
-          // ✅ STEP 8: Send Email
-          if (this.eventEmitter) {
-            this.eventEmitter.stepStarted(platformId, method, `Step 8: Send Email (${run.templateId})`, `Sending email to ${recipients.length} recipient(s)...`, this.publishRunId)
+            // ✅ STEP 7: Process Attachments
+            if (this.eventEmitter) {
+              this.eventEmitter.stepStarted(platformId, method, `Step 7: Process Attachments (${run.templateId})`, 'Processing attachments and embedded images...', this.publishRunId)
+            }
+            const step7Start = Date.now()
+            const { processedHtml, processedAttachments } = step5_ProcessAttachments(run, files, globalAttachments, html)
+            if (this.eventEmitter) {
+              this.eventEmitter.stepCompleted(platformId, method, `Step 7: Process Attachments (${run.templateId})`, Date.now() - step7Start, this.publishRunId)
+            }
+
+            // ✅ STEP 8: Send Email
+            if (this.eventEmitter) {
+              this.eventEmitter.stepStarted(platformId, method, `Step 8: Send Email (${run.templateId})`, `Sending email to ${recipientEmail}...`, this.publishRunId)
+            }
+            const step8Start = Date.now()
+            const result = await step6_SendEmail(credentials, [recipientEmail], subject, processedHtml, processedAttachments, content)
+            if (this.eventEmitter) {
+              this.eventEmitter.stepCompleted(platformId, method, `Step 8: Send Email (${run.templateId})`, Date.now() - step8Start, this.publishRunId)
+            }
+            
+            results.push(result)
           }
-          const step8Start = Date.now()
-          const result = await step6_SendEmail(credentials, recipients, subject, processedHtml, processedAttachments, content)
-          if (this.eventEmitter) {
-            this.eventEmitter.stepCompleted(platformId, method, `Step 8: Send Email (${run.templateId})`, Date.now() - step8Start, this.publishRunId)
-          }
-          
-          results.push(result)
         } catch (error: any) {
           console.error(`Error processing template run ${run.templateId}:`, error)
           results.push({

@@ -85,7 +85,33 @@
       "selectRecipients": "Seleccionar Destinatarios",
       "emailSubject": "Asunto del Correo",
       "emailHtmlContent": "Contenido HTML del Correo",
-      "subredditExample": "ej. r/berlin"
+      "subredditExample": "ej. r/berlin",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "birthday": "Cumpleaños",
+      "gender": "Género",
+      "salutationTone": "Tono de saludo"
+    },
+    "options": {
+      "gender": {
+        "not_specified": "No especificado",
+        "male": "Masculino",
+        "female": "Femenino",
+        "non_binary": "No binario"
+      },
+      "salutationTone": {
+        "informal": "Informal (Hola)",
+        "formal": "Formal (Estimado)"
+      }
+    }
+  },
+  "salutation": {
+    "informal": "Hola {{firstName}}",
+    "formal": {
+      "male": "Estimado Sr. {{lastName}}",
+      "female": "Estimada Sra. {{lastName}}",
+      "generic_with_name": "Estimado/a {{lastName}}",
+      "generic": "Estimados señores y señoras"
     }
   },
   "navigation": {

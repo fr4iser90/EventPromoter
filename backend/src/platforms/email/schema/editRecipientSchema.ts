@@ -38,7 +38,7 @@ const emailRecipientEditSchema: FormSchema = {
     {
       name: 'firstName',
       type: 'text',
-      label: 'First Name',
+      label: 'platform.email.form.labels.firstName',
       ui: {
         width: 6,
         order: 2,
@@ -47,19 +47,49 @@ const emailRecipientEditSchema: FormSchema = {
     {
       name: 'lastName',
       type: 'text',
-      label: 'Last Name',
+      label: 'platform.email.form.labels.lastName',
       ui: {
         width: 6,
         order: 3,
       },
     },
     {
-      name: 'birthday',
-      type: 'date',
-      label: 'Birthday',
+      name: 'gender',
+      type: 'select',
+      label: 'platform.email.form.labels.gender',
+      options: [
+        { label: 'platform.email.form.options.gender.not_specified', value: 'not_specified' },
+        { label: 'platform.email.form.options.gender.male', value: 'male' },
+        { label: 'platform.email.form.options.gender.female', value: 'female' },
+        { label: 'platform.email.form.options.gender.non_binary', value: 'non_binary' }
+      ],
+      default: 'not_specified',
       ui: {
         width: 6,
         order: 4,
+      },
+    },
+    {
+      name: 'salutationTone',
+      type: 'select',
+      label: 'platform.email.form.labels.salutationTone',
+      options: [
+        { label: 'platform.email.form.options.salutationTone.informal', value: 'informal' },
+        { label: 'platform.email.form.options.salutationTone.formal', value: 'formal' }
+      ],
+      default: 'informal',
+      ui: {
+        width: 6,
+        order: 5,
+      },
+    },
+    {
+      name: 'birthday',
+      type: 'date',
+      label: 'platform.email.form.labels.birthday',
+      ui: {
+        width: 6,
+        order: 6,
       },
     },
     {

@@ -85,7 +85,33 @@
       "selectRecipients": "Select Recipients",
       "emailSubject": "Email Subject",
       "emailHtmlContent": "Email HTML Content",
-      "subredditExample": "e.g., r/berlin"
+      "subredditExample": "e.g., r/berlin",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "birthday": "Birthday",
+      "gender": "Gender",
+      "salutationTone": "Salutation Tone"
+    },
+    "options": {
+      "gender": {
+        "not_specified": "Not specified",
+        "male": "Male",
+        "female": "Female",
+        "non_binary": "Non-binary"
+      },
+      "salutationTone": {
+        "informal": "Informal (Hi)",
+        "formal": "Formal (Dear)"
+      }
+    }
+  },
+  "salutation": {
+    "informal": "Hi {{firstName}}",
+    "formal": {
+      "male": "Dear Mr. {{lastName}}",
+      "female": "Dear Ms. {{lastName}}",
+      "generic_with_name": "Dear {{lastName}}",
+      "generic": "Dear recipient"
     }
   },
   "navigation": {

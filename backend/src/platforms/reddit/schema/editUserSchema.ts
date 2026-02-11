@@ -56,6 +56,54 @@ const redditUserEditSchema: FormSchema = {
       },
     },
     {
+      name: 'firstName',
+      type: 'text',
+      label: 'platform.reddit.form.labels.firstName',
+      ui: {
+        width: 6,
+        order: 3,
+      },
+    },
+    {
+      name: 'lastName',
+      type: 'text',
+      label: 'platform.reddit.form.labels.lastName',
+      ui: {
+        width: 6,
+        order: 4,
+      },
+    },
+    {
+      name: 'gender',
+      type: 'select',
+      label: 'platform.reddit.form.labels.gender',
+      options: [
+        { label: 'platform.reddit.form.options.gender.not_specified', value: 'not_specified' },
+        { label: 'platform.reddit.form.options.gender.male', value: 'male' },
+        { label: 'platform.reddit.form.options.gender.female', value: 'female' },
+        { label: 'platform.reddit.form.options.gender.non_binary', value: 'non_binary' }
+      ],
+      default: 'not_specified',
+      ui: {
+        width: 6,
+        order: 5,
+      },
+    },
+    {
+      name: 'salutationTone',
+      type: 'select',
+      label: 'platform.reddit.form.labels.salutationTone',
+      options: [
+        { label: 'platform.reddit.form.options.salutationTone.informal', value: 'informal' },
+        { label: 'platform.reddit.form.options.salutationTone.formal', value: 'formal' }
+      ],
+      default: 'informal',
+      ui: {
+        width: 6,
+        order: 6,
+      },
+    },
+    {
       name: 'notes',
       type: 'textarea',
       label: 'Notes',

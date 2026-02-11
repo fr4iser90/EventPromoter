@@ -22,6 +22,14 @@ export interface EmailAttachment {
   contentType?: string // Optional: alternative type field
 }
 
+export interface EmailRecipient {
+  email: string
+  firstName?: string
+  lastName?: string
+  gender?: 'male' | 'female' | 'non_binary' | 'not_specified'
+  salutationTone?: 'formal' | 'informal'
+}
+
 export interface EmailConfig {
   smtpHost?: string
   smtpPort?: number

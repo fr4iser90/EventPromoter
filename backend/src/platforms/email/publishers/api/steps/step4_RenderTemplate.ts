@@ -6,9 +6,12 @@
  * @module platforms/email/publishers/api/steps/step4_RenderTemplate
  */
 
+import { EmailRecipient } from '../../../types.js'
+
 export async function step4_RenderTemplate(
   run: any,
-  content: any
+  content: any,
+  targetMetadata?: EmailRecipient
 ): Promise<{ html: string; subject: string }> {
   // ✅ DEKLARATIV: Template MUSS vorhanden sein und re-rendert werden (KEINE FALLBACKS)
   if (!run.templateId) {
@@ -63,6 +66,29 @@ export async function step4_RenderTemplate(
       
       variables[varName] = varValue
     }
+  }
+
+  // ✅ PERSONALISIERUNG: Salutation generieren falls Target-Metadaten vorhanden
+  if (targetMetadata) {
+    const { getSalutationConfig } = await import('../../../../../utils/salutationUtils.js')
+    const { loadTranslations } = await import('../../../../../utils/translationLoader.js')
+    
+    const salutationConfig = getSalutationConfig(targetMetadata)
+    const platformTranslations = await loadTranslations('email', targetLocale)
+    
+    // Resolve translation key (e.g., 'salutation.informal')
+    let salutation = salutationConfig.key.split('.').reduce((obj, key) => obj?.[key], platformTranslations as any)
+    
+    if (salutation) {
+      // Replace placeholders in salutation string (e.g., {{firstName}})
+      for (const [key, value] of Object.entries(salutationConfig.data)) {
+        salutation = salutation.replace(new RegExp(`{{${key}}}`, 'g'), value)
+      }
+      variables['salutation'] = salutation
+    }
+
+    if (targetMetadata.firstName) variables['target.firstName'] = targetMetadata.firstName
+    if (targetMetadata.lastName) variables['target.lastName'] = targetMetadata.lastName
   }
   
   // Render template with Target-Locale

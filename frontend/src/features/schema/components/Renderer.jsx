@@ -140,7 +140,7 @@ function renderField(field, value, onChange, error, platformId = null, formValue
                 value={option.value}
                 disabled={option.disabled}
               >
-                {option.label}
+                {option.label && t ? t(option.label, option.label) : option.label}
               </MenuItem>
             ))}
           </Select>

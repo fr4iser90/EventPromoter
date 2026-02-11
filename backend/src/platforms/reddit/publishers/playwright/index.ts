@@ -102,9 +102,55 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
       if (content.subreddits) {
         console.log(`\n🔍 Extracting subreddits from targets configuration...`)
         console.log(`   Targets config:`, JSON.stringify(content.subreddits, null, 2))
-        const subreddits = await extractSubredditsFromTargets(content.subreddits)
-        console.log(`   Extracted subreddits: ${subreddits.length} - [${subreddits.join(', ')}]`)
-        if (subreddits.length === 0) {
+        
+        const { RedditTargetService } = await import('../../../services/targetService.js')
+        const targetService = new RedditTargetService()
+        const allTargets = await targetService.getTargets('subreddit')
+        const groups = await targetService.getGroups()
+        const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
+
+        const subredditsWithMetadata: any[] = []
+        
+        if (content.subreddits.mode === 'all') {
+          allTargets.forEach((t: any) => {
+            const baseField = targetService.getBaseField(t.targetType)
+            subredditsWithMetadata.push({
+              name: t[baseField],
+              metadata: t
+            })
+          })
+        } else if (content.subreddits.mode === 'groups' && content.subreddits.groups) {
+          for (const groupIdentifier of content.subreddits.groups) {
+            const group = groupsArray.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier) as any
+            if (!group || !group.targetIds) continue
+            group.targetIds.forEach((targetId: string) => {
+              const target = allTargets.find((t: any) => t.id === targetId)
+              if (target) {
+                const baseField = targetService.getBaseField(target.targetType)
+                subredditsWithMetadata.push({
+                  name: target[baseField],
+                  metadata: target
+                })
+              }
+            })
+          }
+        } else if (content.subreddits.mode === 'individual' && content.subreddits.individual) {
+          content.subreddits.individual.forEach((targetId: string) => {
+            const target = allTargets.find((t: any) => t.id === targetId)
+            if (target) {
+              const baseField = targetService.getBaseField(target.targetType)
+              subredditsWithMetadata.push({
+                name: target[baseField],
+                metadata: target
+              })
+            }
+          })
+        }
+
+        // Remove duplicates
+        const uniqueSubreddits = Array.from(new Map(subredditsWithMetadata.map(s => [s.name, s])).values())
+
+        if (uniqueSubreddits.length === 0) {
           console.error(`❌ No subreddits found in targets configuration`)
           return {
             success: false,
@@ -144,7 +190,7 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
           }, this.eventEmitter, currentPublishRunId)
 
           console.log(`\n✅ Step 1 complete. Starting form filling process...`)
-          console.log(`📋 Subreddits to process: ${subreddits.join(', ')}`)
+          console.log(`📋 Subreddits to process: ${uniqueSubreddits.map(s => s.name).join(', ')}`)
           console.log(`📋 Title: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`)
           console.log(`📋 Text length: ${text.length} characters`)
           console.log(`📋 Files: ${files.length}`)
@@ -152,14 +198,40 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
           // ✅ Post to ALL subreddits
           const results: Array<{ subreddit: string; success: boolean; url?: string; postId?: string; error?: string }> = []
 
-          console.log(`\n📝 Starting to fill forms for ${subreddits.length} subreddit(s)...`)
+          console.log(`\n📝 Starting to fill forms for ${uniqueSubreddits.length} subreddit(s)...`)
 
-          for (const subreddit of subreddits) {
+          for (const sub of uniqueSubreddits) {
+            const subreddit = sub.name
+            const metadata = sub.metadata
             try {
               console.log(`\n🔹 Processing subreddit: r/${subreddit}`)
               
               if (this.eventEmitter) {
                 this.eventEmitter.info('reddit', 'playwright', `Processing subreddit: r/${subreddit}`, undefined, currentPublishRunId)
+              }
+
+              // Personalized salutation
+              let processedText = text
+              if (metadata) {
+                const { getSalutationConfig } = await import('../../../../utils/salutationUtils.js')
+                const { loadTranslations } = await import('../../../../utils/translationLoader.js')
+                
+                const targetLocale = content.subreddits?.templateLocale || 'de'
+                const salutationConfig = getSalutationConfig(metadata)
+                const platformTranslations = await loadTranslations('reddit', targetLocale)
+                
+                let salutation = salutationConfig.key.split('.').reduce((obj, key) => obj?.[key], platformTranslations as any)
+                
+                if (salutation) {
+                  for (const [key, value] of Object.entries(salutationConfig.data)) {
+                    salutation = salutation.replace(new RegExp(`{{${key}}}`, 'g'), value)
+                  }
+                  processedText = text.replace(/{salutation}/g, salutation)
+                }
+
+                processedText = processedText
+                  .replace(/{target.firstName}/g, metadata.firstName || '')
+                  .replace(/{target.lastName}/g, metadata.lastName || '')
               }
               
               // ✅ STEP 2: Navigate to submit page (with orchestration)
@@ -184,7 +256,7 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
               // ✅ STEP 5: Enter content (with orchestration)
               const step5Start = Date.now()
               await executeStep(page, 'Step 5: Enter content', async () => {
-                await step5_EnterContent(page, files, text)
+                await step5_EnterContent(page, files, processedText)
               }, this.eventEmitter, currentPublishRunId)
 
               // ✅ STEP 6: Submit (with orchestration)
