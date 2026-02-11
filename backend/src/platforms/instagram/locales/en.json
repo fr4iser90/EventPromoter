@@ -1,4 +1,18 @@
 {
+  "credentials": {
+    "api": {
+      "title": "API Configuration",
+      "description": "Configure your Instagram API credentials.",
+      "accessToken": "Access Token",
+      "userId": "User ID"
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "ONLY required for Playwright / browser automation.",
+      "username": "Browser Username/Email",
+      "password": "Browser Password"
+    }
+  },
   "panels": {
     "instagram": {
       "title": "Instagram Settings",

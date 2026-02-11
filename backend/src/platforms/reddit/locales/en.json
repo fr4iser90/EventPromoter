@@ -34,6 +34,24 @@
       }
     }
   },
+  "credentials": {
+    "api": {
+      "title": "API Configuration",
+      "description": "Configure your Reddit API (OAuth2) credentials.",
+      "clientId": "Client ID",
+      "clientIdDescription": "Required only for Reddit API publishing.",
+      "clientSecret": "Client Secret",
+      "clientSecretDescription": "Required only for Reddit API publishing."
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "ONLY required for Playwright / browser automation.",
+      "username": "Reddit Username",
+      "usernameDescription": "Required for both API and Playwright.",
+      "password": "Reddit Password",
+      "passwordDescription": "Required for both API and Playwright."
+    }
+  },
   "salutation": {
     "informal": "Hi {{firstName}}",
     "formal": {
@@ -96,5 +114,3 @@
     }
   }
 }
-
-

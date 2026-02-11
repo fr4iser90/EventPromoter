@@ -34,6 +34,24 @@
       }
     }
   },
+  "credentials": {
+    "api": {
+      "title": "API Konfiguration",
+      "description": "Konfiguriere hier deine Reddit API (OAuth2) Zugangsdaten.",
+      "clientId": "Client ID",
+      "clientIdDescription": "Wird nur für das Publishing über die Reddit API benötigt.",
+      "clientSecret": "Client Secret",
+      "clientSecretDescription": "Wird nur für das Publishing über die Reddit API benötigt."
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
+      "username": "Reddit Benutzername",
+      "usernameDescription": "Wird für API und Playwright benötigt.",
+      "password": "Reddit Passwort",
+      "passwordDescription": "Wird für API und Playwright benötigt."
+    }
+  },
   "salutation": {
     "informal": "Hallo {{firstName}}",
     "formal": {
@@ -55,7 +73,7 @@
     "description": "Teile Events auf Reddit mit Text-Posts und Bildern"
   },
   "subreddits": {
-    "label": "Subreddits für diesen Post",
+    "label": "Subreddits for diesen Post",
     "description": "Wähle die Subreddits für diesen Post",
     "validation": {
       "required": "Mindestens ein Subreddit muss ausgewählt sein"
@@ -96,5 +114,3 @@
     }
   }
 }
-
-

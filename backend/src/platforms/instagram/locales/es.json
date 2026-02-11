@@ -1,4 +1,18 @@
 {
+  "credentials": {
+    "api": {
+      "title": "Configuración de la API",
+      "description": "Configure sus credenciales de la API de Instagram.",
+      "accessToken": "Token de acceso",
+      "userId": "ID de usuario"
+    },
+    "login": {
+      "title": "Inicio de sesión del navegador",
+      "description": "SOLO es necesario für Playwright / automatización del navegador.",
+      "username": "Nombre de usuario/Correo del navegador",
+      "password": "Contraseña del navegador"
+    }
+  },
   "panels": {
     "instagram": {
       "title": "Configuración de Instagram",

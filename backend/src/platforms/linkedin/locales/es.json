@@ -1,4 +1,19 @@
 {
+  "credentials": {
+    "api": {
+      "title": "Configuración de la API",
+      "description": "Configure sus credenciales de la API de LinkedIn.",
+      "accessToken": "Token de acceso",
+      "clientId": "ID del cliente",
+      "clientSecret": "Secreto del cliente"
+    },
+    "login": {
+      "title": "Inicio de sesión del navegador",
+      "description": "SOLO es necesario für Playwright / automatización del navegador.",
+      "username": "Nombre de usuario/Correo del navegador",
+      "password": "Contraseña del navegador"
+    }
+  },
   "panels": {
     "linkedin": {
       "title": "Configuración de LinkedIn",

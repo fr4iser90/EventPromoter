@@ -1,6 +1,9 @@
 {
   "app": {
-    "title": "Multi-Platform Social Media Publisher"
+    "title": "Publicador de Redes Sociales Multiplataforma",
+    "subtitle": "Sube archivos, crea contenido y publica en múltiples plataformas",
+    "readyToPublish": "Listo para publicar",
+    "reviewAndPublish": "Revisa y publica tu contenido"
   },
   "language": {
     "english": "🇺🇸 EN",
@@ -100,12 +103,6 @@
       "target.firstName": "Nombre (Destinatario)",
       "target.lastName": "Apellido (Destinatario)"
     },
-    "actions": {
-      "save": "Guardar",
-      "delete": "Eliminar",
-      "cancel": "Cancelar",
-      "validate": "Validar"
-    },
     "options": {
       "gender": {
         "not_specified": "No especificado",
@@ -119,6 +116,24 @@
       }
     }
   },
+  "credentials": {
+    "api": {
+      "title": "Configuración API / SMTP",
+      "description": "Configure los ajustes de su servidor SMTP para el envío de correos.",
+      "host": "Host SMTP",
+      "port": "Puerto",
+      "username": "Nombre de usuario SMTP",
+      "password": "Contraseña SMTP",
+      "fromEmail": "Correo del remitente",
+      "fromName": "Nombre del remitente"
+    },
+    "login": {
+      "title": "Inicio de sesión del navegador",
+      "description": "SOLO es necesario für Playwright / automatización del navegador.",
+      "username": "Nombre de usuario/Correo del navegador",
+      "password": "Contraseña del navegador"
+    }
+  },
   "salutation": {
     "informal": "Hola {{firstName}}",
     "formal": {
@@ -130,7 +145,8 @@
   },
   "navigation": {
     "home": "Inicio",
-    "templates": "Plantillas"
+    "templates": "Plantillas",
+    "history": "Historial"
   },
   "common": {
     "save": "Guardar",
@@ -145,7 +161,11 @@
     "dropInactive": "Arrastra y suelta los archivos aquí",
     "hashtagsPlaceholder": "Ingresa hashtags separados por comas (ej., party, music, berlin)",
     "characters": "caracteres",
-    "unknown": "Desconocido"
+    "unknown": "Desconocido",
+    "update": "Actualizar",
+    "done": "Hecho",
+    "files": "Archivos",
+    "platforms": "Plataformas"
   },
   "fileUpload": {
     "title": "Subir Archivos",
@@ -156,7 +176,8 @@
     "customHashtagPlaceholder": "Agregar hashtag personalizado...",
     "uploading": "Subiendo...",
     "success": "Archivos subidos exitosamente",
-    "filesUploaded": "{{count}} archivo subido"
+    "filesUploaded": "{{count}} archivo subido",
+    "noFiles": "No hay archivos subidos"
   },
   "preview": {
     "title": "Vista Previa",
@@ -267,5 +288,14 @@
       "groups": "{{count}} grupo(s) seleccionado(s)",
       "individual": "{{count}} destinatario(s) seleccionado(s)"
     }
+  },
+  "history": {
+    "title": "Historial de Eventos",
+    "allFiles": "Todos los archivos",
+    "events": "eventos",
+    "status": "Estado",
+    "platform": "Plataforma",
+    "refresh": "Actualizar",
+    "files": "Archivos"
   }
 }

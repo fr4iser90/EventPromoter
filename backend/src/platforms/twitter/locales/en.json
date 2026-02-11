@@ -1,4 +1,20 @@
 {
+  "credentials": {
+    "api": {
+      "title": "API Configuration",
+      "description": "Configure your Twitter/X API credentials.",
+      "apiKey": "API Key",
+      "apiSecret": "API Secret",
+      "accessToken": "Access Token",
+      "accessTokenSecret": "Access Token Secret"
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "ONLY required for Playwright / browser automation.",
+      "username": "Browser Username/Email",
+      "password": "Browser Password"
+    }
+  },
   "panels": {
     "twitter": {
       "title": "Twitter Settings",

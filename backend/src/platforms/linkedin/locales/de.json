@@ -1,4 +1,19 @@
 {
+  "credentials": {
+    "api": {
+      "title": "API Konfiguration",
+      "description": "Konfiguriere hier deine LinkedIn API Zugangsdaten.",
+      "accessToken": "Access Token",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret"
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
+      "username": "Browser Benutzername/E-Mail",
+      "password": "Browser Passwort"
+    }
+  },
   "panels": {
     "linkedin": {
       "title": "LinkedIn Einstellungen",

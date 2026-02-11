@@ -16,11 +16,8 @@ export const instagramCredentialsSchema: CredentialsSchema = {
     {
       name: 'accessToken',
       type: 'password',
-      label: 'Access Token',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Access Token is required' }
-      ],
+      label: 'platform.instagram.credentials.api.accessToken',
+      required: false,
       ui: {
         width: 12,
         order: 1
@@ -29,24 +26,50 @@ export const instagramCredentialsSchema: CredentialsSchema = {
     {
       name: 'userId',
       type: 'text',
-      label: 'User ID',
-      required: true,
-      validation: [
-        { type: 'required', message: 'User ID is required' }
-      ],
+      label: 'platform.instagram.credentials.api.userId',
+      required: false,
       ui: {
         width: 12,
         order: 2
+      }
+    },
+    {
+      name: 'browser_username',
+      type: 'text',
+      label: 'platform.instagram.credentials.login.username',
+      required: false,
+      ui: {
+        width: 12,
+        order: 3
+      }
+    },
+    {
+      name: 'browser_password',
+      type: 'password',
+      label: 'platform.instagram.credentials.login.password',
+      required: false,
+      ui: {
+        width: 12,
+        order: 4
       }
     }
   ],
   groups: [
     {
-      id: 'credentials',
-      title: 'Instagram API Credentials',
-      description: 'Configure your Instagram API credentials',
+      id: 'api-credentials',
+      title: 'platform.instagram.credentials.api.title',
+      description: 'platform.instagram.credentials.api.description',
+      method: 'api',
       fields: ['accessToken', 'userId'],
-      collapsible: false
+      collapsible: true
+    },
+    {
+      id: 'login-credentials',
+      title: 'platform.instagram.credentials.login.title',
+      description: 'platform.instagram.credentials.login.description',
+      method: 'playwright',
+      fields: ['browser_username', 'browser_password'],
+      collapsible: true
     }
   ]
 }

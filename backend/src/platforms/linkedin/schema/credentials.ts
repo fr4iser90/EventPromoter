@@ -16,11 +16,8 @@ export const linkedinCredentialsSchema: CredentialsSchema = {
     {
       name: 'accessToken',
       type: 'password',
-      label: 'Access Token',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Access Token is required' }
-      ],
+      label: 'platform.linkedin.credentials.api.accessToken',
+      required: false,
       ui: {
         width: 12,
         order: 1
@@ -29,22 +26,50 @@ export const linkedinCredentialsSchema: CredentialsSchema = {
     {
       name: 'organizationId',
       type: 'text',
-      label: 'Organization ID',
+      label: 'platform.linkedin.credentials.api.organizationId',
       required: false,
-      description: 'Optional: For posting as an organization',
       ui: {
         width: 12,
         order: 2
+      }
+    },
+    {
+      name: 'browser_username',
+      type: 'text',
+      label: 'platform.linkedin.credentials.login.username',
+      required: false,
+      ui: {
+        width: 12,
+        order: 3
+      }
+    },
+    {
+      name: 'browser_password',
+      type: 'password',
+      label: 'platform.linkedin.credentials.login.password',
+      required: false,
+      ui: {
+        width: 12,
+        order: 4
       }
     }
   ],
   groups: [
     {
-      id: 'credentials',
-      title: 'LinkedIn API Credentials',
-      description: 'Configure your LinkedIn API credentials',
+      id: 'api-credentials',
+      title: 'platform.linkedin.credentials.api.title',
+      description: 'platform.linkedin.credentials.api.description',
+      method: 'api',
       fields: ['accessToken', 'organizationId'],
-      collapsible: false
+      collapsible: true
+    },
+    {
+      id: 'login-credentials',
+      title: 'platform.linkedin.credentials.login.title',
+      description: 'platform.linkedin.credentials.login.description',
+      method: 'playwright',
+      fields: ['browser_username', 'browser_password'],
+      collapsible: true
     }
   ]
 }

@@ -1,4 +1,18 @@
 {
+  "credentials": {
+    "api": {
+      "title": "API Konfiguration",
+      "description": "Konfiguriere hier deine Instagram API Zugangsdaten.",
+      "accessToken": "Access Token",
+      "userId": "User ID"
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
+      "username": "Browser Benutzername/E-Mail",
+      "password": "Browser Passwort"
+    }
+  },
   "panels": {
     "instagram": {
       "title": "Instagram Einstellungen",
@@ -27,7 +41,7 @@
         },
         "maximal": {
           "label": "Maximal",
-          "description": "25-35 Hashtags (für Reichweite)"
+          "description": "25-35 Hashtags (for reach)"
         }
       },
       "maxHashtags": "Maximale Hashtags",

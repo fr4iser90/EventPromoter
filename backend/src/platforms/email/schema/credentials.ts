@@ -16,11 +16,10 @@ export const emailCredentialsSchema: CredentialsSchema = {
     {
       name: 'host',
       type: 'text',
-      label: 'SMTP Host',
+      label: 'platform.email.credentials.api.host',
       placeholder: 'smtp.gmail.com',
-      required: true,
+      required: false,
       validation: [
-        { type: 'required', message: 'SMTP host is required' },
         { type: 'pattern', value: '^[a-zA-Z0-9.-]+$', message: 'Invalid hostname format' }
       ],
       ui: {
@@ -31,12 +30,11 @@ export const emailCredentialsSchema: CredentialsSchema = {
     {
       name: 'port',
       type: 'number',
-      label: 'Port',
+      label: 'platform.email.credentials.api.port',
       placeholder: '587',
       default: 587,
-      required: true,
+      required: false,
       validation: [
-        { type: 'required', message: 'Port is required' },
         { type: 'min', value: 1, message: 'Port must be at least 1' },
         { type: 'max', value: 65535, message: 'Port must be at most 65535' }
       ],
@@ -48,10 +46,9 @@ export const emailCredentialsSchema: CredentialsSchema = {
     {
       name: 'username',
       type: 'text',
-      label: 'Username',
-      required: true,
+      label: 'platform.email.credentials.api.username',
+      required: false,
       validation: [
-        { type: 'required', message: 'Username is required' },
         { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
       ],
       ui: {
@@ -62,12 +59,8 @@ export const emailCredentialsSchema: CredentialsSchema = {
     {
       name: 'password',
       type: 'password',
-      label: 'Password',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Password is required' },
-        { type: 'minLength', value: 8, message: 'Password must be at least 8 characters' }
-      ],
+      label: 'platform.email.credentials.api.password',
+      required: false,
       ui: {
         width: 12,
         order: 4
@@ -76,10 +69,9 @@ export const emailCredentialsSchema: CredentialsSchema = {
     {
       name: 'fromEmail',
       type: 'text',
-      label: 'From Email',
-      required: true,
+      label: 'platform.email.credentials.api.fromEmail',
+      required: false,
       validation: [
-        { type: 'required', message: 'From email is required' },
         { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
       ],
       ui: {
@@ -90,22 +82,51 @@ export const emailCredentialsSchema: CredentialsSchema = {
     {
       name: 'fromName',
       type: 'text',
-      label: 'From Name',
+      label: 'platform.email.credentials.api.fromName',
       placeholder: 'Your Name',
       required: false,
       ui: {
         width: 12,
         order: 6
       }
+    },
+    {
+      name: 'browser_username',
+      type: 'text',
+      label: 'platform.email.credentials.login.username',
+      required: false,
+      ui: {
+        width: 12,
+        order: 7
+      }
+    },
+    {
+      name: 'browser_password',
+      type: 'password',
+      label: 'platform.email.credentials.login.password',
+      required: false,
+      ui: {
+        width: 12,
+        order: 8
+      }
     }
   ],
   groups: [
     {
-      id: 'smtp',
-      title: 'SMTP Configuration',
-      description: 'Configure your SMTP server settings',
+      id: 'api-credentials',
+      title: 'platform.email.credentials.api.title',
+      description: 'platform.email.credentials.api.description',
+      method: 'api',
       fields: ['host', 'port', 'username', 'password', 'fromEmail', 'fromName'],
-      collapsible: false
+      collapsible: true
+    },
+    {
+      id: 'login-credentials',
+      title: 'platform.email.credentials.login.title',
+      description: 'platform.email.credentials.login.description',
+      method: 'playwright',
+      fields: ['browser_username', 'browser_password'],
+      collapsible: true
     }
   ]
 }

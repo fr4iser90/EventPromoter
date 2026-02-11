@@ -34,6 +34,24 @@
       }
     }
   },
+  "credentials": {
+    "api": {
+      "title": "Configuración de la API",
+      "description": "Configure sus credenciales de la API de Reddit (OAuth2).",
+      "clientId": "ID del cliente",
+      "clientIdDescription": "Solo es necesario para la publicación a través de la API de Reddit.",
+      "clientSecret": "Secreto del cliente",
+      "clientSecretDescription": "Solo es necesario para la publicación a través de la API de Reddit."
+    },
+    "login": {
+      "title": "Inicio de sesión del navegador",
+      "description": "SOLO es necesario für Playwright / automatización del navegador.",
+      "username": "Nombre de usuario de Reddit",
+      "usernameDescription": "Necesario tanto para la API como para Playwright.",
+      "password": "Contraseña de Reddit",
+      "passwordDescription": "Necesario tanto para la API como para Playwright."
+    }
+  },
   "salutation": {
     "informal": "Hola {{firstName}}",
     "formal": {
@@ -96,5 +114,3 @@
     }
   }
 }
-
-

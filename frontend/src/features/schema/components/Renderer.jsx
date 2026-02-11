@@ -21,8 +21,15 @@ import {
   Box,
   Typography,
   Button as MuiButton,
-  Alert
+  Alert,
+  Chip
 } from '@mui/material'
+import {
+  Send as ApiIcon,
+  SmartToy as PlaywrightIcon,
+  Link as N8nIcon,
+  SettingsInputComponent as CustomIcon
+} from '@mui/icons-material'
 import TargetList from './TargetList'
 import HelperIcon from '../../../shared/components/ui/HelperIcon'
 import { getApiUrl } from '../../../shared/utils/api'
@@ -312,14 +319,55 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
 
           return (
             <Box key={group.id} sx={{ mb: 3 }}>
-              {group.title && (
-                <Typography variant="h6" gutterBottom>
-                  {group.title}
-                </Typography>
-              )}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                {group.title && (
+                  <Typography variant="h6">
+                    {t(group.title, group.title)}
+                  </Typography>
+                )}
+                {group.method === 'api' && (
+                  <Chip 
+                    icon={<ApiIcon sx={{ fontSize: '1rem !important' }} />} 
+                    label="API" 
+                    size="small" 
+                    color="info" 
+                    variant="outlined" 
+                    sx={{ height: 20, fontSize: '0.65rem' }}
+                  />
+                )}
+                {group.method === 'playwright' && (
+                  <Chip 
+                    icon={<PlaywrightIcon sx={{ fontSize: '1rem !important' }} />} 
+                    label="PLAYWRIGHT" 
+                    size="small" 
+                    color="warning" 
+                    variant="outlined" 
+                    sx={{ height: 20, fontSize: '0.65rem' }}
+                  />
+                )}
+                {group.method === 'n8n' && (
+                  <Chip 
+                    icon={<N8nIcon sx={{ fontSize: '1rem !important' }} />} 
+                    label="N8N" 
+                    size="small" 
+                    color="secondary" 
+                    variant="outlined" 
+                    sx={{ height: 20, fontSize: '0.65rem' }}
+                  />
+                )}
+                {group.method === 'custom' && (
+                  <Chip 
+                    icon={<CustomIcon sx={{ fontSize: '1rem !important' }} />} 
+                    label="CUSTOM" 
+                    size="small" 
+                    variant="outlined" 
+                    sx={{ height: 20, fontSize: '0.65rem' }}
+                  />
+                )}
+              </Box>
               {group.description && (
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {group.description}
+                  {t(group.description, group.description)}
                 </Typography>
               )}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
@@ -354,7 +402,8 @@ function SchemaRenderer({ fields = [], values = {}, onChange, errors = {}, group
                         platformId,
                         values,
                         fields,
-                        onButtonAction
+                        onButtonAction,
+                        t
                       )}
                     </Box>
                   )

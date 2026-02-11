@@ -16,11 +16,8 @@ export const facebookCredentialsSchema: CredentialsSchema = {
     {
       name: 'accessToken',
       type: 'password',
-      label: 'Access Token',
-      required: true,
-      validation: [
-        { type: 'required', message: 'Access Token is required' }
-      ],
+      label: 'platform.facebook.credentials.api.accessToken',
+      required: false,
       ui: {
         width: 12,
         order: 1
@@ -29,25 +26,50 @@ export const facebookCredentialsSchema: CredentialsSchema = {
     {
       name: 'pageId',
       type: 'text',
-      label: 'Page ID',
-      required: true,
-      description: 'The Facebook Page ID to post to',
-      validation: [
-        { type: 'required', message: 'Page ID is required' }
-      ],
+      label: 'platform.facebook.credentials.api.pageId',
+      required: false,
       ui: {
         width: 12,
         order: 2
+      }
+    },
+    {
+      name: 'browser_username',
+      type: 'text',
+      label: 'platform.facebook.credentials.login.username',
+      required: false,
+      ui: {
+        width: 12,
+        order: 3
+      }
+    },
+    {
+      name: 'browser_password',
+      type: 'password',
+      label: 'platform.facebook.credentials.login.password',
+      required: false,
+      ui: {
+        width: 12,
+        order: 4
       }
     }
   ],
   groups: [
     {
-      id: 'credentials',
-      title: 'Facebook API Credentials',
-      description: 'Configure your Facebook API credentials',
+      id: 'api-credentials',
+      title: 'platform.facebook.credentials.api.title',
+      description: 'platform.facebook.credentials.api.description',
+      method: 'api',
       fields: ['accessToken', 'pageId'],
-      collapsible: false
+      collapsible: true
+    },
+    {
+      id: 'login-credentials',
+      title: 'platform.facebook.credentials.login.title',
+      description: 'platform.facebook.credentials.login.description',
+      method: 'playwright',
+      fields: ['browser_username', 'browser_password'],
+      collapsible: true
     }
   ]
 }

@@ -1,4 +1,19 @@
 {
+  "credentials": {
+    "api": {
+      "title": "API Configuration",
+      "description": "Configure your Facebook API credentials.",
+      "accessToken": "Access Token",
+      "pageId": "Page ID",
+      "pageIdDescription": "The Facebook Page ID to post to"
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "ONLY required for Playwright / browser automation.",
+      "username": "Browser Username/Email",
+      "password": "Browser Password"
+    }
+  },
   "editor": {
     "title": "Facebook Post Editor",
     "description": "Create and edit Facebook posts",

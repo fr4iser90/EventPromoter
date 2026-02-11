@@ -1,4 +1,19 @@
 {
+  "credentials": {
+    "api": {
+      "title": "Configuración de la API",
+      "description": "Configure sus credenciales de la API de Facebook.",
+      "accessToken": "Token de acceso",
+      "pageId": "ID de la página",
+      "pageIdDescription": "El ID de la página de Facebook en la que publicar"
+    },
+    "login": {
+      "title": "Inicio de sesión del navegador",
+      "description": "SOLO es necesario für Playwright / automatización del navegador.",
+      "username": "Nombre de usuario/Correo del navegador",
+      "password": "Contraseña del navegador"
+    }
+  },
   "editor": {
     "title": "Editor de publicaciones de Facebook",
     "description": "Crea y edita publicaciones de Facebook",

@@ -1,6 +1,9 @@
 {
   "app": {
-    "title": "Multi-Platform Social Media Publisher"
+    "title": "Multi-Platform Social Media Publisher",
+    "subtitle": "Lade Dateien hoch, erstelle Inhalte und veröffentliche auf mehreren Plattformen",
+    "readyToPublish": "Bereit zum Veröffentlichen",
+    "reviewAndPublish": "Überprüfe und veröffentliche deinen Inhalt"
   },
   "language": {
     "english": "🇺🇸 EN",
@@ -8,11 +11,24 @@
     "spanish": "🇪🇸 ES"
   },
   "workflow": {
-    "startHere": "Start here:",
-    "next": "Next:",
-    "publishContent": "🚀 Publish Content",
-    "saving": "💾 Saving...",
-    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+    "startHere": "Start hier:",
+    "next": "Weiter:",
+    "publishContent": "🚀 Inhalt veröffentlichen",
+    "saving": "💾 Speichern...",
+    "publishingToPlatforms": "Veröffentliche auf {{count}} Plattform{{plural}}...",
+    "uploadFiles": "📁 Dateien hochladen",
+    "uploadFilesDescription": "Beginne mit dem Hochladen deiner Event-Dateien",
+    "selectPlatforms": "🎯 Plattformen auswählen",
+    "selectPlatformsDescription": "Wähle, wo du deinen Inhalt veröffentlichen möchtest",
+    "createContent": "✏️ Inhalt erstellen",
+    "createContentDescription": "Erstelle plattformspezifische Inhalte",
+    "readyToPublish": "📤 Bereit zum Veröffentlichen",
+    "readyToPublishDescription": "Überprüfe und veröffentliche deinen Inhalt",
+    "publishing": "🚀 Veröffentlichen...",
+    "publishingDescription": "Sende Inhalt an Plattformen",
+    "published": "✅ Veröffentlicht!",
+    "publishedDescription": "Inhalt erfolgreich veröffentlicht",
+    "subtitle": "Lade Dateien hoch, erstelle Inhalte und veröffentliche auf mehreren Plattformen"
   },
   "status": {
     "ready": "Bereit",
@@ -100,12 +116,6 @@
       "target.firstName": "Vorname (Empfänger)",
       "target.lastName": "Nachname (Empfänger)"
     },
-    "actions": {
-      "save": "Speichern",
-      "delete": "Löschen",
-      "cancel": "Abbrechen",
-      "validate": "Validieren"
-    },
     "options": {
       "gender": {
         "not_specified": "Nicht angegeben",
@@ -119,6 +129,24 @@
       }
     }
   },
+  "credentials": {
+    "api": {
+      "title": "API / SMTP Konfiguration",
+      "description": "Konfiguriere hier deine SMTP-Server-Einstellungen für den E-Mail-Versand.",
+      "host": "SMTP Host",
+      "port": "Port",
+      "username": "SMTP Benutzername",
+      "password": "SMTP Passwort",
+      "fromEmail": "Absender E-Mail",
+      "fromName": "Absender Name"
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
+      "username": "Browser Benutzername/E-Mail",
+      "password": "Browser Passwort"
+    }
+  },
   "salutation": {
     "informal": "Hallo {{firstName}}",
     "formal": {
@@ -130,7 +158,8 @@
   },
   "navigation": {
     "home": "Start",
-    "templates": "Vorlagen"
+    "templates": "Vorlagen",
+    "history": "Verlauf"
   },
   "common": {
     "save": "Speichern",
@@ -145,7 +174,11 @@
     "dropInactive": "Dateien hier ziehen und ablegen",
     "hashtagsPlaceholder": "Hashtags durch Kommas getrennt eingeben (z.B., party, music, berlin)",
     "characters": "Zeichen",
-    "unknown": "Unbekannt"
+    "unknown": "Unbekannt",
+    "update": "Aktualisieren",
+    "done": "Fertig",
+    "files": "Dateien",
+    "platforms": "Plattformen"
   },
   "fileUpload": {
     "title": "Dateien hochladen",
@@ -156,7 +189,8 @@
     "customHashtagPlaceholder": "Eigenes Hashtag hinzufügen...",
     "uploading": "Hochladen...",
     "success": "Dateien erfolgreich hochgeladen",
-    "filesUploaded": "{{count}} Datei hochgeladen"
+    "filesUploaded": "{{count}} Datei hochgeladen",
+    "noFiles": "Keine Dateien hochgeladen"
   },
   "preview": {
     "title": "Vorschau",
@@ -267,5 +301,14 @@
       "groups": "{{count}} Gruppe(n) ausgewählt",
       "individual": "{{count}} Empfänger ausgewählt"
     }
+  },
+  "history": {
+    "title": "Event-Verlauf",
+    "allFiles": "Alle Dateien",
+    "events": "Events",
+    "status": "Status",
+    "platform": "Plattform",
+    "refresh": "Aktualisieren",
+    "files": "Dateien"
   }
 }

@@ -1,6 +1,9 @@
 {
   "app": {
-    "title": "Multi-Platform Social Media Publisher"
+    "title": "Multi-Platform Social Media Publisher",
+    "subtitle": "Upload files, create content and publish to multiple platforms",
+    "readyToPublish": "Ready to Publish",
+    "reviewAndPublish": "Review and publish your content"
   },
   "language": {
     "english": "🇺🇸 EN",
@@ -12,7 +15,20 @@
     "next": "Next:",
     "publishContent": "🚀 Publish Content",
     "saving": "💾 Saving...",
-    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
+    "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}...",
+    "uploadFiles": "📁 Upload Files",
+    "uploadFilesDescription": "Start by uploading your event files",
+    "selectPlatforms": "🎯 Select Platforms",
+    "selectPlatformsDescription": "Choose where to publish your content",
+    "createContent": "✏️ Create Content",
+    "createContentDescription": "Write platform-specific content",
+    "readyToPublish": "📤 Ready to Publish",
+    "readyToPublishDescription": "Review and publish your content",
+    "publishing": "🚀 Publishing...",
+    "publishingDescription": "Sending content to platforms",
+    "published": "✅ Published!",
+    "publishedDescription": "Content successfully published",
+    "subtitle": "Upload files, build content, and publish across multiple platforms"
   },
   "status": {
     "ready": "Ready",
@@ -100,12 +116,6 @@
       "target.firstName": "First Name (Recipient)",
       "target.lastName": "Last Name (Recipient)"
     },
-    "actions": {
-      "save": "Save",
-      "delete": "Delete",
-      "cancel": "Cancel",
-      "validate": "Validate"
-    },
     "options": {
       "gender": {
         "not_specified": "Not specified",
@@ -119,6 +129,24 @@
       }
     }
   },
+  "credentials": {
+    "api": {
+      "title": "API / SMTP Configuration",
+      "description": "Configure your SMTP server settings for email delivery.",
+      "host": "SMTP Host",
+      "port": "Port",
+      "username": "SMTP Username",
+      "password": "SMTP Password",
+      "fromEmail": "From Email",
+      "fromName": "From Name"
+    },
+    "login": {
+      "title": "Browser Login",
+      "description": "ONLY required for Playwright / browser automation.",
+      "username": "Browser Username/Email",
+      "password": "Browser Password"
+    }
+  },
   "salutation": {
     "informal": "Hi {{firstName}}",
     "formal": {
@@ -130,7 +158,8 @@
   },
   "navigation": {
     "home": "Home",
-    "templates": "Templates"
+    "templates": "Templates",
+    "history": "History"
   },
   "common": {
     "save": "Save",
@@ -145,7 +174,11 @@
     "dropInactive": "Drag & drop files here",
     "hashtagsPlaceholder": "Enter hashtags separated by commas (e.g., party, music, berlin)",
     "characters": "characters",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "update": "Update",
+    "done": "Done",
+    "files": "Files",
+    "platforms": "Platforms"
   },
   "fileUpload": {
     "title": "Upload Files",
@@ -156,7 +189,8 @@
     "customHashtagPlaceholder": "Add custom hashtag...",
     "uploading": "Uploading...",
     "success": "Files uploaded successfully",
-    "filesUploaded": "{{count}} file uploaded"
+    "filesUploaded": "{{count}} file uploaded",
+    "noFiles": "No files uploaded"
   },
   "preview": {
     "title": "Preview",
@@ -267,5 +301,14 @@
       "groups": "{{count}} group(s) selected",
       "individual": "{{count}} recipient(s) selected"
     }
+  },
+  "history": {
+    "title": "Event History",
+    "allFiles": "All Files",
+    "events": "events",
+    "status": "Status",
+    "platform": "Platform",
+    "refresh": "Refresh",
+    "files": "Files"
   }
 }
