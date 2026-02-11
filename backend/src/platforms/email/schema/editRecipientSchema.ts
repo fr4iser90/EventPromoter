@@ -27,8 +27,8 @@ const emailRecipientEditSchema: FormSchema = {
     },
     {
       name: 'email',
-      type: 'email',
-      label: 'Email Address',
+      type: 'text',
+      label: 'platform.email.form.labels.email',
       required: true,
       ui: {
         width: 12,
@@ -84,40 +84,31 @@ const emailRecipientEditSchema: FormSchema = {
       },
     },
     {
+      name: 'company',
+      type: 'text',
+      label: 'platform.email.form.labels.company',
+      ui: {
+        width: 12,
+        order: 6,
+      },
+    },
+    {
       name: 'birthday',
       type: 'date',
       label: 'platform.email.form.labels.birthday',
       ui: {
         width: 6,
-        order: 6,
-      },
-    },
-    {
-      name: 'company',
-      type: 'text',
-      label: 'Company',
-      ui: {
-        width: 6,
-        order: 5,
-      },
-    },
-    {
-      name: 'phone',
-      type: 'tel',
-      label: 'Phone Number',
-      ui: {
-        width: 6,
-        order: 6,
+        order: 7,
       },
     },
     {
       name: 'tags',
       type: 'multiselect',
-      label: 'Tags',
+      label: 'platform.email.form.labels.tags',
       options: [], // This could be dynamically loaded if needed
       ui: {
         width: 12,
-        order: 7,
+        order: 8,
       },
     },
   ],

@@ -10,6 +10,11 @@
       "gender": "Geschlecht",
       "salutationTone": "Anrede-Tonfall"
     },
+    "variables": {
+      "salutation": "Anrede",
+      "target.firstName": "Vorname (Empfänger)",
+      "target.lastName": "Nachname (Empfänger)"
+    },
     "options": {
       "gender": {
         "not_specified": "Nicht angegeben",

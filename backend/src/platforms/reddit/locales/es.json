@@ -10,6 +10,11 @@
       "gender": "Género",
       "salutationTone": "Tono de saludo"
     },
+    "variables": {
+      "salutation": "Saludo",
+      "target.firstName": "Nombre (Destinatario)",
+      "target.lastName": "Apellido (Destinatario)"
+    },
     "options": {
       "gender": {
         "not_specified": "No especificado",

@@ -86,11 +86,19 @@
       "emailSubject": "E-Mail-Betreff",
       "emailHtmlContent": "HTML E-Mail-Inhalt",
       "subredditExample": "z.B. r/berlin",
+      "email": "E-Mail-Adresse",
       "firstName": "Vorname",
       "lastName": "Nachname",
+      "company": "Firma",
       "birthday": "Geburtstag",
+      "tags": "Tags",
       "gender": "Geschlecht",
       "salutationTone": "Anrede-Tonfall"
+    },
+    "variables": {
+      "salutation": "Anrede",
+      "target.firstName": "Vorname (Empfänger)",
+      "target.lastName": "Nachname (Empfänger)"
     },
     "options": {
       "gender": {

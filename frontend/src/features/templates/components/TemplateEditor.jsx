@@ -297,34 +297,6 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
               {t('template.availableVariables')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {/* ✅ SYSTEM VARIABLES (Always available) */}
-              <Chip
-                label="{salutation}"
-                size="small"
-                color="primary"
-                variant="outlined"
-                title="Personalized salutation (e.g., 'Hallo Max' or 'Sehr geehrter Herr Müller')"
-                onClick={() => {
-                  navigator.clipboard.writeText('{salutation}')
-                }}
-              />
-              <Chip
-                label="{target.firstName}"
-                size="small"
-                color="primary"
-                variant="outlined"
-                title="First name of the recipient"
-                onClick={() => navigator.clipboard.writeText('{target.firstName}')}
-              />
-              <Chip
-                label="{target.lastName}"
-                size="small"
-                color="primary"
-                variant="outlined"
-                title="Last name of the recipient"
-                onClick={() => navigator.clipboard.writeText('{target.lastName}')}
-              />
-              
               {/* PLATFORM SPECIFIC VARIABLES */}
               {templateSchema.variables.map((variable) => (
                 <Chip

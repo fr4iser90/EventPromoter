@@ -86,11 +86,19 @@
       "emailSubject": "Asunto del Correo",
       "emailHtmlContent": "Contenido HTML del Correo",
       "subredditExample": "ej. r/berlin",
+      "email": "Correo electrónico",
       "firstName": "Nombre",
       "lastName": "Apellido",
+      "company": "Empresa",
       "birthday": "Cumpleaños",
+      "tags": "Etiquetas",
       "gender": "Género",
       "salutationTone": "Tono de saludo"
+    },
+    "variables": {
+      "salutation": "Saludo",
+      "target.firstName": "Nombre (Destinatario)",
+      "target.lastName": "Apellido (Destinatario)"
     },
     "options": {
       "gender": {

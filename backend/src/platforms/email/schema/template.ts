@@ -66,6 +66,24 @@ export const emailTemplateSchema: TemplateSchema = {
       label: 'City',
       description: 'The event city',
       type: 'string'
+    },
+    {
+      name: 'salutation',
+      label: 'Personalized Salutation',
+      description: 'Automatic salutation based on recipient metadata (e.g., "Hallo Max" or "Sehr geehrter Herr Müller")',
+      type: 'string'
+    },
+    {
+      name: 'target.firstName',
+      label: 'Recipient First Name',
+      description: 'First name of the recipient',
+      type: 'string'
+    },
+    {
+      name: 'target.lastName',
+      label: 'Recipient Last Name',
+      description: 'Last name of the recipient',
+      type: 'string'
     }
   ],
   // Note: Categories are now loaded dynamically from templates with translations.

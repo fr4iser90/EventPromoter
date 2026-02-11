@@ -134,7 +134,12 @@ export const redditEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Post content...'
+        placeholder: 'Post content...',
+        variables: [
+          { name: 'salutation', label: 'Salutation', description: 'Personalized salutation' },
+          { name: 'target.firstName', label: 'First Name', description: 'Recipient first name' },
+          { name: 'target.lastName', label: 'Last Name', description: 'Recipient last name' }
+        ]
       }
     },
     {
