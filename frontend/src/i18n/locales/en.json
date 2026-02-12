@@ -65,6 +65,8 @@
     "description": "Description",
     "lineup": "Lineup",
     "genre": "Genre",
+    "organizer": "Organizer",
+    "primaryImage": "Primary Image",
     "titlePlaceholder": "Event title",
     "descriptionPlaceholder": "Description",
     "website": "Website"

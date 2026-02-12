@@ -530,16 +530,9 @@ function GenericPlatformEditor({
     
     switch (block.type) {
       case 'targets':
-        return (
-          <Box key={blockId} sx={{ mb: 3 }}>
-            <CompositeRenderer
-              block={block as any}
-              platform={platform}
-              value={content[blockId] as any}
-              onChange={(val) => onChange(blockId, val)}
-            />
-          </Box>
-        )
+        // Targets are selected exclusively in the template apply modal.
+        // Do not render the targets block inside the main content editor.
+        return null
 
       case 'file_selection_input':
         return (
