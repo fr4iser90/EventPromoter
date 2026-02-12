@@ -18,6 +18,7 @@ const SRC_DIR = path.join(ROOT_DIR, 'src')
 const locales = ['de', 'en', 'es']
 const errors = []
 const warnings = []
+const hardcodedWarnings = []
 
 // Load locale files
 function loadLocaleFiles() {
@@ -53,7 +54,51 @@ function flattenObject(obj, prefix = '') {
   return result
 }
 
-// Extract all t() calls from source files
+function isValidTranslationKey(key) {
+  if (!key || typeof key !== 'string') return false
+  const normalized = key.trim()
+  if (normalized.length < 3) return false
+  if (normalized.startsWith('http://') || normalized.startsWith('https://')) return false
+  // Canonical translation key format: namespace.key(.child...)
+  return /^[a-z][a-z0-9_-]*(\.[a-z0-9_-]+)+$/i.test(normalized)
+}
+
+function isDynamicTranslationKeyTemplate(key) {
+  if (!key || typeof key !== 'string') return false
+  const normalized = key.trim()
+  // Typical pattern: platform.${platformId}.attachments.forRun
+  return normalized.includes('${') && normalized.includes('.') && /^[a-z]/i.test(normalized)
+}
+
+function isHardcodedUIString(text) {
+  if (!text || typeof text !== 'string') return false
+  const normalized = text.trim()
+  if (normalized.length < 3) return false
+  if (isValidTranslationKey(normalized)) return false
+  if (isDynamicTranslationKeyTemplate(normalized)) return false
+  if (normalized.startsWith('http://') || normalized.startsWith('https://')) return false
+  if (/^[0-9]+$/.test(normalized)) return false
+  if (!/[A-Za-zÄÖÜäöü]/.test(normalized)) return false
+  // Human UI text heuristics: spaces, sentence punctuation, currency, placeholders
+  return (
+    normalized.includes(' ') ||
+    normalized.includes('...') ||
+    normalized.includes('?') ||
+    normalized.includes('!') ||
+    normalized.includes('€') ||
+    normalized.includes('$')
+  )
+}
+
+function addHardcodedWarning(file, content, index, text) {
+  const line = content.slice(0, index).split('\n').length
+  const signature = `${file}:${line}:${text}`
+  if (!hardcodedWarnings.some((entry) => entry.signature === signature)) {
+    hardcodedWarnings.push({ signature, file, line, text })
+  }
+}
+
+// Extract translation key usages and hardcoded text findings from source files
 function extractTranslationCalls() {
   const calls = new Set()
   const supportedExtensions = new Set(['.js', '.jsx', '.ts', '.tsx'])
@@ -67,20 +112,52 @@ function extractTranslationCalls() {
 
       if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
         scanDirectory(filePath)
-      } else if (supportedExtensions.has(path.extname(file)) && !file.endsWith('.d.ts')) {
-        const content = fs.readFileSync(filePath, 'utf8')
+        continue
+      }
 
-        // Match t('key') and t("key") patterns, but exclude obvious non-keys
-        const matches = content.match(/t\(['"]([^'"]+)['"]/g)
-        if (matches) {
-          matches.forEach(match => {
-            const key = match.match(/t\(['"]([^'"]+)['"]/)[1]
+      if (!supportedExtensions.has(path.extname(file)) || file.endsWith('.d.ts')) {
+        continue
+      }
 
-            // Skip obvious non-translation keys
-            if (isValidTranslationKey(key)) {
-              calls.add(key)
-            }
-          })
+      const content = fs.readFileSync(filePath, 'utf8')
+      const relativeFilePath = path.relative(SRC_DIR, filePath)
+
+      // Pattern 1: direct t('key') / translate('key')
+      const directPattern = /\b(?:t|translate)\(\s*['"`]([^'"`]+)['"`]/g
+      let directMatch
+      while ((directMatch = directPattern.exec(content)) !== null) {
+        const value = directMatch[1]
+        if (isValidTranslationKey(value)) {
+          calls.add(value)
+        } else if (isDynamicTranslationKeyTemplate(value)) {
+          // Dynamic key template; skip hardcoded warning.
+        } else if (isHardcodedUIString(value)) {
+          addHardcodedWarning(relativeFilePath, content, directMatch.index, value)
+        }
+      }
+
+      // Pattern 2: fallback t(expr || 'fallback')
+      const fallbackPattern = /\b(?:t|translate)\(\s*[^)]*?\|\|\s*['"`]([^'"`]+)['"`]/g
+      let fallbackMatch
+      while ((fallbackMatch = fallbackPattern.exec(content)) !== null) {
+        const value = fallbackMatch[1]
+        if (isValidTranslationKey(value)) {
+          calls.add(value)
+        } else if (isDynamicTranslationKeyTemplate(value)) {
+          // Dynamic key template; skip hardcoded warning.
+        } else if (isHardcodedUIString(value)) {
+          addHardcodedWarning(relativeFilePath, content, fallbackMatch.index, value)
+        }
+      }
+
+      // Pattern 3: config fields that often carry translation keys
+      // Exclude defaultValue on purpose: defaults are fallback copy and would create noisy duplicate findings.
+      const configPattern = /(?:label|description|message|placeholder|title|noFilesMessage|helperId|context)\s*[:=]\s*['"`]([^'"`]+)['"`]/g
+      let configMatch
+      while ((configMatch = configPattern.exec(content)) !== null) {
+        const value = configMatch[1]
+        if (isValidTranslationKey(value)) {
+          calls.add(value)
         }
       }
     }
@@ -88,50 +165,6 @@ function extractTranslationCalls() {
 
   scanDirectory(SRC_DIR)
   return calls
-}
-
-// Check if a string looks like a valid translation key
-function isValidTranslationKey(key) {
-  // Skip URLs
-  if (key.startsWith('http://') || key.startsWith('https://')) {
-    return false
-  }
-
-  // Skip strings that are just whitespace, newlines, or punctuation
-  if (/^[\s\n\r\t\.,\-\/\\]+$/.test(key) || key.trim() === '') {
-    return false
-  }
-
-  // Skip escape sequences and special characters
-  if (/^\\[nrt]$/.test(key) || key === '\\n' || key === '\\n\\n') {
-    return false
-  }
-
-  // Skip strings that start and end with quotes (likely template literals)
-  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
-    return false
-  }
-
-  // Skip single characters that are not letters
-  if (key.length === 1 && !/[a-zA-Z]/.test(key)) {
-    return false
-  }
-
-  // Skip very short strings that are likely not translation keys
-  if (key.length < 2) {
-    return false
-  }
-
-  // Skip strings that look like error messages but are hardcoded
-  // These should be converted to use t() calls instead
-  if (key.includes(' ') && !key.includes('.') && /^[A-Z]/.test(key)) {
-    // This might be a hardcoded error message that should be translated
-    // For now, we'll exclude them from validation but mark them as needing translation
-    return false
-  }
-
-  // Allow keys that contain letters and may have dots/underscores for namespacing
-  return /[a-zA-Z]/.test(key) && key.includes('.')
 }
 
 // Validate translations
@@ -207,10 +240,18 @@ function main() {
     console.log()
   }
 
-  if (errors.length === 0 && warnings.length === 0) {
+  if (hardcodedWarnings.length > 0) {
+    console.log('🟠 HARDCODED UI TEXT:')
+    hardcodedWarnings.forEach(({ file, line, text }) => {
+      console.log(`  ${file}:${line} "${text}"`)
+    })
+    console.log()
+  }
+
+  if (errors.length === 0 && warnings.length === 0 && hardcodedWarnings.length === 0) {
     console.log('✅ All translations are valid!')
   } else {
-    console.log(`📈 Summary: ${errors.length} errors, ${warnings.length} warnings`)
+    console.log(`📈 Summary: ${errors.length} errors, ${warnings.length} warnings, ${hardcodedWarnings.length} hardcoded-text findings`)
   }
 
   // Exit with error code if there are errors

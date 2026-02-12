@@ -483,7 +483,7 @@ const TemplateSelector = ({
                               <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                                 <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
                                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                                  {t(`platform.${platformId}.attachments.forRun`, { defaultValue: fileSelectionBlock.label || 'Attachments for this run' })}
+                                  {t(`platform.${platformId}.attachments.forRun`, { defaultValue: fileSelectionBlock.label || t('editor.attachments') })}
                                 </Typography>
                                 <Box sx={{ ml: 'auto', mr: 1 }}>
                                   <Chip 
@@ -497,7 +497,7 @@ const TemplateSelector = ({
                             </AccordionSummary>
                             <AccordionDetails sx={{ px: 2, pb: 2 }}>
                               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                {t(`platform.${platformId}.attachments.description`, { defaultValue: fileSelectionBlock.description || 'Select additional attachments for this group. Standard attachments are already preset.' })}
+                                {t(`platform.${platformId}.attachments.description`, { defaultValue: fileSelectionBlock.description || t('editor.standardAttachmentsDescription') })}
                               </Typography>
 
                               <List 
@@ -677,7 +677,7 @@ const TemplateSelector = ({
                           <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                             <AttachFileIcon sx={{ mr: 1, color: 'primary.main' }} />
                             <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                              {t(`platform.${platformId}.attachments.forRun`, { defaultValue: fileSelectionBlock.label || 'Attachments for this run' })}
+                              {t(`platform.${platformId}.attachments.forRun`, { defaultValue: fileSelectionBlock.label || t('editor.attachments') })}
                             </Typography>
                             <Box sx={{ ml: 'auto', mr: 1 }}>
                               <Chip 
@@ -691,7 +691,7 @@ const TemplateSelector = ({
                         </AccordionSummary>
                         <AccordionDetails sx={{ px: 2, pb: 2 }}>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            {t(`platform.${platformId}.attachments.description`, { defaultValue: fileSelectionBlock.description || 'Select additional attachments for this group. Standard attachments are already preset.' })}
+                            {t(`platform.${platformId}.attachments.description`, { defaultValue: fileSelectionBlock.description || t('editor.standardAttachmentsDescription') })}
                           </Typography>
 
                           <List 

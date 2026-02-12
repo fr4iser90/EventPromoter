@@ -111,7 +111,7 @@ function FileSelectionBlock({ block, content, onChange, uploadedFileRefs }: File
               color="primary"
             />
           }
-          label={<strong>{t(enableToggle?.label || 'Anhänge mitschicken')}</strong>}
+          label={<strong>{t(enableToggle?.label || 'editor.includeAttachments')}</strong>}
         />
       </Tooltip>
 
