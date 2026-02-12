@@ -99,6 +99,7 @@ export class TemplateService {
             category: template.category,
             template: normalizedTemplate,
             variables: template.variables,
+            variableDefinitions: template.variableDefinitions,
             isDefault: true,
             createdAt: template.createdAt,
             updatedAt: template.updatedAt,
@@ -127,6 +128,7 @@ export class TemplateService {
               category: template.category,
               template: normalizedTemplate,
               variables: template.variables,
+              variableDefinitions: template.variableDefinitions,
               isDefault: true,
               createdAt: template.createdAt,
               updatedAt: template.updatedAt,
@@ -144,12 +146,50 @@ export class TemplateService {
   }
 
   // Get all templates for a platform (default + custom merged)
-  // Service stays "dumb" - no processing logic here
+  private static async getPlatformVariableRegistry(platform: string): Promise<any[]> {
+    try {
+      const { getPlatformRegistry, initializePlatformRegistry } = await import('./platformRegistry.js')
+      const registry = getPlatformRegistry()
+      if (!registry.isInitialized()) {
+        await initializePlatformRegistry()
+      }
+
+      const platformSchema = registry.getPlatformSchema(platform.toLowerCase())
+      const variableDefinitions = platformSchema?.template?.variableDefinitions
+      return Array.isArray(variableDefinitions) ? variableDefinitions : []
+    } catch {
+      return []
+    }
+  }
+
+  private static resolveTemplateVariableDefinitions(template: Template, registryDefinitions: any[]): any[] | undefined {
+    const ownDefinitions = Array.isArray(template.variableDefinitions) ? template.variableDefinitions : []
+
+    if (ownDefinitions.length > 0) {
+      return ownDefinitions
+    }
+
+    if (!Array.isArray(template.variables) || template.variables.length === 0 || registryDefinitions.length === 0) {
+      return undefined
+    }
+
+    const usedVarSet = new Set(template.variables)
+    const matched = registryDefinitions.filter((def) => {
+      const aliases = Array.isArray(def.aliases) ? def.aliases : []
+      const keys = [def.name, def.canonicalName, ...aliases].filter(Boolean)
+      return keys.some((key: string) => usedVarSet.has(key))
+    })
+
+    return matched.length > 0 ? matched : undefined
+  }
+
+  // Get all templates for a platform (default + custom merged)
   static async getAllTemplates(platform: string): Promise<Template[]> {
     const [defaultTemplates, customTemplates] = await Promise.all([
       this.loadDefaultTemplates(platform),
       this.loadCustomTemplates(platform)
     ])
+    const variableRegistry = await this.getPlatformVariableRegistry(platform)
 
     // Merge and return all templates (custom templates override defaults if same ID)
     const allTemplates = [...defaultTemplates]
@@ -165,13 +205,18 @@ export class TemplateService {
       }
     }
 
-    return allTemplates.sort((a, b) => {
+    return allTemplates
+      .map((template) => ({
+        ...template,
+        variableDefinitions: this.resolveTemplateVariableDefinitions(template, variableRegistry)
+      }))
+      .sort((a, b) => {
       // Sort: custom first, then defaults; then by name
       if (a.isDefault !== b.isDefault) {
         return a.isDefault ? 1 : -1
       }
       return a.name.localeCompare(b.name)
-    })
+      })
   }
 
   // Get single template by ID
@@ -196,6 +241,7 @@ export class TemplateService {
       category: templateData.category,
       template: templateData.template,
       variables: templateData.variables,
+      variableDefinitions: templateData.variableDefinitions,
       isDefault: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

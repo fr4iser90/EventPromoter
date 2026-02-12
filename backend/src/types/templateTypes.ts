@@ -8,6 +8,25 @@ export interface Template {
   category: string // Category ID from TEMPLATE_CATEGORIES (shared/templateCategories.ts)
   template: Record<string, any> // Platform-specific structure (defined by platform schema)
   variables: string[]
+  /**
+   * Optional backend-driven variable metadata for renderer-only frontend.
+   * This enables canonical grouping (e.g. title/eventTitle/name), source metadata,
+   * and editability without hardcoded frontend maps.
+   */
+  variableDefinitions?: Array<{
+    name: string
+    canonicalName?: string
+    aliases?: string[]
+    label: string
+    description?: string
+    type?: 'string' | 'date' | 'number' | 'url' | 'image'
+    source?: 'parsed' | 'parsed_optional' | 'manual' | 'target' | 'computed'
+    parsedField?: string
+    editable?: boolean
+    showWhenEmpty?: boolean
+    icon?: string
+    defaultValue?: string
+  }>
   isDefault: boolean // true for hardcoded templates, false for custom user templates
   createdAt: string
   updatedAt: string
@@ -26,6 +45,7 @@ export interface TemplateCreateRequest {
   category: string
   template: Record<string, any>
   variables: string[]
+  variableDefinitions?: Template['variableDefinitions']
 }
 
 export interface TemplateUpdateRequest {
@@ -34,6 +54,7 @@ export interface TemplateUpdateRequest {
   category?: string
   template?: Record<string, any>
   variables?: string[]
+  variableDefinitions?: Template['variableDefinitions']
 }
 
 export interface TemplateListResponse {

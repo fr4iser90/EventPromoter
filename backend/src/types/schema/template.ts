@@ -5,6 +5,40 @@
 
 import { ValidationRule } from './primitives.js';
 
+export type TemplateVariableSource =
+  | 'parsed'
+  | 'parsed_optional'
+  | 'manual'
+  | 'target'
+  | 'computed';
+
+export interface TemplateVariableDefinition {
+  /** Variable key that appears in template placeholders, e.g. "eventTitle" */
+  name: string;
+  /** Canonical key used for UI deduplication and normalization, e.g. "title" */
+  canonicalName?: string;
+  /** Optional alias keys belonging to same semantic variable */
+  aliases?: string[];
+  /** Variable label (human readable or i18n key) */
+  label: string;
+  /** Variable description */
+  description?: string;
+  /** Variable type */
+  type?: 'string' | 'date' | 'number' | 'url' | 'image';
+  /** Where this value usually comes from */
+  source?: TemplateVariableSource;
+  /** Parsed data field name if source is parsed/parsed_optional */
+  parsedField?: string;
+  /** Whether user can edit/override the value manually in editor */
+  editable?: boolean;
+  /** If true, keep variable visible in editor even when value is empty */
+  showWhenEmpty?: boolean;
+  /** Optional icon identifier for UI */
+  icon?: string;
+  /** Default value if not available */
+  defaultValue?: string;
+}
+
 export interface TemplateSchema {
   /** Schema version */
   version: string;
@@ -28,18 +62,12 @@ export interface TemplateSchema {
     description?: string;
   }>;
   /** Available template variables (from event data) */
-  variables?: Array<{
-    /** Variable name (e.g., 'eventTitle') */
-    name: string;
-    /** Variable label */
-    label: string;
-    /** Variable description */
-    description?: string;
-    /** Variable type */
-    type?: 'string' | 'date' | 'number' | 'url' | 'image';
-    /** Default value if not available */
-    defaultValue?: string;
-  }>;
+  variables?: TemplateVariableDefinition[];
+  /**
+   * Canonical variable registry for editor/preview rendering.
+   * If present, frontend should prefer this over hardcoded mappings.
+   */
+  variableDefinitions?: TemplateVariableDefinition[];
   /** Template categories */
   categories?: Array<{
     id: string;

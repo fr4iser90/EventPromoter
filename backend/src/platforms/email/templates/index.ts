@@ -33,6 +33,20 @@ export interface EmailTemplate {
   defaultLocale?: 'en' | 'de' | 'es'
   category: string // Category ID from TEMPLATE_CATEGORIES
   variables: string[]
+  variableDefinitions?: Array<{
+    name: string
+    canonicalName?: string
+    aliases?: string[]
+    label: string
+    description?: string
+    type?: 'string' | 'date' | 'number' | 'url' | 'image'
+    source?: 'parsed' | 'parsed_optional' | 'manual' | 'target' | 'computed'
+    parsedField?: string
+    editable?: boolean
+    showWhenEmpty?: boolean
+    icon?: string
+    defaultValue?: string
+  }>
   /** Optional: Target fields that must exist on selected targets (e.g., ['name', 'firstName']) */
   requiredTargetFields?: string[]
   createdAt?: string

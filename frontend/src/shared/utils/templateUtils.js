@@ -190,7 +190,7 @@ export function getUnfulfilledVariables(content, availableVariables = {}) {
 
 /**
  * Extract all template variables from a template object
- * Extracts from template.variables array OR parses from template.template.html/subject
+ * Extracts from template.variables array only.
  * 
  * @param template - Template object with variables array or html/subject with {variable} patterns
  * @returns Array of unique variable names

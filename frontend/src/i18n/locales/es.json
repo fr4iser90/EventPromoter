@@ -71,7 +71,9 @@
     "organizer": "Organizador",
     "website": "Sitio Web",
     "lineup": "Lineup",
-    "genre": "Género"
+    "genre": "Género",
+    "price": "Precio",
+    "primaryImage": "Imagen principal"
   },
   "navigation": {
     "home": "Inicio",

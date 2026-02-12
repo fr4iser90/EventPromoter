@@ -33,12 +33,7 @@ import { TemplateSelector } from '../../templates'
 import { useTemplates } from '../../templates/hooks/useTemplates'
 import useStore from '../../../store'
 import { 
-  getTemplateVariables, 
-  replaceTemplateVariables, 
-  extractTemplateVariables,
-  isAutoFilledVariable,
-  getVariableLabel,
-  getCanonicalVariableName
+  getTemplateVariables
 } from '../../../shared/utils/templateUtils'
 import { getLocaleDisplayName, getValidLocale } from '../../../shared/utils/localeUtils'
 import config from '../../../config'
@@ -421,26 +416,6 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
     }
   }
   
-  // Handle disabling/enabling a template variable
-  const handleToggleVariable = (variableNames) => {
-    const names = Array.isArray(variableNames) ? variableNames : [variableNames]
-    const newDisabled = new Set(disabledVariables)
-
-    const shouldEnable = names.some(name => newDisabled.has(name))
-    if (shouldEnable) {
-      names.forEach((name) => {
-        newDisabled.delete(name)
-        onChange(`_disabled_${name}`, false)
-      })
-    } else {
-      names.forEach((name) => {
-        newDisabled.add(name)
-        onChange(`_disabled_${name}`, true)
-      })
-    }
-    setDisabledVariables(newDisabled)
-  }
-
   // Get current content as string for template selector
   const getCurrentContentString = () => {
     if (!content) return ''
@@ -624,27 +599,43 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
 
       {/* ✅ Template Variables: Show template variables as separate fields */}
       {activeTemplate && (() => {
-        
-        const templateVars = extractTemplateVariables(activeTemplate)
         const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
-        
-        // Dedupe aliases into canonical editor fields (e.g. title/eventTitle/name -> title)
-        const aliasGroups = templateVars.reduce((acc, varName) => {
-          const canonicalName = getCanonicalVariableName(varName)
-          if (!acc[canonicalName]) {
-            acc[canonicalName] = []
-          }
-          if (!acc[canonicalName].includes(varName)) {
-            acc[canonicalName].push(varName)
-          }
-          return acc
-        }, {})
+        const definitionList = Array.isArray(activeTemplate.variableDefinitions) ? activeTemplate.variableDefinitions : []
 
-        const displayVars = Object.entries(aliasGroups).map(([canonicalName, aliases]) => ({
-          canonicalName,
-          aliases
+        if (definitionList.length === 0) {
+          return (
+            <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+              This template has no variableDefinitions metadata. Variable editor requires backend-driven variable definitions.
+            </Alert>
+          )
+        }
+
+        const displayVars = Object.values(
+          definitionList.reduce((acc, def) => {
+            const canonicalName = def.canonicalName || def.name
+            if (!acc[canonicalName]) {
+              acc[canonicalName] = {
+                canonicalName,
+                aliases: new Set(),
+                label: def.label,
+                type: def.type,
+                source: def.source,
+                parsedField: def.parsedField,
+                editable: def.editable,
+                showWhenEmpty: def.showWhenEmpty,
+                icon: def.icon
+              }
+            }
+
+            acc[canonicalName].aliases.add(def.name)
+            ;(def.aliases || []).forEach((alias) => acc[canonicalName].aliases.add(alias))
+            return acc
+          }, {})
+        ).map((entry) => ({
+          ...entry,
+          aliases: Array.from(entry.aliases)
         }))
-        
+
         if (displayVars.length === 0) return null
         
         return (
@@ -662,7 +653,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
               sx={{ mb: 1 }}
             />
             
-            {displayVars.map(({ canonicalName, aliases }) => {
+            {displayVars.map(({ canonicalName, aliases, label, type, source, parsedField, editable, showWhenEmpty, icon }) => {
               const explicitValue = aliases
                 .map(alias => content?.[`_var_${alias}`])
                 .find(value => value !== undefined && value !== null && String(value).length > 0)
@@ -671,35 +662,23 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                 .find(value => value !== undefined && value !== null && String(value).length > 0)
               const varValue = explicitValue || fallbackValue || templateVariables[canonicalName] || ''
               const isDisabled = aliases.some(alias => disabledVariables.has(alias))
-              const isAutoFilled = aliases.some(alias => isAutoFilledVariable(alias, parsedData))
-              const { label, icon } = getVariableLabel(canonicalName)
+              const isAutoFilled = ['parsed', 'parsed_optional'].includes(source) &&
+                parsedData?.[(parsedField || canonicalName)] !== undefined &&
+                parsedData?.[(parsedField || canonicalName)] !== null
+              const isImageVar = type === 'image'
+              const canEdit = editable !== false && !isDisabled
+              const displayLabel = t(label)
               
               // Hide auto-filled variables if checkbox is checked
               if (hideAutoFilled && isAutoFilled && !isDisabled) return null
-              
-              // Check if this is an image variable
-              const isImageVar = aliases.some(alias => /^(img|image)\d*$/i.test(alias) || alias === 'image')
+              if (showWhenEmpty === false && !varValue) return null
               
               return (
                 <Box key={canonicalName} sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                     <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                      {icon} {label}:
+                      {icon ? `${icon} ` : ''}{displayLabel}:
                     </Typography>
-                    {isAutoFilled && (
-                      <IconButton
-                        size="small"
-                        onClick={() => handleToggleVariable(aliases)}
-                        sx={{ 
-                          ml: 'auto',
-                          color: isDisabled ? 'text.disabled' : 'text.secondary',
-                          '&:hover': { bgcolor: 'action.hover' }
-                        }}
-                        title={isDisabled ? 'Enable field' : 'Disable field'}
-                      >
-                        <CloseIcon fontSize="small" />
-                      </IconButton>
-                    )}
                   </Box>
                   
                   {isImageVar ? (
@@ -708,7 +687,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                       <Select
                         value={varValue || ''}
                         onChange={(e) => {
-                          if (!isAutoFilled) {
+                          if (canEdit) {
                             aliases.forEach(alias => onChange(`_var_${alias}`, e.target.value))
                           }
                         }}
@@ -769,8 +748,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                       value={varValue}
                       disabled={isDisabled}
                       onChange={(e) => {
-                        // Allow manual editing if not auto-filled
-                        if (!isAutoFilled) {
+                        if (canEdit) {
                           aliases.forEach(alias => onChange(`_var_${alias}`, e.target.value))
                         }
                       }}
@@ -781,7 +759,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                         }
                       }}
                       InputProps={{
-                        readOnly: isAutoFilled && !isDisabled
+                        readOnly: !canEdit
                       }}
                     />
                   )}

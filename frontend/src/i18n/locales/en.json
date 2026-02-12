@@ -71,7 +71,9 @@
     "organizer": "Organizer",
     "website": "Website",
     "lineup": "Lineup",
-    "genre": "Genre"
+    "genre": "Genre",
+    "price": "Price",
+    "primaryImage": "Primary Image"
   },
   "navigation": {
     "home": "Home",

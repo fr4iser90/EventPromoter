@@ -71,7 +71,9 @@
     "organizer": "Veranstalter",
     "website": "Website",
     "lineup": "Lineup",
-    "genre": "Genre"
+    "genre": "Genre",
+    "price": "Preis",
+    "primaryImage": "Hauptbild"
   },
   "navigation": {
     "home": "Start",

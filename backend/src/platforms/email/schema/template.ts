@@ -86,6 +86,161 @@ export const emailTemplateSchema: TemplateSchema = {
       type: 'string'
     }
   ],
+  variableDefinitions: [
+    {
+      name: 'title',
+      canonicalName: 'title',
+      aliases: ['eventTitle', 'name'],
+      label: 'event.title',
+      description: 'Canonical event title variable',
+      type: 'string',
+      source: 'parsed',
+      parsedField: 'title',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '🎉'
+    },
+    {
+      name: 'description',
+      canonicalName: 'description',
+      aliases: ['desc', 'text'],
+      label: 'event.description',
+      description: 'Main event description',
+      type: 'string',
+      source: 'parsed_optional',
+      parsedField: 'description',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '📝'
+    },
+    {
+      name: 'date',
+      canonicalName: 'date',
+      aliases: ['eventDate'],
+      label: 'event.date',
+      type: 'date',
+      source: 'parsed_optional',
+      parsedField: 'date',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '📅'
+    },
+    {
+      name: 'time',
+      canonicalName: 'time',
+      aliases: ['eventTime'],
+      label: 'event.time',
+      type: 'string',
+      source: 'parsed_optional',
+      parsedField: 'time',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '🕒'
+    },
+    {
+      name: 'venue',
+      canonicalName: 'venue',
+      aliases: ['location'],
+      label: 'event.venue',
+      type: 'string',
+      source: 'parsed_optional',
+      parsedField: 'venue',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '📍'
+    },
+    {
+      name: 'city',
+      canonicalName: 'city',
+      label: 'event.city',
+      type: 'string',
+      source: 'parsed_optional',
+      parsedField: 'city',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '🏙️'
+    },
+    {
+      name: 'price',
+      canonicalName: 'price',
+      aliases: ['ticketPrice'],
+      label: 'event.price',
+      description: 'Optional parsed price; can always be manually set',
+      type: 'string',
+      source: 'parsed_optional',
+      parsedField: 'price',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '💰'
+    },
+    {
+      name: 'lineup',
+      canonicalName: 'lineup',
+      aliases: ['performers', 'artists'],
+      label: 'event.lineup',
+      type: 'string',
+      source: 'parsed_optional',
+      parsedField: 'lineup',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '🎤'
+    },
+    {
+      name: 'website',
+      canonicalName: 'website',
+      aliases: ['url', 'link'],
+      label: 'event.website',
+      type: 'url',
+      source: 'parsed_optional',
+      parsedField: 'website',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '🔗'
+    },
+    {
+      name: 'organizer',
+      canonicalName: 'organizer',
+      aliases: ['organiser'],
+      label: 'event.organizer',
+      type: 'string',
+      source: 'parsed_optional',
+      parsedField: 'organizer',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '👤'
+    },
+    {
+      name: 'img1',
+      canonicalName: 'img1',
+      aliases: ['image1'],
+      label: 'event.primaryImage',
+      type: 'image',
+      source: 'computed',
+      editable: true,
+      showWhenEmpty: true,
+      icon: '📌'
+    },
+    {
+      name: 'target.firstName',
+      canonicalName: 'target.firstName',
+      label: 'platform.email.variables.target.firstName',
+      type: 'string',
+      source: 'target',
+      editable: false,
+      showWhenEmpty: false,
+      icon: '🪪'
+    },
+    {
+      name: 'target.lastName',
+      canonicalName: 'target.lastName',
+      label: 'platform.email.variables.target.lastName',
+      type: 'string',
+      source: 'target',
+      editable: false,
+      showWhenEmpty: false,
+      icon: '🪪'
+    }
+  ],
   // Note: Categories are now loaded dynamically from templates with translations.
   // This is kept for documentation purposes only.
   // Actual categories and their translations come from template.categoryTranslations.
