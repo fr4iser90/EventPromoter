@@ -81,7 +81,7 @@ const TemplateList = ({
 
   const handleDelete = async (templateId: string, event: React.MouseEvent) => {
     event.stopPropagation()
-    if (window.confirm(t('template.deleteConfirm', { defaultValue: 'Are you sure you want to delete this template?' }))) {
+    if (window.confirm(t('template.deleteConfirm'))) {
       await deleteTemplate(templateId)
     }
   }
@@ -137,7 +137,7 @@ const TemplateList = ({
         <TemplateIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
         <Typography variant="h6" color="text.secondary">
           {searchQuery || selectedCategory !== 'all' 
-            ? t('template.noTemplatesFound', { defaultValue: 'No templates found' })
+            ? t('template.noTemplatesFound')
             : t('template.noTemplates')}
         </Typography>
         {!searchQuery && selectedCategory === 'all' && (
@@ -236,7 +236,7 @@ const TemplateList = ({
 
                   <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title={t('template.preview', { defaultValue: 'Preview' })}>
+                      <Tooltip title={t('template.preview')}>
                         <IconButton
                           size="small"
                           onClick={(e) => {
@@ -260,7 +260,7 @@ const TemplateList = ({
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title={t('template.duplicate', { defaultValue: 'Duplicate' })}>
+                      <Tooltip title={t('template.duplicate')}>
                         <IconButton
                           size="small"
                           onClick={(e) => handleDuplicate(template, e)}

@@ -184,15 +184,15 @@ function EventDetailPage() {
 
   if (error || !event) {
     return (
-      <PageShell title={t('history.untitled', { defaultValue: 'Untitled Event' })} headerProps={{ showSettings: false }}>
+      <PageShell title={t('history.untitled')} headerProps={{ showSettings: false }}>
         <Box sx={{
           minHeight: '100%',
           width: '100%'
         }}>
           <Box sx={{ px: 3, pb: 3 }}>
-            <Alert severity="error">{error || 'Event not found'}</Alert>
+            <Alert severity="error">{error || t('history.eventNotFound')}</Alert>
             <Button sx={{ mt: 2 }} onClick={() => navigate('/history')}>
-              {t('history.back', { defaultValue: 'Back to History' })}
+              {t('history.back')}
             </Button>
           </Box>
         </Box>
@@ -202,7 +202,7 @@ function EventDetailPage() {
 
   return (
     <PageShell
-      title={event.title || t('history.untitled', { defaultValue: 'Untitled Event' })}
+      title={event.title || t('history.untitled')}
       headerProps={{ showSettings: false }}
     >
       {/* Content Container */}
@@ -217,7 +217,7 @@ function EventDetailPage() {
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/history')}
           >
-            {t('history.back', { defaultValue: 'Back to History' })}
+            {t('history.back')}
           </Button>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
             {event.eventData?.date && (
@@ -254,7 +254,7 @@ function EventDetailPage() {
               onClick={handleRefreshTelemetry}
               disabled={refreshing}
             >
-              {t('history.refreshStats', { defaultValue: 'Refresh Stats' })}
+              {t('history.refreshStats')}
             </Button>
           </Box>
         </Box>
@@ -297,7 +297,7 @@ function EventDetailPage() {
         ) : (
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography color="text.secondary">
-              {t('history.noPlatforms', { defaultValue: 'No platforms published for this event' })}
+              {t('history.noPlatforms')}
             </Typography>
           </Paper>
         )}
@@ -305,7 +305,7 @@ function EventDetailPage() {
         {/* Event Details */}
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            🎯 {t('history.eventDetails', { defaultValue: 'Event Details' })}
+            🎯 {t('history.eventDetails')}
           </Typography>
           
           <Grid container spacing={3}>
@@ -313,7 +313,7 @@ function EventDetailPage() {
             {event.eventData?.description && (
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="primary" gutterBottom>
-                  📝 {t('event.description', { defaultValue: 'Description' })}
+                  📝 {t('event.description')}
                 </Typography>
                 <Paper variant="outlined" sx={{ p: 2, bgcolor: 'action.hover' }}>
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -327,7 +327,7 @@ function EventDetailPage() {
             {event.files?.some((f: EventFile) => f.type?.startsWith('image/') || f.isImage) && (
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                  <ImageIcon fontSize="small" /> {t('preview.images', { defaultValue: 'Images' })}
+                  <ImageIcon fontSize="small" /> {t('preview.images')}
                 </Typography>
                 <Grid container spacing={2}>
                   {event.files
@@ -366,7 +366,7 @@ function EventDetailPage() {
             {event.files?.some((f: EventFile) => ['txt', 'md'].includes(f.name?.split('.').pop()?.toLowerCase() || '')) && (
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                  <DescriptionIcon fontSize="small" /> {t('preview.sourceFiles', { defaultValue: 'Source Files' })}
+                  <DescriptionIcon fontSize="small" /> {t('preview.sourceFiles')}
                 </Typography>
                 <Grid container spacing={2}>
                   {event.files
@@ -409,7 +409,7 @@ function EventDetailPage() {
                                 </Paper>
                               ) : (
                                 <Typography variant="caption" color="text.secondary">
-                                  No content available or failed to load.
+                                  {t('history.noContentOrFailedToLoad')}
                                 </Typography>
                               )}
                             </AccordionDetails>
@@ -424,7 +424,7 @@ function EventDetailPage() {
             {/* Other Files (as Chips) */}
             <Grid item xs={12}>
               <Typography variant="subtitle2" color="primary" gutterBottom sx={{ mt: 1 }}>
-                📎 {t('history.allFiles', { defaultValue: 'All Files' })}
+                📎 {t('history.allFiles')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {event.files.map((file: EventFile) => (

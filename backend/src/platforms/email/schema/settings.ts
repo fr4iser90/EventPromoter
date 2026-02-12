@@ -15,19 +15,19 @@ import { SettingsSchema } from '@/types/schema/index.js'
 export const emailSettingsSchema: SettingsSchema = {
   id: 'email-settings-schema',
   version: '2.0.0',
-  title: 'Management of Email Recipients and Groups',
-  description: 'Management of Email Recipients and Groups',
+  title: 'platform.email.settings.title',
+  description: 'platform.email.settings.description',
   sections: [
     {
       id: 'target-list',
-      title: 'Management of Your Email Recipients',
-      description: 'Management of Your Email Recipients',
+      title: 'platform.email.settings.recipients.title',
+      description: 'platform.email.settings.recipients.description',
       fields: [
         {
           name: 'recipientSearch',
           type: 'text',
-          label: 'Search recipients...',
-          placeholder: 'Search recipients...',
+          label: 'platform.email.settings.recipients.searchLabel',
+          placeholder: 'platform.email.settings.recipients.searchPlaceholder',
           ui: {
             width: 9,
             order: 1,
@@ -37,7 +37,7 @@ export const emailSettingsSchema: SettingsSchema = {
         {
           name: 'newRecipientButton',
           type: 'button',
-          label: '+ New Recipient',
+          label: 'platform.email.settings.recipients.newButton',
           action: {
             id: 'new-recipient-action',
             type: 'open-edit-modal',
@@ -54,8 +54,8 @@ export const emailSettingsSchema: SettingsSchema = {
         {
           name: 'targets',
           type: 'target-list',
-          label: 'Email Address',
-          description: 'Overview of all email recipients with details.',
+          label: 'platform.email.settings.recipients.table.emailAddress',
+          description: 'platform.email.settings.recipients.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets',
@@ -69,7 +69,7 @@ export const emailSettingsSchema: SettingsSchema = {
             tableColumns: [
               {
                 id: 'email',
-                label: 'Email Address',
+                label: 'platform.email.settings.recipients.table.emailAddress',
                 clickable: true,
                         action: {
                           id: 'email-edit-action',
@@ -81,9 +81,9 @@ export const emailSettingsSchema: SettingsSchema = {
                           onSuccess: 'reload'
                         }
               },
-              { id: 'firstName', label: 'First Name' },
-              { id: 'lastName', label: 'Last Name' },
-              { id: 'birthday', label: 'Birthday', type: 'date' }
+              { id: 'firstName', label: 'platform.email.settings.recipients.table.firstName' },
+              { id: 'lastName', label: 'platform.email.settings.recipients.table.lastName' },
+              { id: 'birthday', label: 'platform.email.settings.recipients.table.birthday', type: 'date' }
             ]
           }
         }
@@ -91,14 +91,14 @@ export const emailSettingsSchema: SettingsSchema = {
     },
     {
       id: 'group-management',
-      title: 'Management of Your Email Groups',
-      description: 'Management of Your Email Groups',
+      title: 'platform.email.settings.groups.title',
+      description: 'platform.email.settings.groups.description',
       fields: [
         {
           name: 'groupSearch',
           type: 'text',
-          label: 'Search groups...',
-          placeholder: 'Search groups...',
+          label: 'platform.email.settings.groups.searchLabel',
+          placeholder: 'platform.email.settings.groups.searchPlaceholder',
           ui: {
             width: 9,
             order: 1,
@@ -108,7 +108,7 @@ export const emailSettingsSchema: SettingsSchema = {
         {
           name: 'newGroupButton',
           type: 'button',
-          label: '+ New Group',
+          label: 'platform.email.settings.groups.newButton',
           action: {
             id: 'new-group-action',
             type: 'open-edit-modal',
@@ -125,8 +125,8 @@ export const emailSettingsSchema: SettingsSchema = {
         {
           name: 'groupsOverview',
           type: 'target-list',
-          label: 'Group Name',
-          description: 'Overview of all email groups and their member counts.',
+          label: 'platform.email.settings.groups.table.groupName',
+          description: 'platform.email.settings.groups.table.description',
           optionsSource: {
             endpoint: 'platforms/:platformId/target-groups',
             method: 'GET',
@@ -139,7 +139,7 @@ export const emailSettingsSchema: SettingsSchema = {
             tableColumns: [
               {
                 id: 'name',
-                label: 'Group Name',
+                label: 'platform.email.settings.groups.table.groupName',
                 clickable: true,
                       action: {
                           id: 'group-edit-action',
@@ -153,12 +153,12 @@ export const emailSettingsSchema: SettingsSchema = {
               },
               {
                 id: 'memberCount',
-                label: 'Members',
+                label: 'platform.email.settings.groups.table.members',
                 type: 'number'
               },
               {
                 id: 'memberValues',
-                label: 'Members',
+                label: 'platform.email.settings.groups.table.members',
                 type: 'text'
               }
             ]
@@ -170,44 +170,44 @@ export const emailSettingsSchema: SettingsSchema = {
   targetSchemas: {
     email: {
       baseField: 'email',
-      baseFieldLabel: 'Email-Adresse',
+      baseFieldLabel: 'platform.email.settings.targetSchemas.email.baseFieldLabel',
       baseFieldValidation: [
-        { type: 'required', message: 'Email is required' },
-        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
+        { type: 'required', message: 'platform.email.validation.emailRequired' },
+        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'platform.email.validation.invalidEmailFormat' }
       ],
       customFields: [
         {
           name: 'name',
           type: 'text',
-          label: 'Name',
+          label: 'platform.email.settings.targetSchemas.email.customFields.name',
           required: false,
           ui: { width: 12, order: 1 }
         },
         {
           name: 'birthday',
           type: 'date',
-          label: 'Geburtstag',
+          label: 'platform.email.settings.targetSchemas.email.customFields.birthday',
           required: false,
           ui: { width: 6, order: 2 }
         },
         {
           name: 'company',
           type: 'text',
-          label: 'Firma',
+          label: 'platform.email.settings.targetSchemas.email.customFields.company',
           required: false,
           ui: { width: 12, order: 3 }
         },
         {
           name: 'phone',
           type: 'text',
-          label: 'Telefon',
+          label: 'platform.email.settings.targetSchemas.email.customFields.phone',
           required: false,
           ui: { width: 12, order: 4 }
         },
         {
           name: 'tags',
           type: 'multiselect',
-          label: 'Tags',
+          label: 'platform.email.settings.targetSchemas.email.customFields.tags',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/tags',

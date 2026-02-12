@@ -50,7 +50,9 @@
       "usernameDescription": "Wird für API und Playwright benötigt.",
       "password": "Reddit Passwort",
       "passwordDescription": "Wird für API und Playwright benötigt."
-    }
+    },
+    "title": "Reddit Plattform-Credentials",
+    "description": "Reddit API-Credentials konfigurieren"
   },
   "salutation": {
     "informal": "Hallo {{firstName}}",
@@ -67,10 +69,28 @@
     }
   },
   "preview": {
-    "subreddit": "Subreddit"
+    "subreddit": "Subreddit",
+    "title": "Reddit-Vorschau",
+    "description": "Vorschau, wie dein Reddit-Post aussehen wird",
+    "modes": {
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop-Reddit-Ansicht"
+      },
+      "mobile": {
+        "label": "Mobil",
+        "description": "Mobile Reddit-Ansicht"
+      }
+    },
+    "mapping": {
+      "title": "Titel",
+      "subreddit": "Subreddit",
+      "postBody": "Post-Text"
+    }
   },
   "metadata": {
-    "description": "Teile Events auf Reddit mit Text-Posts und Bildern"
+    "description": "Teile Events auf Reddit mit Text-Posts und Bildern",
+    "schemaDescription": "Reddit-Plattform-Schema fuer eine selbstentdeckende Architektur"
   },
   "subreddits": {
     "label": "Subreddits for diesen Post",
@@ -95,7 +115,7 @@
       "description": "Sprache für das Template (wird automatisch aus Targets aufgelöst, kann überschrieben werden)"
     },
     "defaultTemplate": {
-      "label": "Standard-Template",
+      "label": "Standardvorlage",
       "description": "Template das für alle Subreddits verwendet wird (falls keine Gruppen-Mapping vorhanden)"
     },
     "templateMapping": {
@@ -111,6 +131,173 @@
       "all": "Alle Subreddits",
       "groups": "{{count}} Gruppe(n) ausgewählt",
       "individual": "{{count}} Subreddit(s) ausgewählt"
+    }
+  },
+  "editor": {
+    "title": "Reddit Post Editor",
+    "description": "Erstelle und bearbeite Reddit-Posts",
+    "postTitle": {
+      "label": "Post-Titel",
+      "description": "Post-Titel (max. 300 Zeichen)",
+      "required": "Titel ist erforderlich",
+      "maxLength": "Titel darf maximal 300 Zeichen haben",
+      "placeholder": "Post-Titel..."
+    },
+    "postBody": {
+      "label": "Post-Text",
+      "description": "Post-Inhalt (max. 40000 Zeichen)",
+      "required": "Post-Text ist erforderlich",
+      "placeholder": "Post-Inhalt...",
+      "variables": {
+        "salutationDescription": "Personalisierte Anrede",
+        "targetFirstNameDescription": "Vorname des Empfaengers",
+        "targetLastNameDescription": "Nachname des Empfaengers"
+      }
+    },
+    "image": {
+      "label": "Bild",
+      "description": "Optionaler Bild-Anhang"
+    },
+    "link": {
+      "label": "Link",
+      "description": "Optionaler Link zum Teilen"
+    }
+  },
+  "editGroup": {
+    "title": "Reddit-Gruppe bearbeiten",
+    "description": "Eine bestehende Reddit-Gruppe bearbeiten (kann Subreddits und Benutzer enthalten).",
+    "fields": {
+      "name": {
+        "label": "Gruppenname",
+        "placeholder": "z.B. Music Events, Local Events, usw."
+      },
+      "targetIds": {
+        "label": "Mitglieder (Subreddits und Benutzer)",
+        "description": "Waehle Subreddits und/oder Benutzer fuer diese Gruppe"
+      }
+    }
+  },
+  "editSubreddit": {
+    "title": "Subreddit bearbeiten",
+    "description": "Ein bestehendes Subreddit bearbeiten.",
+    "fields": {
+      "subreddit": {
+        "label": "Subreddit-Name",
+        "placeholder": "z.B. electronicmusic"
+      },
+      "targetType": {
+        "label": "Target-Typ"
+      },
+      "description": {
+        "label": "Beschreibung",
+        "placeholder": "z.B. Community fuer elektronische Musik"
+      },
+      "tags": {
+        "label": "Tags"
+      },
+      "active": {
+        "label": "Aktiv"
+      }
+    }
+  },
+  "editUser": {
+    "title": "Reddit-Benutzer bearbeiten",
+    "description": "Einen bestehenden Reddit-Benutzer bearbeiten.",
+    "fields": {
+      "username": {
+        "label": "Reddit-Benutzername",
+        "placeholder": "z.B. username123"
+      },
+      "targetType": {
+        "label": "Target-Typ"
+      },
+      "displayName": {
+        "label": "Anzeigename",
+        "placeholder": "z.B. John Doe"
+      },
+      "notes": {
+        "label": "Notizen",
+        "placeholder": "z.B. Wichtiger Kontakt fuer Events"
+      },
+      "active": {
+        "label": "Aktiv"
+      }
+    }
+  },
+  "actions": {
+    "save": "Speichern",
+    "delete": "Loeschen",
+    "cancel": "Abbrechen"
+  },
+  "validation": {
+    "subredditNameRequired": "Subreddit-Name ist erforderlich",
+    "subredditNamePattern": "Subreddit-Name muss 3-21 Zeichen lang sein und darf nur Buchstaben, Zahlen und Unterstriche enthalten",
+    "descriptionMaxLength": "Beschreibung darf maximal 500 Zeichen haben",
+    "usernameRequired": "Benutzername ist erforderlich",
+    "usernamePattern": "Benutzername muss 3-20 Zeichen lang sein und darf nur Buchstaben, Zahlen, Unterstriche und Bindestriche enthalten",
+    "notesMaxLength": "Notizen duerfen maximal 500 Zeichen haben",
+    "invalidSubredditName": "Ungueltiger Subreddit-Name",
+    "invalidUsername": "Ungueltiger Benutzername"
+  },
+  "options": {
+    "music": "Musik",
+    "events": "Events",
+    "local": "Lokal"
+  },
+  "settings": {
+    "title": "Reddit Targets",
+    "description": "Subreddits, Benutzer und Gruppen fuer Event-Posts und DMs verwalten",
+    "tabs": {
+      "subreddits": "Subreddits",
+      "users": "Users",
+      "groups": "Groups",
+      "analytics": "Analytics"
+    },
+    "common": {
+      "description": "Beschreibung",
+      "tags": "Tags",
+      "active": "Aktiv"
+    },
+    "subreddits": {
+      "title": "Verwaltung deiner Subreddits",
+      "description": "Verwaltung deiner Subreddits",
+      "searchLabel": "Subreddits suchen...",
+      "searchPlaceholder": "Subreddits suchen...",
+      "newButton": "+ Neues Subreddit",
+      "table": {
+        "subredditName": "Subreddit-Name",
+        "description": "Uebersicht aller Subreddits mit Details."
+      }
+    },
+    "users": {
+      "title": "Verwaltung deiner Reddit-Benutzer",
+      "description": "Verwaltung deiner Reddit-Benutzer",
+      "searchLabel": "Benutzer suchen...",
+      "searchPlaceholder": "Benutzer suchen...",
+      "newButton": "+ Neuer Benutzer",
+      "table": {
+        "redditUsername": "Reddit-Benutzername",
+        "description": "Uebersicht aller Reddit-Benutzer mit Details.",
+        "displayName": "Anzeigename",
+        "notes": "Notizen"
+      }
+    },
+    "groups": {
+      "title": "Verwaltung deiner Reddit-Gruppen",
+      "description": "Verwaltung deiner Reddit-Gruppen (koennen Subreddits und Benutzer enthalten)",
+      "searchLabel": "Gruppen suchen...",
+      "searchPlaceholder": "Gruppen suchen...",
+      "newButton": "+ Neue Gruppe",
+      "table": {
+        "groupName": "Gruppenname",
+        "description": "Uebersicht aller Reddit-Gruppen und ihrer Mitgliedszahlen (Subreddits und Benutzer).",
+        "members": "Mitglieder"
+      }
+    },
+    "analytics": {
+      "title": "Subreddit-Statistiken",
+      "description": "Zeige Statistiken fuer ein ausgewaehltes Subreddit",
+      "selectSubreddit": "Subreddit auswaehlen"
     }
   }
 }

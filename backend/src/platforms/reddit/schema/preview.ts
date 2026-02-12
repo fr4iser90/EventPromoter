@@ -10,21 +10,21 @@ import { PreviewSchema } from '@/types/schema/index.js'
 
 export const redditPreviewSchema: PreviewSchema = {
   version: '1.0.0',
-  title: 'Reddit Preview',
-  description: 'Preview how your Reddit post will look',
+  title: 'platform.reddit.preview.title',
+  description: 'platform.reddit.preview.description',
   defaultMode: 'desktop',
   modes: [
     {
       id: 'desktop',
-      label: 'Desktop',
-      description: 'Desktop Reddit view',
+      label: 'platform.reddit.preview.modes.desktop.label',
+      description: 'platform.reddit.preview.modes.desktop.description',
       width: 700,
       height: 600
     },
     {
       id: 'mobile',
-      label: 'Mobile',
-      description: 'Mobile Reddit view',
+      label: 'platform.reddit.preview.modes.mobile.label',
+      description: 'platform.reddit.preview.modes.mobile.description',
       width: 375,
       height: 500
     }
@@ -73,19 +73,19 @@ export const redditPreviewSchema: PreviewSchema = {
     {
       field: 'title',
       renderAs: 'heading',
-      label: 'Title',
+      label: 'platform.reddit.preview.mapping.title',
       order: 1
     },
     {
       field: 'subreddit',
       renderAs: 'text',
-      label: 'Subreddit',
+      label: 'platform.reddit.preview.mapping.subreddit',
       order: 2
     },
     {
       field: 'text',
       renderAs: 'markdown',
-      label: 'Post Body',
+      label: 'platform.reddit.preview.mapping.postBody',
       order: 3
     },
     {

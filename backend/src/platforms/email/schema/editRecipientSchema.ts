@@ -2,8 +2,8 @@ import { FormSchema } from '@/types/schema/index.js'
 
 const emailRecipientEditSchema: FormSchema = {
   id: 'editRecipientSchema',
-  title: 'Edit Email Recipient',
-  description: 'Edit an existing email recipient.',
+  title: 'platform.email.recipients.edit.title',
+  description: 'platform.email.recipients.edit.description',
   endpoint: 'platforms/:platformId/targets/:id',
   fields: [
     {
@@ -18,7 +18,7 @@ const emailRecipientEditSchema: FormSchema = {
     {
       name: 'targetType',
       type: 'text',
-      label: 'Target Type',
+      label: 'platform.email.form.labels.targetType',
       default: 'email',
       readOnly: true,
       ui: {

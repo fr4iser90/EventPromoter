@@ -121,7 +121,7 @@ function EventCard({ event, onClick }: EventCardProps) {
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Title */}
         <Typography variant="h6" component="h3" sx={{ mb: 1, fontWeight: 'bold' }} noWrap>
-          {event.title || t('history.untitled', { defaultValue: 'Untitled Event' })}
+          {event.title || t('history.untitled')}
         </Typography>
 
         {/* Date & Venue */}
@@ -174,7 +174,7 @@ function EventCard({ event, onClick }: EventCardProps) {
             variant="outlined"
           />
           {!!event.stats?.telemetry && (
-            <Tooltip title={t('history.viewStats', { defaultValue: 'View statistics' })}>
+            <Tooltip title={t('history.viewStats')}>
               <IconButton size="small">
                 <VisibilityIcon fontSize="small" />
               </IconButton>

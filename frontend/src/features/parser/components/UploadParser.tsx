@@ -288,14 +288,14 @@ function UploadParser() {
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        📁 Upload Parser - Automatic Processing
+        {t('upload.parserTitle')}
       </Typography>
 
       {/* File Selection */}
       {uploadedFileRefs.length > 0 && (
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle2" gutterBottom>
-            Uploaded Files (Backend parsing in progress...):
+            {t('upload.filesProcessing')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {uploadedFileRefs.map((fileData) => (
@@ -311,13 +311,13 @@ function UploadParser() {
 
           {!parsedData && parsingStatus === 'parsing' && (
             <Alert severity="info" sx={{ mt: 2 }}>
-              Backend is processing your files. Parsed data will appear here automatically...
+              {t('upload.processingHint')}
             </Alert>
           )}
 
           {!parsedData && parsingStatus === 'idle' && uploadedFileRefs.length > 0 && (
             <Alert severity="warning" sx={{ mt: 2 }}>
-              Click "Parse Files" to start processing your uploaded files.
+              {t('upload.parseFilesHint')}
             </Alert>
           )}
         </Box>
@@ -354,7 +354,7 @@ function UploadParser() {
           {activeTab === 0 && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                Raw Extracted Data
+                {t('upload.rawExtractedData')}
               </Typography>
               <Alert severity="info" sx={{ mb: 2 }}>
                 Confidence: {parsedData.confidence}% | Parsed: {parsedData.parsedAt ? new Date(parsedData.parsedAt).toLocaleString() : 'unknown'}
@@ -372,7 +372,7 @@ function UploadParser() {
           {activeTab === 1 && editedData && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                🎨 Content Creation Studio
+                {t('upload.contentCreationStudio')}
               </Typography>
 
               {/* Side-by-Side Layout */}
@@ -380,13 +380,13 @@ function UploadParser() {
                 {/* EDITOR PANEL - Left Side */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    ✏️ Editor Panel
+                    {t('upload.editorPanel')}
                   </Typography>
 
                   {/* Platform Selector */}
                   <Box sx={{ mb: 3 }}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Active Platforms:
+                      {t('upload.activePlatforms')}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       {selectedPlatforms.map((platformId) => {
@@ -427,10 +427,10 @@ function UploadParser() {
                   {/* Content Controls */}
                   <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <Button variant="outlined" startIcon={<RefreshIcon />} onClick={resetContent}>
-                      Reset All
+                      {t('common.resetAll')}
                     </Button>
                     <Button variant="outlined" startIcon={<ContentCopyIcon />}>
-                      Copy Between Platforms
+                      {t('common.copyBetweenPlatforms')}
                     </Button>
                   </Box>
 
@@ -440,7 +440,7 @@ function UploadParser() {
                 {/* PREVIEW PANEL - Right Side */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    👁️ Preview Panel
+                    {t('upload.previewPanel')}
                   </Typography>
 
                   {/* Platform Previews */}
@@ -456,7 +456,7 @@ function UploadParser() {
                   {/* Status Summary */}
                   <Paper sx={{ p: 2, mt: 2, bgcolor: 'background.default' }}>
                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      📊 Status Summary
+                      {t('upload.statusSummary')}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       {selectedPlatforms.map((platform) => {
@@ -472,7 +472,7 @@ function UploadParser() {
                             key={platform}
                             size="small"
                             color={isReady ? "success" : "warning"}
-                            label={`${platform}: ${isReady ? 'Ready' : 'Draft'}`}
+                            label={`${platform}: ${isReady ? t('status.ready') : t('status.draft')}`}
                           />
                         )
                       })}
@@ -487,7 +487,7 @@ function UploadParser() {
           {activeTab === 2 && editedData && (
             <Box>
               <Typography variant="h6" gutterBottom>
-                Platform Preview
+                {t('upload.platformPreviewTitle')}
               </Typography>
 
               <Accordion defaultExpanded>
@@ -549,7 +549,7 @@ function UploadParser() {
                     <CardContent>
                       <Typography variant="h6">{editedData.title}</Typography>
                       <Typography variant="body1" sx={{ mt: 1 }}>
-                        Liebe Freunde der elektronischen Musik,
+                        {t('upload.emailGreeting')}
                       </Typography>
                       <Typography variant="body1" sx={{ mt: 1 }}>
                         {editedData.description}
@@ -561,7 +561,7 @@ function UploadParser() {
                         🌐 Tickets: {editedData.website}
                       </Typography>
                       <Typography variant="body2" sx={{ mt: 2 }}>
-                        Wir freuen uns auf euch!
+                        {t('upload.emailClosing')}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -575,7 +575,7 @@ function UploadParser() {
       {/* No data state */}
       {!parsedData && !isParsing && uploadedFileRefs.length === 0 && (
         <Alert severity="info">
-          Upload a PDF or image file to parse event data automatically.
+          {t('upload.emptyHint')}
         </Alert>
       )}
 

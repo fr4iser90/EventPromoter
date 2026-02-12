@@ -10,8 +10,8 @@ import { CredentialsSchema } from '@/types/schema/index.js'
 
 export const emailCredentialsSchema: CredentialsSchema = {
   version: '1.0.0',
-  title: 'Email Platform Credentials',
-  description: 'Configure SMTP credentials for email platform',
+  title: 'platform.email.credentials.title',
+  description: 'platform.email.credentials.description',
   fields: [
     {
       name: 'host',
@@ -20,7 +20,7 @@ export const emailCredentialsSchema: CredentialsSchema = {
       placeholder: 'smtp.gmail.com',
       required: false,
       validation: [
-        { type: 'pattern', value: '^[a-zA-Z0-9.-]+$', message: 'Invalid hostname format' }
+        { type: 'pattern', value: '^[a-zA-Z0-9.-]+$', message: 'platform.email.validation.invalidHostnameFormat' }
       ],
       ui: {
         width: 12,
@@ -35,8 +35,8 @@ export const emailCredentialsSchema: CredentialsSchema = {
       default: 587,
       required: false,
       validation: [
-        { type: 'min', value: 1, message: 'Port must be at least 1' },
-        { type: 'max', value: 65535, message: 'Port must be at most 65535' }
+        { type: 'min', value: 1, message: 'platform.email.validation.portMin' },
+        { type: 'max', value: 65535, message: 'platform.email.validation.portMax' }
       ],
       ui: {
         width: 6,
@@ -49,7 +49,7 @@ export const emailCredentialsSchema: CredentialsSchema = {
       label: 'platform.email.credentials.api.username',
       required: false,
       validation: [
-        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
+        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'platform.email.validation.invalidEmailFormat' }
       ],
       ui: {
         width: 12,
@@ -72,7 +72,7 @@ export const emailCredentialsSchema: CredentialsSchema = {
       label: 'platform.email.credentials.api.fromEmail',
       required: false,
       validation: [
-        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'Invalid email format' }
+        { type: 'pattern', value: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', message: 'platform.email.validation.invalidEmailFormat' }
       ],
       ui: {
         width: 12,
@@ -83,7 +83,7 @@ export const emailCredentialsSchema: CredentialsSchema = {
       name: 'fromName',
       type: 'text',
       label: 'platform.email.credentials.api.fromName',
-      placeholder: 'Your Name',
+      placeholder: 'platform.email.credentials.api.fromNamePlaceholder',
       required: false,
       ui: {
         width: 12,

@@ -38,10 +38,10 @@ export function useTemplatesByCategory(category: string | null, platforms: strin
         if (response.data.success) {
           setTemplates(response.data.templates || [])
         } else {
-          setError('Failed to load templates')
+          setError('template.failedToLoadTemplates')
         }
       } catch (err: unknown) {
-        setError(getAxiosErrorMessage(err, 'Failed to load templates'))
+        setError(getAxiosErrorMessage(err, 'template.failedToLoadTemplates'))
       } finally {
         setLoading(false)
       }

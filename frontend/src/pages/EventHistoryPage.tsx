@@ -58,11 +58,11 @@ function EventHistoryPage() {
       if (data.success && data.history) {
         setEvents(data.history.Events || [])
       } else {
-        setError(data.error || 'Failed to load history')
+        setError(data.error || t('history.failedToLoadHistory'))
       }
     } catch (err: unknown) {
       console.error('Failed to load history:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load history')
+      setError(err instanceof Error ? err.message : t('history.failedToLoadHistory'))
     } finally {
       setLoading(false)
     }
@@ -99,7 +99,7 @@ function EventHistoryPage() {
 
   if (error) {
     return (
-      <PageShell title={t('history.title', { defaultValue: 'Event History' })} headerProps={{ showSettings: false }}>
+      <PageShell title={t('history.title')} headerProps={{ showSettings: false }}>
         <Box sx={{ p: 3 }}>
           <Alert severity="error">{error}</Alert>
         </Box>
@@ -108,7 +108,7 @@ function EventHistoryPage() {
   }
 
   return (
-    <PageShell title={t('history.title', { defaultValue: 'Event History' })} headerProps={{ showSettings: false }}>
+    <PageShell title={t('history.title')} headerProps={{ showSettings: false }}>
       {/* Content Container */}
       <Box sx={{
         display: 'flex',
@@ -127,7 +127,7 @@ function EventHistoryPage() {
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
               <TextField
                 size="small"
-                placeholder={t('history.search', { defaultValue: 'Search events...' })}
+                placeholder={t('history.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 InputProps={{
@@ -166,7 +166,7 @@ function EventHistoryPage() {
             {filteredEvents.length === 0 ? (
               <Paper sx={{ p: 4, textAlign: 'center' }}>
                 <Typography color="text.secondary">
-                  {t('history.noEvents', { defaultValue: 'No events found' })}
+                  {t('history.noEvents')}
                 </Typography>
               </Paper>
             ) : (

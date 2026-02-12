@@ -220,7 +220,7 @@ function PlatformPreview({ platform, content, isActive }: { platform: string; co
         }
       } catch (err: unknown) {
         console.error('Preview render error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load preview')
+        setError(err instanceof Error ? err.message : t('platform.failedToLoadPreview'))
       } finally {
         setLoading(false)
       }
@@ -246,7 +246,7 @@ function PlatformPreview({ platform, content, isActive }: { platform: string; co
     return (
       <Paper sx={{ p: 2 }}>
         <Alert severity="error">
-          Failed to load {platform} preview: {error || metadataError}
+          {t('platform.failedToLoadPreviewWithPlatform', { platform, error: error || metadataError })}
         </Alert>
       </Paper>
     )
@@ -287,27 +287,27 @@ function PlatformPreview({ platform, content, isActive }: { platform: string; co
                 const groupName =
                   preview.group ||
                   preview.target ||
-                  (targetCount === 0 ? 'Keine Targets' : 'Individual')
+                  (targetCount === 0 ? t('preview.noTargets') : t('preview.individual'))
                 
                 // Build tooltip content
                 const tooltipContent = (
                   <Box>
                     {targetCount === 0 ? (
-                      <Typography variant="body2">Keine Targets ausgewählt</Typography>
+                      <Typography variant="body2">{t('preview.noTargetsSelected')}</Typography>
                     ) : null}
                     {preview.group ? (
                       <>
                         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                          Gruppe: {groupName}
+                          {t('preview.group')}: {groupName}
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 0.5 }}>
-                          Targets in Gruppe ({targetCount}):
+                          {t('preview.targetsInGroup', { count: targetCount })}
                         </Typography>
                       </>
                     ) : (
                       targetCount > 0 ? (
                         <Typography variant="body2" sx={{ mb: 0.5 }}>
-                          Targets ({targetCount}):
+                          {t('preview.targetsCount', { count: targetCount })}
                         </Typography>
                       ) : null
                     )}
@@ -322,7 +322,7 @@ function PlatformPreview({ platform, content, isActive }: { platform: string; co
                     ) : null}
                     {preview.templateId && (
                       <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        Template: {preview.templateId}
+                        {t('template.title')}: {preview.templateId}
                       </Typography>
                     )}
                   </Box>
@@ -348,7 +348,7 @@ function PlatformPreview({ platform, content, isActive }: { platform: string; co
                           )}
                           {targetCount > 0 ? (
                             <Typography variant="caption" color="text.secondary" display="block">
-                              {targetCount} Targets
+                              {t('preview.targetsShortCount', { count: targetCount })}
                             </Typography>
                           ) : null}
                         </Box>
@@ -366,7 +366,7 @@ function PlatformPreview({ platform, content, isActive }: { platform: string; co
                     html: currentPreview.html,
                     css: currentPreview.css || undefined,
                     meta: {
-                      title: `${platformName} Preview - ${currentPreview.group || 'Alle'}`
+                      title: `${platformName} ${t('preview.preview')} - ${currentPreview.group || t('common.all')}`
                     }
                   }}
                   dimensions={currentPreview.dimensions}
@@ -381,7 +381,7 @@ function PlatformPreview({ platform, content, isActive }: { platform: string; co
               html: previewHtml,
               css: previewCss || undefined,
               meta: {
-                title: `${platformName} Preview`
+                title: `${platformName} ${t('preview.preview')}`
               }
             }}
             dimensions={previewDimensions || undefined}

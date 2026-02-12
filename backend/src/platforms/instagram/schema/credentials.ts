@@ -10,8 +10,8 @@ import { CredentialsSchema } from '@/types/schema/index.js'
 
 export const instagramCredentialsSchema: CredentialsSchema = {
   version: '1.0.0',
-  title: 'Instagram Platform Credentials',
-  description: 'Configure Instagram API credentials',
+  title: 'platform.instagram.credentials.title',
+  description: 'platform.instagram.credentials.description',
   fields: [
     {
       name: 'accessToken',

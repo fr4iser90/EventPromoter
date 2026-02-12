@@ -136,7 +136,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
   if (!telemetry) {
     return (
       <Alert severity="info">
-        {t('history.noTelemetry', { defaultValue: 'No telemetry data available for this platform' })}
+        {t('history.noTelemetry')}
       </Alert>
     )
   }
@@ -144,7 +144,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
   if (!telemetry.available) {
     return (
       <Alert severity="warning">
-        {telemetry.error || t('history.telemetryUnavailable', { defaultValue: 'Telemetry not available for this platform' })}
+        {telemetry.error || t('history.telemetryUnavailable')}
       </Alert>
     )
   }
@@ -154,7 +154,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
       {/* Header */}
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-          {platform.charAt(0).toUpperCase() + platform.slice(1)} {t('history.statistics', { defaultValue: 'Statistics' })}
+          {platform.charAt(0).toUpperCase() + platform.slice(1)} {t('history.statistics')}
         </Typography>
         {telemetry.url && (
           <Button
@@ -165,7 +165,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
             target="_blank"
             rel="noopener noreferrer"
           >
-            {t('history.viewPost', { defaultValue: 'View Post' })}
+            {t('history.viewPost')}
           </Button>
         )}
       </Box>
@@ -173,7 +173,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
       {/* Last Updated */}
       {telemetry.lastUpdated && (
         <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-          {t('history.lastUpdated', { defaultValue: 'Last updated' })}: {new Date(telemetry.lastUpdated).toLocaleString()}
+          {t('history.lastUpdated')}: {new Date(telemetry.lastUpdated).toLocaleString()}
         </Typography>
       )}
 
@@ -188,7 +188,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatNumber(metrics.views)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.views', { defaultValue: 'Views' })}
+                  {t('history.views')}
                 </Typography>
               </Paper>
             </Grid>
@@ -202,7 +202,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatNumber(metrics.likes)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.likes', { defaultValue: 'Likes' })}
+                  {t('history.likes')}
                 </Typography>
               </Paper>
             </Grid>
@@ -216,7 +216,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatNumber(metrics.upvotes)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.upvotes', { defaultValue: 'Upvotes' })}
+                  {t('history.upvotes')}
                 </Typography>
               </Paper>
             </Grid>
@@ -230,7 +230,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatNumber(metrics.comments)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.comments', { defaultValue: 'Comments' })}
+                  {t('history.comments')}
                 </Typography>
               </Paper>
             </Grid>
@@ -244,7 +244,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatNumber(metrics.shares)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.shares', { defaultValue: 'Shares' })}
+                  {t('history.shares')}
                 </Typography>
               </Paper>
             </Grid>
@@ -258,7 +258,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatNumber(metrics.retweets)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.retweets', { defaultValue: 'Retweets' })}
+                  {t('history.retweets')}
                 </Typography>
               </Paper>
             </Grid>
@@ -272,7 +272,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatNumber(metrics.reactions)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.reactions', { defaultValue: 'Reactions' })}
+                  {t('history.reactions')}
                 </Typography>
               </Paper>
             </Grid>
@@ -286,7 +286,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatPercent(metrics.openRate)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.openRate', { defaultValue: 'Open Rate' })}
+                  {t('history.openRate')}
                 </Typography>
               </Paper>
             </Grid>
@@ -300,7 +300,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
                   {formatPercent(metrics.clickRate)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('history.clickRate', { defaultValue: 'Click Rate' })}
+                  {t('history.clickRate')}
                 </Typography>
               </Paper>
             </Grid>
@@ -308,7 +308,7 @@ function PlatformStatsCard({ platform, telemetry, event }: PlatformStatsCardProp
         </Grid>
       ) : (
         <Alert severity="info">
-          {t('history.noMetrics', { defaultValue: 'No metrics available yet' })}
+          {t('history.noMetrics')}
         </Alert>
       )}
     </Box>

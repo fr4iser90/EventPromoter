@@ -95,7 +95,7 @@ function TemplateEditor({
   const handleSave = async () => {
     if (!template) return
     if (!formData.name.trim() || !formData.category) {
-      setError(t('template.validationError', { defaultValue: 'Name and category are required' }))
+      setError(t('template.validationError'))
       return
     }
 
@@ -119,11 +119,11 @@ function TemplateEditor({
         setIsDirty(false)
         onSave && onSave()
       } else {
-        setError(result.error || t('template.saveError', { defaultValue: 'Failed to save template' }))
+        setError(result.error || t('template.saveError'))
       }
     } catch (err: unknown) {
       console.error('Error saving template:', err)
-      setError(err instanceof Error ? err.message : t('template.saveError', { defaultValue: 'Failed to save template' }))
+      setError(err instanceof Error ? err.message : t('template.saveError'))
     } finally {
       setSaving(false)
     }
@@ -172,7 +172,7 @@ function TemplateEditor({
         </Box>
         {isDirty && (
           <Alert severity="warning" sx={{ mt: 1 }}>
-            {t('template.unsavedChanges', { defaultValue: 'You have unsaved changes' })}
+            {t('template.unsavedChanges')}
           </Alert>
         )}
         {error && (
@@ -187,7 +187,7 @@ function TemplateEditor({
         {/* Basic Info */}
         <SectionPanel sx={{ mb: 2 }}>
           <Typography variant="subtitle1" gutterBottom>
-            {t('template.basicInfo', { defaultValue: 'Basic Information' })}
+            {t('template.basicInfo')}
           </Typography>
           
           <TextField
@@ -233,7 +233,7 @@ function TemplateEditor({
         <SectionPanel sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="subtitle1">
-              {t('template.templateContent', { defaultValue: 'Template Content' })}
+              {t('template.templateContent')}
             </Typography>
             {hasVisualFields && (
               <ToggleButtonGroup
@@ -248,11 +248,11 @@ function TemplateEditor({
               >
                 <ToggleButton value="code">
                   <CodeIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  {t('template.codeEditor', { defaultValue: 'Code' })}
+                  {t('template.codeEditor')}
                 </ToggleButton>
                 <ToggleButton value="visual">
                   <VisualIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  {t('template.visualEditor', { defaultValue: 'Visual' })}
+                  {t('template.visualEditor')}
                 </ToggleButton>
               </ToggleButtonGroup>
             )}
@@ -326,7 +326,7 @@ function TemplateEditor({
               ))}
             </Box>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              {t('template.variablesHint', { defaultValue: 'Use variables in curly braces, e.g., {title}, {date}' })}
+              {t('template.variablesHint')}
             </Typography>
           </SectionPanel>
         )}

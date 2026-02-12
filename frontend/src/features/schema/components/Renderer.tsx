@@ -135,7 +135,7 @@ function renderField(
             key={field.name}
             {...commonProps}
             disabled
-            helperText="No options available"
+            helperText={t ? t('common.noOptionsAvailable') : 'No options available'}
           />
         )
       }
@@ -193,7 +193,7 @@ function renderField(
             />
           ) : (
             <Alert severity="warning">
-              Platform ID is required for target-list field
+              {t ? t('schema.platformIdRequiredTargetList') : 'Platform ID is required for target-list field'}
             </Alert>
           )}
         </Box>

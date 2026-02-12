@@ -48,8 +48,8 @@ function DropZone({ children }: { children?: ReactNode }) {
     >
       <Typography color={isOver ? 'primary.main' : 'text.secondary'}>
         {isOver
-          ? t('template.dropHere', { defaultValue: 'Drop block here' })
-          : t('template.dragBlocksHere', { defaultValue: 'Drag blocks here to get started' })
+          ? t('template.dropHere')
+          : t('template.dragBlocksHere')
         }
       </Typography>
     </Paper>

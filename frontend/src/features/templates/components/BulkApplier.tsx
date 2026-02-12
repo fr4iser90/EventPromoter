@@ -230,7 +230,7 @@ function BulkTemplateApplier({
         } catch (error: unknown) {
           results.errors.push({
             platformId,
-            error: error instanceof Error ? error.message : 'Failed to apply template'
+            error: error instanceof Error ? error.message : t('template.failedToApply')
           })
         }
       }
@@ -413,13 +413,13 @@ function BulkTemplateApplier({
                             </FormControl>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
-                              {t('template.noTemplateAvailable', { defaultValue: 'No template available' })}
+                              {t('template.noTemplateAvailable')}
                             </Typography>
                           )}
                         </Box>
                       ) : (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          {t('template.noTemplateForCategory', { defaultValue: 'No template for this category' })}
+                          {t('template.noTemplateForCategory')}
                         </Typography>
                       )}
                     </ListItem>

@@ -11,7 +11,9 @@
       "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
       "username": "Browser Benutzername/E-Mail",
       "password": "Browser Passwort"
-    }
+    },
+    "title": "Instagram Plattform-Credentials",
+    "description": "Instagram API-Credentials konfigurieren"
   },
   "panels": {
     "instagram": {
@@ -76,12 +78,132 @@
   },
   "preview": {
     "instagram": "📸 Instagram Vorschau",
-    "noCaption": "Noch keine Bildunterschrift..."
+    "noCaption": "Noch keine Bildunterschrift...",
+    "title": "Instagram-Vorschau",
+    "description": "Vorschau, wie dein Instagram-Post aussehen wird",
+    "modes": {
+      "mobile": {
+        "label": "Mobil",
+        "description": "Mobile Instagram-Ansicht"
+      },
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop-Instagram-Ansicht"
+      }
+    }
   },
   "help": {
     "instagramCaption": "Bildunterschrift für Instagram-Post"
   },
   "metadata": {
-    "description": "Teile Events auf Instagram mit Bildern und Bildunterschriften"
+    "description": "Teile Events auf Instagram mit Bildern und Bildunterschriften",
+    "schemaDescription": "Instagram-Plattform-Schema fuer eine selbstentdeckende Architektur"
+  },
+  "editor": {
+    "title": "Instagram Post Editor",
+    "description": "Erstelle und bearbeite Instagram-Posts",
+    "image": {
+      "label": "Bild",
+      "description": "Post-Bild (erforderlich)",
+      "required": "Bild ist erforderlich"
+    },
+    "caption": {
+      "label": "Bildunterschrift",
+      "description": "Post-Bildunterschrift (max. 2200 Zeichen)",
+      "required": "Bildunterschrift ist erforderlich",
+      "maxLength": "Bildunterschrift darf maximal 2200 Zeichen haben",
+      "placeholder": "Schreibe eine Bildunterschrift..."
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Fuege Hashtags zu deinem Post hinzu"
+    }
+  },
+  "settings": {
+    "title": "Instagram Accounts, Hashtags & Locations",
+    "description": "Instagram-Accounts, Hashtags und Locations fuer Event-Posts verwalten",
+    "tabs": {
+      "accounts": "Accounts",
+      "hashtags": "Hashtags",
+      "locations": "Locations"
+    },
+    "common": {
+      "displayName": "Anzeigename",
+      "description": "Beschreibung",
+      "active": "Aktiv"
+    },
+    "accounts": {
+      "list": {
+        "title": "Instagram-Accounts",
+        "description": "Verwaltung der Instagram-Accounts"
+      },
+      "table": {
+        "label": "Accounts",
+        "description": "Liste aller Instagram-Accounts"
+      },
+      "add": {
+        "title": "Neuen Account hinzufuegen",
+        "description": "Fuege einen neuen Instagram-Account hinzu"
+      },
+      "form": {
+        "username": "Instagram Username",
+        "usernamePlaceholder": "@username oder username",
+        "displayNamePlaceholder": "z.B. EventPromo",
+        "descriptionPlaceholder": "z.B. Offizieller Account fuer Event-Promotion"
+      },
+      "edit": {
+        "title": "Account bearbeiten",
+        "description": "Bearbeite einen bestehenden Instagram-Account",
+        "selectLabel": "Account auswaehlen"
+      }
+    },
+    "hashtags": {
+      "list": {
+        "title": "Hashtags",
+        "description": "Verwaltung der Hashtags"
+      },
+      "table": {
+        "label": "Hashtags",
+        "description": "Liste aller Hashtags"
+      },
+      "add": {
+        "title": "Neuen Hashtag hinzufuegen",
+        "description": "Fuege einen neuen Hashtag hinzu"
+      },
+      "form": {
+        "hashtag": "Hashtag",
+        "hashtagPlaceholder": "#hashtag oder hashtag",
+        "descriptionPlaceholder": "z.B. Allgemeiner Hashtag fuer Events"
+      }
+    },
+    "locations": {
+      "list": {
+        "title": "Locations",
+        "description": "Verwaltung der Locations"
+      },
+      "table": {
+        "label": "Locations",
+        "description": "Liste aller Locations"
+      },
+      "add": {
+        "title": "Neue Location hinzufuegen",
+        "description": "Fuege eine neue Location hinzu"
+      },
+      "form": {
+        "locationName": "Location Name",
+        "locationNamePlaceholder": "z.B. Werk 2",
+        "locationId": "Instagram Location ID",
+        "locationIdPlaceholder": "z.B. 123456789",
+        "address": "Adresse",
+        "addressPlaceholder": "z.B. Kochstrasse 132, 04277 Leipzig"
+      }
+    }
+  },
+  "validation": {
+    "usernameRequired": "Instagram Username ist erforderlich",
+    "invalidUsername": "Ungueltiger Instagram Username",
+    "hashtagRequired": "Hashtag ist erforderlich",
+    "invalidHashtag": "Ungueltiger Hashtag",
+    "locationNameRequired": "Location Name ist erforderlich"
   }
 }

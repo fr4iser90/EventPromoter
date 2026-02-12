@@ -20,9 +20,9 @@ export class EmailController {
       return res.json({
         success: true,
         options: [
-          { label: '📬 Alle', value: 'all' },
-          { label: '👥 Gruppen', value: 'groups' },
-          { label: '✉️ Einzelne', value: 'individual' }
+          { label: 'platform.email.recipients.modeAll', value: 'all' },
+          { label: 'platform.email.recipients.modeGroups', value: 'groups' },
+          { label: 'platform.email.recipients.modeIndividual', value: 'individual' }
         ]
       })
     } catch (error: any) {
@@ -77,9 +77,9 @@ export class EmailController {
       return res.json({
         success: true,
         options: [
-          { label: '🇩🇪 Deutsch', value: 'de' },
-          { label: '🇬🇧 English', value: 'en' },
-          { label: '🇪🇸 Español', value: 'es' }
+          { label: 'platform.email.locales.de', value: 'de' },
+          { label: 'platform.email.locales.en', value: 'en' },
+          { label: 'platform.email.locales.es', value: 'es' }
         ]
       })
     } catch (error: any) {

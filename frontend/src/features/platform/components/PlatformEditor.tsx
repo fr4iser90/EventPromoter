@@ -197,7 +197,7 @@ function GenericPlatformEditor({
         setError(null)
       } catch (err: unknown) {
         console.error(`Failed to load config for ${platform}:`, err)
-        setError(err instanceof Error ? err.message : 'Failed to load config')
+        setError(err instanceof Error ? err.message : t('editor.failedToLoadConfig'))
         // NO FALLBACK - show error instead
         setPlatformConfig(null)
       } finally {
@@ -270,10 +270,10 @@ function GenericPlatformEditor({
     return (
       <Paper sx={{ p: 2 }}>
         <Alert severity="error" sx={{ mb: 1 }}>
-          Failed to load {platform} configuration: {error || schemaError}
+          {t('platform.failedToLoadConfigurationWithPlatform', { platform, error: error || schemaError })}
           <br />
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Please ensure the backend server is running and the platform is properly configured.
+            {t('platform.ensureBackendRunningConfigured')}
           </Typography>
         </Alert>
       </Paper>
@@ -284,7 +284,7 @@ function GenericPlatformEditor({
     return (
       <Paper sx={{ p: 2 }}>
         <Alert severity="warning">
-          No configuration available for platform: {platform}
+          {t('platform.noConfigurationForPlatform', { platform })}
         </Alert>
       </Paper>
     )
@@ -299,7 +299,7 @@ function GenericPlatformEditor({
   ) => {
     try {
       if (!template.id) {
-        setError('Template is missing id')
+      setError(t('editor.templateMissingId'))
         return
       }
       // Store active template (for UI)
@@ -459,7 +459,7 @@ function GenericPlatformEditor({
     } catch (error: unknown) {
       console.error('Failed to apply template:', error)
       // Show error to user (you might want to add a toast/alert here)
-      setError(error instanceof Error ? error.message : 'Failed to apply template')
+      setError(error instanceof Error ? error.message : t('template.failedToApply'))
     }
   }
   
@@ -483,17 +483,17 @@ function GenericPlatformEditor({
           onChange={(e) => onChange(blockId, e.target.value)}
           label={t(block.label || 'editor.image')}
           renderValue={(selected) => {
-            if (!selected) return 'No image selected'
+            if (!selected) return t('editor.noImageSelected')
             const selectedValue = String(selected)
             const selectedFile = availableImages.find((img) => {
               const imgUrl = getFileUrl(img.url || '')
               return imgUrl === selectedValue || img.url === selectedValue
             })
-            return selectedFile ? selectedFile.name : 'Selected image'
+            return selectedFile ? selectedFile.name : t('editor.selectedImage')
           }}
         >
           <MenuItem value="">
-            <em>No image</em>
+            <em>{t('editor.noImage')}</em>
           </MenuItem>
           {availableImages.map((file, index) => {
             const fileUrl = getFileUrl(file.url || '')
@@ -592,7 +592,7 @@ function GenericPlatformEditor({
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-          📝 {platformConfig?.name || platform} Editor
+          {t('editor.editorTitle', { platform: platformConfig?.name || platform })}
         </Typography>
         
         {/* Template Selector */}
@@ -616,27 +616,27 @@ function GenericPlatformEditor({
 
         // Helper to format targets summary - uses names from backend if available
         const formatTargetsSummary = (targets: TargetsConfig | undefined) => {
-          if (!targets || Object.keys(targets).length === 0) return 'No targets'
+          if (!targets || Object.keys(targets).length === 0) return t('editor.noTargets')
           
           const mode = targets.mode || 'all'
           if (mode === 'all') {
             // For 'all' mode, show resolved target names from backend
             const names = targets.targetNames || []
-            return `All recipients: ${names.join(', ')}`
+            return t('editor.allRecipients', { names: names.join(', ') })
           } else if (mode === 'groups') {
             const groups = targets.groups || []
             // Use groupNames if available (resolved by backend), otherwise use IDs
             const groupNames = targets.groupNames || groups
-            return `${groups.length} group(s): ${groupNames.join(', ')}`
+            return t('editor.groupsSummary', { count: groups.length, names: groupNames.join(', ') })
           } else if (mode === 'individual') {
             const individuals = targets.individual || []
             // Use targetNames if available (resolved by backend), otherwise use IDs
             const targetNames = targets.targetNames || individuals
             const displayNames = targetNames.slice(0, 3)
             const remaining = targetNames.length > 3 ? '...' : ''
-            return `${individuals.length} single: ${displayNames.join(', ')}${remaining}`
+            return t('editor.individualSummary', { count: individuals.length, names: `${displayNames.join(', ')}${remaining}` })
           }
-          return 'Targets configured'
+          return t('editor.targetsConfigured')
         }
 
         return (
@@ -670,9 +670,9 @@ function GenericPlatformEditor({
                         (targetsBlock?.id ? (content?.[targetsBlock.id] as { templateLocale?: string } | undefined)?.templateLocale : undefined)
                       return (
                         <Typography variant="caption" color="primary.main" sx={{ display: 'block', mt: 0.5 }}>
-                          Language: {templateLocale 
+                          {t('editor.language')}: {templateLocale 
                             ? getLocaleDisplayName(getValidLocale(templateLocale))
-                            : 'Error'
+                            : t('editor.errorValue')
                           }
                         </Typography>
                       )
@@ -711,7 +711,7 @@ function GenericPlatformEditor({
         if (definitionList.length === 0) {
           return (
             <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
-              This template has no variableDefinitions metadata. Variable editor requires backend-driven variable definitions.
+              {t('editor.noVariableDefinitions')}
             </Alert>
           )
         }
@@ -883,7 +883,7 @@ function GenericPlatformEditor({
       {/* Template-based editing only - no editorBlocks */}
       {!activeTemplate && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          Please select a template to start editing. All content is managed through templates.
+          {t('editor.selectTemplatePrompt')}
         </Alert>
       )}
 

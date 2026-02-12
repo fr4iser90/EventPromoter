@@ -52,18 +52,18 @@ function EventHistory() {
           setEvents(data.history?.Events || [])
           setError(null)
         } else {
-          throw new Error('Failed to load events')
+          throw new Error(t('history.failedToLoadEvents'))
         }
       } catch (err: unknown) {
         console.error('Failed to load events:', err)
-        setError(err instanceof Error ? err.message : 'Unknown error')
+        setError(err instanceof Error ? err.message : t('common.unknown'))
       } finally {
         setLoading(false)
       }
     }
 
     loadEvents()
-  }, [])
+  }, [t])
 
   // Auto-expand when in initial state
   useEffect(() => {
@@ -82,9 +82,9 @@ function EventHistory() {
 
       if (response.ok) {
         const data = await response.json()
-        alert(`Loaded ${data.files.length} files from "${event.title || 'Event'}"`)
+        alert(t('history.loadedFilesFromEvent', { count: data.files.length, title: event.title || t('history.untitled') }))
       } else {
-        throw new Error('Failed to load files')
+        throw new Error(t('history.failedToLoadFiles'))
       }
     } catch (error: unknown) {
       console.error('Failed to load event files:', error)
@@ -96,10 +96,10 @@ function EventHistory() {
     try {
       // Use the complete restore functionality
       await (useStore.getState() as any).restoreEvent(event.id)
-      alert(`✅ "${event.title || 'Event'}" wurde vollständig wiederhergestellt!\n\nAlle Dateien, Plattformen und Inhalte wurden geladen.`)
+      alert(t('history.restoreSuccess', { title: event.title || t('history.untitled') }))
     } catch (error: unknown) {
       console.error('Failed to restore event:', error)
-      alert(`❌ Fehler beim Wiederherstellen von "${event.title || 'Event'}": ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(t('history.restoreFailed', { title: event.title || t('history.untitled'), error: error instanceof Error ? error.message : t('common.unknown') }))
     }
   }
 
@@ -125,13 +125,15 @@ function EventHistory() {
         onClick={() => setEventHistoryExpanded(!eventHistoryExpanded)}
       >
         <Typography variant="h6">
-          📂 Event History
+          {t('history.title')}
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {events.length > 0 && (
             <Typography variant="body2" color="text.secondary">
-              {events.length} event{events.length !== 1 ? 's' : ''}
+              {events.length === 1
+                ? t('history.eventsCountOne', { count: events.length })
+                : t('history.eventsCountMany', { count: events.length })}
             </Typography>
           )}
           <Button size="small">
@@ -150,14 +152,14 @@ function EventHistory() {
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Failed to load event history: {error}
+              {t('history.failedToLoadEventHistory', { error })}
             </Alert>
           )}
 
           {!loading && !error && events.length === 0 && (
             <Box sx={{ textAlign: 'center', py: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                No events found. Create your first event by uploading files.
+                {t('history.noEventsUploadHint')}
               </Typography>
             </Box>
           )}

@@ -15,36 +15,36 @@ import { SettingsSchema } from '@/types/schema/index.js'
 export const instagramSettingsSchema: SettingsSchema = {
   id: 'instagram-settings-schema',
   version: '1.0.0',
-  title: 'Instagram Accounts, Hashtags & Locations',
-  description: 'Manage Instagram accounts, hashtags, and locations for event posts',
+  title: 'platform.instagram.settings.title',
+  description: 'platform.instagram.settings.description',
   tabs: [
     {
       id: 'accounts',
-      label: 'Accounts',
+      label: 'platform.instagram.settings.tabs.accounts',
       sections: ['account-list', 'add-account', 'edit-account']
     },
     {
       id: 'hashtags',
-      label: 'Hashtags',
+      label: 'platform.instagram.settings.tabs.hashtags',
       sections: ['hashtag-list', 'add-hashtag']
     },
     {
       id: 'locations',
-      label: 'Locations',
+      label: 'platform.instagram.settings.tabs.locations',
       sections: ['location-list', 'add-location']
     }
   ],
   sections: [
     {
       id: 'account-list',
-      title: 'Instagram-Accounts',
-      description: 'Verwaltung der Instagram-Accounts',
+      title: 'platform.instagram.settings.accounts.list.title',
+      description: 'platform.instagram.settings.accounts.list.description',
       fields: [
         {
           name: 'accounts',
           type: 'target-list',
-          label: 'Accounts',
-          description: 'Liste aller Instagram-Accounts',
+          label: 'platform.instagram.settings.accounts.table.label',
+          description: 'platform.instagram.settings.accounts.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=account',
@@ -60,18 +60,18 @@ export const instagramSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-account',
-      title: 'Neuen Account hinzufügen',
-      description: 'Füge einen neuen Instagram-Account hinzu',
+      title: 'platform.instagram.settings.accounts.add.title',
+      description: 'platform.instagram.settings.accounts.add.description',
       fields: [
         {
           name: 'username',
           type: 'text',
-          label: 'Instagram Username',
-          placeholder: '@username oder username',
+          label: 'platform.instagram.settings.accounts.form.username',
+          placeholder: 'platform.instagram.settings.accounts.form.usernamePlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Instagram Username ist erforderlich' },
-            { type: 'pattern', value: '^@?[a-zA-Z0-9_.]+$', message: 'Ungültiger Instagram Username' }
+            { type: 'required', message: 'platform.instagram.validation.usernameRequired' },
+            { type: 'pattern', value: '^@?[a-zA-Z0-9_.]+$', message: 'platform.instagram.validation.invalidUsername' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=account',
@@ -88,8 +88,8 @@ export const instagramSettingsSchema: SettingsSchema = {
         {
           name: 'displayName',
           type: 'text',
-          label: 'Anzeigename',
-          placeholder: 'z.B. EventPromo',
+          label: 'platform.instagram.settings.common.displayName',
+          placeholder: 'platform.instagram.settings.accounts.form.displayNamePlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -99,8 +99,8 @@ export const instagramSettingsSchema: SettingsSchema = {
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
-          placeholder: 'z.B. Offizieller Account für Event-Promotion',
+          label: 'platform.instagram.settings.common.description',
+          placeholder: 'platform.instagram.settings.accounts.form.descriptionPlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -110,7 +110,7 @@ export const instagramSettingsSchema: SettingsSchema = {
         {
           name: 'active',
           type: 'boolean',
-          label: 'Aktiv',
+          label: 'platform.instagram.settings.common.active',
           default: true,
           ui: {
             width: 6,
@@ -121,13 +121,13 @@ export const instagramSettingsSchema: SettingsSchema = {
     },
     {
       id: 'edit-account',
-      title: 'Account bearbeiten',
-      description: 'Bearbeite einen bestehenden Instagram-Account',
+      title: 'platform.instagram.settings.accounts.edit.title',
+      description: 'platform.instagram.settings.accounts.edit.description',
       fields: [
         {
           name: 'selectedTarget',
           type: 'select',
-          label: 'Account auswählen',
+          label: 'platform.instagram.settings.accounts.edit.selectLabel',
           required: true,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=account',
@@ -143,14 +143,14 @@ export const instagramSettingsSchema: SettingsSchema = {
     },
     {
       id: 'hashtag-list',
-      title: 'Hashtags',
-      description: 'Verwaltung der Hashtags',
+      title: 'platform.instagram.settings.hashtags.list.title',
+      description: 'platform.instagram.settings.hashtags.list.description',
       fields: [
         {
           name: 'hashtags',
           type: 'target-list',
-          label: 'Hashtags',
-          description: 'Liste aller Hashtags',
+          label: 'platform.instagram.settings.hashtags.table.label',
+          description: 'platform.instagram.settings.hashtags.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=hashtag',
@@ -166,18 +166,18 @@ export const instagramSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-hashtag',
-      title: 'Neuen Hashtag hinzufügen',
-      description: 'Füge einen neuen Hashtag hinzu',
+      title: 'platform.instagram.settings.hashtags.add.title',
+      description: 'platform.instagram.settings.hashtags.add.description',
       fields: [
         {
           name: 'hashtag',
           type: 'text',
-          label: 'Hashtag',
-          placeholder: '#hashtag oder hashtag',
+          label: 'platform.instagram.settings.hashtags.form.hashtag',
+          placeholder: 'platform.instagram.settings.hashtags.form.hashtagPlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Hashtag ist erforderlich' },
-            { type: 'pattern', value: '^#?[a-zA-Z0-9_]+$', message: 'Ungültiger Hashtag' }
+            { type: 'required', message: 'platform.instagram.validation.hashtagRequired' },
+            { type: 'pattern', value: '^#?[a-zA-Z0-9_]+$', message: 'platform.instagram.validation.invalidHashtag' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=hashtag',
@@ -194,8 +194,8 @@ export const instagramSettingsSchema: SettingsSchema = {
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
-          placeholder: 'z.B. Allgemeiner Hashtag für Events',
+          label: 'platform.instagram.settings.common.description',
+          placeholder: 'platform.instagram.settings.hashtags.form.descriptionPlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -206,14 +206,14 @@ export const instagramSettingsSchema: SettingsSchema = {
     },
     {
       id: 'location-list',
-      title: 'Locations',
-      description: 'Verwaltung der Locations',
+      title: 'platform.instagram.settings.locations.list.title',
+      description: 'platform.instagram.settings.locations.list.description',
       fields: [
         {
           name: 'locations',
           type: 'target-list',
-          label: 'Locations',
-          description: 'Liste aller Locations',
+          label: 'platform.instagram.settings.locations.table.label',
+          description: 'platform.instagram.settings.locations.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=location',
@@ -229,17 +229,17 @@ export const instagramSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-location',
-      title: 'Neue Location hinzufügen',
-      description: 'Füge eine neue Location hinzu',
+      title: 'platform.instagram.settings.locations.add.title',
+      description: 'platform.instagram.settings.locations.add.description',
       fields: [
         {
           name: 'locationName',
           type: 'text',
-          label: 'Location Name',
-          placeholder: 'z.B. Werk 2',
+          label: 'platform.instagram.settings.locations.form.locationName',
+          placeholder: 'platform.instagram.settings.locations.form.locationNamePlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Location Name ist erforderlich' }
+            { type: 'required', message: 'platform.instagram.validation.locationNameRequired' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=location',
@@ -256,8 +256,8 @@ export const instagramSettingsSchema: SettingsSchema = {
         {
           name: 'locationId',
           type: 'text',
-          label: 'Instagram Location ID',
-          placeholder: 'z.B. 123456789',
+          label: 'platform.instagram.settings.locations.form.locationId',
+          placeholder: 'platform.instagram.settings.locations.form.locationIdPlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -267,8 +267,8 @@ export const instagramSettingsSchema: SettingsSchema = {
         {
           name: 'address',
           type: 'textarea',
-          label: 'Adresse',
-          placeholder: 'z.B. Kochstraße 132, 04277 Leipzig',
+          label: 'platform.instagram.settings.locations.form.address',
+          placeholder: 'platform.instagram.settings.locations.form.addressPlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -281,23 +281,23 @@ export const instagramSettingsSchema: SettingsSchema = {
   targetSchemas: {
     username: {
       baseField: 'username',
-      baseFieldLabel: 'Instagram Username',
+      baseFieldLabel: 'platform.instagram.settings.accounts.form.username',
       baseFieldValidation: [
-        { type: 'required', message: 'Username is required' },
-        { type: 'pattern', value: '^@?[a-zA-Z0-9_.]+$', message: 'Invalid Instagram username' }
+        { type: 'required', message: 'platform.instagram.validation.usernameRequired' },
+        { type: 'pattern', value: '^@?[a-zA-Z0-9_.]+$', message: 'platform.instagram.validation.invalidUsername' }
       ],
       customFields: [
         {
           name: 'displayName',
           type: 'text',
-          label: 'Anzeigename',
+          label: 'platform.instagram.settings.common.displayName',
           required: false,
           ui: { width: 12, order: 1 }
         },
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
+          label: 'platform.instagram.settings.common.description',
           required: false,
           ui: { width: 12, order: 2 }
         }

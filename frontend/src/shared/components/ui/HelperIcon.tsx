@@ -171,7 +171,7 @@ function HelperIcon({
   context?: string
   size?: 'small' | 'medium' | 'large'
 }) {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
   const [helper, setHelper] = useState<HelperPayload | null>(null)
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -225,7 +225,7 @@ function HelperIcon({
 
   // Tooltip-Modus: Hover zeigt Info, Click öffnet optional Dialog
   if (displayMode === 'tooltip') {
-    const tooltipText = helper?.short?.[lang] || localizedContent || 'Click for help'
+    const tooltipText = helper?.short?.[lang] || localizedContent || t('helper.clickForHelp')
     
     return (
       <>
@@ -275,7 +275,7 @@ function HelperIcon({
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
             >
-              {helper.title[lang] || helper.title.en || 'Help'}
+              {helper.title[lang] || helper.title.en || t('helper.title')}
               <IconButton
                 onClick={(e) => {
                   e.stopPropagation()
@@ -305,7 +305,7 @@ function HelperIcon({
                   handleClose()
                 }}
               >
-                Close
+                {t('common.close')}
               </Button>
             </DialogActions>
           </Dialog>
@@ -316,7 +316,7 @@ function HelperIcon({
 
   // Dialog-Modus: Click öffnet Dialog mit vollständigem Content
   if (displayMode === 'dialog') {
-    const tooltipText = helper?.short?.[lang] || helper?.short?.en || 'Click for help'
+    const tooltipText = helper?.short?.[lang] || helper?.short?.en || t('helper.clickForHelp')
     
     return (
       <>
@@ -362,7 +362,7 @@ function HelperIcon({
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
             >
-              {helper.title?.[lang] || helper.title?.en || 'Help'}
+              {helper.title?.[lang] || helper.title?.en || t('helper.title')}
               <IconButton
                 onClick={(e) => {
                   e.stopPropagation()
@@ -420,7 +420,7 @@ function HelperIcon({
                   handleClose()
                 }}
               >
-                Close
+                {t('common.close')}
               </Button>
             </DialogActions>
           </Dialog>
@@ -467,7 +467,7 @@ function HelperIcon({
       onMouseUp={(e) => e.stopPropagation()}
       sx={{ display: 'inline-flex' }}
     >
-      <Tooltip title="Click for help">
+      <Tooltip title={t('helper.clickForHelp')}>
         <IconButton
           size={size}
           onClick={(e) => {

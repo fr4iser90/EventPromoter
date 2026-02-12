@@ -10,79 +10,79 @@ import { TemplateSchema } from '@/types/schema/index.js'
 
 export const emailTemplateSchema: TemplateSchema = {
   version: '1.0.0',
-  title: 'Email Templates',
-  description: 'Manage email templates with variable placeholders',
+  title: 'platform.email.template.title',
+  description: 'platform.email.template.description',
   defaultStructure: {
     subject: {
-      label: 'Email Subject',
+      label: 'platform.email.template.subject.label',
       type: 'text',
-      default: 'New Event: {title}',
-      placeholder: 'Use {variable} for dynamic content',
+      default: 'platform.email.template.subject.default',
+      placeholder: 'platform.email.template.common.dynamicPlaceholder',
       required: true,
-      description: 'Email subject line template'
+      description: 'platform.email.template.subject.description'
     },
     html: {
-      label: 'Email HTML Content',
+      label: 'platform.email.template.html.label',
       type: 'html',
-      default: '<h1>{title}</h1><p>{description}</p>',
-      placeholder: 'Use {variable} for dynamic content',
+      default: 'platform.email.template.html.default',
+      placeholder: 'platform.email.template.common.dynamicPlaceholder',
       required: true,
-      description: 'HTML email body template'
+      description: 'platform.email.template.html.description'
     }
   },
   variables: [
     {
       name: 'eventTitle',
-      label: 'Event Title',
-      description: 'The title of the event',
+      label: 'platform.email.template.variables.eventTitle.label',
+      description: 'platform.email.template.variables.eventTitle.description',
       type: 'string'
     },
     {
       name: 'description',
-      label: 'Event Description',
-      description: 'The event description',
+      label: 'platform.email.template.variables.description.label',
+      description: 'platform.email.template.variables.description.description',
       type: 'string'
     },
     {
       name: 'date',
-      label: 'Event Date',
-      description: 'The event date',
+      label: 'platform.email.template.variables.date.label',
+      description: 'platform.email.template.variables.date.description',
       type: 'date'
     },
     {
       name: 'time',
-      label: 'Event Time',
-      description: 'The event time',
+      label: 'platform.email.template.variables.time.label',
+      description: 'platform.email.template.variables.time.description',
       type: 'string'
     },
     {
       name: 'venue',
-      label: 'Venue',
-      description: 'The event venue',
+      label: 'platform.email.template.variables.venue.label',
+      description: 'platform.email.template.variables.venue.description',
       type: 'string'
     },
     {
       name: 'city',
-      label: 'City',
-      description: 'The event city',
+      label: 'platform.email.template.variables.city.label',
+      description: 'platform.email.template.variables.city.description',
       type: 'string'
     },
     {
       name: 'salutation',
-      label: 'Personalized Salutation',
-      description: 'Automatic salutation based on recipient metadata (e.g., "Hallo Max" or "Sehr geehrter Herr Müller")',
+      label: 'platform.email.template.variables.salutation.label',
+      description: 'platform.email.template.variables.salutation.description',
       type: 'string'
     },
     {
       name: 'target.firstName',
-      label: 'Recipient First Name',
-      description: 'First name of the recipient',
+      label: 'platform.email.template.variables.targetFirstName.label',
+      description: 'platform.email.template.variables.targetFirstName.description',
       type: 'string'
     },
     {
       name: 'target.lastName',
-      label: 'Recipient Last Name',
-      description: 'Last name of the recipient',
+      label: 'platform.email.template.variables.targetLastName.label',
+      description: 'platform.email.template.variables.targetLastName.description',
       type: 'string'
     }
   ],
@@ -92,7 +92,7 @@ export const emailTemplateSchema: TemplateSchema = {
       canonicalName: 'title',
       aliases: ['eventTitle', 'name'],
       label: 'event.title',
-      description: 'Canonical event title variable',
+      description: 'platform.email.template.variableDefinitions.title.description',
       type: 'string',
       source: 'parsed',
       parsedField: 'title',
@@ -105,7 +105,7 @@ export const emailTemplateSchema: TemplateSchema = {
       canonicalName: 'description',
       aliases: ['desc', 'text'],
       label: 'event.description',
-      description: 'Main event description',
+      description: 'platform.email.template.variableDefinitions.description.description',
       type: 'string',
       source: 'parsed_optional',
       parsedField: 'description',
@@ -165,7 +165,7 @@ export const emailTemplateSchema: TemplateSchema = {
       canonicalName: 'price',
       aliases: ['ticketPrice'],
       label: 'event.price',
-      description: 'Optional parsed price; can always be manually set',
+      description: 'platform.email.template.variableDefinitions.price.description',
       type: 'string',
       source: 'parsed_optional',
       parsedField: 'price',
@@ -247,18 +247,18 @@ export const emailTemplateSchema: TemplateSchema = {
   categories: [
     {
       id: 'announcement',
-      label: 'Announcement',
-      description: 'Event announcements'
+      label: 'platform.email.template.categories.announcement.label',
+      description: 'platform.email.template.categories.announcement.description'
     },
     {
       id: 'reminder',
-      label: 'Reminder',
-      description: 'Event reminders'
+      label: 'platform.email.template.categories.reminder.label',
+      description: 'platform.email.template.categories.reminder.description'
     },
     {
       id: 'follow-up',
-      label: 'Follow-up',
-      description: 'Post-event follow-ups'
+      label: 'platform.email.template.categories.followUp.label',
+      description: 'platform.email.template.categories.followUp.description'
     }
   ],
   validation: {

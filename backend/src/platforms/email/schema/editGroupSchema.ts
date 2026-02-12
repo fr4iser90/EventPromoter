@@ -2,8 +2,8 @@ import { FormSchema } from '@/types/schema/index.js';
 
 const emailGroupEditSchema: FormSchema = {
   id: 'editGroupSchema',
-  title: 'Edit Email Group',
-  description: 'Edit an existing email group.',
+  title: 'platform.email.groups.edit.title',
+  description: 'platform.email.groups.edit.description',
   endpoint: 'platforms/:platformId/target-groups/:id',
   fields: [
       {
@@ -17,7 +17,7 @@ const emailGroupEditSchema: FormSchema = {
     },
     {
       name: 'name',
-      label: 'Group Name',
+      label: 'platform.email.groups.form.groupName',
       type: 'text',
       required: true,
       ui: {
@@ -28,7 +28,7 @@ const emailGroupEditSchema: FormSchema = {
     {
       name: 'targetIds',
       type: 'multiselect',
-      label: 'Members',
+      label: 'platform.email.groups.form.members',
       required: false,
       optionsSource: {
         endpoint: 'platforms/:platformId/targets',
@@ -45,7 +45,7 @@ const emailGroupEditSchema: FormSchema = {
     {
       id: 'save',
       type: 'submit',
-      label: 'Save',
+      label: 'platform.email.actions.save',
       method: 'PUT',
       ui: {
         variant: 'contained',
@@ -55,7 +55,7 @@ const emailGroupEditSchema: FormSchema = {
     {
       id: 'delete',
       type: 'delete',
-      label: 'Delete',
+      label: 'platform.email.actions.delete',
       method: 'DELETE',
       endpoint: 'platforms/:platformId/target-groups/:id',
       ui: {
@@ -66,7 +66,7 @@ const emailGroupEditSchema: FormSchema = {
     {
       id: 'cancel',
       type: 'button',
-      label: 'Cancel',
+      label: 'platform.email.actions.cancel',
       ui: {
         variant: 'outlined',
       },

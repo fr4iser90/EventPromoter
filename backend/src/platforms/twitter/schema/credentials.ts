@@ -10,8 +10,8 @@ import { CredentialsSchema } from '@/types/schema/index.js'
 
 export const twitterCredentialsSchema: CredentialsSchema = {
   version: '1.0.0',
-  title: 'Twitter Platform Credentials',
-  description: 'Configure Twitter API credentials',
+  title: 'platform.twitter.credentials.title',
+  description: 'platform.twitter.credentials.description',
   fields: [
     {
       name: 'apiKey',

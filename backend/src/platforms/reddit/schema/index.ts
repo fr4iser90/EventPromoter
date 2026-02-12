@@ -31,7 +31,7 @@ export const redditSchema: PlatformSchema = {
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',
-    description: 'Reddit platform schema for self-discovering architecture'
+    description: 'platform.reddit.metadata.schemaDescription'
   }
 }
 

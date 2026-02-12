@@ -12,7 +12,9 @@
       "description": "SOLO es necesario für Playwright / automatización del navegador.",
       "username": "Nombre de usuario/Correo del navegador",
       "password": "Contraseña del navegador"
-    }
+    },
+    "title": "Credenciales de plataforma Facebook",
+    "description": "Configurar credenciales de la API de Facebook"
   },
   "editor": {
     "title": "Editor de publicaciones de Facebook",
@@ -46,6 +48,121 @@
     "no_link": "Considera añadir un enlace para atraer tráfico"
   },
   "metadata": {
-    "description": "Comparte eventos en Facebook con contenido enriquecido"
+    "description": "Comparte eventos en Facebook con contenido enriquecido",
+    "schemaDescription": "Esquema de plataforma Facebook para arquitectura autodescubrible"
+  },
+  "preview": {
+    "title": "Vista previa de Facebook",
+    "description": "Vista previa de como se vera tu publicacion de Facebook",
+    "modes": {
+      "desktop": {
+        "label": "Escritorio",
+        "description": "Vista de Facebook en escritorio"
+      },
+      "mobile": {
+        "label": "Movil",
+        "description": "Vista de Facebook en movil"
+      }
+    },
+    "mapping": {
+      "postContent": "Contenido de la publicacion"
+    }
+  },
+  "settings": {
+    "title": "Pages, grupos y eventos de Facebook",
+    "description": "Administra paginas, grupos y eventos de Facebook para publicaciones de eventos",
+    "tabs": {
+      "pages": "Paginas",
+      "groups": "Grupos",
+      "events": "Eventos"
+    },
+    "pages": {
+      "list": {
+        "title": "Paginas de Facebook",
+        "description": "Gestion de paginas de Facebook"
+      },
+      "table": {
+        "label": "Paginas",
+        "description": "Lista de todas las paginas de Facebook"
+      },
+      "add": {
+        "title": "Agregar nueva pagina",
+        "description": "Agrega una nueva pagina de Facebook"
+      },
+      "form": {
+        "pageId": "ID de pagina de Facebook",
+        "pageIdPlaceholder": "p.ej. 123456789012345",
+        "pageName": "Nombre de pagina",
+        "pageNamePlaceholder": "p.ej. EventPromo",
+        "pageUrl": "URL de pagina"
+      },
+      "edit": {
+        "title": "Editar pagina",
+        "description": "Edita una pagina de Facebook existente",
+        "selectLabel": "Seleccionar pagina"
+      }
+    },
+    "groups": {
+      "list": {
+        "title": "Grupos de Facebook",
+        "description": "Gestion de grupos de Facebook"
+      },
+      "table": {
+        "label": "Grupos",
+        "description": "Lista de todos los grupos de Facebook"
+      },
+      "add": {
+        "title": "Agregar nuevo grupo",
+        "description": "Agrega un nuevo grupo de Facebook"
+      },
+      "form": {
+        "groupId": "ID de grupo de Facebook",
+        "groupIdPlaceholder": "p.ej. 987654321098765",
+        "groupName": "Nombre del grupo",
+        "groupNamePlaceholder": "p.ej. Leipzig Events",
+        "descriptionPlaceholder": "p.ej. Grupo para eventos locales en Leipzig"
+      }
+    },
+    "events": {
+      "list": {
+        "title": "Eventos de Facebook",
+        "description": "Gestion de eventos de Facebook"
+      },
+      "table": {
+        "label": "Eventos",
+        "description": "Lista de todos los eventos de Facebook"
+      },
+      "add": {
+        "title": "Agregar nuevo evento",
+        "description": "Agrega un nuevo evento de Facebook"
+      },
+      "form": {
+        "eventId": "ID de evento de Facebook",
+        "eventIdPlaceholder": "p.ej. 123456789012345",
+        "eventName": "Nombre del evento",
+        "eventNamePlaceholder": "p.ej. Depeche Mode Party"
+      }
+    },
+    "common": {
+      "category": "Categoria",
+      "active": "Activo",
+      "description": "Descripcion"
+    },
+    "categories": {
+      "business": "Business",
+      "entertainment": "Entertainment",
+      "event": "Evento",
+      "music": "Musica",
+      "nightlife": "Vida nocturna"
+    }
+  },
+  "validation": {
+    "pageIdRequired": "Se requiere ID de pagina de Facebook",
+    "pageNameRequired": "Se requiere nombre de pagina",
+    "invalidUrl": "URL no valida",
+    "groupIdRequired": "Se requiere ID de grupo de Facebook",
+    "groupNameRequired": "Se requiere nombre de grupo",
+    "eventIdRequired": "Se requiere ID de evento de Facebook",
+    "eventNameRequired": "Se requiere nombre del evento"
   }
 }

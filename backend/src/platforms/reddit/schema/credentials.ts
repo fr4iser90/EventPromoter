@@ -10,8 +10,8 @@ import { CredentialsSchema } from '@/types/schema/index.js'
 
 export const redditCredentialsSchema: CredentialsSchema = {
   version: '1.0.0',
-  title: 'Reddit Platform Credentials',
-  description: 'Configure Reddit API credentials',
+  title: 'platform.reddit.credentials.title',
+  description: 'platform.reddit.credentials.description',
   fields: [
     {
       name: 'clientId',

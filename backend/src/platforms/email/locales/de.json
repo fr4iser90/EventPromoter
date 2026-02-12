@@ -46,17 +46,17 @@
     "platformPreview": "👁️ Plattformvorschau"
   },
   "search": {
-    "events": "Search events..."
+    "events": "Events suchen..."
   },
   "templates": {
     "title": "📝 Template Manager",
-    "management": "Template Management",
-    "managementSystem": "📝 Template Management System",
-    "preview": "Template Preview",
+    "management": "Vorlagenverwaltung",
+    "managementSystem": "📝 Vorlagenverwaltungssystem",
+    "preview": "Vorlagenvorschau",
     "usage": "💡 Template Usage",
     "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{title}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
-    "defaultTemplates": "Default templates",
-    "customTemplates": "Custom templates",
+    "defaultTemplates": "Standardvorlagen",
+    "customTemplates": "Benutzerdefinierte Vorlagen",
     "defaultTemplatesNote": "cannot be modified but serve as examples.",
     "customTemplatesNote": "can be fully edited and deleted.",
     "categories": {
@@ -109,7 +109,8 @@
       "birthday": "Geburtstag",
       "tags": "Tags",
       "gender": "Geschlecht",
-      "salutationTone": "Anrede-Tonfall"
+      "salutationTone": "Anrede-Tonfall",
+      "targetType": "Target-Typ"
     },
     "variables": {
       "salutation": "Anrede",
@@ -138,14 +139,17 @@
       "username": "SMTP Benutzername",
       "password": "SMTP Passwort",
       "fromEmail": "Absender E-Mail",
-      "fromName": "Absender Name"
+      "fromName": "Absender Name",
+      "fromNamePlaceholder": "Dein Name"
     },
     "login": {
       "title": "Browser Login",
       "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
       "username": "Browser Benutzername/E-Mail",
       "password": "Browser Passwort"
-    }
+    },
+    "title": "Email Plattform Credentials",
+    "description": "SMTP-Credentials fuer die E-Mail-Plattform konfigurieren"
   },
   "salutation": {
     "informal": "Hallo {{firstName}}",
@@ -198,7 +202,18 @@
     "parsedData": "Geparste Event-Daten",
     "images": "Bilder",
     "sourceFiles": "Quelldateien",
-    "eventImage": "Event-Bild"
+    "eventImage": "Event-Bild",
+    "modes": {
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop-E-Mail-Client Ansicht"
+      },
+      "mobile": {
+        "label": "Mobil",
+        "description": "Mobile E-Mail-Client Ansicht"
+      }
+    },
+    "description": "Vorschau, wie deine E-Mail aussehen wird"
   },
   "template": {
     "placeholders": "Vorlagen-Platzhalter verfügbar",
@@ -207,7 +222,84 @@
     "delete": "Vorlage löschen",
     "name": "Name",
     "description": "Beschreibung",
-    "platform": "Plattform"
+    "platform": "Plattform",
+    "title": "E-Mail-Templates",
+    "common": {
+      "dynamicPlaceholder": "Nutze {variable} fuer dynamischen Inhalt"
+    },
+    "subject": {
+      "label": "E-Mail-Betreff",
+      "default": "Neues Event: {title}",
+      "description": "Template fuer die Betreffzeile"
+    },
+    "html": {
+      "label": "E-Mail-HTML-Inhalt",
+      "default": "<h1>{title}</h1><p>{description}</p>",
+      "description": "Template fuer den HTML-E-Mail-Body"
+    },
+    "variables": {
+      "eventTitle": {
+        "label": "Event-Titel",
+        "description": "Der Titel des Events"
+      },
+      "description": {
+        "label": "Event-Beschreibung",
+        "description": "Die Beschreibung des Events"
+      },
+      "date": {
+        "label": "Event-Datum",
+        "description": "Das Datum des Events"
+      },
+      "time": {
+        "label": "Event-Uhrzeit",
+        "description": "Die Uhrzeit des Events"
+      },
+      "venue": {
+        "label": "Veranstaltungsort",
+        "description": "Der Veranstaltungsort des Events"
+      },
+      "city": {
+        "label": "Stadt",
+        "description": "Die Stadt des Events"
+      },
+      "salutation": {
+        "label": "Personalisierte Anrede",
+        "description": "Automatische Anrede basierend auf Empfaengermetadaten"
+      },
+      "targetFirstName": {
+        "label": "Empfaenger Vorname",
+        "description": "Vorname des Empfaengers"
+      },
+      "targetLastName": {
+        "label": "Empfaenger Nachname",
+        "description": "Nachname des Empfaengers"
+      }
+    },
+    "variableDefinitions": {
+      "title": {
+        "description": "Kanonsiche Event-Titelvariable"
+      },
+      "description": {
+        "description": "Hauptbeschreibung des Events"
+      },
+      "price": {
+        "description": "Optional geparster Preis; kann immer manuell gesetzt werden"
+      }
+    },
+    "categories": {
+      "announcement": {
+        "label": "Ankuendigung",
+        "description": "Event-Ankuendigungen"
+      },
+      "reminder": {
+        "label": "Erinnerung",
+        "description": "Event-Erinnerungen"
+      },
+      "followUp": {
+        "label": "Nachfassung",
+        "description": "Nachbereitung nach dem Event"
+      }
+    }
   },
   "settings": {
     "title": "Einstellungen",
@@ -216,7 +308,46 @@
     "timeFormat": "Zeitformat",
     "theme": "Design",
     "light": "Hell",
-    "dark": "Dunkel"
+    "dark": "Dunkel",
+    "description": "Verwaltung von E-Mail-Empfaengern und Gruppen",
+    "recipients": {
+      "title": "Verwaltung deiner E-Mail-Empfaenger",
+      "description": "Verwaltung deiner E-Mail-Empfaenger",
+      "searchLabel": "Empfaenger suchen...",
+      "searchPlaceholder": "Empfaenger suchen...",
+      "newButton": "+ Neuer Empfaenger",
+      "table": {
+        "emailAddress": "E-Mail-Adresse",
+        "description": "Uebersicht aller E-Mail-Empfaenger mit Details.",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "birthday": "Geburtstag"
+      }
+    },
+    "groups": {
+      "title": "Verwaltung deiner E-Mail-Gruppen",
+      "description": "Verwaltung deiner E-Mail-Gruppen",
+      "searchLabel": "Gruppen suchen...",
+      "searchPlaceholder": "Gruppen suchen...",
+      "newButton": "+ Neue Gruppe",
+      "table": {
+        "groupName": "Gruppenname",
+        "description": "Uebersicht aller E-Mail-Gruppen und ihrer Mitgliedszahlen.",
+        "members": "Mitglieder"
+      }
+    },
+    "targetSchemas": {
+      "email": {
+        "baseFieldLabel": "E-Mail-Adresse",
+        "customFields": {
+          "name": "Name",
+          "birthday": "Geburtstag",
+          "company": "Firma",
+          "phone": "Telefon",
+          "tags": "Tags"
+        }
+      }
+    }
   },
   "dateFormats": {
     "german": "DD.MM.YYYY",
@@ -250,7 +381,8 @@
     "errorLoadingFileContent": "Fehler beim Laden des Dateiinhalts"
   },
   "metadata": {
-    "description": "Sende Event-Ankündigungen per E-Mail mit reichhaltigem HTML-Inhalt"
+    "description": "Sende Event-Ankündigungen per E-Mail mit reichhaltigem HTML-Inhalt",
+    "schemaDescription": "E-Mail-Plattform-Schema fuer eine selbstentdeckende Architektur"
   },
   "attachments": {
     "forRun": "Anhänge für diesen Run",
@@ -284,7 +416,7 @@
       "description": "Sprache für das Template (wird automatisch aus Targets aufgelöst, kann überschrieben werden)"
     },
     "defaultTemplate": {
-      "label": "Standard-Template",
+      "label": "Standardvorlage",
       "description": "Template das für alle Empfänger verwendet wird (falls keine Gruppen-Mapping vorhanden)"
     },
     "templateMapping": {
@@ -300,6 +432,13 @@
       "all": "Alle Empfänger",
       "groups": "{{count}} Gruppe(n) ausgewählt",
       "individual": "{{count}} Empfänger ausgewählt"
+    },
+    "modeAll": "📬 Alle",
+    "modeGroups": "👥 Gruppen",
+    "modeIndividual": "✉️ Einzelne",
+    "edit": {
+      "title": "E-Mail-Empfaenger bearbeiten",
+      "description": "Einen bestehenden E-Mail-Empfaenger bearbeiten."
     }
   },
   "history": {
@@ -310,5 +449,64 @@
     "platform": "Plattform",
     "refresh": "Aktualisieren",
     "files": "Dateien"
+  },
+  "editor": {
+    "standardAttachments": "Standard-Anhänge",
+    "includeStandardAttachments": "Standard-Anhänge mitschicken",
+    "standardAttachmentsDescription": "Diese Dateien werden JEDEM Template als Anhang beigefügt (z.B. Flyer, AGB).",
+    "title": "E-Mail Editor",
+    "description": "E-Mail-Inhalte mit strukturierten Feldern erstellen und bearbeiten",
+    "subject": "Betreff",
+    "subjectDescription": "E-Mail-Betreffzeile",
+    "subjectPlaceholder": "E-Mail-Betreff eingeben...",
+    "headerImage": "Header-Bild",
+    "headerImageDescription": "Hauptbild oben in der E-Mail (wird in HTML eingebettet)",
+    "bodyText": "Fliesstext",
+    "bodyTextDescription": "Hauptinhalt der E-Mail (Klartext, wird automatisch formatiert)",
+    "bodyTextPlaceholder": "E-Mail-Inhalt hier eingeben...",
+    "ctaButtonText": "CTA-Button Text",
+    "ctaButtonTextDescription": "Text fuer den Call-to-Action-Button",
+    "ctaButtonTextPlaceholder": "z.B. Jetzt Tickets sichern",
+    "ctaButtonLink": "CTA-Button Link",
+    "ctaButtonLinkDescription": "URL fuer den Call-to-Action-Button",
+    "ctaButtonLinkPlaceholder": "https://example.com/tickets",
+    "footerText": "Footer-Text",
+    "footerTextDescription": "Optionaler Footer-Text (z.B. Abmeldelink, Kontaktinfo)",
+    "footerTextPlaceholder": "Optionaler Footer-Text...",
+    "legacyBody": "E-Mail-Body (Legacy)",
+    "legacyBodyDescription": "Legacy: Vollstaendiger HTML-Body (stattdessen strukturierte Felder oben nutzen)",
+    "legacyBodyPlaceholder": "HTML-Inhalt...",
+    "legacyImages": "Bilder (Legacy)",
+    "legacyImagesDescription": "Legacy: Zusaetzliche Bilder",
+    "legacyLinks": "Links (Legacy)",
+    "legacyLinksDescription": "Legacy: Zusaetzliche Links",
+    "legacyLinksPlaceholder": "https://example.com",
+    "validation": {
+      "subjectRequired": "Betreff ist erforderlich",
+      "subjectMaxLength": "Betreff darf maximal 200 Zeichen haben",
+      "bodyTextRequired": "Fliesstext ist erforderlich"
+    }
+  },
+  "locales": {
+    "de": "🇩🇪 Deutsch",
+    "en": "🇬🇧 Englisch",
+    "es": "🇪🇸 Spanisch"
+  },
+  "validation": {
+    "invalidHostnameFormat": "Ungueltiges Hostname-Format",
+    "portMin": "Port muss mindestens 1 sein",
+    "portMax": "Port darf hoechstens 65535 sein",
+    "invalidEmailFormat": "Ungueltiges E-Mail-Format",
+    "emailRequired": "E-Mail ist erforderlich"
+  },
+  "groups": {
+    "edit": {
+      "title": "E-Mail-Gruppe bearbeiten",
+      "description": "Eine bestehende E-Mail-Gruppe bearbeiten."
+    },
+    "form": {
+      "groupName": "Gruppenname",
+      "members": "Mitglieder"
+    }
   }
 }

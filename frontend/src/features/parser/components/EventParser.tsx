@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Paper, Typography, Box, Button, Grid, CircularProgress, Tabs, Tab } from '@mui/material'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
@@ -54,6 +55,7 @@ function PlatformEditorComponent({
 }
 
 function EventParser() {
+  const { t } = useTranslation()
   const { selectedPlatforms, platformContent, setPlatformContent, resetPlatformContent } = useStore() as unknown as {
     selectedPlatforms: string[]
     platformContent: Record<string, Record<string, unknown>>
@@ -133,7 +135,7 @@ function EventParser() {
     return (
       <Paper sx={{ p: 3, textAlign: 'center' }}>
         <CircularProgress sx={{ mb: 2 }} />
-        <Typography>Loading platforms...</Typography>
+        <Typography>{t('platform.loading')}</Typography>
       </Paper>
     )
   }
@@ -142,10 +144,10 @@ function EventParser() {
     return (
       <Paper sx={{ p: 3, textAlign: 'center' }}>
         <Typography variant="h6" color="text.secondary">
-          No platforms selected
+          {t('platform.noneSelected')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Please select platforms to start creating content.
+          {t('platform.selectToStartContent')}
         </Typography>
       </Paper>
     )
@@ -154,7 +156,7 @@ function EventParser() {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        📝 Content Creation
+        {t('tabs.contentCreation')}
       </Typography>
 
       {/* Platform Tabs - GENERIC */}
@@ -191,7 +193,7 @@ function EventParser() {
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              ✏️ Editor
+              {t('parser.editor')}
             </Typography>
             <PlatformEditorComponent
               platform={activePlatform}
@@ -204,7 +206,7 @@ function EventParser() {
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              👁️ Preview
+              {t('preview.preview')}
             </Typography>
             <PlatformPreviewComponent
               platform={activePlatform}
@@ -218,10 +220,10 @@ function EventParser() {
       {/* Content Controls */}
       <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <Button variant="outlined" startIcon={<RefreshIcon />} onClick={resetContent}>
-          Reset All
+          {t('common.resetAll')}
         </Button>
         <Button variant="outlined" startIcon={<ContentCopyIcon />}>
-          Copy Between Platforms
+          {t('common.copyBetweenPlatforms')}
         </Button>
       </Box>
     </Paper>

@@ -11,6 +11,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Typography,
   Box,
@@ -28,6 +29,7 @@ import SectionPanel from '../../../shared/components/layout/SectionPanel'
 import type { PanelConfig, PanelField } from '../types'
 
 function DynamicPanelWrapper({ platform }: { platform: string }) {
+  const { t } = useTranslation()
   const { platformContent, setPlatformContent } = useStore() as unknown as {
     platformContent: Record<string, Record<string, unknown>>
     setPlatformContent: (platform: string, content: Record<string, unknown>) => void
@@ -77,7 +79,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
         setPanelConfig(null)
       } catch (err: unknown) {
         console.error('Failed to load panel config:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load panel config')
+        setError(err instanceof Error ? err.message : t('platform.failedToLoadPanelConfig'))
       } finally {
         setLoading(false)
       }
@@ -250,7 +252,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
       <SectionPanel sx={{ textAlign: 'center' }}>
         <CircularProgress sx={{ mb: 2 }} />
         <Typography variant="body2" color="text.secondary">
-          Loading {platform} panel...
+          {t('platform.loadingPanel', { platform })}
         </Typography>
       </SectionPanel>
     )
@@ -261,7 +263,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
       <SectionPanel sx={{ mb: 2, p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6">
-            {panelConfig?.title || `${platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Unknown'} Options`}
+            {panelConfig?.title || t('platform.optionsFor', { platform: platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : t('common.unknown') })}
           </Typography>
           <Button
             size="small"
@@ -269,7 +271,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
             onClick={handleOpenSettings}
             variant="outlined"
           >
-            Settings
+            {t('platform.settings')}
           </Button>
         </Box>
 
@@ -281,7 +283,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
 
         {!panelConfig ? (
           <Alert severity="info">
-            No panel configuration available for {platform}. Use the Settings button to configure credentials.
+            {t('platform.noPanelConfiguration', { platform })}
           </Alert>
         ) : (
           <Box>
@@ -329,7 +331,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
               </Box>
             ) : (
               <Alert severity="info">
-                Panel configuration available but no sections defined.
+                {t('platform.panelNoSections')}
               </Alert>
             )}
           </Box>

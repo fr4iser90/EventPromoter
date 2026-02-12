@@ -13,7 +13,9 @@
       "description": "ONLY required for Playwright / browser automation.",
       "username": "Browser Username/Email",
       "password": "Browser Password"
-    }
+    },
+    "title": "Twitter Platform Credentials",
+    "description": "Configure Twitter API credentials"
   },
   "panels": {
     "twitter": {
@@ -40,9 +42,125 @@
     }
   },
   "preview": {
-    "twitter": "🐦 Twitter/X Preview"
+    "twitter": "🐦 Twitter/X Preview",
+    "title": "Twitter Preview",
+    "description": "Preview how your tweet will look",
+    "modes": {
+      "mobile": {
+        "label": "Mobile",
+        "description": "Mobile Twitter view"
+      },
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop Twitter view"
+      }
+    },
+    "mapping": {
+      "tweetText": "Tweet Text"
+    }
   },
   "metadata": {
-    "description": "Share events on Twitter/X with character-limited posts"
+    "description": "Share events on Twitter/X with character-limited posts",
+    "schemaDescription": "Twitter platform schema for self-discovering architecture"
+  },
+  "editor": {
+    "title": "Twitter Post Editor",
+    "description": "Create and edit Twitter posts",
+    "text": {
+      "label": "Tweet Text",
+      "description": "Your tweet content (max 280 characters)",
+      "required": "Tweet text is required",
+      "maxLength": "Tweet must be at most 280 characters",
+      "placeholder": "What's happening?"
+    },
+    "image": {
+      "label": "Image",
+      "description": "Optional image attachment"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Add hashtags to your tweet"
+    },
+    "mentions": {
+      "label": "Mentions",
+      "description": "Mention other users"
+    }
+  },
+  "settings": {
+    "title": "Twitter Accounts & Hashtags",
+    "description": "Manage Twitter accounts and hashtags for event posts",
+    "tabs": {
+      "accounts": "Accounts",
+      "hashtags": "Hashtags",
+      "mentions": "Mentions"
+    },
+    "common": {
+      "twitterUsername": "Twitter Username",
+      "twitterUsernamePlaceholder": "@username or username",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "e.g. EventPromo",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. Official account for event promotion",
+      "active": "Active"
+    },
+    "accounts": {
+      "list": {
+        "title": "Twitter Accounts",
+        "description": "Management of Twitter accounts"
+      },
+      "table": {
+        "label": "Accounts",
+        "description": "List of all Twitter accounts"
+      },
+      "add": {
+        "title": "Add New Account",
+        "description": "Add a new Twitter account"
+      },
+      "edit": {
+        "title": "Edit Account",
+        "description": "Edit an existing Twitter account",
+        "selectLabel": "Select Account"
+      }
+    },
+    "hashtags": {
+      "list": {
+        "title": "Hashtags",
+        "description": "Management of hashtags"
+      },
+      "table": {
+        "label": "Hashtags",
+        "description": "List of all hashtags"
+      },
+      "add": {
+        "title": "Add New Hashtag",
+        "description": "Add a new hashtag"
+      },
+      "form": {
+        "hashtag": "Hashtag",
+        "hashtagPlaceholder": "#hashtag or hashtag",
+        "descriptionPlaceholder": "e.g. General hashtag for events"
+      }
+    },
+    "mentions": {
+      "list": {
+        "title": "Mentions",
+        "description": "Management of mentions/users"
+      },
+      "table": {
+        "label": "Mentions",
+        "description": "List of all mentions/users"
+      },
+      "add": {
+        "title": "Add New Mention",
+        "description": "Add a new user/mention"
+      }
+    }
+  },
+  "validation": {
+    "twitterUsernameRequired": "Twitter Username is required",
+    "invalidTwitterUsername": "Invalid Twitter username",
+    "hashtagRequired": "Hashtag is required",
+    "invalidHashtag": "Invalid hashtag",
+    "usernameRequired": "Username is required"
   }
 }

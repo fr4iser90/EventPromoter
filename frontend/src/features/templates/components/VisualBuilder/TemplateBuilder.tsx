@@ -201,7 +201,7 @@ function TemplateBuilder({
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography color="text.secondary">
-          {t('template.noSchemaAvailable', { defaultValue: 'No template schema available' })}
+          {t('template.noSchemaAvailable')}
         </Typography>
       </Box>
     )
@@ -217,7 +217,7 @@ function TemplateBuilder({
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
         <Typography color="text.secondary">
-          {t('template.noVisualFields', { defaultValue: 'No visual fields available for this template' })}
+          {t('template.noVisualFields')}
         </Typography>
       </Box>
     )
@@ -245,7 +245,7 @@ function TemplateBuilder({
             }}
           />
           <Box sx={{ flex: 1 }} />
-          <Tooltip title={t('template.togglePalette', { defaultValue: 'Toggle Palette' })}>
+          <Tooltip title={t('template.togglePalette')}>
             <IconButton
               size="small"
               onClick={() => setShowPalette(!showPalette)}
@@ -254,7 +254,7 @@ function TemplateBuilder({
               <AddIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t('template.togglePreview', { defaultValue: 'Toggle Preview' })}>
+          <Tooltip title={t('template.togglePreview')}>
             <IconButton
               size="small"
               onClick={() => setShowPreview(!showPreview)}

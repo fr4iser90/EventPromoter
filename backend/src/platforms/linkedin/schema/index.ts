@@ -31,7 +31,7 @@ export const linkedinSchema: PlatformSchema = {
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',
-    description: 'LinkedIn platform schema for self-discovering architecture'
+    description: 'platform.linkedin.metadata.schemaDescription'
   }
 }
 

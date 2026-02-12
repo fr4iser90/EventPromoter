@@ -10,21 +10,21 @@ import { PreviewSchema } from '@/types/schema/index.js'
 
 export const facebookPreviewSchema: PreviewSchema = {
   version: '1.0.0',
-  title: 'Facebook Preview',
-  description: 'Preview how your Facebook post will look',
+  title: 'platform.facebook.preview.title',
+  description: 'platform.facebook.preview.description',
   defaultMode: 'desktop',
   modes: [
     {
       id: 'desktop',
-      label: 'Desktop',
-      description: 'Desktop Facebook view',
+      label: 'platform.facebook.preview.modes.desktop.label',
+      description: 'platform.facebook.preview.modes.desktop.description',
       width: 500,
       height: 600
     },
     {
       id: 'mobile',
-      label: 'Mobile',
-      description: 'Mobile Facebook view',
+      label: 'platform.facebook.preview.modes.mobile.label',
+      description: 'platform.facebook.preview.modes.mobile.description',
       width: 375,
       height: 500
     }
@@ -68,7 +68,7 @@ export const facebookPreviewSchema: PreviewSchema = {
     {
       field: 'text',
       renderAs: 'paragraph',
-      label: 'Post Content',
+      label: 'platform.facebook.preview.mapping.postContent',
       order: 1
     },
     {

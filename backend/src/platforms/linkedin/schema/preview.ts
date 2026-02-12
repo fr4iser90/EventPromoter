@@ -10,21 +10,21 @@ import { PreviewSchema } from '@/types/schema/index.js'
 
 export const linkedinPreviewSchema: PreviewSchema = {
   version: '1.0.0',
-  title: 'LinkedIn Preview',
-  description: 'Preview how your LinkedIn post will look',
+  title: 'platform.linkedin.preview.title',
+  description: 'platform.linkedin.preview.description',
   defaultMode: 'desktop',
   modes: [
     {
       id: 'desktop',
-      label: 'Desktop',
-      description: 'Desktop LinkedIn view',
+      label: 'platform.linkedin.preview.modes.desktop.label',
+      description: 'platform.linkedin.preview.modes.desktop.description',
       width: 700,
       height: 600
     },
     {
       id: 'mobile',
-      label: 'Mobile',
-      description: 'Mobile LinkedIn view',
+      label: 'platform.linkedin.preview.modes.mobile.label',
+      description: 'platform.linkedin.preview.modes.mobile.description',
       width: 375,
       height: 500
     }
@@ -68,7 +68,7 @@ export const linkedinPreviewSchema: PreviewSchema = {
     {
       field: 'text',
       renderAs: 'paragraph',
-      label: 'Post Content',
+      label: 'platform.linkedin.preview.mapping.postContent',
       order: 1
     },
     {

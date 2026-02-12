@@ -100,10 +100,10 @@ function BlockPalette({ schema, existingBlocks = [] }: { schema: any; existingBl
     return (
       <Paper sx={{ p: 2, height: '100%' }}>
         <Typography variant="subtitle2" gutterBottom>
-          {t('template.blockPalette', { defaultValue: 'Block Palette' })}
+          {t('template.blockPalette')}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {t('template.allBlocksAdded', { defaultValue: 'All available blocks have been added' })}
+          {t('template.allBlocksAdded')}
         </Typography>
       </Paper>
     )
@@ -127,10 +127,10 @@ function BlockPalette({ schema, existingBlocks = [] }: { schema: any; existingBl
   return (
     <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'medium' }}>
-        {t('template.blockPalette', { defaultValue: 'Block Palette' })}
+        {t('template.blockPalette')}
       </Typography>
       <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
-        {t('template.dragToAdd', { defaultValue: 'Drag blocks to add them' })}
+        {t('template.dragToAdd')}
       </Typography>
       <List dense sx={{ flex: 1, overflow: 'auto' }}>
         {visualFields.map(([fieldName, fieldSchema]) => (

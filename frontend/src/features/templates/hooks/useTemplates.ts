@@ -48,10 +48,10 @@ export const useTemplates = (platform?: string, mode: TemplateMode = 'raw') => {
         return
       }
 
-      setError('Failed to load templates')
+      setError('template.failedToLoadTemplates')
     } catch (err: unknown) {
       console.error('Error loading templates:', err)
-      setError(getAxiosErrorMessage(err, 'Failed to load templates'))
+      setError(getAxiosErrorMessage(err, 'template.failedToLoadTemplates'))
     } finally {
       setLoading(false)
     }
@@ -70,7 +70,7 @@ export const useTemplates = (platform?: string, mode: TemplateMode = 'raw') => {
 
   const createTemplate = useCallback(async (templateData: TemplateCreateRequest): Promise<TemplateMutationResult> => {
     if (!platform) {
-      const message = 'Platform is required'
+      const message = 'template.platformRequired'
       setError(message)
       return { success: false, error: message }
     }
@@ -99,7 +99,7 @@ export const useTemplates = (platform?: string, mode: TemplateMode = 'raw') => {
     updates: TemplateUpdateRequest
   ): Promise<TemplateMutationResult> => {
     if (!platform) {
-      const message = 'Platform is required'
+      const message = 'template.platformRequired'
       setError(message)
       return { success: false, error: message }
     }
@@ -128,7 +128,7 @@ export const useTemplates = (platform?: string, mode: TemplateMode = 'raw') => {
 
   const deleteTemplate = useCallback(async (templateId: string): Promise<DeleteTemplateResult> => {
     if (!platform) {
-      const message = 'Platform is required'
+      const message = 'template.platformRequired'
       setError(message)
       return { success: false, error: message }
     }

@@ -15,36 +15,36 @@ import { SettingsSchema } from '@/types/schema/index.js'
 export const twitterSettingsSchema: SettingsSchema = {
   id: 'twitter-settings-schema',
   version: '1.0.0',
-  title: 'Twitter Accounts & Hashtags',
-  description: 'Manage Twitter accounts and hashtags for event posts',
+  title: 'platform.twitter.settings.title',
+  description: 'platform.twitter.settings.description',
   tabs: [
     {
       id: 'accounts',
-      label: 'Accounts',
+      label: 'platform.twitter.settings.tabs.accounts',
       sections: ['account-list', 'add-account', 'edit-account']
     },
     {
       id: 'hashtags',
-      label: 'Hashtags',
+      label: 'platform.twitter.settings.tabs.hashtags',
       sections: ['hashtag-list', 'add-hashtag']
     },
     {
       id: 'mentions',
-      label: 'Mentions',
+      label: 'platform.twitter.settings.tabs.mentions',
       sections: ['mention-list', 'add-mention']
     }
   ],
   sections: [
     {
       id: 'account-list',
-      title: 'Twitter-Accounts',
-      description: 'Verwaltung der Twitter-Accounts',
+      title: 'platform.twitter.settings.accounts.list.title',
+      description: 'platform.twitter.settings.accounts.list.description',
       fields: [
         {
           name: 'accounts',
           type: 'target-list',
-          label: 'Accounts',
-          description: 'Liste aller Twitter-Accounts',
+          label: 'platform.twitter.settings.accounts.table.label',
+          description: 'platform.twitter.settings.accounts.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=account',
@@ -60,18 +60,18 @@ export const twitterSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-account',
-      title: 'Neuen Account hinzufügen',
-      description: 'Füge einen neuen Twitter-Account hinzu',
+      title: 'platform.twitter.settings.accounts.add.title',
+      description: 'platform.twitter.settings.accounts.add.description',
       fields: [
         {
           name: 'username',
           type: 'text',
-          label: 'Twitter Username',
-          placeholder: '@username oder username',
+          label: 'platform.twitter.settings.common.twitterUsername',
+          placeholder: 'platform.twitter.settings.common.twitterUsernamePlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Twitter Username ist erforderlich' },
-            { type: 'pattern', value: '^@?[a-zA-Z0-9_]{1,15}$', message: 'Ungültiger Twitter Username' }
+            { type: 'required', message: 'platform.twitter.validation.twitterUsernameRequired' },
+            { type: 'pattern', value: '^@?[a-zA-Z0-9_]{1,15}$', message: 'platform.twitter.validation.invalidTwitterUsername' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=account',
@@ -88,8 +88,8 @@ export const twitterSettingsSchema: SettingsSchema = {
         {
           name: 'displayName',
           type: 'text',
-          label: 'Anzeigename',
-          placeholder: 'z.B. EventPromo',
+          label: 'platform.twitter.settings.common.displayName',
+          placeholder: 'platform.twitter.settings.common.displayNamePlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -99,8 +99,8 @@ export const twitterSettingsSchema: SettingsSchema = {
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
-          placeholder: 'z.B. Offizieller Account für Event-Promotion',
+          label: 'platform.twitter.settings.common.description',
+          placeholder: 'platform.twitter.settings.common.descriptionPlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -110,7 +110,7 @@ export const twitterSettingsSchema: SettingsSchema = {
         {
           name: 'active',
           type: 'boolean',
-          label: 'Aktiv',
+          label: 'platform.twitter.settings.common.active',
           default: true,
           ui: {
             width: 6,
@@ -121,13 +121,13 @@ export const twitterSettingsSchema: SettingsSchema = {
     },
     {
       id: 'edit-account',
-      title: 'Account bearbeiten',
-      description: 'Bearbeite einen bestehenden Twitter-Account',
+      title: 'platform.twitter.settings.accounts.edit.title',
+      description: 'platform.twitter.settings.accounts.edit.description',
       fields: [
         {
           name: 'selectedTarget',
           type: 'select',
-          label: 'Account auswählen',
+          label: 'platform.twitter.settings.accounts.edit.selectLabel',
           required: true,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=account',
@@ -143,14 +143,14 @@ export const twitterSettingsSchema: SettingsSchema = {
     },
     {
       id: 'hashtag-list',
-      title: 'Hashtags',
-      description: 'Verwaltung der Hashtags',
+      title: 'platform.twitter.settings.hashtags.list.title',
+      description: 'platform.twitter.settings.hashtags.list.description',
       fields: [
         {
           name: 'hashtags',
           type: 'target-list',
-          label: 'Hashtags',
-          description: 'Liste aller Hashtags',
+          label: 'platform.twitter.settings.hashtags.table.label',
+          description: 'platform.twitter.settings.hashtags.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=hashtag',
@@ -166,18 +166,18 @@ export const twitterSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-hashtag',
-      title: 'Neuen Hashtag hinzufügen',
-      description: 'Füge einen neuen Hashtag hinzu',
+      title: 'platform.twitter.settings.hashtags.add.title',
+      description: 'platform.twitter.settings.hashtags.add.description',
       fields: [
         {
           name: 'hashtag',
           type: 'text',
-          label: 'Hashtag',
-          placeholder: '#hashtag oder hashtag',
+          label: 'platform.twitter.settings.hashtags.form.hashtag',
+          placeholder: 'platform.twitter.settings.hashtags.form.hashtagPlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Hashtag ist erforderlich' },
-            { type: 'pattern', value: '^#?[a-zA-Z0-9_]+$', message: 'Ungültiger Hashtag' }
+            { type: 'required', message: 'platform.twitter.validation.hashtagRequired' },
+            { type: 'pattern', value: '^#?[a-zA-Z0-9_]+$', message: 'platform.twitter.validation.invalidHashtag' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=hashtag',
@@ -194,8 +194,8 @@ export const twitterSettingsSchema: SettingsSchema = {
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
-          placeholder: 'z.B. Allgemeiner Hashtag für Events',
+          label: 'platform.twitter.settings.common.description',
+          placeholder: 'platform.twitter.settings.hashtags.form.descriptionPlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -206,14 +206,14 @@ export const twitterSettingsSchema: SettingsSchema = {
     },
     {
       id: 'mention-list',
-      title: 'Mentions',
-      description: 'Verwaltung der Mentions/User',
+      title: 'platform.twitter.settings.mentions.list.title',
+      description: 'platform.twitter.settings.mentions.list.description',
       fields: [
         {
           name: 'mentions',
           type: 'target-list',
-          label: 'Mentions',
-          description: 'Liste aller Mentions/User',
+          label: 'platform.twitter.settings.mentions.table.label',
+          description: 'platform.twitter.settings.mentions.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=mention',
@@ -229,18 +229,18 @@ export const twitterSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-mention',
-      title: 'Neue Mention hinzufügen',
-      description: 'Füge einen neuen User/Mention hinzu',
+      title: 'platform.twitter.settings.mentions.add.title',
+      description: 'platform.twitter.settings.mentions.add.description',
       fields: [
         {
           name: 'username',
           type: 'text',
-          label: 'Twitter Username',
-          placeholder: '@username oder username',
+          label: 'platform.twitter.settings.common.twitterUsername',
+          placeholder: 'platform.twitter.settings.common.twitterUsernamePlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Twitter Username ist erforderlich' },
-            { type: 'pattern', value: '^@?[a-zA-Z0-9_]{1,15}$', message: 'Ungültiger Twitter Username' }
+            { type: 'required', message: 'platform.twitter.validation.twitterUsernameRequired' },
+            { type: 'pattern', value: '^@?[a-zA-Z0-9_]{1,15}$', message: 'platform.twitter.validation.invalidTwitterUsername' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=mention',
@@ -260,23 +260,23 @@ export const twitterSettingsSchema: SettingsSchema = {
   targetSchemas: {
     username: {
       baseField: 'username',
-      baseFieldLabel: 'Twitter Username',
+      baseFieldLabel: 'platform.twitter.settings.common.twitterUsername',
       baseFieldValidation: [
-        { type: 'required', message: 'Username is required' },
-        { type: 'pattern', value: '^@?[a-zA-Z0-9_]{1,15}$', message: 'Invalid Twitter username' }
+        { type: 'required', message: 'platform.twitter.validation.usernameRequired' },
+        { type: 'pattern', value: '^@?[a-zA-Z0-9_]{1,15}$', message: 'platform.twitter.validation.invalidTwitterUsername' }
       ],
       customFields: [
         {
           name: 'displayName',
           type: 'text',
-          label: 'Anzeigename',
+          label: 'platform.twitter.settings.common.displayName',
           required: false,
           ui: { width: 12, order: 1 }
         },
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
+          label: 'platform.twitter.settings.common.description',
           required: false,
           ui: { width: 12, order: 2 }
         }

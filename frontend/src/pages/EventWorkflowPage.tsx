@@ -232,19 +232,19 @@ function EventWorkflowPage() {
             {/* Next Step Guidance */}
             {workflowState === WORKFLOW_STATES.INITIAL && safeUploadedFileRefs.length === 0 && (
               <Alert severity="info" sx={{ mb: 4 }} icon={<span>👆</span>}>
-                <strong>{t('workflow.startHere')}</strong> Upload your event files (PDF, images, documents) to begin creating content.
+                <strong>{t('workflow.startHere')}</strong> {t('workflow.uploadFilesHelp')}
               </Alert>
             )}
 
             {workflowState === WORKFLOW_STATES.FILES_UPLOADED && safeSelectedPlatforms.length === 0 && (
               <Alert severity="info" sx={{ mb: 4 }} icon={<span>🎯</span>}>
-                <strong>{t('workflow.next')}</strong> Select the platforms where you want to publish your content.
+                <strong>{t('workflow.next')}</strong> {t('workflow.selectPlatformsHelp')}
               </Alert>
             )}
 
             {workflowState === WORKFLOW_STATES.PLATFORMS_SELECTED && (
               <Alert severity="info" sx={{ mb: 4 }} icon={<span>✏️</span>}>
-                <strong>{t('workflow.next')}</strong> Create platform-specific content in the editors above, then publish when ready.
+                <strong>{t('workflow.next')}</strong> {t('workflow.createContentHelp')}
               </Alert>
             )}
 
@@ -269,7 +269,7 @@ function EventWorkflowPage() {
               />
               {!publishSessionId && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
-                  Bereit zum Senden. Klicken Sie unten auf "Publish", um den Live-Status zu starten.
+                  {t('publish.readyHint')}
                 </Typography>
               )}
             </Box>
@@ -311,7 +311,7 @@ function EventWorkflowPage() {
                   transition: 'opacity 0.3s ease'
                 }}
               >
-                🔄 Start Fresh
+                {t('workflow.startFresh')}
               </Button>
             </Box>
 

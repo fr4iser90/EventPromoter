@@ -31,7 +31,7 @@ export const instagramSchema: PlatformSchema = {
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',
-    description: 'Instagram platform schema for self-discovering architecture'
+    description: 'platform.instagram.metadata.schemaDescription'
   }
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Typography,
   Box,
@@ -20,34 +20,32 @@ import PageToolbar from '../../../shared/components/layout/PageToolbar'
 import SectionPanel from '../../../shared/components/layout/SectionPanel'
 import type { TemplatePreviewPlatformSchema as PlatformSchema, TemplatePreviewProps } from '../types'
 
-// Sample data for template variables (same structure as getTemplateVariables returns)
-const SAMPLE_DATA = {
-  title: 'Summer Music Festival 2025',
-  eventTitle: 'Summer Music Festival 2025',
-  name: 'John Doe',
-  date: '2025-07-15',
-  time: '20:00',
-  venue: 'Central Park',
-  city: 'New York',
-  description: 'An amazing outdoor music experience featuring local and international artists.',
-  lineup: 'DJ Shadow, Bonobo, Four Tet',
-  genre: 'Electronic',
-  price: '$45 - $85',
-  organizer: 'City Events LLC',
-  website: 'www.summerfest.com',
-  ticketInfo: 'Tickets available at the venue or online',
-  email: 'john@example.com',
-  link: 'https://example.com/event',
-  img1: 'https://example.com/image.jpg',
-  image1: 'https://example.com/image.jpg'
-}
-
 function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
   const { t, i18n } = useTranslation()
   const { categories } = useTemplateCategories()
   const { schema } = usePlatformSchema(platform) as { schema?: PlatformSchema }
   const [customVariables, setCustomVariables] = useState<Record<string, string>>({})
   const [previewContent, setPreviewContent] = useState<Record<string, unknown> | null>(null)
+  const sampleData = useMemo(() => ({
+    title: t('template.sample.title'),
+    eventTitle: t('template.sample.title'),
+    name: t('template.sample.name'),
+    date: '2025-07-15',
+    time: '20:00',
+    venue: t('template.sample.venue'),
+    city: t('template.sample.city'),
+    description: t('template.sample.description'),
+    lineup: t('template.sample.lineup'),
+    genre: t('template.sample.genre'),
+    price: t('template.sample.price'),
+    organizer: t('template.sample.organizer'),
+    website: t('template.sample.website'),
+    ticketInfo: t('template.sample.ticketInfo'),
+    email: 'john@example.com',
+    link: 'https://example.com/event',
+    img1: 'https://example.com/image.jpg',
+    image1: 'https://example.com/image.jpg'
+  }), [t])
 
   // Get variable label from schema
   const getVariableLabel = (variableName: string) => {
@@ -75,7 +73,7 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
     }
 
     // Generate preview content using sample data + custom variables
-    const templateVariables = { ...SAMPLE_DATA, ...customVariables }
+    const templateVariables = { ...sampleData, ...customVariables }
 
     // Create content object like main page (bodyText, subject, etc.)
     const content: Record<string, unknown> = {}
@@ -91,7 +89,7 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
     }
 
     setPreviewContent(content)
-  }, [template, platform, customVariables, i18n.language])
+  }, [template, platform, customVariables, i18n.language, sampleData])
 
   const handleVariableChange = (variable: string, value: string) => {
     setCustomVariables(prev => ({
@@ -104,10 +102,10 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 4 }}>
         <Typography variant="h6" gutterBottom>
-          👁️ {t('template.preview', { defaultValue: 'Template Preview' })}
+          👁️ {t('template.preview')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t('template.selectTemplate', { defaultValue: 'Select a template to see preview' })}
+          {t('template.selectTemplate')}
         </Typography>
       </Box>
     )
@@ -194,7 +192,7 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
         {template.variables && template.variables.length > 0 && (
           <>
             <Typography variant="subtitle2" gutterBottom>
-              🎛️ {t('template.customizePreviewVariables', { defaultValue: 'Customize Preview Variables' })}
+              🎛️ {t('template.customizePreviewVariables')}
             </Typography>
             <Box sx={{ 
               display: 'grid', 
@@ -207,7 +205,7 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
                   key={variable}
                   label={getVariableLabel(variable)}
                   size="small"
-                  value={customVariables[variable] || (SAMPLE_DATA as Record<string, string>)[variable] || ''}
+                  value={customVariables[variable] || (sampleData as Record<string, string>)[variable] || ''}
                   onChange={(e) => handleVariableChange(variable, e.target.value)}
                   placeholder={getVariableLabel(variable)}
                 />
@@ -219,7 +217,7 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
 
         {/* Preview Content - Use PlatformPreview like main page */}
         <Typography variant="subtitle2" gutterBottom>
-          📄 {t('template.previewResult', { defaultValue: 'Preview' })}
+          📄 {t('template.previewResult')}
         </Typography>
 
         {previewContent && (

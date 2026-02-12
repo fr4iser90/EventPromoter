@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
 import {
   Table,
@@ -16,6 +17,7 @@ import {
 } from '@mui/material';
 import EditModal from '../../../shared/components/EditModal';
 import { getApiUrl } from '../../../shared/utils/api';
+import { usePlatformTranslations } from '../../platform/hooks/usePlatformTranslations'
 import axios from 'axios';
 import type { DataRow, FieldAction, TargetListProps } from '../types'
 
@@ -25,6 +27,13 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
 }
 
 const TargetList = ({ field, platformId, onUpdate, allFields, values = {} }: TargetListProps) => {
+  const { t, i18n } = useTranslation();
+  usePlatformTranslations(platformId, i18n.language)
+  const translate = (key?: string, fallback?: string) => {
+    if (!key) return fallback || ''
+    return t(key, { defaultValue: fallback || key })
+  }
+
   const [targets, setTargets] = useState<DataRow[]>([]);
   const [filteredTargets, setFilteredTargets] = useState<DataRow[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -62,7 +71,7 @@ const TargetList = ({ field, platformId, onUpdate, allFields, values = {} }: Tar
       setFilteredTargets(data ?? []);
     } catch (err: unknown) {
       console.error('Failed to fetch targets:', err);
-      setError(getErrorMessage(err, 'Failed to load data'));
+      setError(getErrorMessage(err, t('common.failedToLoadData')));
     } finally {
       setLoading(false);
     }
@@ -107,7 +116,7 @@ const TargetList = ({ field, platformId, onUpdate, allFields, values = {} }: Tar
       <TableContainer component={Paper} sx={{
         mt: 2,
         border: `1px solid ${theme.palette.divider}`,
-        borderRadius: theme.shape.borderRadius,
+        borderRadius: 0,
         boxShadow: theme.shadows[1],
       }}>
         <Table size="small" sx={{ borderCollapse: 'collapse' }}>
@@ -120,7 +129,7 @@ const TargetList = ({ field, platformId, onUpdate, allFields, values = {} }: Tar
                   fontWeight: 'bold',
                   bgcolor: 'action.hover'
                 }}>
-                  {column.label}
+                  {translate(column.label, column.label)}
                 </TableCell>
               ))}
             </TableRow>
@@ -142,7 +151,7 @@ const TargetList = ({ field, platformId, onUpdate, allFields, values = {} }: Tar
               <TableRow>
                 <TableCell colSpan={columns.length} align="center" sx={{ p: 3 }}>
                   <Typography variant="body2" color="textSecondary">
-                    No items found.
+                    {t('common.noItemsFound')}
                   </Typography>
                 </TableCell>
               </TableRow>

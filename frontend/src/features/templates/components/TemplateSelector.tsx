@@ -223,7 +223,7 @@ const TemplateSelector = ({
     } catch (error: unknown) {
       console.error('Failed to render template preview:', error)
       // Show error - no fallback
-      const message = error instanceof Error ? error.message : 'Failed to load preview from backend'
+      const message = error instanceof Error ? error.message : t('template.failedToLoadPreviewFromBackend')
       setPreviewContent(`<div style="padding: 20px; color: red;">
         <strong>Error rendering preview:</strong><br/>
         ${message}

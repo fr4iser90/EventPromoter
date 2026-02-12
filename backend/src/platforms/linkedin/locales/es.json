@@ -12,7 +12,9 @@
       "description": "SOLO es necesario für Playwright / automatización del navegador.",
       "username": "Nombre de usuario/Correo del navegador",
       "password": "Contraseña del navegador"
-    }
+    },
+    "title": "Credenciales de plataforma LinkedIn",
+    "description": "Configurar credenciales de la API de LinkedIn"
   },
   "panels": {
     "linkedin": {
@@ -71,12 +73,140 @@
     }
   },
   "preview": {
-    "noLinkedInContent": "Aún no hay contenido de LinkedIn..."
+    "noLinkedInContent": "Aún no hay contenido de LinkedIn...",
+    "title": "Vista previa de LinkedIn",
+    "description": "Vista previa de como se vera tu publicacion de LinkedIn",
+    "modes": {
+      "desktop": {
+        "label": "Escritorio",
+        "description": "Vista de LinkedIn en escritorio"
+      },
+      "mobile": {
+        "label": "Movil",
+        "description": "Vista de LinkedIn en movil"
+      }
+    },
+    "mapping": {
+      "postContent": "Contenido de la publicacion"
+    }
   },
   "help": {
     "linkedinPost": "Contenido profesional para publicación de LinkedIn"
   },
   "metadata": {
-    "description": "Comparte eventos en LinkedIn con contenido profesional"
+    "description": "Comparte eventos en LinkedIn con contenido profesional",
+    "schemaDescription": "Esquema de plataforma LinkedIn para arquitectura autodescubrible"
+  },
+  "editor": {
+    "title": "Editor de publicaciones de LinkedIn",
+    "description": "Crea y edita publicaciones de LinkedIn",
+    "text": {
+      "label": "Contenido de la publicacion",
+      "description": "Contenido de tu publicacion de LinkedIn (maximo 3000 caracteres)",
+      "required": "El contenido de la publicacion es obligatorio",
+      "maxLength": "La publicacion debe tener como maximo 3000 caracteres",
+      "placeholder": "Comparte ideas profesionales..."
+    },
+    "image": {
+      "label": "Imagen",
+      "description": "Adjunto de imagen opcional"
+    },
+    "link": {
+      "label": "Enlace",
+      "description": "Enlace opcional para compartir"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Anade hashtags a tu publicacion"
+    }
+  },
+  "settings": {
+    "title": "Conexiones y paginas de LinkedIn",
+    "description": "Gestiona conexiones, paginas de empresa y grupos de LinkedIn",
+    "tabs": {
+      "connections": "Conexiones",
+      "pages": "Paginas de empresa",
+      "groups": "Grupos"
+    },
+    "common": {
+      "name": "Nombre",
+      "company": "Empresa",
+      "companyPlaceholder": "p.ej. Example Corp",
+      "jobTitle": "Puesto de trabajo",
+      "jobTitlePlaceholder": "p.ej. CEO",
+      "tags": "Etiquetas",
+      "active": "Activo"
+    },
+    "connections": {
+      "list": {
+        "title": "Conexiones de LinkedIn",
+        "description": "Gestion de conexiones de LinkedIn"
+      },
+      "table": {
+        "label": "Conexiones",
+        "description": "Lista de todas las conexiones de LinkedIn"
+      },
+      "add": {
+        "title": "Agregar nueva conexion",
+        "description": "Agrega una nueva conexion de LinkedIn"
+      },
+      "form": {
+        "profileUrl": "URL de perfil de LinkedIn",
+        "namePlaceholder": "p.ej. Max Mustermann"
+      },
+      "edit": {
+        "title": "Editar conexion",
+        "description": "Edita una conexion de LinkedIn existente",
+        "selectLabel": "Seleccionar conexion"
+      }
+    },
+    "pages": {
+      "list": {
+        "title": "Paginas de empresa",
+        "description": "Gestion de paginas de empresa"
+      },
+      "table": {
+        "label": "Paginas de empresa",
+        "description": "Lista de todas las paginas de empresa"
+      },
+      "add": {
+        "title": "Agregar nueva pagina de empresa",
+        "description": "Agrega una nueva pagina de empresa"
+      },
+      "form": {
+        "pageUrl": "URL de pagina de empresa",
+        "pageName": "Nombre de pagina",
+        "pageNamePlaceholder": "p.ej. Example Corp"
+      }
+    },
+    "groups": {
+      "list": {
+        "title": "Grupos de LinkedIn",
+        "description": "Gestion de grupos de LinkedIn"
+      },
+      "table": {
+        "label": "Grupos",
+        "description": "Lista de todos los grupos de LinkedIn"
+      },
+      "add": {
+        "title": "Agregar nuevo grupo",
+        "description": "Agrega un nuevo grupo de LinkedIn"
+      },
+      "form": {
+        "groupUrl": "URL de grupo",
+        "groupName": "Nombre del grupo",
+        "groupNamePlaceholder": "p.ej. Event Marketing Professionals"
+      }
+    }
+  },
+  "validation": {
+    "profileUrlRequired": "Se requiere URL de perfil de LinkedIn",
+    "invalidUrl": "URL no valida",
+    "nameRequired": "Se requiere nombre",
+    "pageUrlRequired": "Se requiere URL de pagina de empresa",
+    "pageNameRequired": "Se requiere nombre de pagina",
+    "groupUrlRequired": "Se requiere URL de grupo",
+    "groupNameRequired": "Se requiere nombre de grupo",
+    "invalidUrlFormat": "Formato de URL no valido"
   }
 }

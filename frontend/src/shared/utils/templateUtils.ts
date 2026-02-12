@@ -312,11 +312,11 @@ export function getVariableLabel(variableName: string): { label: string; icon: s
     'lineup': { label: 'Lineup', icon: '🎤' },
     'performers': { label: 'Performers', icon: '🎤' },
     'artists': { label: 'Artists', icon: '🎤' },
-    'ticketInfo': { label: 'Ticket Info', icon: '🎫' },
+    'ticketInfo': { label: 'TicketInfo', icon: '🎫' },
     'highlights': { label: 'Highlights', icon: '✨' },
-    'prepTips': { label: 'Preparation Tips', icon: '💡' },
-    'unsubscribeLink': { label: 'Unsubscribe Link', icon: '🔕' },
-    'contactLink': { label: 'Contact Link', icon: '📧' }
+    'prepTips': { label: 'PreparationTips', icon: '💡' },
+    'unsubscribeLink': { label: 'UnsubscribeLink', icon: '🔕' },
+    'contactLink': { label: 'ContactLink', icon: '📧' }
   }
 
   return labels[variableName] || { label: variableName, icon: '📌' }

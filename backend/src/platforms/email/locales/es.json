@@ -11,9 +11,9 @@
     "spanish": "🇪🇸 ES"
   },
   "workflow": {
-    "startHere": "Start here:",
-    "next": "Next:",
-    "publishContent": "🚀 Publish Content",
+    "startHere": "Comienza aqui:",
+    "next": "Siguiente:",
+    "publishContent": "🚀 Publicar contenido",
     "saving": "💾 Saving...",
     "publishingToPlatforms": "Publishing to {{count}} platform{{plural}}..."
   },
@@ -33,17 +33,17 @@
     "platformPreview": "👁️ Vista Previa de Plataforma"
   },
   "search": {
-    "events": "Search events..."
+    "events": "Buscar eventos..."
   },
   "templates": {
     "title": "📝 Template Manager",
-    "management": "Template Management",
-    "managementSystem": "📝 Template Management System",
-    "preview": "Template Preview",
+    "management": "Gestion de plantillas",
+    "managementSystem": "📝 Sistema de gestion de plantillas",
+    "preview": "Vista previa de plantilla",
     "usage": "💡 Template Usage",
     "description": "Templates help you create consistent content across platforms. Create platform-specific templates with placeholders like {{title}}, {{venue}}, and {{description}} that will be automatically filled with your event data.",
-    "defaultTemplates": "Default templates",
-    "customTemplates": "Custom templates",
+    "defaultTemplates": "Plantillas predeterminadas",
+    "customTemplates": "Plantillas personalizadas",
     "defaultTemplatesNote": "cannot be modified but serve as examples.",
     "customTemplatesNote": "can be fully edited and deleted.",
     "categories": {
@@ -96,7 +96,8 @@
       "birthday": "Cumpleaños",
       "tags": "Etiquetas",
       "gender": "Género",
-      "salutationTone": "Tono de saludo"
+      "salutationTone": "Tono de saludo",
+      "targetType": "Tipo de destino"
     },
     "variables": {
       "salutation": "Saludo",
@@ -125,14 +126,17 @@
       "username": "Nombre de usuario SMTP",
       "password": "Contraseña SMTP",
       "fromEmail": "Correo del remitente",
-      "fromName": "Nombre del remitente"
+      "fromName": "Nombre del remitente",
+      "fromNamePlaceholder": "Tu nombre"
     },
     "login": {
       "title": "Inicio de sesión del navegador",
       "description": "SOLO es necesario für Playwright / automatización del navegador.",
       "username": "Nombre de usuario/Correo del navegador",
       "password": "Contraseña del navegador"
-    }
+    },
+    "title": "Credenciales de plataforma email",
+    "description": "Configura credenciales SMTP para la plataforma email"
   },
   "salutation": {
     "informal": "Hola {{firstName}}",
@@ -185,7 +189,18 @@
     "parsedData": "Datos del Evento Analizados",
     "images": "Imágenes",
     "sourceFiles": "Archivos Fuente",
-    "eventImage": "Imagen del Evento"
+    "eventImage": "Imagen del Evento",
+    "modes": {
+      "desktop": {
+        "label": "Escritorio",
+        "description": "Vista de cliente de correo en escritorio"
+      },
+      "mobile": {
+        "label": "Movil",
+        "description": "Vista de cliente de correo en movil"
+      }
+    },
+    "description": "Vista previa de como se vera tu correo"
   },
   "template": {
     "placeholders": "Marcadores de Posición de Plantilla Disponibles",
@@ -194,7 +209,84 @@
     "delete": "Eliminar Plantilla",
     "name": "Nombre",
     "description": "Descripción",
-    "platform": "Plataforma"
+    "platform": "Plataforma",
+    "title": "Plantillas de correo",
+    "common": {
+      "dynamicPlaceholder": "Usa {variable} para contenido dinamico"
+    },
+    "subject": {
+      "label": "Asunto del correo",
+      "default": "Nuevo evento: {title}",
+      "description": "Plantilla para la linea de asunto del correo"
+    },
+    "html": {
+      "label": "Contenido HTML del correo",
+      "default": "<h1>{title}</h1><p>{description}</p>",
+      "description": "Plantilla para el cuerpo HTML del correo"
+    },
+    "variables": {
+      "eventTitle": {
+        "label": "Titulo del evento",
+        "description": "El titulo del evento"
+      },
+      "description": {
+        "label": "Descripcion del evento",
+        "description": "La descripcion del evento"
+      },
+      "date": {
+        "label": "Fecha del evento",
+        "description": "La fecha del evento"
+      },
+      "time": {
+        "label": "Hora del evento",
+        "description": "La hora del evento"
+      },
+      "venue": {
+        "label": "Lugar",
+        "description": "El lugar del evento"
+      },
+      "city": {
+        "label": "Ciudad",
+        "description": "La ciudad del evento"
+      },
+      "salutation": {
+        "label": "Saludo personalizado",
+        "description": "Saludo automatico basado en metadatos del destinatario"
+      },
+      "targetFirstName": {
+        "label": "Nombre del destinatario",
+        "description": "Nombre del destinatario"
+      },
+      "targetLastName": {
+        "label": "Apellido del destinatario",
+        "description": "Apellido del destinatario"
+      }
+    },
+    "variableDefinitions": {
+      "title": {
+        "description": "Variable canonica de titulo del evento"
+      },
+      "description": {
+        "description": "Descripcion principal del evento"
+      },
+      "price": {
+        "description": "Precio parseado opcional; siempre puede establecerse manualmente"
+      }
+    },
+    "categories": {
+      "announcement": {
+        "label": "Anuncio",
+        "description": "Anuncios de eventos"
+      },
+      "reminder": {
+        "label": "Recordatorio",
+        "description": "Recordatorios de eventos"
+      },
+      "followUp": {
+        "label": "Seguimiento",
+        "description": "Seguimientos posteriores al evento"
+      }
+    }
   },
   "settings": {
     "title": "Configuración",
@@ -203,7 +295,46 @@
     "timeFormat": "Formato de Hora",
     "theme": "Tema",
     "light": "Claro",
-    "dark": "Oscuro"
+    "dark": "Oscuro",
+    "description": "Gestion de destinatarios y grupos de correo",
+    "recipients": {
+      "title": "Gestion de tus destinatarios de correo",
+      "description": "Gestion de tus destinatarios de correo",
+      "searchLabel": "Buscar destinatarios...",
+      "searchPlaceholder": "Buscar destinatarios...",
+      "newButton": "+ Nuevo destinatario",
+      "table": {
+        "emailAddress": "Direccion de correo",
+        "description": "Resumen de todos los destinatarios de correo con detalles.",
+        "firstName": "Nombre",
+        "lastName": "Apellido",
+        "birthday": "Cumpleanos"
+      }
+    },
+    "groups": {
+      "title": "Gestion de tus grupos de correo",
+      "description": "Gestion de tus grupos de correo",
+      "searchLabel": "Buscar grupos...",
+      "searchPlaceholder": "Buscar grupos...",
+      "newButton": "+ Nuevo grupo",
+      "table": {
+        "groupName": "Nombre del grupo",
+        "description": "Resumen de todos los grupos de correo y sus cantidades de miembros.",
+        "members": "Miembros"
+      }
+    },
+    "targetSchemas": {
+      "email": {
+        "baseFieldLabel": "Direccion de correo",
+        "customFields": {
+          "name": "Nombre",
+          "birthday": "Cumpleanos",
+          "company": "Empresa",
+          "phone": "Telefono",
+          "tags": "Etiquetas"
+        }
+      }
+    }
   },
   "dateFormats": {
     "german": "DD.MM.YYYY",
@@ -237,7 +368,8 @@
     "errorLoadingFileContent": "Error al cargar contenido del archivo"
   },
   "metadata": {
-    "description": "Envía anuncios de eventos por correo electrónico con contenido HTML enriquecido"
+    "description": "Envía anuncios de eventos por correo electrónico con contenido HTML enriquecido",
+    "schemaDescription": "Esquema de plataforma email para arquitectura autodescubrible"
   },
   "attachments": {
     "forRun": "Adjuntos para esta ejecución",
@@ -287,6 +419,13 @@
       "all": "Todos los destinatarios",
       "groups": "{{count}} grupo(s) seleccionado(s)",
       "individual": "{{count}} destinatario(s) seleccionado(s)"
+    },
+    "modeAll": "📬 Todos",
+    "modeGroups": "👥 Grupos",
+    "modeIndividual": "✉️ Individuales",
+    "edit": {
+      "title": "Editar destinatario de correo",
+      "description": "Editar un destinatario de correo existente."
     }
   },
   "history": {
@@ -297,5 +436,64 @@
     "platform": "Plataforma",
     "refresh": "Actualizar",
     "files": "Archivos"
+  },
+  "editor": {
+    "standardAttachments": "Adjuntos estándar",
+    "includeStandardAttachments": "Incluir adjuntos estándar",
+    "standardAttachmentsDescription": "Estos archivos se adjuntarán a CADA plantilla (p. ej. folleto, términos).",
+    "title": "Editor de correo",
+    "description": "Crea y edita contenido de correo con campos estructurados",
+    "subject": "Asunto",
+    "subjectDescription": "Linea de asunto del correo",
+    "subjectPlaceholder": "Introduce el asunto del correo...",
+    "headerImage": "Imagen de cabecera",
+    "headerImageDescription": "Imagen principal en la parte superior del correo (incrustada en HTML)",
+    "bodyText": "Texto principal",
+    "bodyTextDescription": "Contenido principal del correo (texto plano, se formatea automaticamente)",
+    "bodyTextPlaceholder": "Introduce aqui el contenido del correo...",
+    "ctaButtonText": "Texto del boton CTA",
+    "ctaButtonTextDescription": "Texto para el boton de llamada a la accion",
+    "ctaButtonTextPlaceholder": "p.ej. Consigue entradas ahora",
+    "ctaButtonLink": "Enlace del boton CTA",
+    "ctaButtonLinkDescription": "URL para el boton de llamada a la accion",
+    "ctaButtonLinkPlaceholder": "https://example.com/tickets",
+    "footerText": "Texto de pie de pagina",
+    "footerTextDescription": "Texto opcional de pie (p.ej. enlace de baja, contacto)",
+    "footerTextPlaceholder": "Texto opcional de pie...",
+    "legacyBody": "Cuerpo de correo (legacy)",
+    "legacyBodyDescription": "Legacy: cuerpo HTML completo (usa los campos estructurados de arriba)",
+    "legacyBodyPlaceholder": "Contenido HTML...",
+    "legacyImages": "Imagenes (legacy)",
+    "legacyImagesDescription": "Legacy: imagenes adicionales",
+    "legacyLinks": "Enlaces (legacy)",
+    "legacyLinksDescription": "Legacy: enlaces adicionales",
+    "legacyLinksPlaceholder": "https://example.com",
+    "validation": {
+      "subjectRequired": "El asunto es obligatorio",
+      "subjectMaxLength": "El asunto debe tener como maximo 200 caracteres",
+      "bodyTextRequired": "El texto principal es obligatorio"
+    }
+  },
+  "locales": {
+    "de": "🇩🇪 Aleman",
+    "en": "🇬🇧 Ingles",
+    "es": "🇪🇸 Espanol"
+  },
+  "validation": {
+    "invalidHostnameFormat": "Formato de hostname invalido",
+    "portMin": "El puerto debe ser al menos 1",
+    "portMax": "El puerto debe ser como maximo 65535",
+    "invalidEmailFormat": "Formato de correo invalido",
+    "emailRequired": "El correo es obligatorio"
+  },
+  "groups": {
+    "edit": {
+      "title": "Editar grupo de correo",
+      "description": "Editar un grupo de correo existente."
+    },
+    "form": {
+      "groupName": "Nombre del grupo",
+      "members": "Miembros"
+    }
   }
 }

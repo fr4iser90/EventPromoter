@@ -10,21 +10,21 @@ import { PreviewSchema } from '@/types/schema/index.js'
 
 export const instagramPreviewSchema: PreviewSchema = {
   version: '1.0.0',
-  title: 'Instagram Preview',
-  description: 'Preview how your Instagram post will look',
+  title: 'platform.instagram.preview.title',
+  description: 'platform.instagram.preview.description',
   defaultMode: 'mobile',
   modes: [
     {
       id: 'mobile',
-      label: 'Mobile',
-      description: 'Mobile Instagram view',
+      label: 'platform.instagram.preview.modes.mobile.label',
+      description: 'platform.instagram.preview.modes.mobile.description',
       width: 375,
       height: 375
     },
     {
       id: 'desktop',
-      label: 'Desktop',
-      description: 'Desktop Instagram view',
+      label: 'platform.instagram.preview.modes.desktop.label',
+      description: 'platform.instagram.preview.modes.desktop.description',
       width: 600,
       height: 600
     }

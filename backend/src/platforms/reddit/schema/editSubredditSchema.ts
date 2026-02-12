@@ -2,8 +2,8 @@ import { FormSchema } from '@/types/schema/index.js'
 
 const redditSubredditEditSchema: FormSchema = {
   id: 'editSubredditSchema',
-  title: 'Edit Subreddit',
-  description: 'Edit an existing subreddit.',
+  title: 'platform.reddit.editSubreddit.title',
+  description: 'platform.reddit.editSubreddit.description',
   endpoint: 'platforms/:platformId/targets/:id',
   fields: [
     {
@@ -18,15 +18,15 @@ const redditSubredditEditSchema: FormSchema = {
     {
       name: 'subreddit',
       type: 'text',
-      label: 'Subreddit Name',
-      placeholder: 'e.g., electronicmusic',
+      label: 'platform.reddit.editSubreddit.fields.subreddit.label',
+      placeholder: 'platform.reddit.editSubreddit.fields.subreddit.placeholder',
       required: true,
       validation: [
-        { type: 'required', message: 'Subreddit name is required' },
+        { type: 'required', message: 'platform.reddit.validation.subredditNameRequired' },
         { 
           type: 'pattern', 
           value: '^[a-z0-9_]{3,21}$', 
-          message: 'Subreddit name must be 3-21 characters and contain only letters, numbers, and underscores' 
+          message: 'platform.reddit.validation.subredditNamePattern' 
         }
       ],
       ui: {
@@ -37,7 +37,7 @@ const redditSubredditEditSchema: FormSchema = {
     {
       name: 'targetType',
       type: 'text',
-      label: 'Target Type',
+      label: 'platform.reddit.editSubreddit.fields.targetType.label',
       default: 'subreddit',
       readOnly: true,
       ui: {
@@ -47,11 +47,11 @@ const redditSubredditEditSchema: FormSchema = {
     {
       name: 'description',
       type: 'textarea',
-      label: 'Description',
-      placeholder: 'e.g., Community for electronic music',
+      label: 'platform.reddit.editSubreddit.fields.description.label',
+      placeholder: 'platform.reddit.editSubreddit.fields.description.placeholder',
       required: false,
       validation: [
-        { type: 'maxLength', value: 500, message: 'Description must be at most 500 characters' }
+        { type: 'maxLength', value: 500, message: 'platform.reddit.validation.descriptionMaxLength' }
       ],
       ui: {
         width: 12,
@@ -61,12 +61,12 @@ const redditSubredditEditSchema: FormSchema = {
     {
       name: 'tags',
       type: 'multiselect',
-      label: 'Tags',
+      label: 'platform.reddit.editSubreddit.fields.tags.label',
       required: false,
       options: [
-        { label: 'Music', value: 'music' },
-        { label: 'Events', value: 'events' },
-        { label: 'Local', value: 'local' }
+        { label: 'platform.reddit.options.music', value: 'music' },
+        { label: 'platform.reddit.options.events', value: 'events' },
+        { label: 'platform.reddit.options.local', value: 'local' }
       ],
       ui: {
         width: 12,
@@ -76,7 +76,7 @@ const redditSubredditEditSchema: FormSchema = {
     {
       name: 'active',
       type: 'boolean',
-      label: 'Active',
+      label: 'platform.reddit.editSubreddit.fields.active.label',
       required: false,
       default: true,
       ui: {
@@ -89,7 +89,7 @@ const redditSubredditEditSchema: FormSchema = {
     {
       id: 'save',
       type: 'submit',
-      label: 'Save',
+      label: 'platform.reddit.actions.save',
       method: 'PUT',
       ui: {
         variant: 'contained',
@@ -99,7 +99,7 @@ const redditSubredditEditSchema: FormSchema = {
     {
       id: 'delete',
       type: 'delete',
-      label: 'Delete',
+      label: 'platform.reddit.actions.delete',
       method: 'DELETE',
       endpoint: 'platforms/:platformId/targets/:id',
       ui: {
@@ -110,7 +110,7 @@ const redditSubredditEditSchema: FormSchema = {
     {
       id: 'cancel',
       type: 'button',
-      label: 'Cancel',
+      label: 'platform.reddit.actions.cancel',
       ui: {
         variant: 'outlined',
       },

@@ -15,36 +15,36 @@ import { SettingsSchema } from '@/types/schema/index.js'
 export const facebookSettingsSchema: SettingsSchema = {
   id: 'facebook-settings-schema',
   version: '1.0.0',
-  title: 'Facebook Pages, Groups & Events',
-  description: 'Manage Facebook pages, groups, and events for event posts',
+  title: 'platform.facebook.settings.title',
+  description: 'platform.facebook.settings.description',
   tabs: [
     {
       id: 'pages',
-      label: 'Pages',
+      label: 'platform.facebook.settings.tabs.pages',
       sections: ['page-list', 'add-page', 'edit-page']
     },
     {
       id: 'groups',
-      label: 'Groups',
+      label: 'platform.facebook.settings.tabs.groups',
       sections: ['group-list', 'add-group']
     },
     {
       id: 'events',
-      label: 'Events',
+      label: 'platform.facebook.settings.tabs.events',
       sections: ['event-list', 'add-event']
     }
   ],
   sections: [
     {
       id: 'page-list',
-      title: 'Facebook-Pages',
-      description: 'Verwaltung der Facebook-Pages',
+      title: 'platform.facebook.settings.pages.list.title',
+      description: 'platform.facebook.settings.pages.list.description',
       fields: [
         {
           name: 'pages',
           type: 'target-list',
-          label: 'Pages',
-          description: 'Liste aller Facebook-Pages',
+          label: 'platform.facebook.settings.pages.table.label',
+          description: 'platform.facebook.settings.pages.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=page',
@@ -60,17 +60,17 @@ export const facebookSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-page',
-      title: 'Neue Page hinzufügen',
-      description: 'Füge eine neue Facebook-Page hinzu',
+      title: 'platform.facebook.settings.pages.add.title',
+      description: 'platform.facebook.settings.pages.add.description',
       fields: [
         {
           name: 'pageId',
           type: 'text',
-          label: 'Facebook Page ID',
-          placeholder: 'z.B. 123456789012345',
+          label: 'platform.facebook.settings.pages.form.pageId',
+          placeholder: 'platform.facebook.settings.pages.form.pageIdPlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Facebook Page ID ist erforderlich' }
+            { type: 'required', message: 'platform.facebook.validation.pageIdRequired' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=page',
@@ -87,11 +87,11 @@ export const facebookSettingsSchema: SettingsSchema = {
         {
           name: 'pageName',
           type: 'text',
-          label: 'Page Name',
-          placeholder: 'z.B. EventPromo',
+          label: 'platform.facebook.settings.pages.form.pageName',
+          placeholder: 'platform.facebook.settings.pages.form.pageNamePlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Page Name ist erforderlich' }
+            { type: 'required', message: 'platform.facebook.validation.pageNameRequired' }
           ],
           ui: {
             width: 12,
@@ -101,11 +101,11 @@ export const facebookSettingsSchema: SettingsSchema = {
         {
           name: 'pageUrl',
           type: 'url',
-          label: 'Page URL',
+          label: 'platform.facebook.settings.pages.form.pageUrl',
           placeholder: 'https://facebook.com/eventpromo',
           required: false,
           validation: [
-            { type: 'url', message: 'Ungültige URL' }
+            { type: 'url', message: 'platform.facebook.validation.invalidUrl' }
           ],
           ui: {
             width: 12,
@@ -115,14 +115,14 @@ export const facebookSettingsSchema: SettingsSchema = {
         {
           name: 'category',
           type: 'select',
-          label: 'Kategorie',
+          label: 'platform.facebook.settings.common.category',
           required: false,
           options: [
-            { label: 'Business', value: 'business' },
-            { label: 'Entertainment', value: 'entertainment' },
-            { label: 'Event', value: 'event' },
-            { label: 'Music', value: 'music' },
-            { label: 'Nightlife', value: 'nightlife' }
+            { label: 'platform.facebook.settings.categories.business', value: 'business' },
+            { label: 'platform.facebook.settings.categories.entertainment', value: 'entertainment' },
+            { label: 'platform.facebook.settings.categories.event', value: 'event' },
+            { label: 'platform.facebook.settings.categories.music', value: 'music' },
+            { label: 'platform.facebook.settings.categories.nightlife', value: 'nightlife' }
           ],
           ui: {
             width: 12,
@@ -132,7 +132,7 @@ export const facebookSettingsSchema: SettingsSchema = {
         {
           name: 'active',
           type: 'boolean',
-          label: 'Aktiv',
+          label: 'platform.facebook.settings.common.active',
           default: true,
           ui: {
             width: 6,
@@ -143,13 +143,13 @@ export const facebookSettingsSchema: SettingsSchema = {
     },
     {
       id: 'edit-page',
-      title: 'Page bearbeiten',
-      description: 'Bearbeite eine bestehende Facebook-Page',
+      title: 'platform.facebook.settings.pages.edit.title',
+      description: 'platform.facebook.settings.pages.edit.description',
       fields: [
         {
           name: 'selectedTarget',
           type: 'select',
-          label: 'Page auswählen',
+          label: 'platform.facebook.settings.pages.edit.selectLabel',
           required: true,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=page',
@@ -165,14 +165,14 @@ export const facebookSettingsSchema: SettingsSchema = {
     },
     {
       id: 'group-list',
-      title: 'Facebook-Groups',
-      description: 'Verwaltung der Facebook-Groups',
+      title: 'platform.facebook.settings.groups.list.title',
+      description: 'platform.facebook.settings.groups.list.description',
       fields: [
         {
           name: 'groups',
           type: 'target-list',
-          label: 'Groups',
-          description: 'Liste aller Facebook-Groups',
+          label: 'platform.facebook.settings.groups.table.label',
+          description: 'platform.facebook.settings.groups.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=group',
@@ -188,17 +188,17 @@ export const facebookSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-group',
-      title: 'Neue Group hinzufügen',
-      description: 'Füge eine neue Facebook-Group hinzu',
+      title: 'platform.facebook.settings.groups.add.title',
+      description: 'platform.facebook.settings.groups.add.description',
       fields: [
         {
           name: 'groupId',
           type: 'text',
-          label: 'Facebook Group ID',
-          placeholder: 'z.B. 987654321098765',
+          label: 'platform.facebook.settings.groups.form.groupId',
+          placeholder: 'platform.facebook.settings.groups.form.groupIdPlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Facebook Group ID ist erforderlich' }
+            { type: 'required', message: 'platform.facebook.validation.groupIdRequired' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=group',
@@ -215,11 +215,11 @@ export const facebookSettingsSchema: SettingsSchema = {
         {
           name: 'groupName',
           type: 'text',
-          label: 'Group Name',
-          placeholder: 'z.B. Leipzig Events',
+          label: 'platform.facebook.settings.groups.form.groupName',
+          placeholder: 'platform.facebook.settings.groups.form.groupNamePlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Group Name ist erforderlich' }
+            { type: 'required', message: 'platform.facebook.validation.groupNameRequired' }
           ],
           ui: {
             width: 12,
@@ -229,8 +229,8 @@ export const facebookSettingsSchema: SettingsSchema = {
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
-          placeholder: 'z.B. Gruppe für lokale Events in Leipzig',
+          label: 'platform.facebook.settings.common.description',
+          placeholder: 'platform.facebook.settings.groups.form.descriptionPlaceholder',
           required: false,
           ui: {
             width: 12,
@@ -241,14 +241,14 @@ export const facebookSettingsSchema: SettingsSchema = {
     },
     {
       id: 'event-list',
-      title: 'Facebook Events',
-      description: 'Verwaltung der Facebook Events',
+      title: 'platform.facebook.settings.events.list.title',
+      description: 'platform.facebook.settings.events.list.description',
       fields: [
         {
           name: 'events',
           type: 'target-list',
-          label: 'Events',
-          description: 'Liste aller Facebook Events',
+          label: 'platform.facebook.settings.events.table.label',
+          description: 'platform.facebook.settings.events.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=event',
@@ -264,17 +264,17 @@ export const facebookSettingsSchema: SettingsSchema = {
     },
     {
       id: 'add-event',
-      title: 'Neues Event hinzufügen',
-      description: 'Füge ein neues Facebook Event hinzu',
+      title: 'platform.facebook.settings.events.add.title',
+      description: 'platform.facebook.settings.events.add.description',
       fields: [
         {
           name: 'eventId',
           type: 'text',
-          label: 'Facebook Event ID',
-          placeholder: 'z.B. 123456789012345',
+          label: 'platform.facebook.settings.events.form.eventId',
+          placeholder: 'platform.facebook.settings.events.form.eventIdPlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Facebook Event ID ist erforderlich' }
+            { type: 'required', message: 'platform.facebook.validation.eventIdRequired' }
           ],
           action: {
             endpoint: 'platforms/:platformId/targets?type=event',
@@ -291,11 +291,11 @@ export const facebookSettingsSchema: SettingsSchema = {
         {
           name: 'eventName',
           type: 'text',
-          label: 'Event Name',
-          placeholder: 'z.B. Depeche Mode Party',
+          label: 'platform.facebook.settings.events.form.eventName',
+          placeholder: 'platform.facebook.settings.events.form.eventNamePlaceholder',
           required: true,
           validation: [
-            { type: 'required', message: 'Event Name ist erforderlich' }
+            { type: 'required', message: 'platform.facebook.validation.eventNameRequired' }
           ],
           ui: {
             width: 12,
@@ -308,34 +308,34 @@ export const facebookSettingsSchema: SettingsSchema = {
   targetSchemas: {
     pageId: {
       baseField: 'pageId',
-      baseFieldLabel: 'Facebook Page ID',
+      baseFieldLabel: 'platform.facebook.settings.pages.form.pageId',
       baseFieldValidation: [
-        { type: 'required', message: 'Page ID is required' }
+        { type: 'required', message: 'platform.facebook.validation.pageIdRequired' }
       ],
       customFields: [
         {
           name: 'pageName',
           type: 'text',
-          label: 'Page Name',
+          label: 'platform.facebook.settings.pages.form.pageName',
           required: true,
           ui: { width: 12, order: 1 }
         },
         {
           name: 'pageUrl',
           type: 'url',
-          label: 'Page URL',
+          label: 'platform.facebook.settings.pages.form.pageUrl',
           required: false,
           ui: { width: 12, order: 2 }
         },
         {
           name: 'category',
           type: 'select',
-          label: 'Kategorie',
+          label: 'platform.facebook.settings.common.category',
           required: false,
           options: [
-            { label: 'Business', value: 'business' },
-            { label: 'Entertainment', value: 'entertainment' },
-            { label: 'Event', value: 'event' }
+            { label: 'platform.facebook.settings.categories.business', value: 'business' },
+            { label: 'platform.facebook.settings.categories.entertainment', value: 'entertainment' },
+            { label: 'platform.facebook.settings.categories.event', value: 'event' }
           ],
           ui: { width: 12, order: 3 }
         }

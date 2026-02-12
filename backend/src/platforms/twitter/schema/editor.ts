@@ -10,23 +10,23 @@ import { EditorSchema } from '@/types/schema/index.js'
 
 export const twitterEditorSchema: EditorSchema = {
   version: '1.0.0',
-  title: 'Twitter Post Editor',
-  description: 'Create and edit Twitter posts',
+  title: 'platform.twitter.editor.title',
+  description: 'platform.twitter.editor.description',
   mode: 'simple',
   blocks: [
     {
       type: 'text',
       id: 'text',
-      label: 'Tweet Text',
-      description: 'Your tweet content (max 280 characters)',
+      label: 'platform.twitter.editor.text.label',
+      description: 'platform.twitter.editor.text.description',
       required: true,
       constraints: {
         maxLength: 280,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Tweet text is required' },
-        { type: 'maxLength', value: 280, message: 'Tweet must be at most 280 characters' }
+        { type: 'required', message: 'platform.twitter.editor.text.required' },
+        { type: 'maxLength', value: 280, message: 'platform.twitter.editor.text.maxLength' }
       ],
       ui: {
         icon: 'text',
@@ -35,14 +35,14 @@ export const twitterEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'What\'s happening?'
+        placeholder: 'platform.twitter.editor.text.placeholder'
       }
     },
     {
       type: 'image',
       id: 'image',
-      label: 'Image',
-      description: 'Optional image attachment',
+      label: 'platform.twitter.editor.image.label',
+      description: 'platform.twitter.editor.image.description',
       required: false,
       constraints: {
         maxItems: 1,
@@ -58,8 +58,8 @@ export const twitterEditorSchema: EditorSchema = {
     {
       type: 'hashtag',
       id: 'hashtags',
-      label: 'Hashtags',
-      description: 'Add hashtags to your tweet',
+      label: 'platform.twitter.editor.hashtags.label',
+      description: 'platform.twitter.editor.hashtags.description',
       required: false,
       constraints: {
         maxItems: 10
@@ -73,8 +73,8 @@ export const twitterEditorSchema: EditorSchema = {
     {
       type: 'mention',
       id: 'mentions',
-      label: 'Mentions',
-      description: 'Mention other users',
+      label: 'platform.twitter.editor.mentions.label',
+      description: 'platform.twitter.editor.mentions.description',
       required: false,
       constraints: {
         maxItems: 10

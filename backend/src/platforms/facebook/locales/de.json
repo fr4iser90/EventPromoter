@@ -12,7 +12,9 @@
       "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
       "username": "Browser Benutzername/E-Mail",
       "password": "Browser Passwort"
-    }
+    },
+    "title": "Facebook Plattform-Credentials",
+    "description": "Facebook API-Credentials konfigurieren"
   },
   "editor": {
     "title": "Facebook Post Editor",
@@ -46,6 +48,121 @@
     "no_link": "Überlege, einen Link hinzuzufügen, um Traffic zu generieren"
   },
   "metadata": {
-    "description": "Teile Events auf Facebook mit reichhaltigem Inhalt"
+    "description": "Teile Events auf Facebook mit reichhaltigem Inhalt",
+    "schemaDescription": "Facebook-Plattform-Schema fuer eine selbstentdeckende Architektur"
+  },
+  "preview": {
+    "title": "Facebook-Vorschau",
+    "description": "Vorschau, wie dein Facebook-Post aussehen wird",
+    "modes": {
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop-Facebook-Ansicht"
+      },
+      "mobile": {
+        "label": "Mobil",
+        "description": "Mobile Facebook-Ansicht"
+      }
+    },
+    "mapping": {
+      "postContent": "Post-Inhalt"
+    }
+  },
+  "settings": {
+    "title": "Facebook Pages, Groups & Events",
+    "description": "Facebook-Pages, -Gruppen und -Events fuer Event-Posts verwalten",
+    "tabs": {
+      "pages": "Pages",
+      "groups": "Groups",
+      "events": "Events"
+    },
+    "pages": {
+      "list": {
+        "title": "Facebook-Pages",
+        "description": "Verwaltung der Facebook-Pages"
+      },
+      "table": {
+        "label": "Pages",
+        "description": "Liste aller Facebook-Pages"
+      },
+      "add": {
+        "title": "Neue Page hinzufuegen",
+        "description": "Fuege eine neue Facebook-Page hinzu"
+      },
+      "form": {
+        "pageId": "Facebook Page ID",
+        "pageIdPlaceholder": "z.B. 123456789012345",
+        "pageName": "Page Name",
+        "pageNamePlaceholder": "z.B. EventPromo",
+        "pageUrl": "Page URL"
+      },
+      "edit": {
+        "title": "Page bearbeiten",
+        "description": "Bearbeite eine bestehende Facebook-Page",
+        "selectLabel": "Page auswaehlen"
+      }
+    },
+    "groups": {
+      "list": {
+        "title": "Facebook-Groups",
+        "description": "Verwaltung der Facebook-Groups"
+      },
+      "table": {
+        "label": "Groups",
+        "description": "Liste aller Facebook-Groups"
+      },
+      "add": {
+        "title": "Neue Group hinzufuegen",
+        "description": "Fuege eine neue Facebook-Group hinzu"
+      },
+      "form": {
+        "groupId": "Facebook Group ID",
+        "groupIdPlaceholder": "z.B. 987654321098765",
+        "groupName": "Group Name",
+        "groupNamePlaceholder": "z.B. Leipzig Events",
+        "descriptionPlaceholder": "z.B. Gruppe fuer lokale Events in Leipzig"
+      }
+    },
+    "events": {
+      "list": {
+        "title": "Facebook Events",
+        "description": "Verwaltung der Facebook Events"
+      },
+      "table": {
+        "label": "Events",
+        "description": "Liste aller Facebook Events"
+      },
+      "add": {
+        "title": "Neues Event hinzufuegen",
+        "description": "Fuege ein neues Facebook Event hinzu"
+      },
+      "form": {
+        "eventId": "Facebook Event ID",
+        "eventIdPlaceholder": "z.B. 123456789012345",
+        "eventName": "Event Name",
+        "eventNamePlaceholder": "z.B. Depeche Mode Party"
+      }
+    },
+    "common": {
+      "category": "Kategorie",
+      "active": "Aktiv",
+      "description": "Beschreibung"
+    },
+    "categories": {
+      "business": "Business",
+      "entertainment": "Entertainment",
+      "event": "Event",
+      "music": "Music",
+      "nightlife": "Nightlife"
+    }
+  },
+  "validation": {
+    "pageIdRequired": "Facebook Page ID ist erforderlich",
+    "pageNameRequired": "Page Name ist erforderlich",
+    "invalidUrl": "Ungueltige URL",
+    "groupIdRequired": "Facebook Group ID ist erforderlich",
+    "groupNameRequired": "Group Name ist erforderlich",
+    "eventIdRequired": "Facebook Event ID ist erforderlich",
+    "eventNameRequired": "Event Name ist erforderlich"
   }
 }

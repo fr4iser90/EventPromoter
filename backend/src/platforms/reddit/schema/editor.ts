@@ -10,8 +10,8 @@ import { EditorSchema } from '@/types/schema/index.js'
 
 export const redditEditorSchema: EditorSchema = {
   version: '2.0.0',
-  title: 'Reddit Post Editor',
-  description: 'Create and edit Reddit posts',
+  title: 'platform.reddit.editor.title',
+  description: 'platform.reddit.editor.description',
   mode: 'simple',
   blocks: [
     {
@@ -93,16 +93,16 @@ export const redditEditorSchema: EditorSchema = {
     {
       type: 'heading',
       id: 'title',
-      label: 'Post Title',
-      description: 'Post title (max 300 characters)',
+      label: 'platform.reddit.editor.postTitle.label',
+      description: 'platform.reddit.editor.postTitle.description',
       required: true,
       constraints: {
         maxLength: 300,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Title is required' },
-        { type: 'maxLength', value: 300, message: 'Title must be at most 300 characters' }
+        { type: 'required', message: 'platform.reddit.editor.postTitle.required' },
+        { type: 'maxLength', value: 300, message: 'platform.reddit.editor.postTitle.maxLength' }
       ],
       ui: {
         icon: 'title',
@@ -111,21 +111,21 @@ export const redditEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'text',
-        placeholder: 'Post title...'
+        placeholder: 'platform.reddit.editor.postTitle.placeholder'
       }
     },
     {
       type: 'paragraph',
       id: 'text',
-      label: 'Post Body',
-      description: 'Post content (max 40000 characters)',
+      label: 'platform.reddit.editor.postBody.label',
+      description: 'platform.reddit.editor.postBody.description',
       required: true,
       constraints: {
         maxLength: 40000,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Post body is required' }
+        { type: 'required', message: 'platform.reddit.editor.postBody.required' }
       ],
       ui: {
         icon: 'text',
@@ -134,19 +134,19 @@ export const redditEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Post content...',
+        placeholder: 'platform.reddit.editor.postBody.placeholder',
         variables: [
-          { name: 'salutation', label: 'Salutation', description: 'Personalized salutation' },
-          { name: 'target.firstName', label: 'First Name', description: 'Recipient first name' },
-          { name: 'target.lastName', label: 'Last Name', description: 'Recipient last name' }
+          { name: 'salutation', label: 'platform.reddit.form.variables.salutation', description: 'platform.reddit.editor.postBody.variables.salutationDescription' },
+          { name: 'target.firstName', label: 'platform.reddit.form.variables.target.firstName', description: 'platform.reddit.editor.postBody.variables.targetFirstNameDescription' },
+          { name: 'target.lastName', label: 'platform.reddit.form.variables.target.lastName', description: 'platform.reddit.editor.postBody.variables.targetLastNameDescription' }
         ]
       }
     },
     {
       type: 'image',
       id: 'image',
-      label: 'Image',
-      description: 'Optional image attachment',
+      label: 'platform.reddit.editor.image.label',
+      description: 'platform.reddit.editor.image.description',
       required: false,
       constraints: {
         maxItems: 1,
@@ -162,8 +162,8 @@ export const redditEditorSchema: EditorSchema = {
     {
       type: 'link',
       id: 'link',
-      label: 'Link',
-      description: 'Optional link to share',
+      label: 'platform.reddit.editor.link.label',
+      description: 'platform.reddit.editor.link.description',
       required: false,
       constraints: {
         maxItems: 1

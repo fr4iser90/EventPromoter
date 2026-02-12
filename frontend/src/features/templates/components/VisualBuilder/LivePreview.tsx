@@ -52,7 +52,7 @@ function LivePreview({
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography color="text.secondary">
-          {t('template.noPlatform', { defaultValue: 'No platform selected' })}
+          {t('template.noPlatform')}
         </Typography>
       </Box>
     )
@@ -62,7 +62,7 @@ function LivePreview({
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 1, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
-          {t('template.preview', { defaultValue: 'Preview' })}
+          {t('template.preview')}
         </Typography>
       </Box>
       <Box sx={{ flex: 1, overflow: 'auto' }}>

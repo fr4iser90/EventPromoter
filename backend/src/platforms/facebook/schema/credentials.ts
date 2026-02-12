@@ -10,8 +10,8 @@ import { CredentialsSchema } from '@/types/schema/index.js'
 
 export const facebookCredentialsSchema: CredentialsSchema = {
   version: '1.0.0',
-  title: 'Facebook Platform Credentials',
-  description: 'Configure Facebook API credentials',
+  title: 'platform.facebook.credentials.title',
+  description: 'platform.facebook.credentials.description',
   fields: [
     {
       name: 'accessToken',

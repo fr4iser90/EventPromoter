@@ -12,7 +12,9 @@
       "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
       "username": "Browser Benutzername/E-Mail",
       "password": "Browser Passwort"
-    }
+    },
+    "title": "LinkedIn Plattform-Credentials",
+    "description": "LinkedIn API-Credentials konfigurieren"
   },
   "panels": {
     "linkedin": {
@@ -71,12 +73,140 @@
     }
   },
   "preview": {
-    "noLinkedInContent": "Noch kein LinkedIn-Inhalt..."
+    "noLinkedInContent": "Noch kein LinkedIn-Inhalt...",
+    "title": "LinkedIn-Vorschau",
+    "description": "Vorschau, wie dein LinkedIn-Post aussehen wird",
+    "modes": {
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop-LinkedIn-Ansicht"
+      },
+      "mobile": {
+        "label": "Mobil",
+        "description": "Mobile LinkedIn-Ansicht"
+      }
+    },
+    "mapping": {
+      "postContent": "Post-Inhalt"
+    }
   },
   "help": {
     "linkedinPost": "Professioneller Post-Inhalt für LinkedIn"
   },
   "metadata": {
-    "description": "Teile Events auf LinkedIn mit professionellem Inhalt"
+    "description": "Teile Events auf LinkedIn mit professionellem Inhalt",
+    "schemaDescription": "LinkedIn-Plattform-Schema fuer eine selbstentdeckende Architektur"
+  },
+  "editor": {
+    "title": "LinkedIn Post Editor",
+    "description": "Erstelle und bearbeite LinkedIn-Posts",
+    "text": {
+      "label": "Post-Inhalt",
+      "description": "Dein LinkedIn-Post-Inhalt (max. 3000 Zeichen)",
+      "required": "Post-Inhalt ist erforderlich",
+      "maxLength": "Post darf maximal 3000 Zeichen haben",
+      "placeholder": "Teile professionelle Einblicke..."
+    },
+    "image": {
+      "label": "Bild",
+      "description": "Optionaler Bild-Anhang"
+    },
+    "link": {
+      "label": "Link",
+      "description": "Optionaler Link zum Teilen"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Fuege Hashtags zu deinem Post hinzu"
+    }
+  },
+  "settings": {
+    "title": "LinkedIn Connections & Pages",
+    "description": "LinkedIn-Connections, Company Pages und Gruppen verwalten",
+    "tabs": {
+      "connections": "Connections",
+      "pages": "Company Pages",
+      "groups": "Groups"
+    },
+    "common": {
+      "name": "Name",
+      "company": "Firma",
+      "companyPlaceholder": "z.B. Example Corp",
+      "jobTitle": "Job-Titel",
+      "jobTitlePlaceholder": "z.B. CEO",
+      "tags": "Tags",
+      "active": "Aktiv"
+    },
+    "connections": {
+      "list": {
+        "title": "LinkedIn-Connections",
+        "description": "Verwaltung der LinkedIn-Connections"
+      },
+      "table": {
+        "label": "Connections",
+        "description": "Liste aller LinkedIn-Connections"
+      },
+      "add": {
+        "title": "Neue Connection hinzufuegen",
+        "description": "Fuege eine neue LinkedIn-Connection hinzu"
+      },
+      "form": {
+        "profileUrl": "LinkedIn Profile URL",
+        "namePlaceholder": "z.B. Max Mustermann"
+      },
+      "edit": {
+        "title": "Connection bearbeiten",
+        "description": "Bearbeite eine bestehende LinkedIn-Connection",
+        "selectLabel": "Connection auswaehlen"
+      }
+    },
+    "pages": {
+      "list": {
+        "title": "Company Pages",
+        "description": "Verwaltung der Company Pages"
+      },
+      "table": {
+        "label": "Company Pages",
+        "description": "Liste aller Company Pages"
+      },
+      "add": {
+        "title": "Neue Company Page hinzufuegen",
+        "description": "Fuege eine neue Company Page hinzu"
+      },
+      "form": {
+        "pageUrl": "Company Page URL",
+        "pageName": "Page Name",
+        "pageNamePlaceholder": "z.B. Example Corp"
+      }
+    },
+    "groups": {
+      "list": {
+        "title": "LinkedIn Groups",
+        "description": "Verwaltung der LinkedIn Groups"
+      },
+      "table": {
+        "label": "Groups",
+        "description": "Liste aller LinkedIn Groups"
+      },
+      "add": {
+        "title": "Neue Group hinzufuegen",
+        "description": "Fuege eine neue LinkedIn Group hinzu"
+      },
+      "form": {
+        "groupUrl": "Group URL",
+        "groupName": "Group Name",
+        "groupNamePlaceholder": "z.B. Event Marketing Professionals"
+      }
+    }
+  },
+  "validation": {
+    "profileUrlRequired": "LinkedIn Profile URL ist erforderlich",
+    "invalidUrl": "Ungueltige URL",
+    "nameRequired": "Name ist erforderlich",
+    "pageUrlRequired": "Company Page URL ist erforderlich",
+    "pageNameRequired": "Page Name ist erforderlich",
+    "groupUrlRequired": "Group URL ist erforderlich",
+    "groupNameRequired": "Group Name ist erforderlich",
+    "invalidUrlFormat": "Ungueltiges URL-Format"
   }
 }

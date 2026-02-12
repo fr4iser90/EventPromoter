@@ -124,7 +124,7 @@ const Header = ({
               exclusive
               onChange={handleModeChange}
               size="small"
-              aria-label="publishing mode"
+              aria-label={t('header.publishingModeAria')}
               sx={{ 
                 height: 32,
                 bgcolor: 'background.default',
@@ -142,22 +142,22 @@ const Header = ({
                 }
               }}
             >
-              <Tooltip title="CUSTOM Mode (Manual Overrides)" arrow>
+              <Tooltip title={t('header.modeCustomTooltip')} arrow>
                 <ToggleButton value="custom" aria-label="custom">
                   <CustomIcon sx={{ fontSize: 18 }} />
                 </ToggleButton>
               </Tooltip>
-              <Tooltip title="n8n Integration" arrow>
+              <Tooltip title={t('header.modeN8nTooltip')} arrow>
                 <ToggleButton value="n8n" aria-label="n8n">
                   <N8nIcon sx={{ fontSize: 18 }} />
                 </ToggleButton>
               </Tooltip>
-              <Tooltip title="Direct API" arrow>
+              <Tooltip title={t('header.modeApiTooltip')} arrow>
                 <ToggleButton value="api" aria-label="api">
                   <ApiIcon sx={{ fontSize: 18 }} />
                 </ToggleButton>
               </Tooltip>
-              <Tooltip title="Playwright Automation" arrow>
+              <Tooltip title={t('header.modePlaywrightTooltip')} arrow>
                 <ToggleButton value="playwright" aria-label="playwright">
                   <PlaywrightIcon sx={{ fontSize: 18 }} />
                 </ToggleButton>
@@ -219,7 +219,7 @@ const Header = ({
           <IconButton
             onClick={handleSettingsClick}
             color="inherit"
-            aria-label="open settings"
+            aria-label={t('header.openSettingsAria')}
             sx={{ mr: 1 }}
           >
             <SettingsIcon />
@@ -230,7 +230,7 @@ const Header = ({
         <IconButton
           onClick={toggleDarkMode}
           color="inherit"
-          aria-label="toggle dark mode"
+          aria-label={t('header.toggleDarkModeAria')}
         >
           {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
         </IconButton>

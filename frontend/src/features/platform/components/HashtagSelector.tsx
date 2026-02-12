@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Typography,
@@ -10,6 +11,7 @@ import AddIcon from '@mui/icons-material/Add'
 import type { HashtagSelectorProps } from '../types'
 
 function HashtagSelector({ value = [], onChange, maxHashtags = 10 }: HashtagSelectorProps) {
+  const { t } = useTranslation()
   const [customHashtag, setCustomHashtag] = useState('')
 
   // Predefined hashtag suggestions
@@ -47,7 +49,7 @@ function HashtagSelector({ value = [], onChange, maxHashtags = 10 }: HashtagSele
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom>
-        Hashtags ({value.length}/{maxHashtags})
+        {t('hashtags.title')} ({value.length}/{maxHashtags})
       </Typography>
 
       {/* Selected Hashtags */}
@@ -69,7 +71,7 @@ function HashtagSelector({ value = [], onChange, maxHashtags = 10 }: HashtagSele
         <TextField
           fullWidth
           size="small"
-          placeholder="Add custom hashtag..."
+          placeholder={t('hashtags.addCustomPlaceholder')}
           value={customHashtag}
           onChange={(e) => setCustomHashtag(e.target.value)}
           onKeyPress={handleKeyPress}
@@ -87,7 +89,7 @@ function HashtagSelector({ value = [], onChange, maxHashtags = 10 }: HashtagSele
 
       {/* Suggested Hashtags */}
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        Suggested hashtags:
+        {t('hashtags.suggestedHashtags')}
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         {suggestedHashtags
@@ -110,7 +112,7 @@ function HashtagSelector({ value = [], onChange, maxHashtags = 10 }: HashtagSele
 
       {value.length >= maxHashtags && (
         <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
-          Maximum {maxHashtags} hashtags reached
+          {t('hashtags.reachedPlatformLimit', { limit: maxHashtags })}
         </Typography>
       )}
     </Box>

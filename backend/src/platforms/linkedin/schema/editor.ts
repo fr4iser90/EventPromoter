@@ -10,23 +10,23 @@ import { EditorSchema } from '@/types/schema/index.js'
 
 export const linkedinEditorSchema: EditorSchema = {
   version: '1.0.0',
-  title: 'LinkedIn Post Editor',
-  description: 'Create and edit LinkedIn posts',
+  title: 'platform.linkedin.editor.title',
+  description: 'platform.linkedin.editor.description',
   mode: 'rich',
   blocks: [
     {
       type: 'paragraph',
       id: 'text',
-      label: 'Post Content',
-      description: 'Your LinkedIn post content (max 3000 characters)',
+      label: 'platform.linkedin.editor.text.label',
+      description: 'platform.linkedin.editor.text.description',
       required: true,
       constraints: {
         maxLength: 3000,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Post content is required' },
-        { type: 'maxLength', value: 3000, message: 'Post must be at most 3000 characters' }
+        { type: 'required', message: 'platform.linkedin.editor.text.required' },
+        { type: 'maxLength', value: 3000, message: 'platform.linkedin.editor.text.maxLength' }
       ],
       ui: {
         icon: 'text',
@@ -35,14 +35,14 @@ export const linkedinEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Share professional insights...'
+        placeholder: 'platform.linkedin.editor.text.placeholder'
       }
     },
     {
       type: 'image',
       id: 'image',
-      label: 'Image',
-      description: 'Optional image attachment',
+      label: 'platform.linkedin.editor.image.label',
+      description: 'platform.linkedin.editor.image.description',
       required: false,
       constraints: {
         maxItems: 1,
@@ -58,8 +58,8 @@ export const linkedinEditorSchema: EditorSchema = {
     {
       type: 'link',
       id: 'link',
-      label: 'Link',
-      description: 'Optional link to share',
+      label: 'platform.linkedin.editor.link.label',
+      description: 'platform.linkedin.editor.link.description',
       required: false,
       constraints: {
         maxItems: 1
@@ -73,8 +73,8 @@ export const linkedinEditorSchema: EditorSchema = {
     {
       type: 'hashtag',
       id: 'hashtags',
-      label: 'Hashtags',
-      description: 'Add hashtags to your post',
+      label: 'platform.linkedin.editor.hashtags.label',
+      description: 'platform.linkedin.editor.hashtags.description',
       required: false,
       constraints: {
         maxItems: 5

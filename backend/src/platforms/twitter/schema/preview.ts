@@ -10,21 +10,21 @@ import { PreviewSchema } from '@/types/schema/index.js'
 
 export const twitterPreviewSchema: PreviewSchema = {
   version: '1.0.0',
-  title: 'Twitter Preview',
-  description: 'Preview how your tweet will look',
+  title: 'platform.twitter.preview.title',
+  description: 'platform.twitter.preview.description',
   defaultMode: 'mobile',
   modes: [
     {
       id: 'mobile',
-      label: 'Mobile',
-      description: 'Mobile Twitter view',
+      label: 'platform.twitter.preview.modes.mobile.label',
+      description: 'platform.twitter.preview.modes.mobile.description',
       width: 375,
       height: 667
     },
     {
       id: 'desktop',
-      label: 'Desktop',
-      description: 'Desktop Twitter view',
+      label: 'platform.twitter.preview.modes.desktop.label',
+      description: 'platform.twitter.preview.modes.desktop.description',
       width: 600,
       height: 400
     }
@@ -59,7 +59,7 @@ export const twitterPreviewSchema: PreviewSchema = {
     {
       field: 'text',
       renderAs: 'paragraph',
-      label: 'Tweet Text',
+      label: 'platform.twitter.preview.mapping.tweetText',
       order: 1
     },
     {

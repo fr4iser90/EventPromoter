@@ -2,8 +2,8 @@ import { FormSchema } from '@/types/schema/index.js'
 
 const redditGroupEditSchema: FormSchema = {
   id: 'editGroupSchema',
-  title: 'Edit Reddit Group',
-  description: 'Edit an existing Reddit group (can contain Subreddits and Users).',
+  title: 'platform.reddit.editGroup.title',
+  description: 'platform.reddit.editGroup.description',
   endpoint: 'platforms/:platformId/target-groups/:id',
   fields: [
     {
@@ -17,10 +17,10 @@ const redditGroupEditSchema: FormSchema = {
     },
     {
       name: 'name',
-      label: 'Group Name',
+      label: 'platform.reddit.editGroup.fields.name.label',
       type: 'text',
       required: true,
-      placeholder: 'e.g., Music Events, Local Events, etc.',
+      placeholder: 'platform.reddit.editGroup.fields.name.placeholder',
       ui: {
         width: 12,
         order: 1,
@@ -29,8 +29,8 @@ const redditGroupEditSchema: FormSchema = {
     {
       name: 'targetIds',
       type: 'multiselect',
-      label: 'Members (Subreddits and Users)',
-      description: 'Select subreddits and/or users for this group',
+      label: 'platform.reddit.editGroup.fields.targetIds.label',
+      description: 'platform.reddit.editGroup.fields.targetIds.description',
       required: false,
       optionsSource: {
         endpoint: 'platforms/:platformId/targets',
@@ -47,7 +47,7 @@ const redditGroupEditSchema: FormSchema = {
     {
       id: 'save',
       type: 'submit',
-      label: 'Save',
+      label: 'platform.reddit.actions.save',
       method: 'PUT',
       ui: {
         variant: 'contained',
@@ -57,7 +57,7 @@ const redditGroupEditSchema: FormSchema = {
     {
       id: 'delete',
       type: 'delete',
-      label: 'Delete',
+      label: 'platform.reddit.actions.delete',
       method: 'DELETE',
       endpoint: 'platforms/:platformId/target-groups/:id',
       ui: {
@@ -68,7 +68,7 @@ const redditGroupEditSchema: FormSchema = {
     {
       id: 'cancel',
       type: 'button',
-      label: 'Cancel',
+      label: 'platform.reddit.actions.cancel',
       ui: {
         variant: 'outlined',
       },

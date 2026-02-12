@@ -31,7 +31,7 @@ export const twitterSchema: PlatformSchema = {
   metadata: {
     lastUpdated: '2026-01-08T10:55:43.000Z',
     author: 'EventPromoter',
-    description: 'Twitter platform schema for self-discovering architecture'
+    description: 'platform.twitter.metadata.schemaDescription'
   }
 }
 

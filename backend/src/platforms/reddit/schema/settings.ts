@@ -15,41 +15,41 @@ import { SettingsSchema } from '@/types/schema/index.js'
 export const redditSettingsSchema: SettingsSchema = {
   id: 'reddit-settings-schema',
   version: '2.0.0',
-  title: 'Reddit Targets',
-  description: 'Manage subreddits, users, and groups for event posts and DMs',
+  title: 'platform.reddit.settings.title',
+  description: 'platform.reddit.settings.description',
   tabs: [
     {
       id: 'subreddits',
-      label: 'Subreddits',
+      label: 'platform.reddit.settings.tabs.subreddits',
       sections: ['subreddit-list']
     },
     {
       id: 'users',
-      label: 'Users',
+      label: 'platform.reddit.settings.tabs.users',
       sections: ['user-list']
     },
     {
       id: 'groups',
-      label: 'Groups',
+      label: 'platform.reddit.settings.tabs.groups',
       sections: ['group-management']
     },
     {
       id: 'analytics',
-      label: 'Analytics',
+      label: 'platform.reddit.settings.tabs.analytics',
       sections: ['subreddit-stats']
     }
   ],
   sections: [
     {
       id: 'subreddit-list',
-      title: 'Management of Your Subreddits',
-      description: 'Management of Your Subreddits',
+      title: 'platform.reddit.settings.subreddits.title',
+      description: 'platform.reddit.settings.subreddits.description',
       fields: [
         {
           name: 'subredditSearch',
           type: 'text',
-          label: 'Search subreddits...',
-          placeholder: 'Search subreddits...',
+          label: 'platform.reddit.settings.subreddits.searchLabel',
+          placeholder: 'platform.reddit.settings.subreddits.searchPlaceholder',
           ui: {
             width: 9,
             order: 1,
@@ -59,7 +59,7 @@ export const redditSettingsSchema: SettingsSchema = {
         {
           name: 'newSubredditButton',
           type: 'button',
-          label: '+ New Subreddit',
+          label: 'platform.reddit.settings.subreddits.newButton',
           action: {
             id: 'new-subreddit-action',
             type: 'open-edit-modal',
@@ -76,8 +76,8 @@ export const redditSettingsSchema: SettingsSchema = {
         {
           name: 'targets',
           type: 'target-list',
-          label: 'Subreddit Name',
-          description: 'Overview of all subreddits with details.',
+          label: 'platform.reddit.settings.subreddits.table.subredditName',
+          description: 'platform.reddit.settings.subreddits.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=subreddit',
@@ -91,7 +91,7 @@ export const redditSettingsSchema: SettingsSchema = {
             tableColumns: [
               {
                 id: 'subreddit',
-                label: 'Subreddit Name',
+                label: 'platform.reddit.settings.subreddits.table.subredditName',
                 clickable: true,
                 action: {
                   id: 'subreddit-edit-action',
@@ -103,9 +103,9 @@ export const redditSettingsSchema: SettingsSchema = {
                   onSuccess: 'reload'
                 }
               },
-              { id: 'description', label: 'Description' },
-              { id: 'tags', label: 'Tags' },
-              { id: 'active', label: 'Active', type: 'boolean' }
+              { id: 'description', label: 'platform.reddit.settings.common.description' },
+              { id: 'tags', label: 'platform.reddit.settings.common.tags' },
+              { id: 'active', label: 'platform.reddit.settings.common.active', type: 'boolean' }
             ]
           }
         }
@@ -113,14 +113,14 @@ export const redditSettingsSchema: SettingsSchema = {
     },
     {
       id: 'user-list',
-      title: 'Management of Your Reddit Users',
-      description: 'Management of Your Reddit Users',
+      title: 'platform.reddit.settings.users.title',
+      description: 'platform.reddit.settings.users.description',
       fields: [
         {
           name: 'userSearch',
           type: 'text',
-          label: 'Search users...',
-          placeholder: 'Search users...',
+          label: 'platform.reddit.settings.users.searchLabel',
+          placeholder: 'platform.reddit.settings.users.searchPlaceholder',
           ui: {
             width: 9,
             order: 1,
@@ -130,7 +130,7 @@ export const redditSettingsSchema: SettingsSchema = {
         {
           name: 'newUserButton',
           type: 'button',
-          label: '+ New User',
+          label: 'platform.reddit.settings.users.newButton',
           action: {
             id: 'new-user-action',
             type: 'open-edit-modal',
@@ -147,8 +147,8 @@ export const redditSettingsSchema: SettingsSchema = {
         {
           name: 'userTargets',
           type: 'target-list',
-          label: 'Reddit Username',
-          description: 'Overview of all Reddit users with details.',
+          label: 'platform.reddit.settings.users.table.redditUsername',
+          description: 'platform.reddit.settings.users.table.description',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets?type=user',
@@ -162,7 +162,7 @@ export const redditSettingsSchema: SettingsSchema = {
             tableColumns: [
               {
                 id: 'username',
-                label: 'Reddit Username',
+                label: 'platform.reddit.settings.users.table.redditUsername',
                 clickable: true,
                 action: {
                   id: 'user-edit-action',
@@ -174,9 +174,9 @@ export const redditSettingsSchema: SettingsSchema = {
                   onSuccess: 'reload'
                 }
               },
-              { id: 'displayName', label: 'Display Name' },
-              { id: 'notes', label: 'Notes' },
-              { id: 'active', label: 'Active', type: 'boolean' }
+              { id: 'displayName', label: 'platform.reddit.settings.users.table.displayName' },
+              { id: 'notes', label: 'platform.reddit.settings.users.table.notes' },
+              { id: 'active', label: 'platform.reddit.settings.common.active', type: 'boolean' }
             ]
           }
         }
@@ -184,14 +184,14 @@ export const redditSettingsSchema: SettingsSchema = {
     },
     {
       id: 'group-management',
-      title: 'Management of Your Reddit Groups',
-      description: 'Management of Your Reddit Groups (can contain Subreddits and Users)',
+      title: 'platform.reddit.settings.groups.title',
+      description: 'platform.reddit.settings.groups.description',
       fields: [
         {
           name: 'groupSearch',
           type: 'text',
-          label: 'Search groups...',
-          placeholder: 'Search groups...',
+          label: 'platform.reddit.settings.groups.searchLabel',
+          placeholder: 'platform.reddit.settings.groups.searchPlaceholder',
           ui: {
             width: 9,
             order: 1,
@@ -201,7 +201,7 @@ export const redditSettingsSchema: SettingsSchema = {
         {
           name: 'newGroupButton',
           type: 'button',
-          label: '+ New Group',
+          label: 'platform.reddit.settings.groups.newButton',
           action: {
             id: 'new-group-action',
             type: 'open-edit-modal',
@@ -218,8 +218,8 @@ export const redditSettingsSchema: SettingsSchema = {
         {
           name: 'groupsOverview',
           type: 'target-list',
-          label: 'Group Name',
-          description: 'Overview of all Reddit groups and their member counts (Subreddits and Users).',
+          label: 'platform.reddit.settings.groups.table.groupName',
+          description: 'platform.reddit.settings.groups.table.description',
           optionsSource: {
             endpoint: 'platforms/:platformId/target-groups',
             method: 'GET',
@@ -232,7 +232,7 @@ export const redditSettingsSchema: SettingsSchema = {
             tableColumns: [
               {
                 id: 'name',
-                label: 'Group Name',
+                label: 'platform.reddit.settings.groups.table.groupName',
                 clickable: true,
                 action: {
                   id: 'group-edit-action',
@@ -246,12 +246,12 @@ export const redditSettingsSchema: SettingsSchema = {
               },
               {
                 id: 'memberCount',
-                label: 'Members',
+                label: 'platform.reddit.settings.groups.table.members',
                 type: 'number'
               },
               {
                 id: 'memberValues',
-                label: 'Members',
+                label: 'platform.reddit.settings.groups.table.members',
                 type: 'text'
               }
             ]
@@ -261,13 +261,13 @@ export const redditSettingsSchema: SettingsSchema = {
     },
     {
       id: 'subreddit-stats',
-      title: 'Subreddit-Statistiken',
-      description: 'Zeige Statistiken für ein ausgewähltes Subreddit',
+      title: 'platform.reddit.settings.analytics.title',
+      description: 'platform.reddit.settings.analytics.description',
       fields: [
         {
           name: 'selectedTarget',
           type: 'select',
-          label: 'Subreddit auswählen',
+          label: 'platform.reddit.settings.analytics.selectSubreddit',
           required: false,
           optionsSource: {
             endpoint: 'platforms/:platformId/targets',
@@ -286,37 +286,37 @@ export const redditSettingsSchema: SettingsSchema = {
   targetSchemas: {
     subreddit: {
       baseField: 'subreddit',
-      baseFieldLabel: 'Subreddit Name',
+      baseFieldLabel: 'platform.reddit.settings.subreddits.table.subredditName',
       baseFieldValidation: [
-        { type: 'pattern', value: '^[a-z0-9_]{3,21}$', message: 'Invalid subreddit name' }
+        { type: 'pattern', value: '^[a-z0-9_]{3,21}$', message: 'platform.reddit.validation.invalidSubredditName' }
       ],
       customFields: [
         {
           name: 'description',
           type: 'textarea',
-          label: 'Beschreibung',
+          label: 'platform.reddit.settings.common.description',
           required: false,
           validation: [
-            { type: 'maxLength', value: 500, message: 'Description must be at most 500 characters' }
+            { type: 'maxLength', value: 500, message: 'platform.reddit.validation.descriptionMaxLength' }
           ],
           ui: { width: 12, order: 1 }
         },
         {
           name: 'tags',
           type: 'multiselect',
-          label: 'Tags',
+          label: 'platform.reddit.settings.common.tags',
           required: false,
           options: [
-            { label: 'Music', value: 'music' },
-            { label: 'Events', value: 'events' },
-            { label: 'Local', value: 'local' }
+            { label: 'platform.reddit.options.music', value: 'music' },
+            { label: 'platform.reddit.options.events', value: 'events' },
+            { label: 'platform.reddit.options.local', value: 'local' }
           ],
           ui: { width: 12, order: 2 }
         },
         {
           name: 'active',
           type: 'boolean',
-          label: 'Aktiv',
+          label: 'platform.reddit.settings.common.active',
           required: false,
           default: true,
           ui: { width: 6, order: 3 }
@@ -326,32 +326,32 @@ export const redditSettingsSchema: SettingsSchema = {
     },
     user: {
       baseField: 'username',
-      baseFieldLabel: 'Reddit Username',
+      baseFieldLabel: 'platform.reddit.settings.users.table.redditUsername',
       baseFieldValidation: [
-        { type: 'pattern', value: '^[a-zA-Z0-9_-]{3,20}$', message: 'Invalid username' }
+        { type: 'pattern', value: '^[a-zA-Z0-9_-]{3,20}$', message: 'platform.reddit.validation.invalidUsername' }
       ],
       customFields: [
         {
           name: 'displayName',
           type: 'text',
-          label: 'Display Name',
+          label: 'platform.reddit.settings.users.table.displayName',
           required: false,
           ui: { width: 12, order: 1 }
         },
         {
           name: 'notes',
           type: 'textarea',
-          label: 'Notizen',
+          label: 'platform.reddit.settings.users.table.notes',
           required: false,
           validation: [
-            { type: 'maxLength', value: 500, message: 'Notes must be at most 500 characters' }
+            { type: 'maxLength', value: 500, message: 'platform.reddit.validation.notesMaxLength' }
           ],
           ui: { width: 12, order: 2 }
         },
         {
           name: 'active',
           type: 'boolean',
-          label: 'Aktiv',
+          label: 'platform.reddit.settings.common.active',
           required: false,
           default: true,
           ui: { width: 6, order: 3 }

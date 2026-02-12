@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogTitle,
@@ -51,6 +52,7 @@ const PublishResults = ({
   onClose: () => void
   publishSessionId: string | null
 }) => {
+  const { t } = useTranslation()
   const [results, setResults] = useState<PublishSession | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -78,11 +80,11 @@ const PublishResults = ({
       if (response.data.success) {
         setResults(response.data.session)
       } else {
-        setError('Failed to load publish results')
+        setError(t('publishResults.failedToLoad'))
       }
     } catch (err) {
       console.error('Failed to load publish results:', err)
-      setError('Failed to load publish results')
+      setError(t('publishResults.failedToLoad'))
     } finally {
       setLoading(false)
     }
@@ -125,7 +127,7 @@ const PublishResults = ({
               {result.platform}
             </Typography>
             <Chip
-              label={result.success ? 'Erfolgreich' : 'Fehlgeschlagen'}
+              label={result.success ? t('publishResults.success') : t('publishResults.failed')}
               color={result.success ? 'success' : 'error'}
               size="small"
             />
@@ -135,7 +137,7 @@ const PublishResults = ({
           <Box sx={{ mt: 1 }}>
             {!result.success && result.error && (
               <Typography variant="body2" color="error" sx={{ mb: 1 }}>
-                Fehler: {result.error}
+                {t('publishResults.error')}: {result.error}
               </Typography>
             )}
 
@@ -150,20 +152,20 @@ const PublishResults = ({
                       rel="noopener noreferrer"
                       variant="body2"
                     >
-                      Beitrag ansehen
+                      {t('history.viewPost')}
                     </Link>
                   </Box>
                 )}
 
                 {result.data.postId && (
                   <Typography variant="body2" color="text.secondary">
-                    Post-ID: {result.data.postId}
+                    {t('publishResults.postId')}: {result.data.postId}
                   </Typography>
                 )}
 
                 {result.data.method && (
                   <Typography variant="body2" color="text.secondary">
-                    Methode: {result.data.method.toUpperCase()}
+                    {t('publishResults.method')}: {result.data.method.toUpperCase()}
                   </Typography>
                 )}
 
@@ -171,7 +173,7 @@ const PublishResults = ({
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <TimeIcon fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
-                      Gesendet: {new Date(result.data.sentAt).toLocaleString('de-DE')}
+                      {t('publishResults.sentAt')}: {new Date(result.data.sentAt).toLocaleString()}
                     </Typography>
                   </Box>
                 )}
@@ -186,14 +188,14 @@ const PublishResults = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        📊 Publishing-Ergebnisse
+        {t('publishResults.title')}
       </DialogTitle>
 
       <DialogContent>
         {loading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
-            <Typography sx={{ ml: 2 }}>Lade Ergebnisse...</Typography>
+            <Typography sx={{ ml: 2 }}>{t('publishResults.loading')}</Typography>
           </Box>
         )}
 
@@ -208,32 +210,32 @@ const PublishResults = ({
             {/* Session Overview */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Session-Übersicht
+                {t('publishResults.sessionOverview')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <Chip
-                  label={`Gesamt: ${results.results.length} Plattformen`}
+                  label={t('publishResults.totalPlatforms', { count: results.results.length })}
                   color="primary"
                 />
                 <Chip
-                  label={`Erfolgreich: ${results.results.filter((r) => r.success).length}`}
+                  label={t('publishResults.totalSuccess', { count: results.results.filter((r) => r.success).length })}
                   color="success"
                 />
                 <Chip
-                  label={`Fehlgeschlagen: ${results.results.filter((r) => !r.success).length}`}
+                  label={t('publishResults.totalFailed', { count: results.results.filter((r) => !r.success).length })}
                   color={results.results.some((r) => !r.success) ? 'error' : 'default'}
                 />
                 <Chip
-                  label={`Dauer: ${formatDuration(results.totalDuration)}`}
+                  label={t('publishResults.duration', { duration: formatDuration(results.totalDuration) })}
                   color="info"
                 />
               </Box>
 
               <Typography variant="body2" color="text.secondary">
-                Session-ID: {results.id}
+                {t('publishResults.sessionId')}: {results.id}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Gestartet: {new Date(results.timestamp).toLocaleString('de-DE')}
+                {t('publishResults.startedAt')}: {new Date(results.timestamp).toLocaleString()}
               </Typography>
             </Box>
 
@@ -241,7 +243,7 @@ const PublishResults = ({
 
             {/* Results List */}
             <Typography variant="h6" gutterBottom>
-              Plattform-Ergebnisse
+              {t('publishResults.platformResults')}
             </Typography>
 
             <List>
@@ -252,11 +254,11 @@ const PublishResults = ({
             <Box sx={{ mt: 3 }}>
               {results.overallSuccess ? (
                 <Alert severity="success">
-                  🎉 Alle Plattformen erfolgreich veröffentlicht!
+                  {t('publishResults.allSuccess')}
                 </Alert>
               ) : (
                 <Alert severity="warning">
-                  ⚠️ Einige Plattformen sind fehlgeschlagen. Überprüfe die Ergebnisse oben.
+                  {t('publishResults.someFailed')}
                 </Alert>
               )}
             </Box>
@@ -266,7 +268,7 @@ const PublishResults = ({
 
       <DialogActions>
         <Button onClick={onClose} variant="contained">
-          Schließen
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

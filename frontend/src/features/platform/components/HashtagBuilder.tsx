@@ -71,13 +71,13 @@ function HashtagBuilder({ disabled = false }) {
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        #️⃣ Hashtag Builder
+        {t('hashtags.hashtagBuilder')}
       </Typography>
 
       {/* Custom Hashtags Input */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          ✏️ Add Custom Hashtags
+          {t('hashtags.editor')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <TextField
@@ -93,7 +93,7 @@ function HashtagBuilder({ disabled = false }) {
             onClick={handleCustomHashtagAdd}
             startIcon={<AddIcon />}
           >
-            Add
+            {t('common.add')}
           </Button>
         </Box>
       </Box>
@@ -101,7 +101,7 @@ function HashtagBuilder({ disabled = false }) {
       {/* Predefined Hashtags */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          📋 Predefined Hashtags
+          {t('hashtags.predefinedHashtags')}
         </Typography>
         <Grid container spacing={2}>
           {Object.entries(PREDEFINED_HASHTAGS).map(([category, hashtags]) => (
@@ -136,7 +136,7 @@ function HashtagBuilder({ disabled = false }) {
       <Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6">
-            ✅ Selected Hashtags ({selectedHashtags.length})
+            {t('hashtags.selectedHashtags')} ({selectedHashtags.length})
           </Typography>
           {selectedHashtags.length > 0 && (
             <Button
@@ -145,14 +145,14 @@ function HashtagBuilder({ disabled = false }) {
               onClick={clearAllHashtags}
               startIcon={<ClearIcon />}
             >
-              Clear All
+              {t('common.clearAll')}
             </Button>
           )}
         </Box>
 
         {selectedHashtags.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
-            No hashtags selected yet. Add some from above or enter custom ones.
+            {t('hashtags.noHashtagsSelectedHint')}
           </Typography>
         ) : (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>

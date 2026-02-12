@@ -140,7 +140,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
         setError(null)
       } catch (err: unknown) {
         console.error('Failed to load platforms:', err)
-        setError(getErrorMessage(err, 'Failed to load platforms'))
+        setError(getErrorMessage(err, t('platform.failedToLoad')))
         // NO FALLBACK - show error instead
         setPlatforms([])
       } finally {
@@ -149,7 +149,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
     }
 
     loadPlatforms()
-  }, [])
+  }, [t])
 
   // Ensure selectedPlatforms is always an array
   const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
@@ -178,7 +178,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
     return (
       <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
         <CircularProgress sx={{ mb: 2 }} />
-        <Typography>Loading platforms...</Typography>
+        <Typography>{t('platform.loading')}</Typography>
       </Paper>
     )
   }
@@ -187,10 +187,10 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
     return (
       <Paper elevation={2} sx={{ p: 3 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load platforms from server: {error}
+          {t('platform.failedToLoadFromServer', { error })}
           <br />
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Please ensure the backend server is running and accessible.
+            {t('platform.ensureBackendRunning')}
           </Typography>
         </Alert>
       </Paper>
@@ -201,7 +201,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
     return (
       <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
         <Alert severity="info">
-          No platforms available. Please check backend configuration.
+          {t('platform.noneAvailable')}
         </Alert>
       </Paper>
     )
@@ -264,7 +264,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
 
                     {platform.description && (
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                        {platform.description}
+                        {t(platform.description, { defaultValue: platform.description })}
                       </Typography>
                     )}
 
@@ -381,7 +381,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
 
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="h6" gutterBottom>
-            Selected Platforms: {safeSelectedPlatforms.length}
+            {t('platform.selectedPlatformsCount', { count: safeSelectedPlatforms.length })}
           </Typography>
           {safeSelectedPlatforms.length > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1, mt: 2 }}>

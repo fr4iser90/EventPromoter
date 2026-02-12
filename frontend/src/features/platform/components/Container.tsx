@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Tabs,
@@ -33,6 +34,7 @@ function ContentEditor({
   onPlatformContentChange: (platformId: string, content: Record<string, unknown>) => void
   disabled?: boolean
 }) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState(0)
   const [bulkApplierOpen, setBulkApplierOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
@@ -106,7 +108,7 @@ function ContentEditor({
     return (
       <SectionPanel sx={{ textAlign: 'center' }}>
         <CircularProgress sx={{ mb: 2 }} />
-        <Typography>Loading platforms...</Typography>
+        <Typography>{t('platform.loading')}</Typography>
       </SectionPanel>
     )
   }
@@ -115,7 +117,7 @@ function ContentEditor({
     return (
       <SectionPanel>
         <Alert severity="error">
-          Failed to load platforms: {error}
+          {t('platform.failedToLoadFromServer', { error })}
         </Alert>
       </SectionPanel>
     )
@@ -125,10 +127,10 @@ function ContentEditor({
     return (
       <SectionPanel sx={{ textAlign: 'center' }}>
         <Typography variant="h6" color="text.secondary">
-          No platforms selected
+          {t('platform.noneSelected')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Please select platforms above to start creating content.
+          {t('platform.selectToStartContent')}
         </Typography>
       </SectionPanel>
     )
@@ -213,7 +215,7 @@ function ContentEditor({
               disabled={disabled || availablePlatforms.length === 0}
               size="small"
             >
-              Apply Templates
+              {t('template.applyTemplatesToAll')}
             </Button>
           </Box>
         </Box>
@@ -225,7 +227,7 @@ function ContentEditor({
           {/* Editor Section */}
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              ✏️ Content Editor
+              {t('platform.contentEditor')}
             </Typography>
             {getEditorComponent(activePlatform)}
           </Grid>
@@ -233,7 +235,7 @@ function ContentEditor({
           {/* Preview Section */}
           <Grid item xs={12} md={6}>
             <Typography variant="h6" gutterBottom>
-              👁️ Live Preview
+              {t('platform.livePreview')}
             </Typography>
             {getPreviewComponent(activePlatform)}
           </Grid>

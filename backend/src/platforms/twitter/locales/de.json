@@ -13,7 +13,9 @@
       "description": "NUR für Playwright / Browser-Automatisierung benötigt.",
       "username": "Browser Benutzername/E-Mail",
       "password": "Browser Passwort"
-    }
+    },
+    "title": "Twitter Plattform-Credentials",
+    "description": "Twitter API-Credentials konfigurieren"
   },
   "panels": {
     "twitter": {
@@ -40,9 +42,125 @@
     }
   },
   "preview": {
-    "twitter": "🐦 Twitter/X Vorschau"
+    "twitter": "🐦 Twitter/X Vorschau",
+    "title": "Twitter-Vorschau",
+    "description": "Vorschau, wie dein Tweet aussehen wird",
+    "modes": {
+      "mobile": {
+        "label": "Mobil",
+        "description": "Mobile Twitter-Ansicht"
+      },
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop-Twitter-Ansicht"
+      }
+    },
+    "mapping": {
+      "tweetText": "Tweet-Text"
+    }
   },
   "metadata": {
-    "description": "Teile Events auf Twitter/X mit zeichenbegrenzten Posts"
+    "description": "Teile Events auf Twitter/X mit zeichenbegrenzten Posts",
+    "schemaDescription": "Twitter-Plattform-Schema fuer eine selbstentdeckende Architektur"
+  },
+  "editor": {
+    "title": "Twitter Post Editor",
+    "description": "Erstelle und bearbeite Twitter-Posts",
+    "text": {
+      "label": "Tweet-Text",
+      "description": "Dein Tweet-Inhalt (max. 280 Zeichen)",
+      "required": "Tweet-Text ist erforderlich",
+      "maxLength": "Tweet darf maximal 280 Zeichen haben",
+      "placeholder": "Was gibt es Neues?"
+    },
+    "image": {
+      "label": "Bild",
+      "description": "Optionaler Bild-Anhang"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Fuege Hashtags zu deinem Tweet hinzu"
+    },
+    "mentions": {
+      "label": "Mentions",
+      "description": "Andere Benutzer erwaehnen"
+    }
+  },
+  "settings": {
+    "title": "Twitter Accounts & Hashtags",
+    "description": "Twitter-Accounts und Hashtags fuer Event-Posts verwalten",
+    "tabs": {
+      "accounts": "Accounts",
+      "hashtags": "Hashtags",
+      "mentions": "Mentions"
+    },
+    "common": {
+      "twitterUsername": "Twitter Username",
+      "twitterUsernamePlaceholder": "@username oder username",
+      "displayName": "Anzeigename",
+      "displayNamePlaceholder": "z.B. EventPromo",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "z.B. Offizieller Account fuer Event-Promotion",
+      "active": "Aktiv"
+    },
+    "accounts": {
+      "list": {
+        "title": "Twitter-Accounts",
+        "description": "Verwaltung der Twitter-Accounts"
+      },
+      "table": {
+        "label": "Accounts",
+        "description": "Liste aller Twitter-Accounts"
+      },
+      "add": {
+        "title": "Neuen Account hinzufuegen",
+        "description": "Fuege einen neuen Twitter-Account hinzu"
+      },
+      "edit": {
+        "title": "Account bearbeiten",
+        "description": "Bearbeite einen bestehenden Twitter-Account",
+        "selectLabel": "Account auswaehlen"
+      }
+    },
+    "hashtags": {
+      "list": {
+        "title": "Hashtags",
+        "description": "Verwaltung der Hashtags"
+      },
+      "table": {
+        "label": "Hashtags",
+        "description": "Liste aller Hashtags"
+      },
+      "add": {
+        "title": "Neuen Hashtag hinzufuegen",
+        "description": "Fuege einen neuen Hashtag hinzu"
+      },
+      "form": {
+        "hashtag": "Hashtag",
+        "hashtagPlaceholder": "#hashtag oder hashtag",
+        "descriptionPlaceholder": "z.B. Allgemeiner Hashtag fuer Events"
+      }
+    },
+    "mentions": {
+      "list": {
+        "title": "Mentions",
+        "description": "Verwaltung der Mentions/User"
+      },
+      "table": {
+        "label": "Mentions",
+        "description": "Liste aller Mentions/User"
+      },
+      "add": {
+        "title": "Neue Mention hinzufuegen",
+        "description": "Fuege einen neuen User/Mention hinzu"
+      }
+    }
+  },
+  "validation": {
+    "twitterUsernameRequired": "Twitter Username ist erforderlich",
+    "invalidTwitterUsername": "Ungueltiger Twitter Username",
+    "hashtagRequired": "Hashtag ist erforderlich",
+    "invalidHashtag": "Ungueltiger Hashtag",
+    "usernameRequired": "Benutzername ist erforderlich"
   }
 }

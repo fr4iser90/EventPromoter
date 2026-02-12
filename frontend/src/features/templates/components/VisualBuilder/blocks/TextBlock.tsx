@@ -58,7 +58,7 @@ function TextBlock({
         minRows={4}
         value={block.data.value || ''}
         onChange={handleChange}
-        placeholder={fieldSchema.placeholder || t('template.enterText', { defaultValue: 'Enter text...' })}
+        placeholder={fieldSchema.placeholder || t('template.enterText')}
         variant="outlined"
         size="small"
       />

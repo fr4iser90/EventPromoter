@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Table,
@@ -18,6 +19,7 @@ import {
   DialogActions,
 } from '@mui/material'
 import { getApiUrl } from '../../../shared/utils/api'
+import { usePlatformTranslations } from '../../platform/hooks/usePlatformTranslations'
 import axios from 'axios'
 import EditModal from '../../../shared/components/EditModal'
 import type { DataRow, FieldAction, GroupListProps, Primitive, SchemaField } from '../types'
@@ -28,6 +30,12 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
 }
 
 function GroupList({ data, platformId, title, description, fields, onUpdate }: GroupListProps) {
+  const { t, i18n } = useTranslation()
+  usePlatformTranslations(platformId, i18n.language)
+  const translate = (key?: string, fallback?: string) => {
+    if (!key) return fallback || ''
+    return t(key, { defaultValue: fallback || key })
+  }
   const [groups, setGroups] = useState<DataRow[]>([])
   const [filteredGroups, setFilteredGroups] = useState<DataRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -98,7 +106,7 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }: G
       setSelectedForDelete(null)
     } catch (err: unknown) {
       console.error('Failed to delete group:', err)
-      setErrorState(getErrorMessage(err, 'Failed to delete group'))
+      setErrorState(getErrorMessage(err, t('groups.failedToDelete')))
     }
   }
 
@@ -108,13 +116,13 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }: G
         if (field.ui?.renderAsTable) {
           const columns = field.ui.tableColumns || [];
           return (
-            <TableContainer component={Paper} elevation={1} sx={{ mt: 2 }}>
+            <TableContainer component={Paper} elevation={1} sx={{ mt: 2, borderRadius: 0 }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     {columns.map((column) => (
                       <TableCell key={column.id} style={{ width: column.width || 'auto' }}>
-                        {column.label}
+                        {translate(column.label, column.label)}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -130,7 +138,7 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }: G
                     <TableRow>
                       <TableCell colSpan={columns.length} align="center">
                         <Typography variant="body2" color="textSecondary">
-                          No groups available. Add a new group.
+                          {t('groups.noGroupsAvailable')}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -142,13 +150,13 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }: G
                           
                           // Format memberCount
                           if (column.id === 'memberCount') {
-                            displayValue = `${row[column.id]} members`
+                            displayValue = row[column.id]
                           }
                           // Format memberValues array as comma-separated string (generic)
                           else if (column.id === 'memberValues') {
                             const memberValues = row[column.id]
                             if (Array.isArray(memberValues)) {
-                              displayValue = memberValues.filter((v: Primitive) => v != null && v !== '').join(', ') || 'No members'
+                              displayValue = memberValues.filter((v: Primitive) => v != null && v !== '').join(', ')
                             }
                           }
                           // Handle undefined/null values
@@ -190,8 +198,8 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }: G
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6" gutterBottom>{title}</Typography>
-      {description && <Typography variant="body2" color="textSecondary" gutterBottom>{description}</Typography>}
+      <Typography variant="h6" gutterBottom>{translate(title, title)}</Typography>
+      {description && <Typography variant="body2" color="textSecondary" gutterBottom>{translate(description, description)}</Typography>}
 
       {groupsOverviewField && renderField(groupsOverviewField)}
 
@@ -211,17 +219,16 @@ function GroupList({ data, platformId, title, description, fields, onUpdate }: G
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Group</DialogTitle>
+        <DialogTitle>{t('groups.deleteGroup')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete <strong>{selectedForDelete ? selectedForDelete.name : ''}</strong>?
-            This action cannot be undone.
+            {t('groups.deleteConfirm', { name: selectedForDelete ? selectedForDelete.name : '' })}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button onClick={confirmDelete} color="error" variant="contained">
-            Delete
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

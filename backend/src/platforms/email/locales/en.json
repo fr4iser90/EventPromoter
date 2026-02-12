@@ -109,7 +109,8 @@
       "birthday": "Birthday",
       "tags": "Tags",
       "gender": "Gender",
-      "salutationTone": "Salutation Tone"
+      "salutationTone": "Salutation Tone",
+      "targetType": "Target Type"
     },
     "variables": {
       "salutation": "Salutation",
@@ -138,14 +139,17 @@
       "username": "SMTP Username",
       "password": "SMTP Password",
       "fromEmail": "From Email",
-      "fromName": "From Name"
+      "fromName": "From Name",
+      "fromNamePlaceholder": "Your Name"
     },
     "login": {
       "title": "Browser Login",
       "description": "ONLY required for Playwright / browser automation.",
       "username": "Browser Username/Email",
       "password": "Browser Password"
-    }
+    },
+    "title": "Email Platform Credentials",
+    "description": "Configure SMTP credentials for email platform"
   },
   "salutation": {
     "informal": "Hi {{firstName}}",
@@ -198,7 +202,18 @@
     "parsedData": "Parsed Event Data",
     "images": "Images",
     "sourceFiles": "Source Files",
-    "eventImage": "Event Image"
+    "eventImage": "Event Image",
+    "modes": {
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop email client view"
+      },
+      "mobile": {
+        "label": "Mobile",
+        "description": "Mobile email client view"
+      }
+    },
+    "description": "Preview how your email will look"
   },
   "template": {
     "placeholders": "Template Placeholders Available",
@@ -207,7 +222,84 @@
     "delete": "Delete Template",
     "name": "Name",
     "description": "Description",
-    "platform": "Platform"
+    "platform": "Platform",
+    "title": "Email Templates",
+    "common": {
+      "dynamicPlaceholder": "Use {variable} for dynamic content"
+    },
+    "subject": {
+      "label": "Email Subject",
+      "default": "New Event: {title}",
+      "description": "Email subject line template"
+    },
+    "html": {
+      "label": "Email HTML Content",
+      "default": "<h1>{title}</h1><p>{description}</p>",
+      "description": "HTML email body template"
+    },
+    "variables": {
+      "eventTitle": {
+        "label": "Event Title",
+        "description": "The title of the event"
+      },
+      "description": {
+        "label": "Event Description",
+        "description": "The event description"
+      },
+      "date": {
+        "label": "Event Date",
+        "description": "The event date"
+      },
+      "time": {
+        "label": "Event Time",
+        "description": "The event time"
+      },
+      "venue": {
+        "label": "Venue",
+        "description": "The event venue"
+      },
+      "city": {
+        "label": "City",
+        "description": "The event city"
+      },
+      "salutation": {
+        "label": "Personalized Salutation",
+        "description": "Automatic salutation based on recipient metadata"
+      },
+      "targetFirstName": {
+        "label": "Recipient First Name",
+        "description": "First name of the recipient"
+      },
+      "targetLastName": {
+        "label": "Recipient Last Name",
+        "description": "Last name of the recipient"
+      }
+    },
+    "variableDefinitions": {
+      "title": {
+        "description": "Canonical event title variable"
+      },
+      "description": {
+        "description": "Main event description"
+      },
+      "price": {
+        "description": "Optional parsed price; can always be manually set"
+      }
+    },
+    "categories": {
+      "announcement": {
+        "label": "Announcement",
+        "description": "Event announcements"
+      },
+      "reminder": {
+        "label": "Reminder",
+        "description": "Event reminders"
+      },
+      "followUp": {
+        "label": "Follow-up",
+        "description": "Post-event follow-ups"
+      }
+    }
   },
   "settings": {
     "title": "Settings",
@@ -216,7 +308,46 @@
     "timeFormat": "Time Format",
     "theme": "Theme",
     "light": "Light",
-    "dark": "Dark"
+    "dark": "Dark",
+    "description": "Management of Email Recipients and Groups",
+    "recipients": {
+      "title": "Management of Your Email Recipients",
+      "description": "Management of Your Email Recipients",
+      "searchLabel": "Search recipients...",
+      "searchPlaceholder": "Search recipients...",
+      "newButton": "+ New Recipient",
+      "table": {
+        "emailAddress": "Email Address",
+        "description": "Overview of all email recipients with details.",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "birthday": "Birthday"
+      }
+    },
+    "groups": {
+      "title": "Management of Your Email Groups",
+      "description": "Management of Your Email Groups",
+      "searchLabel": "Search groups...",
+      "searchPlaceholder": "Search groups...",
+      "newButton": "+ New Group",
+      "table": {
+        "groupName": "Group Name",
+        "description": "Overview of all email groups and their member counts.",
+        "members": "Members"
+      }
+    },
+    "targetSchemas": {
+      "email": {
+        "baseFieldLabel": "Email address",
+        "customFields": {
+          "name": "Name",
+          "birthday": "Birthday",
+          "company": "Company",
+          "phone": "Phone",
+          "tags": "Tags"
+        }
+      }
+    }
   },
   "dateFormats": {
     "german": "DD.MM.YYYY",
@@ -250,7 +381,8 @@
     "errorLoadingFileContent": "Error loading file content"
   },
   "metadata": {
-    "description": "Send event announcements via email with rich HTML content"
+    "description": "Send event announcements via email with rich HTML content",
+    "schemaDescription": "Email platform schema for self-discovering architecture"
   },
   "attachments": {
     "forRun": "Attachments for this run",
@@ -300,6 +432,13 @@
       "all": "All recipients",
       "groups": "{{count}} group(s) selected",
       "individual": "{{count}} recipient(s) selected"
+    },
+    "modeAll": "📬 All",
+    "modeGroups": "👥 Groups",
+    "modeIndividual": "✉️ Individual",
+    "edit": {
+      "title": "Edit Email Recipient",
+      "description": "Edit an existing email recipient."
     }
   },
   "history": {
@@ -310,5 +449,64 @@
     "platform": "Platform",
     "refresh": "Refresh",
     "files": "Files"
+  },
+  "editor": {
+    "standardAttachments": "Standard Attachments",
+    "includeStandardAttachments": "Include standard attachments",
+    "standardAttachmentsDescription": "These files will be attached to EVERY template (e.g. flyer, terms).",
+    "title": "Email Content Editor",
+    "description": "Create and edit email content with structured fields",
+    "subject": "Subject",
+    "subjectDescription": "Email subject line",
+    "subjectPlaceholder": "Enter email subject...",
+    "headerImage": "Header Image",
+    "headerImageDescription": "Main image displayed at the top of the email (embedded in HTML)",
+    "bodyText": "Body Text",
+    "bodyTextDescription": "Main email content (plain text, will be formatted automatically)",
+    "bodyTextPlaceholder": "Enter your email content here...",
+    "ctaButtonText": "CTA Button Text",
+    "ctaButtonTextDescription": "Text for the call-to-action button",
+    "ctaButtonTextPlaceholder": "e.g., Get Tickets Now",
+    "ctaButtonLink": "CTA Button Link",
+    "ctaButtonLinkDescription": "URL for the call-to-action button",
+    "ctaButtonLinkPlaceholder": "https://example.com/tickets",
+    "footerText": "Footer Text",
+    "footerTextDescription": "Optional footer text (e.g., unsubscribe link, contact info)",
+    "footerTextPlaceholder": "Optional footer text...",
+    "legacyBody": "Email Body (HTML)",
+    "legacyBodyDescription": "Legacy: Full HTML body (use structured fields above instead)",
+    "legacyBodyPlaceholder": "HTML content...",
+    "legacyImages": "Images (Legacy)",
+    "legacyImagesDescription": "Legacy: Additional images",
+    "legacyLinks": "Links (Legacy)",
+    "legacyLinksDescription": "Legacy: Additional links",
+    "legacyLinksPlaceholder": "https://example.com",
+    "validation": {
+      "subjectRequired": "Subject is required",
+      "subjectMaxLength": "Subject must be at most 200 characters",
+      "bodyTextRequired": "Body text is required"
+    }
+  },
+  "locales": {
+    "de": "🇩🇪 German",
+    "en": "🇬🇧 English",
+    "es": "🇪🇸 Spanish"
+  },
+  "validation": {
+    "invalidHostnameFormat": "Invalid hostname format",
+    "portMin": "Port must be at least 1",
+    "portMax": "Port must be at most 65535",
+    "invalidEmailFormat": "Invalid email format",
+    "emailRequired": "Email is required"
+  },
+  "groups": {
+    "edit": {
+      "title": "Edit Email Group",
+      "description": "Edit an existing email group."
+    },
+    "form": {
+      "groupName": "Group Name",
+      "members": "Members"
+    }
   }
 }

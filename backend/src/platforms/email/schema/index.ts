@@ -34,7 +34,7 @@ export const emailSchema: PlatformSchema = {
   metadata: {
     lastUpdated: '2026-01-08T10:53:50.000Z',
     author: 'EventPromoter',
-    description: 'Email platform schema for self-discovering architecture'
+    description: 'platform.email.metadata.schemaDescription'
   }
 }
 

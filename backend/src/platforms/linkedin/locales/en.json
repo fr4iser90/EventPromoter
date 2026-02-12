@@ -12,7 +12,9 @@
       "description": "ONLY required for Playwright / browser automation.",
       "username": "Browser Username/Email",
       "password": "Browser Password"
-    }
+    },
+    "title": "LinkedIn Platform Credentials",
+    "description": "Configure LinkedIn API credentials"
   },
   "panels": {
     "linkedin": {
@@ -71,12 +73,140 @@
     }
   },
   "preview": {
-    "noLinkedInContent": "No LinkedIn content yet..."
+    "noLinkedInContent": "No LinkedIn content yet...",
+    "title": "LinkedIn Preview",
+    "description": "Preview how your LinkedIn post will look",
+    "modes": {
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop LinkedIn view"
+      },
+      "mobile": {
+        "label": "Mobile",
+        "description": "Mobile LinkedIn view"
+      }
+    },
+    "mapping": {
+      "postContent": "Post Content"
+    }
   },
   "help": {
     "linkedinPost": "Professional post content for LinkedIn"
   },
   "metadata": {
-    "description": "Share events on LinkedIn with professional content"
+    "description": "Share events on LinkedIn with professional content",
+    "schemaDescription": "LinkedIn platform schema for self-discovering architecture"
+  },
+  "editor": {
+    "title": "LinkedIn Post Editor",
+    "description": "Create and edit LinkedIn posts",
+    "text": {
+      "label": "Post Content",
+      "description": "Your LinkedIn post content (max 3000 characters)",
+      "required": "Post content is required",
+      "maxLength": "Post must be at most 3000 characters",
+      "placeholder": "Share professional insights..."
+    },
+    "image": {
+      "label": "Image",
+      "description": "Optional image attachment"
+    },
+    "link": {
+      "label": "Link",
+      "description": "Optional link to share"
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Add hashtags to your post"
+    }
+  },
+  "settings": {
+    "title": "LinkedIn Connections & Pages",
+    "description": "Manage LinkedIn connections, company pages, and groups",
+    "tabs": {
+      "connections": "Connections",
+      "pages": "Company Pages",
+      "groups": "Groups"
+    },
+    "common": {
+      "name": "Name",
+      "company": "Company",
+      "companyPlaceholder": "e.g. Example Corp",
+      "jobTitle": "Job Title",
+      "jobTitlePlaceholder": "e.g. CEO",
+      "tags": "Tags",
+      "active": "Active"
+    },
+    "connections": {
+      "list": {
+        "title": "LinkedIn Connections",
+        "description": "Management of LinkedIn connections"
+      },
+      "table": {
+        "label": "Connections",
+        "description": "List of all LinkedIn connections"
+      },
+      "add": {
+        "title": "Add New Connection",
+        "description": "Add a new LinkedIn connection"
+      },
+      "form": {
+        "profileUrl": "LinkedIn Profile URL",
+        "namePlaceholder": "e.g. Max Mustermann"
+      },
+      "edit": {
+        "title": "Edit Connection",
+        "description": "Edit an existing LinkedIn connection",
+        "selectLabel": "Select Connection"
+      }
+    },
+    "pages": {
+      "list": {
+        "title": "Company Pages",
+        "description": "Management of company pages"
+      },
+      "table": {
+        "label": "Company Pages",
+        "description": "List of all company pages"
+      },
+      "add": {
+        "title": "Add New Company Page",
+        "description": "Add a new company page"
+      },
+      "form": {
+        "pageUrl": "Company Page URL",
+        "pageName": "Page Name",
+        "pageNamePlaceholder": "e.g. Example Corp"
+      }
+    },
+    "groups": {
+      "list": {
+        "title": "LinkedIn Groups",
+        "description": "Management of LinkedIn groups"
+      },
+      "table": {
+        "label": "Groups",
+        "description": "List of all LinkedIn groups"
+      },
+      "add": {
+        "title": "Add New Group",
+        "description": "Add a new LinkedIn group"
+      },
+      "form": {
+        "groupUrl": "Group URL",
+        "groupName": "Group Name",
+        "groupNamePlaceholder": "e.g. Event Marketing Professionals"
+      }
+    }
+  },
+  "validation": {
+    "profileUrlRequired": "LinkedIn Profile URL is required",
+    "invalidUrl": "Invalid URL",
+    "nameRequired": "Name is required",
+    "pageUrlRequired": "Company Page URL is required",
+    "pageNameRequired": "Page Name is required",
+    "groupUrlRequired": "Group URL is required",
+    "groupNameRequired": "Group Name is required",
+    "invalidUrlFormat": "Invalid URL format"
   }
 }

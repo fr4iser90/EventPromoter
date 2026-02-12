@@ -158,13 +158,13 @@ function Preview() {
         const response = await fetch(getApiUrl((fileData.url || '') + '/content'))
         if (response.ok) {
           const data = await response.json()
-          setTextContent(data.content || 'No content available')
+          setTextContent(data.content || t('preview.noContentAvailable'))
         } else {
-          setTextContent('Failed to load file content')
+          setTextContent(t('preview.failedToLoadFileContent'))
         }
       } catch (error) {
         console.error('Error loading text file:', error)
-        setTextContent('Error loading file content')
+        setTextContent(t('preview.errorLoadingFileContent'))
       } finally {
         setLoadingText(false)
       }
@@ -368,7 +368,7 @@ function Preview() {
       groups: [
         {
           id: 'ticketInfo',
-          label: 'Ticket-Informationen',
+          label: t('preview.ticketInfo'),
           icon: '🎫',
           collapsible: true,
           defaultExpanded: false,
@@ -377,53 +377,53 @@ function Preview() {
             {
               id: 'presale',
               type: 'group',
-              label: 'Vorkasse / Presale',
+              label: t('preview.presale'),
               fields: [
-                { id: 'price', type: 'text', label: 'Preis', placeholder: 'z.B. 25€' },
-                { id: 'url', type: 'url', label: 'Ticket-URL', placeholder: 'https://...' },
-                { id: 'available', type: 'boolean', label: 'Vorkasse verfügbar', default: true },
-                { id: 'until', type: 'date', label: 'Verfügbar bis' }
+                { id: 'price', type: 'text', label: t('preview.price'), placeholder: t('preview.priceExample25') },
+                { id: 'url', type: 'url', label: t('preview.ticketUrl'), placeholder: 'https://...' },
+                { id: 'available', type: 'boolean', label: t('preview.presaleAvailable'), default: true },
+                { id: 'until', type: 'date', label: t('preview.availableUntil') }
               ]
             },
             {
               id: 'boxOffice',
               type: 'group',
-              label: 'Abendkasse / Box Office',
+              label: t('preview.boxOffice'),
               fields: [
-                { id: 'price', type: 'text', label: 'Preis', placeholder: 'z.B. 30€' },
-                { id: 'available', type: 'boolean', label: 'Abendkasse verfügbar', default: true },
-                { id: 'note', type: 'textarea', label: 'Hinweis', placeholder: 'z.B. Teurer als Vorkasse' }
+                { id: 'price', type: 'text', label: t('preview.price'), placeholder: t('preview.priceExample30') },
+                { id: 'available', type: 'boolean', label: t('preview.boxOfficeAvailable'), default: true },
+                { id: 'note', type: 'textarea', label: t('preview.note'), placeholder: t('preview.boxOfficeNoteExample') }
               ]
             },
-            { id: 'info', type: 'textarea', label: 'Allgemeine Ticket-Informationen', placeholder: 'Zusätzliche Infos zu Tickets...' },
-            { id: 'url', type: 'url', label: 'Ticket-URL (Allgemein)', placeholder: 'https://tickets.example.com' }
+            { id: 'info', type: 'textarea', label: t('preview.generalTicketInfo'), placeholder: t('preview.generalTicketInfoPlaceholder') },
+            { id: 'url', type: 'url', label: t('preview.generalTicketUrl'), placeholder: 'https://tickets.example.com' }
           ]
         },
         {
           id: 'contactInfo',
-          label: 'Kontakt-Informationen',
+          label: t('preview.contactInfo'),
           icon: '📞',
           collapsible: true,
           defaultExpanded: false,
           showWhenEmpty: true,
           fields: [
-            { id: 'email', type: 'email', label: 'E-Mail', placeholder: 'info@example.com' },
-            { id: 'phone', type: 'tel', label: 'Telefon', placeholder: '+49 341 1234567' },
-            { id: 'contactPerson', type: 'text', label: 'Ansprechpartner', placeholder: 'Max Mustermann' }
+            { id: 'email', type: 'email', label: t('preview.email'), placeholder: 'info@example.com' },
+            { id: 'phone', type: 'tel', label: t('preview.phone'), placeholder: '+49 341 1234567' },
+            { id: 'contactPerson', type: 'text', label: t('preview.contactPerson'), placeholder: t('preview.contactPersonPlaceholder') }
           ]
         },
         {
           id: 'additionalInfo',
-          label: 'Zusätzliche Informationen',
+          label: t('preview.additionalInfo'),
           icon: 'ℹ️',
           collapsible: true,
           defaultExpanded: false,
           showWhenEmpty: true,
           fields: [
-            { id: 'ageRestriction', type: 'text', label: 'Altersbeschränkung', placeholder: '18+' },
-            { id: 'dressCode', type: 'text', label: 'Dresscode', placeholder: 'Casual' },
-            { id: 'parking', type: 'textarea', label: 'Parkmöglichkeiten', placeholder: 'Kostenlose Parkplätze verfügbar' },
-            { id: 'accessibility', type: 'textarea', label: 'Barrierefreiheit', placeholder: 'Rollstuhlgerechter Zugang vorhanden' }
+            { id: 'ageRestriction', type: 'text', label: t('preview.ageRestriction'), placeholder: '18+' },
+            { id: 'dressCode', type: 'text', label: t('preview.dressCode'), placeholder: 'Casual' },
+            { id: 'parking', type: 'textarea', label: t('preview.parking'), placeholder: t('preview.parkingPlaceholder') },
+            { id: 'accessibility', type: 'textarea', label: t('preview.accessibility'), placeholder: t('preview.accessibilityPlaceholder') }
           ]
         }
       ]
@@ -518,7 +518,7 @@ function Preview() {
     if (!hasPrice && !hasUrl) {
       return { 
         isValid: false, 
-        error: 'Bitte Preis oder Ticket-URL angeben (z.B. "Coming Soon" für Preis)' 
+        error: t('preview.ticketConditionalRequired')
       }
     }
     
@@ -578,7 +578,7 @@ function Preview() {
               }
             }}
             type={field.type === 'email' ? 'email' : field.type === 'tel' ? 'tel' : 'text'}
-            helperText={conditionalValidation.error || field.description || (isPriceField ? `Standard: ${getDefaultCurrency(currentLocale)} (manuell änderbar, z.B. "25$")` : '')}
+            helperText={conditionalValidation.error || field.description || (isPriceField ? t('preview.priceDefaultHint', { currency: getDefaultCurrency(currentLocale) }) : '')}
             error={!conditionalValidation.isValid}
             InputProps={isPriceField && displayedCurrency ? {
               endAdornment: (
@@ -738,21 +738,21 @@ function Preview() {
                   variant="outlined"
                   color="secondary"
                 >
-                  {t('common.newEvent') || 'New Event'}
+                  {t('common.newEvent')}
                 </Button>
               </Box>
               <Card>
                 <CardContent>
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      📝 Titel
+                      📝 {t('event.title')}
                     </Typography>
                     <TextField
                       fullWidth
                       size="small"
                       value={editedData.title || ''}
                       onChange={(e) => handleFieldChange('title', e.target.value)}
-                      placeholder="Event Titel"
+                      placeholder={t('event.titlePlaceholder')}
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           '&:hover fieldset': {
@@ -830,14 +830,14 @@ function Preview() {
                         {Boolean(editedData.city) && (
                           <Grid item xs={12} sm={6} md={3}>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                              🏙️ Stadt
+                              🏙️ {t('event.city')}
                             </Typography>
                             <TextField
                               fullWidth
                               size="small"
                               value={editedData.city || ''}
                               onChange={(e) => handleFieldChange('city', e.target.value)}
-                              placeholder="Stadt"
+                              placeholder={t('event.city')}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
                                   '&:hover fieldset': {
@@ -876,14 +876,14 @@ function Preview() {
                     {Boolean(editedData.price) && (
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          💰 Preis
+                          💰 {t('preview.price')}
                         </Typography>
                         <TextField
                           fullWidth
                           size="small"
                           value={editedData.price || ''}
                           onChange={(e) => handleFieldChange('price', e.target.value)}
-                          placeholder="Preis"
+                          placeholder={t('preview.price')}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               '&:hover fieldset': {
@@ -898,14 +898,14 @@ function Preview() {
                     {Boolean(editedData.organizer) && (
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          👤 Organizer
+                          👤 {t('preview.organizer')}
                         </Typography>
                         <TextField
                           fullWidth
                           size="small"
                           value={editedData.organizer || ''}
                           onChange={(e) => handleFieldChange('organizer', e.target.value)}
-                          placeholder="Organizer"
+                          placeholder={t('preview.organizer')}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               '&:hover fieldset': {
@@ -920,7 +920,7 @@ function Preview() {
                     {Boolean(editedData.website) && (
                       <Grid item xs={12} sm={6} md={3}>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                          🌐 Website
+                          🌐 {t('event.website')}
                         </Typography>
                         <TextField
                           fullWidth
@@ -984,7 +984,7 @@ function Preview() {
                                 }
                               }, 0)
                             }}
-                            placeholder="Beschreibung"
+                            placeholder={t('event.descriptionPlaceholder')}
                             sx={{
                               '& .MuiOutlinedInput-root': {
                                 '&:hover fieldset': {
@@ -1027,7 +1027,7 @@ function Preview() {
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', mt: 0.5 }}>
                       {getAvailablePlaceholders().length > 0
                         ? getAvailablePlaceholders().map(placeholder => `[${placeholder}]`).join(' ')
-                        : 'No data available for templating'
+                        : t('template.noDataForTemplating')
                       }
                     </Typography>
                   </Box>
@@ -1052,7 +1052,7 @@ function Preview() {
                       </Typography>
                       {hashtags.length > 0 && (
                         <Chip
-                          label="Konfiguriert"
+                          label={t('common.configured')}
                           size="small"
                           color="primary"
                           sx={{ ml: 'auto' }}
@@ -1263,7 +1263,7 @@ function Preview() {
                   }}
                 >
                   {loadingText ? (
-                    <Typography color="text.secondary">Loading...</Typography>
+                    <Typography color="text.secondary">{t('common.loading')}</Typography>
                   ) : (
                     <Typography component="pre" sx={{ m: 0 }}>
                       {textContent}

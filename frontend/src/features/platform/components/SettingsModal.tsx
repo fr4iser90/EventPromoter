@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Typography,
   Box,
@@ -25,6 +26,7 @@ import SettingsIcon from '@mui/icons-material/Settings'
 import KeyIcon from '@mui/icons-material/VpnKey'
 import SchemaRenderer from '../../schema/components/Renderer'
 import EditModal from '../../../shared/components/EditModal'
+import { usePlatformTranslations } from '../hooks/usePlatformTranslations'
 import { getApiUrl } from '../../../shared/utils/api'
 import type { SchemaField } from '../../schema/types'
 import type {
@@ -52,6 +54,12 @@ function SettingsModal({
   onClose: () => void
   onSave?: (platformId: string, values: GenericValues) => void
 }) {
+  const { t, i18n } = useTranslation()
+  usePlatformTranslations(platformId, i18n.language)
+  const translate = (key?: string, fallback?: string) => {
+    if (!key) return fallback || ''
+    return t(key, { defaultValue: fallback || key })
+  }
   const [activeTab, setActiveTab] = useState(0)
   const [schema, setSchema] = useState<PlatformSchema | null>(null)
   const [credentialsValues, setCredentialsValues] = useState<GenericValues>({})
@@ -107,7 +115,7 @@ function SettingsModal({
 
         // Load schema
         const schemaResponse = await fetch(getApiUrl(`platforms/${platformId}/schema`))
-        if (!schemaResponse.ok) throw new Error('Failed to load schema')
+        if (!schemaResponse.ok) throw new Error(t('platform.failedToLoadSchema'))
         const schemaData = await schemaResponse.json() as { schema: PlatformSchema }
         
         // Load enriched settings schema if available
@@ -166,7 +174,7 @@ function SettingsModal({
         setDataLoaded(true)
       } catch (err: unknown) {
         console.error('Failed to load platform data:', err)
-        setError(getErrorMessage(err, 'Failed to load platform data'))
+        setError(getErrorMessage(err, t('platform.failedToLoadData')))
       } finally {
         setLoading(false)
       }
@@ -210,22 +218,22 @@ function SettingsModal({
             const field = schema?.credentials?.fields?.find((ff: FieldConfig) => ff.name === f)
             return field?.label || f
           }).join(', ')
-          setError(`Validation failed: ${errorCount} field(s) have errors (${errorFields})`)
+          setError(t('platform.validationFailedWithFields', { count: errorCount, fields: errorFields }))
         } else {
-          setError(data.error || 'Validation failed')
+          setError(data.error || t('platform.validationFailed'))
         }
         return false
       }
 
       console.log(`[SettingsModal] Backend validation passed for ${platformId}`)
       setError(null)
-      setSuccessMessage('✅ Validation passed! All fields are valid.')
+      setSuccessMessage(t('platform.validationPassed'))
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000)
       return true
     } catch (err: unknown) {
       console.error(`[SettingsModal] Validation error for ${platformId}:`, err)
-      setError(getErrorMessage(err, 'Validation failed'))
+      setError(getErrorMessage(err, t('platform.validationFailed')))
       return false
     } finally {
       setValidating(false)
@@ -263,7 +271,7 @@ function SettingsModal({
           const formatted = formatErrors(data.errors)
           setErrors(formatted)
         }
-        throw new Error(data.error || 'Failed to save credentials')
+        throw new Error(data.error || t('platform.failedToSaveCredentials'))
       }
 
       console.log(`[SettingsModal] Successfully saved ${platformId} credentials`)
@@ -271,7 +279,7 @@ function SettingsModal({
       onClose()
     } catch (err: unknown) {
       console.error(`[SettingsModal] Save error for ${platformId}:`, err)
-      setError(getErrorMessage(err, 'Failed to save credentials'))
+      setError(getErrorMessage(err, t('platform.failedToSaveCredentials')))
     } finally {
       setSaving(false)
     }
@@ -285,7 +293,7 @@ function SettingsModal({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <SettingsIcon color="primary" />
           <Typography variant="h6">
-            {platformId?.charAt(0).toUpperCase() + platformId?.slice(1)} Configuration
+            {t('platform.configurationFor', { platform: `${platformId?.charAt(0).toUpperCase() + platformId?.slice(1)}` })}
           </Typography>
         </Box>
         <Tabs 
@@ -293,8 +301,8 @@ function SettingsModal({
           onChange={(_, v: number) => setActiveTab(v)}
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab icon={<SettingsIcon />} label="Settings" iconPosition="start" />
-          <Tab icon={<KeyIcon />} label="Credentials" iconPosition="start" />
+          <Tab icon={<SettingsIcon />} label={t('platform.settings')} iconPosition="start" />
+          <Tab icon={<KeyIcon />} label={t('platform.credentials')} iconPosition="start" />
         </Tabs>
       </DialogTitle>
 
@@ -319,8 +327,13 @@ function SettingsModal({
                   schema.settings.sections.map((section: SectionConfig) => (
                     <Box key={section.id} sx={{ mb: 3 }}>
                       <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                        {section.title}
+                        {translate(section.title, section.title)}
                       </Typography>
+                      {section.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          {translate(section.description, section.description)}
+                        </Typography>
+                      )}
                       <SchemaRenderer
                         fields={section.fields as Array<SchemaField & { name: string }>}
                         values={settingsValues}
@@ -340,7 +353,7 @@ function SettingsModal({
                     </Box>
                   ))
                 ) : (
-                  <Alert severity="info">No settings available for this platform.</Alert>
+                  <Alert severity="info">{t('platform.noSettingsForPlatform')}</Alert>
                 )}
               </Box>
             )}
@@ -351,7 +364,7 @@ function SettingsModal({
                     {/* ✅ SECURITY: Show indicator if credentials are configured */}
                     {hasCredentials && (
                       <Alert severity="success" sx={{ mb: 2 }}>
-                        ✓ Credentials are configured. Enter new values to update specific fields.
+                        {t('platform.credentialsConfiguredHint')}
                       </Alert>
                     )}
                     <SchemaRenderer
@@ -365,7 +378,7 @@ function SettingsModal({
                         if (isSensitive && hasCredentials && !field.placeholder) {
                           return {
                             ...field,
-                            placeholder: '•••••••• (configured)'
+                            placeholder: t('platform.credentialsConfiguredMask')
                           }
                         }
                         return field
@@ -420,7 +433,7 @@ function SettingsModal({
                     />
                   </>
                 ) : (
-                  <Alert severity="info">No credentials available for this platform.</Alert>
+                  <Alert severity="info">{t('platform.noCredentialsForPlatform')}</Alert>
                 )}
               </Box>
             )}
@@ -454,17 +467,17 @@ function SettingsModal({
       )}
 
       <DialogActions>
-        <Button onClick={onClose} disabled={saving}>Cancel</Button>
+        <Button onClick={onClose} disabled={saving}>{t('common.cancel')}</Button>
         <Button 
           onClick={handleValidate} 
           variant="outlined" 
           disabled={loading || saving || validating}
           sx={{ mr: 1 }}
         >
-          {validating ? 'Validating...' : 'Validate'}
+          {validating ? t('platform.validating') : t('platform.validate')}
         </Button>
         <Button onClick={handleSave} variant="contained" disabled={loading || saving}>
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? t('common.saving') : t('common.save')}
         </Button>
       </DialogActions>
     </Dialog>

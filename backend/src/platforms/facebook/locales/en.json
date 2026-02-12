@@ -12,7 +12,9 @@
       "description": "ONLY required for Playwright / browser automation.",
       "username": "Browser Username/Email",
       "password": "Browser Password"
-    }
+    },
+    "title": "Facebook Platform Credentials",
+    "description": "Configure Facebook API credentials"
   },
   "editor": {
     "title": "Facebook Post Editor",
@@ -46,6 +48,121 @@
     "no_link": "Consider adding a link to drive traffic"
   },
   "metadata": {
-    "description": "Share events on Facebook with rich content"
+    "description": "Share events on Facebook with rich content",
+    "schemaDescription": "Facebook platform schema for self-discovering architecture"
+  },
+  "preview": {
+    "title": "Facebook Preview",
+    "description": "Preview how your Facebook post will look",
+    "modes": {
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop Facebook view"
+      },
+      "mobile": {
+        "label": "Mobile",
+        "description": "Mobile Facebook view"
+      }
+    },
+    "mapping": {
+      "postContent": "Post Content"
+    }
+  },
+  "settings": {
+    "title": "Facebook Pages, Groups & Events",
+    "description": "Manage Facebook pages, groups, and events for event posts",
+    "tabs": {
+      "pages": "Pages",
+      "groups": "Groups",
+      "events": "Events"
+    },
+    "pages": {
+      "list": {
+        "title": "Facebook Pages",
+        "description": "Management of Facebook pages"
+      },
+      "table": {
+        "label": "Pages",
+        "description": "List of all Facebook pages"
+      },
+      "add": {
+        "title": "Add New Page",
+        "description": "Add a new Facebook page"
+      },
+      "form": {
+        "pageId": "Facebook Page ID",
+        "pageIdPlaceholder": "e.g. 123456789012345",
+        "pageName": "Page Name",
+        "pageNamePlaceholder": "e.g. EventPromo",
+        "pageUrl": "Page URL"
+      },
+      "edit": {
+        "title": "Edit Page",
+        "description": "Edit an existing Facebook page",
+        "selectLabel": "Select Page"
+      }
+    },
+    "groups": {
+      "list": {
+        "title": "Facebook Groups",
+        "description": "Management of Facebook groups"
+      },
+      "table": {
+        "label": "Groups",
+        "description": "List of all Facebook groups"
+      },
+      "add": {
+        "title": "Add New Group",
+        "description": "Add a new Facebook group"
+      },
+      "form": {
+        "groupId": "Facebook Group ID",
+        "groupIdPlaceholder": "e.g. 987654321098765",
+        "groupName": "Group Name",
+        "groupNamePlaceholder": "e.g. Leipzig Events",
+        "descriptionPlaceholder": "e.g. Group for local events in Leipzig"
+      }
+    },
+    "events": {
+      "list": {
+        "title": "Facebook Events",
+        "description": "Management of Facebook events"
+      },
+      "table": {
+        "label": "Events",
+        "description": "List of all Facebook events"
+      },
+      "add": {
+        "title": "Add New Event",
+        "description": "Add a new Facebook event"
+      },
+      "form": {
+        "eventId": "Facebook Event ID",
+        "eventIdPlaceholder": "e.g. 123456789012345",
+        "eventName": "Event Name",
+        "eventNamePlaceholder": "e.g. Depeche Mode Party"
+      }
+    },
+    "common": {
+      "category": "Category",
+      "active": "Active",
+      "description": "Description"
+    },
+    "categories": {
+      "business": "Business",
+      "entertainment": "Entertainment",
+      "event": "Event",
+      "music": "Music",
+      "nightlife": "Nightlife"
+    }
+  },
+  "validation": {
+    "pageIdRequired": "Facebook Page ID is required",
+    "pageNameRequired": "Page Name is required",
+    "invalidUrl": "Invalid URL",
+    "groupIdRequired": "Facebook Group ID is required",
+    "groupNameRequired": "Group Name is required",
+    "eventIdRequired": "Facebook Event ID is required",
+    "eventNameRequired": "Event Name is required"
   }
 }

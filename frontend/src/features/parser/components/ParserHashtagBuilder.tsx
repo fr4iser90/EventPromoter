@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Paper,
@@ -48,6 +49,7 @@ function ParserHashtagBuilder({
   eventData: EventData
   onHashtagsChange?: (hashtags: string[]) => void
 }) {
+  const { t } = useTranslation()
   const [available, setAvailable] = useState<string[]>([])
   const [groups, setGroups] = useState<Record<string, string[]>>({})
   const [selected, setSelected] = useState<string[]>([])
@@ -99,7 +101,7 @@ function ParserHashtagBuilder({
       }
     } catch (err: unknown) {
       console.error('Failed to load hashtags:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load hashtags')
+      setError(err instanceof Error ? err.message : t('parser.failedToLoadHashtags'))
     } finally {
       setLoading(false)
     }
@@ -199,7 +201,7 @@ function ParserHashtagBuilder({
   if (error) {
     return (
       <Alert severity="error">
-        Failed to load hashtags: {error}
+        {t('parser.failedToLoadHashtags')}: {error}
       </Alert>
     )
   }
@@ -207,7 +209,7 @@ function ParserHashtagBuilder({
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        # Hashtag Builder
+        {t('parser.hashtagBuilder')}
       </Typography>
 
       {/* Suggestions Alert */}
@@ -222,12 +224,12 @@ function ParserHashtagBuilder({
               startIcon={<AutoAwesomeIcon />}
               onClick={handleAddAllSuggestions}
             >
-              Add All
+              {t('parser.addAll')}
             </Button>
           }
         >
           <Typography variant="body2" gutterBottom>
-            <strong>Suggested hashtags</strong> based on your event data:
+            <strong>{t('parser.suggestedHashtags')}</strong> {t('parser.basedOnEventData')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
             {suggestions.slice(0, 10).map((hashtag) => (
@@ -256,14 +258,14 @@ function ParserHashtagBuilder({
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2, height: '100%', maxHeight: 600, overflow: 'auto' }}>
             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
-              Available Hashtags
+              {t('parser.availableHashtags')}
             </Typography>
 
             {/* Search */}
             <TextField
               fullWidth
               size="small"
-              placeholder="Search hashtags..."
+              placeholder={t('parser.searchHashtags')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
@@ -312,7 +314,7 @@ function ParserHashtagBuilder({
               ))
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No hashtags found
+                {t('parser.noHashtagsFound')}
               </Typography>
             )}
 
@@ -323,7 +325,7 @@ function ParserHashtagBuilder({
             }).length > 0 && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
-                  Other
+                  {t('common.other')}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                   {filteredAvailable.filter((h) => !Object.values(groups).flat().includes(h)).map((hashtag) => (
@@ -350,7 +352,7 @@ function ParserHashtagBuilder({
           <Paper sx={{ p: 2, height: '100%', maxHeight: 600, overflow: 'auto' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                Selected Hashtags
+                {t('parser.selectedHashtags')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Typography variant="body2" color="text.secondary">
@@ -363,7 +365,7 @@ function ParserHashtagBuilder({
                     onClick={handleClearSelected}
                     color="error"
                   >
-                    Clear
+                    {t('common.clear')}
                   </Button>
                 )}
               </Box>
@@ -371,7 +373,7 @@ function ParserHashtagBuilder({
 
             {selected.length === 0 ? (
               <Alert severity="info">
-                No hashtags selected. Click on hashtags from the left panel to add them.
+                {t('parser.noHashtagsSelectedHint')}
               </Alert>
             ) : (
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -389,7 +391,7 @@ function ParserHashtagBuilder({
 
             {selected.length >= getPlatformLimit() && (
               <Alert severity="warning" sx={{ mt: 2 }}>
-                You've reached the platform limit ({getPlatformLimit()} hashtags)
+                {t('parser.reachedPlatformLimit', { limit: getPlatformLimit() })}
               </Alert>
             )}
           </Paper>

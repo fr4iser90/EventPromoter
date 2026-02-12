@@ -10,21 +10,21 @@ import { PreviewSchema } from '@/types/schema/index.js'
 
 export const emailPreviewSchema: PreviewSchema = {
   version: '1.0.0',
-  title: 'Email Preview',
-  description: 'Preview how your email will look',
+  title: 'platform.email.preview.title',
+  description: 'platform.email.preview.description',
   defaultMode: 'desktop',
   modes: [
     {
       id: 'desktop',
-      label: 'Desktop',
-      description: 'Desktop email client view',
+      label: 'platform.email.preview.modes.desktop.label',
+      description: 'platform.email.preview.modes.desktop.description',
       width: 600,
       height: 800
     },
     {
       id: 'mobile',
-      label: 'Mobile',
-      description: 'Mobile email client view',
+      label: 'platform.email.preview.modes.mobile.label',
+      description: 'platform.email.preview.modes.mobile.description',
       width: 320,
       height: 568
     }

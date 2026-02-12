@@ -31,7 +31,7 @@ function VariableToolbar({
     return (
       <Box sx={{ p: 1 }}>
         <Typography variant="caption" color="text.secondary">
-          {t('template.noVariables', { defaultValue: 'No variables available' })}
+          {t('template.noVariables')}
         </Typography>
       </Box>
     )
@@ -40,7 +40,7 @@ function VariableToolbar({
   return (
     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
       <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-        {t('template.variables', { defaultValue: 'Variables:' })}
+        {t('template.variables')}
       </Typography>
       {variables.map((variable: TemplateVariable) => (
         <Tooltip

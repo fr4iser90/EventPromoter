@@ -61,11 +61,11 @@ function FileUpload() {
         const errorMessages = file.errors.map((error) => {
           switch (error.code) {
             case 'file-too-large':
-              return `File "${file.file.name}" is too large. Maximum size is 10MB.`
+              return t('upload.errors.fileTooLarge', { name: file.file.name })
             case 'file-invalid-type':
-              return `File "${file.file.name}" has an invalid type. Only JPG, PNG, GIF, WebP, PDF, TXT, and MD files are allowed.`
+              return t('upload.errors.fileInvalidType', { name: file.file.name })
             default:
-              return `File "${file.file.name}": ${error.message}`
+              return t('upload.errors.fileGeneric', { name: file.file.name, message: error.message })
           }
         })
         return errorMessages.join(' ')
@@ -82,9 +82,9 @@ function FileUpload() {
           // Parsing happens automatically in upload now
 
     } catch {
-      setError('Failed to upload files')
+      setError(t('upload.errors.failedUpload'))
     }
-  }, [uploadFiles, setError])
+  }, [uploadFiles, setError, t])
 
   // Auto-expand when in initial state
   useEffect(() => {
@@ -104,7 +104,7 @@ function FileUpload() {
     try {
       await removeUploadedFile(fileId)
     } catch (error) {
-      setError('Failed to remove file')
+      setError(t('upload.errors.failedRemove'))
     }
   }
 
@@ -117,13 +117,13 @@ function FileUpload() {
     )
 
     if (validFiles.length === 0) {
-      setError('No supported files found in the selected folder. Supported: JPG, PNG, GIF, WebP, PDF, TXT, MD')
+      setError(t('upload.errors.noSupportedInFolder'))
       return
     }
 
     const oversizedFiles = validFiles.filter((file) => file.size > MAX_FILE_SIZE)
     if (oversizedFiles.length > 0) {
-      setError(`Some files are too large. Maximum size is 10MB. Skipped: ${oversizedFiles.map((f) => f.name).join(', ')}`)
+      setError(t('upload.errors.oversizedSkipped', { files: oversizedFiles.map((f) => f.name).join(', ') }))
       return
     }
 
@@ -131,7 +131,7 @@ function FileUpload() {
       await uploadFiles(validFiles)
       setError(null)
     } catch {
-      setError('Failed to upload files')
+      setError(t('upload.errors.failedUpload'))
     }
 
     // Reset input
@@ -168,7 +168,7 @@ function FileUpload() {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h6">
-            📁 File Upload
+            {t('workflow.uploadFiles')}
           </Typography>
           <HelperIcon 
             helperId="upload"
@@ -180,7 +180,9 @@ function FileUpload() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {!fileUploadExpanded && uploadedFileRefs.length > 0 && (
             <Typography variant="body2" color="text.secondary">
-              {uploadedFileRefs.length} file{uploadedFileRefs.length !== 1 ? 's' : ''} uploaded
+              {uploadedFileRefs.length === 1
+                ? t('upload.filesUploadedOne', { count: uploadedFileRefs.length })
+                : t('upload.filesUploadedMany', { count: uploadedFileRefs.length })}
             </Typography>
           )}
           <IconButton size="small">
@@ -215,11 +217,11 @@ function FileUpload() {
           {isDragActive ? t('common.dropActive') : t('common.dropInactive')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          or click to browse files
+          {t('upload.browsePrompt')}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 1 }}>
           <Typography variant="caption">
-            Supported: JPG, PNG, GIF, WebP images, PDF documents, TXT, MD text files (max 10MB each)
+            {t('upload.supportedSummary')}
           </Typography>
           <HelperIcon 
             helperId="upload.formats"
@@ -244,7 +246,7 @@ function FileUpload() {
             onClick={() => folderInputRef.current?.click()}
             size="small"
           >
-            Select Folder
+            {t('upload.selectFolder')}
           </Button>
         </Box>
       </Box>
@@ -258,7 +260,7 @@ function FileUpload() {
       {uploadedFileRefs.length > 0 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Uploaded Files ({uploadedFileRefs.length})
+            {t('upload.uploadedFiles', { count: uploadedFileRefs.length })}
           </Typography>
           <List>
             {uploadedFileRefs.map((fileData) => (

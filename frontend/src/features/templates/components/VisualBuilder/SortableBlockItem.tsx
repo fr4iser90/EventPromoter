@@ -108,7 +108,7 @@ function SortableBlockItem({
 
       {/* Block Actions */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5, mb: 1 }}>
-        <Tooltip title={t('common.moveUp', { defaultValue: 'Move Up' })}>
+        <Tooltip title={t('common.moveUp')}>
           <IconButton
             size="small"
             onClick={(e) => {
@@ -120,7 +120,7 @@ function SortableBlockItem({
             <ArrowUpIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={t('common.moveDown', { defaultValue: 'Move Down' })}>
+        <Tooltip title={t('common.moveDown')}>
           <IconButton
             size="small"
             onClick={(e) => {
@@ -132,7 +132,7 @@ function SortableBlockItem({
             <ArrowDownIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Tooltip title={t('common.delete', { defaultValue: 'Delete' })}>
+        <Tooltip title={t('common.delete')}>
           <IconButton
             size="small"
             color="error"

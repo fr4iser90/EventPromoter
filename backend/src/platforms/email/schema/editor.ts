@@ -10,8 +10,8 @@ import { EditorSchema } from '@/types/schema/index.js'
 
 export const emailEditorSchema: EditorSchema = {
   version: '1.0.0',
-  title: 'Email Content Editor',
-  description: 'Create and edit email content with structured fields',
+  title: 'platform.email.editor.title',
+  description: 'platform.email.editor.description',
   mode: 'advanced',
   blocks: [
     {
@@ -93,16 +93,16 @@ export const emailEditorSchema: EditorSchema = {
     {
       type: 'text',
       id: 'subject',
-      label: 'Subject',
-      description: 'Email subject line',
+      label: 'platform.email.editor.subject',
+      description: 'platform.email.editor.subjectDescription',
       required: true,
       constraints: {
         maxLength: 200,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Subject is required' },
-        { type: 'maxLength', value: 200, message: 'Subject must be at most 200 characters' }
+        { type: 'required', message: 'platform.email.editor.validation.subjectRequired' },
+        { type: 'maxLength', value: 200, message: 'platform.email.editor.validation.subjectMaxLength' }
       ],
       ui: {
         icon: 'subject',
@@ -111,14 +111,14 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'text',
-        placeholder: 'Enter email subject...'
+        placeholder: 'platform.email.editor.subjectPlaceholder'
       }
     },
     {
       type: 'image',
       id: 'headerImage',
-      label: 'Header Image',
-      description: 'Main image displayed at the top of the email (embedded in HTML)',
+      label: 'platform.email.editor.headerImage',
+      description: 'platform.email.editor.headerImageDescription',
       required: false,
       constraints: {
         maxItems: 1,
@@ -138,12 +138,12 @@ export const emailEditorSchema: EditorSchema = {
     {
       type: 'file_selection_input',
       id: 'globalFiles',
-      label: 'editor.standardAttachments',
-      description: 'editor.standardAttachmentsDescription',
+      label: 'platform.email.editor.standardAttachments',
+      description: 'platform.email.editor.standardAttachmentsDescription',
       required: false,
       settings: {
         enableToggle: {
-          label: 'editor.includeStandardAttachments',
+          label: 'platform.email.editor.includeStandardAttachments',
           default: false
         },
         selectionLimit: {
@@ -167,15 +167,15 @@ export const emailEditorSchema: EditorSchema = {
     {
       type: 'paragraph',
       id: 'bodyText',
-      label: 'Body Text',
-      description: 'Main email content (plain text, will be formatted automatically)',
+      label: 'platform.email.editor.bodyText',
+      description: 'platform.email.editor.bodyTextDescription',
       required: true,
       constraints: {
         maxLength: 10000,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Body text is required' }
+        { type: 'required', message: 'platform.email.editor.validation.bodyTextRequired' }
       ],
       ui: {
         icon: 'text',
@@ -184,14 +184,14 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Enter your email content here...'
+        placeholder: 'platform.email.editor.bodyTextPlaceholder'
       }
     },
     {
       type: 'text',
       id: 'ctaButtonText',
-      label: 'CTA Button Text',
-      description: 'Text for the call-to-action button',
+      label: 'platform.email.editor.ctaButtonText',
+      description: 'platform.email.editor.ctaButtonTextDescription',
       required: false,
       constraints: {
         maxLength: 50,
@@ -204,14 +204,14 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'text',
-        placeholder: 'e.g., Get Tickets Now'
+        placeholder: 'platform.email.editor.ctaButtonTextPlaceholder'
       }
     },
     {
       type: 'link',
       id: 'ctaButtonLink',
-      label: 'CTA Button Link',
-      description: 'URL for the call-to-action button',
+      label: 'platform.email.editor.ctaButtonLink',
+      description: 'platform.email.editor.ctaButtonLinkDescription',
       required: false,
       constraints: {
         maxLength: 500
@@ -223,14 +223,14 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'url',
-        placeholder: 'https://example.com/tickets'
+        placeholder: 'platform.email.editor.ctaButtonLinkPlaceholder'
       }
     },
     {
       type: 'paragraph',
       id: 'footerText',
-      label: 'Footer Text',
-      description: 'Optional footer text (e.g., unsubscribe link, contact info)',
+      label: 'platform.email.editor.footerText',
+      description: 'platform.email.editor.footerTextDescription',
       required: false,
       constraints: {
         maxLength: 500
@@ -242,15 +242,15 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Optional footer text...'
+        placeholder: 'platform.email.editor.footerTextPlaceholder'
       }
     },
     // Legacy fields for backward compatibility
     {
       type: 'paragraph',
       id: 'body',
-      label: 'Email Body (HTML)',
-      description: 'Legacy: Full HTML body (use structured fields above instead)',
+      label: 'platform.email.editor.legacyBody',
+      description: 'platform.email.editor.legacyBodyDescription',
       required: false,
       constraints: {
         maxLength: 50000
@@ -262,14 +262,14 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'HTML content...'
+        placeholder: 'platform.email.editor.legacyBodyPlaceholder'
       }
     },
     {
       type: 'image',
       id: 'images',
-      label: 'Images (Legacy)',
-      description: 'Legacy: Additional images',
+      label: 'platform.email.editor.legacyImages',
+      description: 'platform.email.editor.legacyImagesDescription',
       required: false,
       constraints: {
         maxItems: 10,
@@ -289,8 +289,8 @@ export const emailEditorSchema: EditorSchema = {
     {
       type: 'link',
       id: 'links',
-      label: 'Links (Legacy)',
-      description: 'Legacy: Additional links',
+      label: 'platform.email.editor.legacyLinks',
+      description: 'platform.email.editor.legacyLinksDescription',
       required: false,
       constraints: {
         maxItems: 10
@@ -302,7 +302,7 @@ export const emailEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'url',
-        placeholder: 'https://example.com'
+        placeholder: 'platform.email.editor.legacyLinksPlaceholder'
       }
     }
   ],

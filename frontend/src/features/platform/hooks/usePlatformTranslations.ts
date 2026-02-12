@@ -109,7 +109,7 @@ export function usePlatformTranslations(platformId?: string, lang?: string): Pla
         }
       } catch (err: unknown) {
         console.warn(`[usePlatformTranslations] Failed to load translations for platform ${platformId}:`, err)
-        setError(err instanceof Error ? err.message : 'Failed to load platform translations')
+        setError(err instanceof Error ? err.message : 'platform.failedToLoadPlatformTranslations')
         // Don't fail completely - just log warning
         setLoaded(true)
       } finally {
@@ -193,7 +193,7 @@ export function useMultiplePlatformTranslations(platformIds: string[] = [], lang
             console.warn(`Failed to load translations for ${platformId}:`, err)
             setErrors(prev => ({
               ...prev,
-              [platformId]: err instanceof Error ? err.message : 'Failed to load platform translation'
+              [platformId]: err instanceof Error ? err.message : 'platform.failedToLoadPlatformTranslation'
             }))
           }
         })

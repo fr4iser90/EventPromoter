@@ -1,5 +1,6 @@
 // Publish Parser - Handles manual finalization before submission
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -42,6 +43,7 @@ type PlatformMeta = {
 }
 
 function PublishParser() {
+  const { t } = useTranslation()
   const {
     selectedPlatforms,
     platformContent,
@@ -205,7 +207,7 @@ function PublishParser() {
       }
     } catch (error: unknown) {
       console.error(`Failed to retry platform ${platformId}:`, error)
-      setValidationErrors([`Failed to retry ${platformId}: ${error instanceof Error ? error.message : 'unknown error'}`])
+      setValidationErrors([t('publish.retryFailed', { platform: platformId, error: error instanceof Error ? error.message : t('common.unknown') })])
     }
   }
 
@@ -234,7 +236,7 @@ function PublishParser() {
       {/* --- FEEDBACK BLOCK GANZ OBEN --- */}
       <Box sx={{ mb: 4, p: 2, border: '3px solid #2196F3', borderRadius: 2, bgcolor: '#f0f7ff' }}>
         <Typography variant="h6" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          📡 Live Publishing Feedback
+          {t('publish.liveFeedback')}
         </Typography>
         <PublisherProgress 
           sessionId={publishSessionId || 'active-session'} 
@@ -243,24 +245,24 @@ function PublishParser() {
         />
         {!publishSessionId && (
           <Typography variant="caption" color="text.secondary">
-            Bereit zum Senden. Klicken Sie unten auf "Publish", um den Live-Status zu starten.
+            {t('publish.readyHint')}
           </Typography>
         )}
       </Box>
       {/* -------------------------------------- */}
 
       <Typography variant="h5" gutterBottom>
-        🚀 Publish Parser - Manual Finalization
+        {t('publish.title')}
       </Typography>
 
       <Typography variant="body1" sx={{ mb: 3 }}>
-        Review and finalize your content before publishing to selected platforms.
+        {t('publish.description')}
       </Typography>
 
       {/* Platform Status Overview */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          📊 Platform Status
+          {t('publish.platformStatus')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           {platformStatuses.map(({ platform, status }) => {
@@ -269,7 +271,7 @@ function PublishParser() {
               <Chip
                 key={platform}
                 icon={<span>{info.icon}</span>}
-                label={`${info.name}: ${status === 'ready' ? 'Ready' : 'Draft'}`}
+                label={`${info.name}: ${status === 'ready' ? t('status.ready') : t('status.draft')}`}
                 color={status === 'ready' ? 'success' : 'warning'}
                 variant="outlined"
               />
@@ -282,7 +284,7 @@ function PublishParser() {
       {validationErrors.length > 0 && (
         <Alert severity="error" sx={{ mb: 3 }}>
           <Typography variant="subtitle2" gutterBottom>
-            Please fix the following issues before publishing:
+            {t('publish.fixIssuesPrompt')}
           </Typography>
           <ul style={{ margin: 0, paddingLeft: '20px' }}>
             {validationErrors.map((error: string, index: number) => (
@@ -324,7 +326,7 @@ function PublishParser() {
             }
           }}
         >
-          🚀 Publish to {selectedPlatforms.length} Platform{selectedPlatforms.length !== 1 ? 's' : ''}
+          {t('publish.publishToCount', { count: selectedPlatforms.length })}
         </Button>
       </Box>
 
@@ -335,10 +337,10 @@ function PublishParser() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Confirm Publishing</DialogTitle>
+        <DialogTitle>{t('publish.confirmTitle')}</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            You are about to publish to the following platforms:
+            {t('publish.confirmListIntro')}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
             {selectedPlatforms.map((platformId) => {
@@ -355,13 +357,13 @@ function PublishParser() {
             })}
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            This action cannot be undone. Make sure all content is ready for publishing.
+            {t('publish.confirmWarning')}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowConfirmDialog(false)}>Cancel</Button>
+          <Button onClick={() => setShowConfirmDialog(false)}>{t('common.cancel')}</Button>
           <Button onClick={handleConfirmPublish} variant="contained" color="primary">
-            Confirm Publish
+            {t('publish.confirmAction')}
           </Button>
         </DialogActions>
       </Dialog>

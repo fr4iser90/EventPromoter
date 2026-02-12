@@ -65,7 +65,7 @@ export function PreviewFrame({ document, dimensions, ...props }: {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style id="preview-structural-css">
-          /* Strukturelles CSS vom Backend (wird injiziert) */
+          /*x*/
         </style>
         <style id="preview-theme-css">
           /* Theme CSS Variables (werden komplett via JS gesetzt) */
@@ -182,7 +182,7 @@ export function PreviewFrame({ document, dimensions, ...props }: {
         display: 'block',
         backgroundColor: 'transparent'
       }}
-      title={document?.meta?.title || 'Preview'}
+      title={document?.meta?.title || 'preview.frame'}
       {...props}
     />
   )

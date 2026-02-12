@@ -26,11 +26,11 @@ export function useTemplateCategories() {
         if (response.data.success && Array.isArray(response.data.categories)) {
           setCategories(response.data.categories)
         } else {
-          setError('Failed to load categories')
+          setError('template.failedToLoadCategories')
           setCategories([])
         }
       } catch (err: unknown) {
-        setError(getAxiosErrorMessage(err, 'Failed to load categories'))
+        setError(getAxiosErrorMessage(err, 'template.failedToLoadCategories'))
         setCategories([])
       } finally {
         setLoading(false)

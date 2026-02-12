@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogTitle,
@@ -11,6 +12,7 @@ import {
 } from '@mui/material'
 import { getApiUrl } from '../../shared/utils/api';
 import SchemaRenderer from '../../features/schema/components/Renderer'
+import { usePlatformTranslations } from '../../features/platform/hooks/usePlatformTranslations'
 import type { SchemaField as RendererSchemaField } from '../../features/schema/types'
 
 type BackendField = {
@@ -66,6 +68,13 @@ const EditModal = ({
   method?: string
   onSaveSuccess?: () => void
 }) => {
+  const { t, i18n } = useTranslation()
+  usePlatformTranslations(platformId, i18n.language)
+  const translate = (key?: string, fallback?: string) => {
+    if (!key) return fallback || ''
+    return t(key, { defaultValue: fallback || key })
+  }
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [schema, setSchema] = useState<LoadedSchema | null>(null)
@@ -171,7 +180,7 @@ const EditModal = ({
         }
       } catch (err: unknown) {
         console.error('Error fetching schema or data:', err);
-        setError(getErrorMessage(err, 'Error fetching schema or data'))
+        setError(getErrorMessage(err, t('common.errorFetchingSchemaOrData')))
       } finally {
         setLoading(false);
       }
@@ -214,7 +223,7 @@ const EditModal = ({
       onClose();
     } catch (err: unknown) {
       console.error('Error saving data:', err);
-      setError(getErrorMessage(err, 'Error saving data'))
+      setError(getErrorMessage(err, t('common.errorSavingData')))
     } finally {
       setLoading(false);
     }
@@ -260,7 +269,7 @@ const EditModal = ({
       onClose();
     } catch (err: unknown) {
       console.error('Error deleting item:', err);
-      setError(getErrorMessage(err, 'Error deleting item'))
+      setError(getErrorMessage(err, t('common.errorDeletingItem')))
       setDeleteDialogOpen(false);
     } finally {
       setLoading(false);
@@ -271,7 +280,7 @@ const EditModal = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{schema ? schema.title : 'Loading...'}</DialogTitle>
+      <DialogTitle>{schema ? translate(schema.title, schema.title) : t('common.loading')}</DialogTitle>
       <DialogContent dividers>
         {loading && (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="100px">
@@ -279,7 +288,7 @@ const EditModal = ({
           </Box>
         )}
         {error && (
-          <Typography color="error">Error: {error}</Typography>
+          <Typography color="error">{t('common.error')}: {error}</Typography>
         )}
         {!loading && !error && schema && (
           <SchemaRenderer
@@ -297,7 +306,7 @@ const EditModal = ({
           />
         )}
         {!loading && !error && !schema && (
-          <Typography>No schema found or loaded.</Typography>
+          <Typography>{t('common.noSchemaFoundOrLoaded')}</Typography>
         )}
       </DialogContent>
       <DialogActions>
@@ -324,7 +333,7 @@ const EditModal = ({
               variant={action.ui?.variant || 'text'}
               disabled={loading}
             >
-              {action.label}
+              {translate(action.label, action.label)}
             </Button>
           );
         })}
@@ -332,18 +341,18 @@ const EditModal = ({
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete {schema?.title?.replace('Edit ', '') || 'Item'}</DialogTitle>
+        <DialogTitle>{t('common.delete')} {schema?.title?.replace('Edit ', '') || t('common.item')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete this item? This action cannot be undone.
+            {t('common.deleteConfirmItem')}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)} disabled={loading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={loading}>
-            Delete
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

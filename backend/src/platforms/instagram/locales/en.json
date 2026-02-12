@@ -11,7 +11,9 @@
       "description": "ONLY required for Playwright / browser automation.",
       "username": "Browser Username/Email",
       "password": "Browser Password"
-    }
+    },
+    "title": "Instagram Platform Credentials",
+    "description": "Configure Instagram API credentials"
   },
   "panels": {
     "instagram": {
@@ -76,12 +78,132 @@
   },
   "preview": {
     "instagram": "📸 Instagram Preview",
-    "noCaption": "No caption yet..."
+    "noCaption": "No caption yet...",
+    "title": "Instagram Preview",
+    "description": "Preview how your Instagram post will look",
+    "modes": {
+      "mobile": {
+        "label": "Mobile",
+        "description": "Mobile Instagram view"
+      },
+      "desktop": {
+        "label": "Desktop",
+        "description": "Desktop Instagram view"
+      }
+    }
   },
   "help": {
     "instagramCaption": "Caption for Instagram post"
   },
   "metadata": {
-    "description": "Share events on Instagram with images and captions"
+    "description": "Share events on Instagram with images and captions",
+    "schemaDescription": "Instagram platform schema for self-discovering architecture"
+  },
+  "editor": {
+    "title": "Instagram Post Editor",
+    "description": "Create and edit Instagram posts",
+    "image": {
+      "label": "Image",
+      "description": "Post image (required)",
+      "required": "Image is required"
+    },
+    "caption": {
+      "label": "Caption",
+      "description": "Post caption (max 2200 characters)",
+      "required": "Caption is required",
+      "maxLength": "Caption must be at most 2200 characters",
+      "placeholder": "Write a caption..."
+    },
+    "hashtags": {
+      "label": "Hashtags",
+      "description": "Add hashtags to your post"
+    }
+  },
+  "settings": {
+    "title": "Instagram Accounts, Hashtags & Locations",
+    "description": "Manage Instagram accounts, hashtags, and locations for event posts",
+    "tabs": {
+      "accounts": "Accounts",
+      "hashtags": "Hashtags",
+      "locations": "Locations"
+    },
+    "common": {
+      "displayName": "Display Name",
+      "description": "Description",
+      "active": "Active"
+    },
+    "accounts": {
+      "list": {
+        "title": "Instagram Accounts",
+        "description": "Management of Instagram accounts"
+      },
+      "table": {
+        "label": "Accounts",
+        "description": "List of all Instagram accounts"
+      },
+      "add": {
+        "title": "Add New Account",
+        "description": "Add a new Instagram account"
+      },
+      "form": {
+        "username": "Instagram Username",
+        "usernamePlaceholder": "@username or username",
+        "displayNamePlaceholder": "e.g. EventPromo",
+        "descriptionPlaceholder": "e.g. Official account for event promotion"
+      },
+      "edit": {
+        "title": "Edit Account",
+        "description": "Edit an existing Instagram account",
+        "selectLabel": "Select Account"
+      }
+    },
+    "hashtags": {
+      "list": {
+        "title": "Hashtags",
+        "description": "Management of hashtags"
+      },
+      "table": {
+        "label": "Hashtags",
+        "description": "List of all hashtags"
+      },
+      "add": {
+        "title": "Add New Hashtag",
+        "description": "Add a new hashtag"
+      },
+      "form": {
+        "hashtag": "Hashtag",
+        "hashtagPlaceholder": "#hashtag or hashtag",
+        "descriptionPlaceholder": "e.g. General hashtag for events"
+      }
+    },
+    "locations": {
+      "list": {
+        "title": "Locations",
+        "description": "Management of locations"
+      },
+      "table": {
+        "label": "Locations",
+        "description": "List of all locations"
+      },
+      "add": {
+        "title": "Add New Location",
+        "description": "Add a new location"
+      },
+      "form": {
+        "locationName": "Location Name",
+        "locationNamePlaceholder": "e.g. Werk 2",
+        "locationId": "Instagram Location ID",
+        "locationIdPlaceholder": "e.g. 123456789",
+        "address": "Address",
+        "addressPlaceholder": "e.g. Kochstrasse 132, 04277 Leipzig"
+      }
+    }
+  },
+  "validation": {
+    "usernameRequired": "Instagram Username is required",
+    "invalidUsername": "Invalid Instagram username",
+    "hashtagRequired": "Hashtag is required",
+    "invalidHashtag": "Invalid hashtag",
+    "locationNameRequired": "Location Name is required"
   }
 }

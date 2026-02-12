@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Paper,
   Typography,
@@ -101,6 +102,7 @@ function PublisherProgress({
   onComplete?: (event: PublisherEvent) => void
   onRetry?: (platformId: string) => void
 }) {
+  const { t } = useTranslation()
   const theme = useTheme()
   const [events, setEvents] = useState<PublisherEvent[]>([])
   const [steps, setSteps] = useState<Map<string, StepState>>(new Map())
@@ -230,7 +232,7 @@ function PublisherProgress({
                     publishRunId: data.publishRunId
                   })
                 }
-                setError(data.error || 'Step failed')
+                setError(data.error || t('publishProgress.stepFailed'))
                 setOverallStatus('failed')
                 setCurrentStep(null)
                 // Update platform status
@@ -253,7 +255,7 @@ function PublisherProgress({
                     error: data.error
                   })
                 }
-                setError(data.error || 'Unknown publishing error')
+                setError(data.error || t('publishProgress.unknownPublishingError'))
                 setOverallStatus('failed')
                 setCurrentStep(null)
               } else if (data.type === 'success') {
@@ -341,7 +343,7 @@ function PublisherProgress({
 
     eventSource.onerror = (err) => {
       console.error('SSE connection error:', err)
-      setError('Connection lost. Please check the console for details.')
+      setError(t('publishProgress.connectionLost'))
       eventSource.close()
     }
 
@@ -350,7 +352,7 @@ function PublisherProgress({
         eventSourceRef.current.close()
       }
     }
-  }, [sessionId, onComplete, theme])
+  }, [sessionId, onComplete, t, theme])
 
   const getStepIcon = (status?: string) => {
     switch (status) {
@@ -398,6 +400,21 @@ function PublisherProgress({
     return `${(ms / 1000).toFixed(1)}s`
   }
 
+  const getOverallStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return t('publishProgress.statusPending')
+      case 'running':
+        return t('publishProgress.statusRunning')
+      case 'completed':
+        return t('publishProgress.statusCompleted')
+      case 'failed':
+        return t('publishProgress.statusFailed')
+      default:
+        return status.toUpperCase()
+    }
+  }
+
   const stepsArray = Array.from(steps.values())
 
   return (
@@ -415,7 +432,7 @@ function PublisherProgress({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Sensors color={overallStatus === 'running' ? 'primary' : 'disabled'} sx={{ animation: overallStatus === 'running' ? 'pulse 2s infinite' : 'none' }} />
           <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-            Publishing Progress
+            {t('publishProgress.title')}
           </Typography>
         </Box>
         <IconButton onClick={() => setExpanded(!expanded)} size="small">
@@ -427,17 +444,17 @@ function PublisherProgress({
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
           <Typography variant="caption" component="div" color="text.secondary" sx={{ fontWeight: 'medium', textTransform: 'uppercase', letterSpacing: 1 }}>
-            Status: {overallStatus.toUpperCase()}
+            {t('publishProgress.statusLabel')}: {getOverallStatusLabel(overallStatus)}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" component="div" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
               {Math.round(overallProgress)}%
             </Typography>
             {overallStatus === 'failed' && (
-              <Chip label="Failed" size="small" color="error" variant="filled" sx={{ height: 20, fontSize: '0.7rem' }} />
+              <Chip label={t('publishProgress.failed')} size="small" color="error" variant="filled" sx={{ height: 20, fontSize: '0.7rem' }} />
             )}
             {overallStatus === 'completed' && (
-              <Chip label="Done" size="small" color="success" variant="filled" sx={{ height: 20, fontSize: '0.7rem' }} />
+              <Chip label={t('publishProgress.done')} size="small" color="success" variant="filled" sx={{ height: 20, fontSize: '0.7rem' }} />
             )}
           </Box>
         </Box>
@@ -536,7 +553,7 @@ function PublisherProgress({
                         {info.name}
                       </Typography>
                       <Typography variant="caption" component="div" color="text.secondary" sx={{ display: 'block' }}>
-                        via {platform.method?.toUpperCase() || 'UNKNOWN'}
+                        {t('publishProgress.via')} {platform.method?.toUpperCase() || t('common.unknown')}
                       </Typography>
                     </Box>
                   </Box>
@@ -555,7 +572,7 @@ function PublisherProgress({
                         onClick={() => onRetry(platform.platform || 'unknown')}
                         sx={{ height: 24, fontSize: '0.65rem', px: 1 }}
                       >
-                        Retry
+                        {t('publishProgress.retry')}
                       </Button>
                     )}
                   </Box>
@@ -621,7 +638,7 @@ function PublisherProgress({
                       </Box>
                     )) : (
                       <ListItem sx={{ py: 2, justifyContent: 'center' }}>
-                        <Typography variant="caption" color="text.disabled">No steps recorded yet</Typography>
+                        <Typography variant="caption" color="text.disabled">{t('publishProgress.noStepsYet')}</Typography>
                       </ListItem>
                     )}
                   </List>
@@ -636,7 +653,7 @@ function PublisherProgress({
         <Box sx={{ textAlign: 'center', py: 4, opacity: 0.6 }}>
           <Sensors sx={{ fontSize: 40, color: theme.palette.action.disabled, mb: 1 }} />
           <Typography variant="body2" color="text.secondary">
-            Waiting for publisher events...
+            {t('publishProgress.waitingForEvents')}
           </Typography>
         </Box>
       )}

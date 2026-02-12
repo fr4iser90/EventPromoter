@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogTitle,
@@ -26,6 +27,7 @@ type SettingsModalProps = {
 }
 
 function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const { t } = useTranslation()
   const { n8nWebhookUrl, setN8nWebhookUrl, loadAppConfig } = useStore()
   const [tempN8nUrl, setTempN8nUrl] = useState('')
   const [publishingMode, setPublishingMode] = useState('auto')
@@ -126,40 +128,40 @@ function SettingsModal({ open, onClose }: SettingsModalProps) {
   return (
     <Dialog open={open} onClose={handleCancel} maxWidth="sm" fullWidth>
       <DialogTitle>
-        ⚙️ Application Settings
+        {t('settingsDialog.title')}
       </DialogTitle>
 
       <DialogContent>
         {/* Publishing Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            📤 Publishing
+            {t('settingsDialog.publishingSectionTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Configure how content is published to external platforms
+            {t('settingsDialog.publishingSectionDescription')}
           </Typography>
 
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Publishing Method</InputLabel>
+            <InputLabel>{t('settingsDialog.publishingMethodLabel')}</InputLabel>
             <Select
               value={publishingMode}
               onChange={(e) => setPublishingMode(e.target.value)}
-              label="Publishing Method"
+              label={t('settingsDialog.publishingMethodLabel')}
             >
-              <MenuItem value="auto">Auto (Recommended)</MenuItem>
-              <MenuItem value="api">Direct API</MenuItem>
-              <MenuItem value="n8n">N8N Webhook</MenuItem>
-              <MenuItem value="playwright">Browser Automation (Playwright)</MenuItem>
+              <MenuItem value="auto">{t('settingsDialog.modeAuto')}</MenuItem>
+              <MenuItem value="api">{t('settingsDialog.modeApi')}</MenuItem>
+              <MenuItem value="n8n">{t('settingsDialog.modeN8n')}</MenuItem>
+              <MenuItem value="playwright">{t('settingsDialog.modePlaywright')}</MenuItem>
             </Select>
           </FormControl>
 
           {publishingMode === 'auto' && (
             <Alert severity="info" sx={{ mt: 1 }}>
-              ℹ️ Auto mode will attempt the following order:
+              {t('settingsDialog.autoModeInfo')}
               <Box component="ol" sx={{ mt: 1, mb: 0, pl: 3 }}>
-                <li>N8N Webhook</li>
-                <li>Direct API</li>
-                <li>Browser Automation (Playwright)</li>
+                <li>{t('settingsDialog.modeN8n')}</li>
+                <li>{t('settingsDialog.modeApi')}</li>
+                <li>{t('settingsDialog.modePlaywright')}</li>
               </Box>
             </Alert>
           )}
@@ -170,15 +172,15 @@ function SettingsModal({ open, onClose }: SettingsModalProps) {
         {/* N8N Integration Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            🔗 N8N Integration
+            {t('settingsDialog.n8nSectionTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Automate publishing workflows using N8N webhooks.
+            {t('settingsDialog.n8nSectionDescription')}
           </Typography>
 
           <TextField
             fullWidth
-            label="N8N Webhook URL"
+            label={t('settingsDialog.n8nWebhookUrlLabel')}
             value={tempN8nUrl}
             onChange={(e) => {
               setTempN8nUrl(e.target.value)
@@ -196,7 +198,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps) {
             disabled={isValidating || !tempN8nUrl?.trim()}
             startIcon={isValidating ? <CircularProgress size={16} /> : null}
           >
-            Test Connection
+            {t('settingsDialog.testConnection')}
           </Button>
 
           {validationStatus !== null && (
@@ -208,7 +210,7 @@ function SettingsModal({ open, onClose }: SettingsModalProps) {
                   fontWeight: 'bold'
                 }}
               >
-                {validationStatus ? '✓ Connection successful' : '✗ Connection failed'}
+                {validationStatus ? t('settingsDialog.connectionSuccess') : t('settingsDialog.connectionFailed')}
               </Typography>
             </Box>
           )}
@@ -217,10 +219,10 @@ function SettingsModal({ open, onClose }: SettingsModalProps) {
 
       <DialogActions>
         <Button onClick={handleCancel} color="inherit" disabled={saving}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? t('common.saving') : t('settingsDialog.saveSettings')}
         </Button>
       </DialogActions>
     </Dialog>

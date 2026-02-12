@@ -228,7 +228,7 @@ function CompositeRenderer({
         setData(loadedData)
       } catch (err: unknown) {
         console.error('Composite renderer data load error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load data')
+        setError(err instanceof Error ? err.message : t('common.failedToLoadData'))
       } finally {
         setLoading(false)
       }
@@ -335,7 +335,7 @@ function CompositeRenderer({
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <CircularProgress size={24} />
-        <Typography variant="body2" sx={{ mt: 1 }}>Loading...</Typography>
+        <Typography variant="body2" sx={{ mt: 1 }}>{t('common.loading')}</Typography>
       </Box>
     )
   }
@@ -343,7 +343,7 @@ function CompositeRenderer({
   if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
-        Failed to load data: {error}
+        {t('common.failedToLoadData')}: {error}
       </Alert>
     )
   }
@@ -549,7 +549,7 @@ function CompositeRenderer({
                             setReloadTrigger(prev => prev + 1)
                           } catch (err: unknown) {
                             console.error(`Failed to add target ${newTarget}:`, err)
-                            const message = err instanceof Error ? err.message : 'Unknown error'
+                            const message = err instanceof Error ? err.message : t('common.unknownError')
                             alert(translate('common.errorAdding', `Error adding: ${message}`))
                             return
                           }
@@ -637,7 +637,7 @@ function CompositeRenderer({
         let summaryText = ''
         
         if (mode === 'all') {
-          summaryText = t('common.allSelected', { defaultValue: 'All selected' })
+          summaryText = t('common.allSelected')
         } else if (mode === 'groups' && selectedGroups.length > 0) {
           summaryText = t('common.groupsSelected', { count: selectedGroups.length, defaultValue: `${selectedGroups.length} group(s) selected` })
         } else if (mode === 'individual' && selectedIndividuals.length > 0) {

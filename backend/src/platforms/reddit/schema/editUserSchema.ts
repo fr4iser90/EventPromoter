@@ -2,8 +2,8 @@ import { FormSchema } from '@/types/schema/index.js'
 
 const redditUserEditSchema: FormSchema = {
   id: 'editUserSchema',
-  title: 'Edit Reddit User',
-  description: 'Edit an existing Reddit user.',
+  title: 'platform.reddit.editUser.title',
+  description: 'platform.reddit.editUser.description',
   endpoint: 'platforms/:platformId/targets/:id',
   fields: [
     {
@@ -18,15 +18,15 @@ const redditUserEditSchema: FormSchema = {
     {
       name: 'username',
       type: 'text',
-      label: 'Reddit Username',
-      placeholder: 'e.g., username123',
+      label: 'platform.reddit.editUser.fields.username.label',
+      placeholder: 'platform.reddit.editUser.fields.username.placeholder',
       required: true,
       validation: [
-        { type: 'required', message: 'Username is required' },
+        { type: 'required', message: 'platform.reddit.validation.usernameRequired' },
         { 
           type: 'pattern', 
           value: '^[a-zA-Z0-9_-]{3,20}$', 
-          message: 'Username must be 3-20 characters and contain only letters, numbers, underscores, and hyphens' 
+          message: 'platform.reddit.validation.usernamePattern' 
         }
       ],
       ui: {
@@ -37,7 +37,7 @@ const redditUserEditSchema: FormSchema = {
     {
       name: 'targetType',
       type: 'text',
-      label: 'Target Type',
+      label: 'platform.reddit.editUser.fields.targetType.label',
       default: 'user',
       readOnly: true,
       ui: {
@@ -47,8 +47,8 @@ const redditUserEditSchema: FormSchema = {
     {
       name: 'displayName',
       type: 'text',
-      label: 'Display Name',
-      placeholder: 'e.g., John Doe',
+      label: 'platform.reddit.editUser.fields.displayName.label',
+      placeholder: 'platform.reddit.editUser.fields.displayName.placeholder',
       required: false,
       ui: {
         width: 12,
@@ -106,11 +106,11 @@ const redditUserEditSchema: FormSchema = {
     {
       name: 'notes',
       type: 'textarea',
-      label: 'Notes',
-      placeholder: 'e.g., Important contact for events',
+      label: 'platform.reddit.editUser.fields.notes.label',
+      placeholder: 'platform.reddit.editUser.fields.notes.placeholder',
       required: false,
       validation: [
-        { type: 'maxLength', value: 500, message: 'Notes must be at most 500 characters' }
+        { type: 'maxLength', value: 500, message: 'platform.reddit.validation.notesMaxLength' }
       ],
       ui: {
         width: 12,
@@ -120,7 +120,7 @@ const redditUserEditSchema: FormSchema = {
     {
       name: 'active',
       type: 'boolean',
-      label: 'Active',
+      label: 'platform.reddit.editUser.fields.active.label',
       required: false,
       default: true,
       ui: {

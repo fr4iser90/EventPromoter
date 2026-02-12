@@ -104,7 +104,7 @@ function TemplateManagementPage() {
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
               <TextField
                 size="small"
-                placeholder={t('templates.search', { defaultValue: 'Search templates...' })}
+                placeholder={t('templates.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 InputProps={{
@@ -182,10 +182,10 @@ function TemplateManagementPage() {
                 color: 'text.secondary'
               }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('templates.selectTemplate', { defaultValue: 'Select a template' })}
+                  {t('templates.selectTemplate')}
                 </Typography>
                 <Typography variant="body2">
-                  {t('templates.selectTemplateHint', { defaultValue: 'Click on a template to see preview and details' })}
+                  {t('templates.selectTemplateHint')}
                 </Typography>
               </Box>
             )}

@@ -10,15 +10,15 @@ import { EditorSchema } from '@/types/schema/index.js'
 
 export const instagramEditorSchema: EditorSchema = {
   version: '1.0.0',
-  title: 'Instagram Post Editor',
-  description: 'Create and edit Instagram posts',
+  title: 'platform.instagram.editor.title',
+  description: 'platform.instagram.editor.description',
   mode: 'simple',
   blocks: [
     {
       type: 'image',
       id: 'image',
-      label: 'Image',
-      description: 'Post image (required)',
+      label: 'platform.instagram.editor.image.label',
+      description: 'platform.instagram.editor.image.description',
       required: true,
       constraints: {
         maxItems: 1,
@@ -27,7 +27,7 @@ export const instagramEditorSchema: EditorSchema = {
         aspectRatio: '1:1'
       },
       validation: [
-        { type: 'required', message: 'Image is required' }
+        { type: 'required', message: 'platform.instagram.editor.image.required' }
       ],
       ui: {
         icon: 'image',
@@ -38,16 +38,16 @@ export const instagramEditorSchema: EditorSchema = {
     {
       type: 'paragraph',
       id: 'caption',
-      label: 'Caption',
-      description: 'Post caption (max 2200 characters)',
+      label: 'platform.instagram.editor.caption.label',
+      description: 'platform.instagram.editor.caption.description',
       required: true,
       constraints: {
         maxLength: 2200,
         minLength: 1
       },
       validation: [
-        { type: 'required', message: 'Caption is required' },
-        { type: 'maxLength', value: 2200, message: 'Caption must be at most 2200 characters' }
+        { type: 'required', message: 'platform.instagram.editor.caption.required' },
+        { type: 'maxLength', value: 2200, message: 'platform.instagram.editor.caption.maxLength' }
       ],
       ui: {
         icon: 'text',
@@ -56,14 +56,14 @@ export const instagramEditorSchema: EditorSchema = {
       },
       rendering: {
         fieldType: 'textarea',
-        placeholder: 'Write a caption...'
+        placeholder: 'platform.instagram.editor.caption.placeholder'
       }
     },
     {
       type: 'hashtag',
       id: 'hashtags',
-      label: 'Hashtags',
-      description: 'Add hashtags to your post',
+      label: 'platform.instagram.editor.hashtags.label',
+      description: 'platform.instagram.editor.hashtags.description',
       required: false,
       constraints: {
         maxItems: 30

@@ -53,7 +53,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }: EventHi
   const { setError } = useStore() as unknown as { setError: (error: string | null) => void }
 
   const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'No date'
+    if (!dateString) return t('history.noDate')
     return formatDateForDisplay(dateString, i18n.language)
   }
 
@@ -87,7 +87,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }: EventHi
       await onLoadEvent(event)
     } catch (error) {
       console.error('Failed to load event:', error)
-      setError('Failed to load event data')
+      setError(t('history.failedToLoadEventData'))
     }
   }
 
@@ -125,13 +125,13 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }: EventHi
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          📅 {formatDate(event.eventData?.date || event.publishedAt)} • {event.files?.length || 0} files
+          📅 {formatDate(event.eventData?.date || event.publishedAt)} • {t('history.filesCount', { count: event.files?.length || 0 })}
         </Typography>
 
         {event.platforms && event.platforms.length > 0 && (
           <Box sx={{ mb: 1 }}>
             <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
-              Platforms:
+              {t('platform.selection')}:
             </Typography>
             {event.platforms.slice(0, 3).map(platform => (
               <Chip
@@ -162,7 +162,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }: EventHi
               </Tooltip>
             ))}
             {remainingCount > 0 && (
-              <Chip label={`+${remainingCount} more`} size="small" variant="outlined" />
+              <Chip label={t('history.moreCount', { count: remainingCount })} size="small" variant="outlined" />
             )}
           </Box>
         )}
@@ -186,7 +186,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }: EventHi
             disabled={!event.files || event.files.length === 0}
             variant="outlined"
           >
-            Load Files Only
+            {t('history.loadFilesOnly')}
           </Button>
 
           <Button
@@ -196,7 +196,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }: EventHi
             variant="contained"
             color="primary"
           >
-            Restore Event
+            {t('history.restoreEvent')}
           </Button>
         </Box>
 
@@ -204,7 +204,7 @@ function EventHistoryCard({ event, onLoadFiles, onLoadEvent, onDelete }: EventHi
           size="small"
           color="error"
           onClick={handleDelete}
-          aria-label="Delete event"
+          aria-label={t('history.deleteEvent')}
         >
           <DeleteIcon fontSize="small" />
         </IconButton>

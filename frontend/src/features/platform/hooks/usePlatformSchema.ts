@@ -47,7 +47,7 @@ export function usePlatformSchema<T = unknown>(platformId?: string): PlatformSch
         setSchema(data.schema)
       } catch (err: unknown) {
         console.error('Failed to load platform schema:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load platform schema')
+        setError(err instanceof Error ? err.message : 'platform.failedToLoadPlatformSchema')
         setSchema(null)
       } finally {
         setLoading(false)
@@ -95,7 +95,7 @@ export function usePlatformMetadata<T = unknown>(platformId?: string): PlatformM
         }
       } catch (err: unknown) {
         console.error('Failed to load platform metadata:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load platform metadata')
+        setError(err instanceof Error ? err.message : 'platform.failedToLoadPlatformMetadata')
         setPlatform(null)
       } finally {
         setLoading(false)
@@ -137,7 +137,7 @@ export function usePlatforms<T = unknown>(): PlatformsState<T> {
         }
       } catch (err: unknown) {
         console.error('Failed to load platforms:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load platforms')
+        setError(err instanceof Error ? err.message : 'platform.failedToLoadPlatforms')
         setPlatforms([])
       } finally {
         setLoading(false)
