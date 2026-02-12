@@ -1,6 +1,6 @@
 import { createWorker } from 'tesseract.js'
-// Dynamic import for CommonJS module in ES module environment
-let pdfParse: any = null
+// pdf-parse v2 exposes a class (PDFParse), not a callable default export.
+let PDFParseCtor: any = null
 import fs from 'fs'
 import path from 'path'
 import { PathConfig } from '../../utils/pathConfig.js'
@@ -151,14 +151,21 @@ export class ContentExtractionService {
       await this.initOCR()
 
       if (mimeType === 'application/pdf') {
-        // PDF parsing - dynamic import for CommonJS module
-        if (!pdfParse) {
+        // PDF parsing (pdf-parse v2)
+        if (!PDFParseCtor) {
           const pdfModule = await import('pdf-parse')
-          pdfParse = (pdfModule as any).default || (pdfModule as any)
+          PDFParseCtor = (pdfModule as any).PDFParse
+          if (typeof PDFParseCtor !== 'function') {
+            throw new Error('PDFParse constructor not available from pdf-parse')
+          }
         }
 
         const dataBuffer = fs.readFileSync(filePath)
-        const data = await pdfParse(dataBuffer)
+        const parser = new PDFParseCtor({ data: dataBuffer })
+        const data = await parser.getText()
+        if (typeof parser.destroy === 'function') {
+          await parser.destroy()
+        }
         return {
           text: data.text,
           confidence: 0.9, // PDFs usually have good text extraction
