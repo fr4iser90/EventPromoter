@@ -29,7 +29,7 @@ export const InstagramPlatformModule: PlatformModule = {
     color: '#E4405F',
     description: 'Share events on Instagram with images and captions',
     author: 'EventPromoter',
-    dataSource: 'accounts.json',
+    dataSource: 'targets.json',
     publishingModeStatus: {
       n8n: { status: 'not-tested', message: 'Not yet tested' },
       api: { status: 'not-tested', message: 'Not yet tested' },

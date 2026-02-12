@@ -29,7 +29,7 @@ export const TwitterPlatformModule: PlatformModule = {
     color: '#1DA1F2',
     description: 'Share events on Twitter/X with character-limited posts',
     author: 'EventPromoter',
-    dataSource: 'accounts.json',
+    dataSource: 'targets.json',
     publishingModeStatus: {
       n8n: { status: 'not-tested', message: 'Not yet tested' },
       api: { status: 'not-tested', message: 'Not yet tested' },

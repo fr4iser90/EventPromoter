@@ -64,7 +64,7 @@ export const PLATFORM_IDPlatformModule: PlatformModule = convertPlatformPluginTo
     description: 'PLATFORM_DESCRIPTION',
     author: 'EventPromoter',
     license: 'MIT',
-    dataSource: 'data.json' // Optional: filename for platform data (stored in platforms/{id}/data/)
+    dataSource: 'targets.json' // Primary target/group storage file in platforms/{id}/data/
   }
 )
 

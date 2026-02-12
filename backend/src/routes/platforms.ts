@@ -1,7 +1,7 @@
 // ✅ GENERIC: Platform routes - Platform metadata and configuration
 // NO platform-specific routes here! All platform-specific routes belong in platforms/{platform}/routes.ts
 import { Router, Request, Response } from 'express'
-import { readdir } from 'fs/promises'
+import { readdir, access } from 'fs/promises'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { PlatformController, UserPreferencesController } from '../controllers/platformController.js'
@@ -12,6 +12,7 @@ const router = Router()
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+const ENFORCE_PLATFORM_ROUTE_GUARD = process.env.ENFORCE_PLATFORM_ROUTE_GUARD !== 'false'
 
 // ⚠️ IMPORTANT: Specific routes must be defined BEFORE parameterized routes
 // Otherwise Express will match /preferences as /:platformId with platformId='preferences'
@@ -83,6 +84,14 @@ router.get('/:platformId/target-groups/export', TargetController.exportGroups)
 async function loadPlatformRoutes() {
   try {
     const platformsPath = join(__dirname, '../platforms')
+    const fileExists = async (absolutePath: string): Promise<boolean> => {
+      try {
+        await access(absolutePath)
+        return true
+      } catch {
+        return false
+      }
+    }
     
     const platformDirs = await readdir(platformsPath, { withFileTypes: true })
     const loadedPlatforms: string[] = []
@@ -90,7 +99,26 @@ async function loadPlatformRoutes() {
     for (const dirent of platformDirs) {
       if (dirent.isDirectory() && !dirent.name.startsWith('_')) {
         const platformId = dirent.name
-        const routesPath = join(platformsPath, platformId, 'routes.ts')
+        const platformPath = join(platformsPath, platformId)
+        const hasRoutesEntrypoint =
+          (await fileExists(join(platformPath, 'routes.js'))) ||
+          (await fileExists(join(platformPath, 'routes.ts')))
+        const hasPlatformLocalController =
+          (await fileExists(join(platformPath, 'controller.js'))) ||
+          (await fileExists(join(platformPath, 'controller.ts'))) ||
+          (await fileExists(join(platformPath, 'api/routes.js'))) ||
+          (await fileExists(join(platformPath, 'api/routes.ts')))
+
+        // Hard architecture guard:
+        // If a platform defines local controller-style endpoints, it must expose routes.ts/js.
+        if (hasPlatformLocalController && !hasRoutesEntrypoint) {
+          const message = `Platform ${platformId} has local API controllers/routes but no routes.ts entrypoint`
+          if (ENFORCE_PLATFORM_ROUTE_GUARD) {
+            throw new Error(message)
+          }
+          console.warn(`⚠️  ${message}`)
+          continue
+        }
         
         try {
           // Try to import platform routes
@@ -98,10 +126,16 @@ async function loadPlatformRoutes() {
           if (routesModule.default) {
             router.use(`/${platformId}`, routesModule.default)
             loadedPlatforms.push(platformId)
+          } else if (hasRoutesEntrypoint && ENFORCE_PLATFORM_ROUTE_GUARD) {
+            throw new Error(`Platform ${platformId} routes entrypoint has no default export`)
           }
         } catch (error: any) {
-          // Platform doesn't have routes.ts - that's OK, not all platforms need custom routes
-          if (!error.message.includes('Cannot find module')) {
+          const moduleNotFound = error?.message?.includes('Cannot find module')
+          // Platform without routes entrypoint is fine when no local controller endpoints exist.
+          if (!moduleNotFound || hasRoutesEntrypoint) {
+            if (ENFORCE_PLATFORM_ROUTE_GUARD) {
+              throw error
+            }
             console.info(`⚠️  Failed to load routes for ${platformId}:`, error.message)
           }
         }

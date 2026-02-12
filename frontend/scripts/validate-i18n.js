@@ -56,6 +56,7 @@ function flattenObject(obj, prefix = '') {
 // Extract all t() calls from source files
 function extractTranslationCalls() {
   const calls = new Set()
+  const supportedExtensions = new Set(['.js', '.jsx', '.ts', '.tsx'])
 
   function scanDirectory(dir) {
     const files = fs.readdirSync(dir)
@@ -66,7 +67,7 @@ function extractTranslationCalls() {
 
       if (stat.isDirectory() && !file.startsWith('.') && file !== 'node_modules') {
         scanDirectory(filePath)
-      } else if (file.endsWith('.js') || file.endsWith('.jsx')) {
+      } else if (supportedExtensions.has(path.extname(file)) && !file.endsWith('.d.ts')) {
         const content = fs.readFileSync(filePath, 'utf8')
 
         // Match t('key') and t("key") patterns, but exclude obvious non-keys

@@ -29,7 +29,7 @@ export const RedditPlatformModule: PlatformModule = {
     color: '#FF4500',
     description: 'Share events on Reddit with text posts and images',
     author: 'EventPromoter',
-    dataSource: 'subreddits.json',
+    dataSource: 'targets.json',
     publishingModeStatus: {
       n8n: { status: 'not-tested', message: 'Not yet tested' },
       api: { status: 'not-tested', message: 'Not yet tested' },

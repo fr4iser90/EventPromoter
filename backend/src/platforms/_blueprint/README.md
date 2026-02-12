@@ -73,7 +73,7 @@ myplatform/
     └── panel.ts            # Panel schema with data source UI
 ```
 
-### Example: Email Recipients
+### Example: Email Targets
 
 **1. Define dataSource in Platform Metadata (`index.ts`):**
 ```typescript
@@ -81,27 +81,27 @@ metadata: {
   id: 'email',
   displayName: 'Email',
   // ... other metadata
-  dataSource: 'recipients.json' // Defines filename in platforms/email/data/
+  dataSource: 'targets.json' // Defines filename in platforms/email/data/
 }
 ```
 
-**2. Service (`recipientService.ts`):**
+**2. Service (`targetService.ts`):**
 ```typescript
 import { readPlatformData, writePlatformData } from '../../utils/platformDataUtils.js'
 
 const PLATFORM_ID = 'email'
 
-export class EmailRecipientService {
-  static async getRecipients() {
-    // ✅ GENERIC: Reads from platforms/email/data/recipients.json
+export class EmailTargetService {
+  static async getTargets() {
+    // ✅ GENERIC: Reads from platforms/email/data/targets.json
     const config = await readPlatformData(PLATFORM_ID)
     return {
-      available: config?.available || [],
+      targets: config?.targets || [],
       groups: config?.groups || {}
     }
   }
   
-  static async addRecipient(email: string) {
+  static async addTarget(email: string) {
     // Validation and business logic
     const config = await readPlatformData(PLATFORM_ID)
     // ... update logic
@@ -114,11 +114,11 @@ export class EmailRecipientService {
 **2. Controller (`controller.ts`):**
 ```typescript
 import { Request, Response } from 'express'
-import { EmailRecipientService } from './recipientService.js'
+import { EmailTargetService } from './targetService.js'
 
 export class EmailController {
-  static async getRecipients(req: Request, res: Response) {
-    const result = await EmailRecipientService.getRecipients()
+  static async getTargets(req: Request, res: Response) {
+    const result = await EmailTargetService.getTargets()
     return res.json({ success: true, ...result })
   }
 }
@@ -130,8 +130,8 @@ import { Router } from 'express'
 import { EmailController } from './controller.js'
 
 const router = Router()
-router.get('/recipients', EmailController.getRecipients)
-router.post('/recipients', EmailController.addRecipient)
+router.get('/targets', EmailController.getTargets)
+router.post('/targets', EmailController.addTarget)
 // ... more routes
 
 export default router
@@ -147,12 +147,12 @@ export const emailPanelSchema: PanelSchema = {
       id: 'recipient-list',
       fields: [
         {
-          name: 'recipients',
+          name: 'targets',
           type: 'multiselect',
           optionsSource: {
-            endpoint: 'platforms/:platformId/recipients',
+            endpoint: 'platforms/:platformId/targets',
             method: 'GET',
-            transform: (data) => data.available.map(email => ({
+            transform: (data) => data.targets.map(email => ({
               label: email,
               value: email
             }))
@@ -166,13 +166,13 @@ export const emailPanelSchema: PanelSchema = {
 
 ### Data Storage Pattern
 
-- Each platform defines its `dataSource` in `metadata.dataSource` (e.g., `'recipients.json'`, `'subreddits.json'`)
+- Each platform defines its `dataSource` in `metadata.dataSource` (recommended: `'targets.json'`)
 - Data is stored in `platforms/{platformId}/data/{dataSource}`
 - Use `readPlatformData(platformId)` and `writePlatformData(platformId, data)` utilities
 - Examples:
-  - Email: `metadata.dataSource: 'recipients.json'` → `platforms/email/data/recipients.json`
-  - Reddit: `metadata.dataSource: 'subreddits.json'` → `platforms/reddit/data/subreddits.json`
-  - Twitter: `metadata.dataSource: 'accounts.json'` → `platforms/twitter/data/accounts.json`
+  - Email: `metadata.dataSource: 'targets.json'` → `platforms/email/data/targets.json`
+  - Reddit: `metadata.dataSource: 'targets.json'` → `platforms/reddit/data/targets.json`
+  - Twitter: `metadata.dataSource: 'targets.json'` → `platforms/twitter/data/targets.json`
 
 ### Frontend Integration
 

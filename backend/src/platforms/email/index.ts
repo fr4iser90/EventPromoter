@@ -8,9 +8,9 @@
 
 import { PlatformModule } from '../../types/platformModule.js'
 import { EmailParser } from './parser.js'
-import { EmailService } from './services/emailService.js'
+import { EmailService } from './service.js'
 import { EMAIL_TEMPLATES } from './templates/index.js'
-import { EmailValidator } from './validators/emailValidator.js'
+import { EmailValidator } from './validator.js'
 import { emailSchema } from './schema/index.js'
 
 /**
@@ -29,7 +29,7 @@ export const EmailPlatformModule: PlatformModule = {
     color: '#EA4335',
     description: 'Send event announcements via email with rich HTML content',
     author: 'EventPromoter',
-    dataSource: 'recipients.json',
+    dataSource: 'targets.json',
     publishingModeStatus: {
       n8n: {
         status: 'partial',

@@ -111,15 +111,17 @@ function EventParser() {
     const sourceContent = platformContent[fromPlatform] || {}
     const targetContent = platformContent[toPlatform] || {}
 
-    // Copy text content (generic approach)
-    const textFields = ['text', 'caption', 'body', 'html']
-    textFields.forEach((field) => {
-      if (sourceContent[field]) {
+    // Generic copy: move non-internal fields without platform-specific assumptions.
+    const copiedFields = Object.entries(sourceContent).reduce<Record<string, unknown>>((acc, [key, value]) => {
+      if (!key.startsWith('_') && value !== undefined) {
+        acc[key] = value
+      }
+      return acc
+    }, {})
+
         setPlatformContent(toPlatform, {
           ...targetContent,
-          [field]: sourceContent[field]
-        })
-      }
+      ...copiedFields
     })
   }
 

@@ -461,7 +461,12 @@ function UploadParser() {
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       {selectedPlatforms.map((platform) => {
                         const content = platformContent[platform] || {}
-                        const isReady = content.text || content.caption || content.subject
+                        const isReady = Object.entries(content).some(([key, value]) => {
+                          if (key.startsWith('_')) return false
+                          if (typeof value === 'string') return value.trim().length > 0
+                          if (Array.isArray(value)) return value.length > 0
+                          return value !== null && value !== undefined
+                        })
                         return (
                           <Chip
                             key={platform}

@@ -33,35 +33,18 @@ export function usePlatformSchema<T = unknown>(platformId?: string): PlatformSch
         setLoading(true)
         setError(null)
 
-        // ✅ Kein darkMode-Parameter mehr - Schema ist theme-agnostisch
-        const url = getApiUrl(`platforms/${platformId}/schema`)
-        
-        // Try to load schema from dedicated endpoint
-        const response = await fetch(url)
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success && data.schema) {
-            setSchema(data.schema)
-            setLoading(false)
-            return
-          }
+        // Authoritative schema contract: always use dedicated schema endpoint.
+        const response = await fetch(getApiUrl(`platforms/${platformId}/schema`))
+        if (!response.ok) {
+          throw new Error(`Failed to load schema: ${response.status}`)
         }
 
-        // Fallback: try to load from platform endpoint
-        const platformUrl = getApiUrl(`platforms/${platformId}`)
-        const platformResponse = await fetch(platformUrl)
-        if (platformResponse.ok) {
-          const platformData = await platformResponse.json()
-          if (platformData.success && platformData.platform?.schema) {
-            setSchema(platformData.platform.schema)
-            setLoading(false)
-            return
-          }
+        const data = await response.json()
+        if (!data.success || !data.schema) {
+          throw new Error('Schema response is invalid')
         }
 
-        // No schema available
-        setError('Schema not available for this platform')
-        setSchema(null)
+        setSchema(data.schema)
       } catch (err: unknown) {
         console.error('Failed to load platform schema:', err)
         setError(err instanceof Error ? err.message : 'Failed to load platform schema')

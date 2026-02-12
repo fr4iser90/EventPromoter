@@ -140,16 +140,8 @@ function PublishParser() {
           }
         }
       } else {
-        // Fallback: basic validation if no schema available
-        const hasContent = Object.keys(content).some(key => {
-          const value = content[key]
-          return value && (typeof value === 'string' ? value.trim().length > 0 : Array.isArray(value) ? value.length > 0 : true)
-        })
-        
-        if (!hasContent) {
           const platformName = getPlatformInfo(platformId).name
-          errors.push(`${platformName}: Content is required`)
-        }
+        errors.push(`${platformName}: Schema is required for publish validation`)
       }
     }
 
@@ -221,7 +213,12 @@ function PublishParser() {
   const getPlatformStatus = () => {
     return selectedPlatforms.map((platform) => {
       const content = platformContent[platform] || {}
-      const hasContent = content.text || content.caption || content.subject
+      const hasContent = Object.entries(content).some(([key, value]) => {
+        if (key.startsWith('_')) return false
+        if (typeof value === 'string') return value.trim().length > 0
+        if (Array.isArray(value)) return value.length > 0
+        return value !== null && value !== undefined
+      })
       return {
         platform,
         status: hasContent ? 'ready' : 'draft',

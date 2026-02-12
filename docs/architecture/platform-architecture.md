@@ -1,5 +1,18 @@
 # Self-Discovering Platform Architecture
 
+> Status note: This document explains the platform architecture model.
+> For binding cross-domain consistency rules and required corrections, see
+> `docs/architecture/architecture-consistency-rules.md`.
+
+## Current Standards (2026-02)
+
+These are the active standards and override older examples in this document:
+
+- Authoritative schema contract: frontend uses `GET /api/platforms/:id/schema` as single source of truth.
+- Platform target storage standard: `platforms/{platformId}/data/targets.json` with top-level `targets` and `groups`.
+- Canonical platform entrypoints: each platform exposes `service.ts` and `validator.ts` (adapters allowed to internal `services/*` and `validators/*`).
+- Platform-local routes guard: if a platform defines local controller-style endpoints, it must expose `routes.ts` for dynamic loading.
+
 ## Overview
 
 The self-discovering platform architecture enables automatic platform discovery, registration, and schema-driven UI rendering. This system eliminates the need for manual platform imports and hardcoded frontend configurations.
@@ -24,6 +37,12 @@ interface PlatformModule {
   config?: PlatformConfig        // Platform configuration
 }
 ```
+
+#### Platform Data Source Standard
+
+- `metadata.dataSource` should be set to `targets.json`.
+- `targets.json` is the primary CRUD store for platform targets/groups.
+- Legacy parallel files such as `pages.json`, `accounts.json`, `connections.json`, `subreddits.json` are deprecated as primary stores.
 
 #### Platform Metadata
 

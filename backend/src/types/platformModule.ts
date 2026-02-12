@@ -59,7 +59,7 @@ export interface PlatformMetadata {
   author?: string
   /** License information */
   license?: string
-  /** Data source filename (e.g., 'recipients.json', 'subreddits.json') - stored in platforms/{id}/data/ */
+  /** Primary platform data file in platforms/{id}/data/ (standard: 'targets.json') */
   dataSource?: string
   /** Publishing mode status information */
   publishingModeStatus?: PublishingModeStatuses

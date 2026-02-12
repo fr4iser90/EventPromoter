@@ -29,7 +29,7 @@ export const LinkedInPlatformModule: PlatformModule = {
     color: '#0A66C2',
     description: 'Share events on LinkedIn with professional content',
     author: 'EventPromoter',
-    dataSource: 'connections.json',
+    dataSource: 'targets.json',
     publishingModeStatus: {
       n8n: { status: 'not-tested', message: 'Not yet tested' },
       api: { status: 'not-tested', message: 'Not yet tested' },
