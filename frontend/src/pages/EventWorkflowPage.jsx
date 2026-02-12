@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Box,
@@ -8,39 +7,23 @@ import {
   Alert,
   CircularProgress,
   LinearProgress,
-  Chip,
-  useMediaQuery,
-  Tooltip
+  Chip
 } from '@mui/material'
 import SendIcon from '@mui/icons-material/Send'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
-import { createTheme } from '@mui/material/styles'
 import { EventHistory, EventDataPreview } from '../features/event'
 import { FileUpload } from '../features/upload'
 import { Container as ContentEditor, PlatformSelector } from '../features/platform'
 import SettingsModal from '../shared/components/ui/Dialog/Settings'
 import DuplicateDialog from '../shared/components/ui/Dialog/Duplicate'
-import Header from '../shared/components/Header'
+import PageShell from '../shared/components/layout/PageShell'
 import useStore, { WORKFLOW_STATES } from '../store'
 import { useMultiplePlatformTranslations } from '../features/platform/hooks/usePlatformTranslations'
 import { getApiUrl } from '../shared/utils/api'
 import PublisherProgress from '../features/publish/components/PublisherProgress'
-
-// Static theme for media queries (needed before component renders)
-const staticTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-})
 
 function EventWorkflowPage() {
   const { t, i18n } = useTranslation()
@@ -53,14 +36,10 @@ function EventWorkflowPage() {
     isProcessing,
     error,
     successMessage,
-    darkMode,
-    n8nWebhookUrl,
     workflowState,
     autoSaving,
     submit,
     reset,
-    setDarkMode,
-    setN8nWebhookUrl
   } = useStore()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -73,7 +52,7 @@ function EventWorkflowPage() {
     useStore.getState().set({ isProcessing: false, publishing: false })
   }
 
-  const handleRetryPlatform = async (platformId) => {
+  const handleRetryPlatform = async (_platformId) => {
     // Retry logic
   }
 
@@ -99,9 +78,6 @@ function EventWorkflowPage() {
     }
     loadConfiguredMode()
   }, [])
-
-  // Responsive breakpoints
-  const isMobile = useMediaQuery(staticTheme.breakpoints.down('md'))
 
   // Determine what UI elements should be enabled based on workflow state
   const canUploadFiles = workflowState === WORKFLOW_STATES.INITIAL
@@ -160,16 +136,15 @@ function EventWorkflowPage() {
   }
 
   return (
-    <>
-      {/* Fixed Header */}
-      <Header
-        title={t('app.title')}
-        showPublishingMode={true}
-        configuredMode={configuredMode}
-        selectedPlatforms={selectedPlatforms}
-        onSettingsClick={() => setSettingsOpen(true)}
-      />
-
+    <PageShell
+      title={t('app.title')}
+      headerProps={{
+        showPublishingMode: true,
+        configuredMode,
+        selectedPlatforms,
+        onSettingsClick: () => setSettingsOpen(true),
+      }}
+    >
       {/* Workflow Progress Indicator */}
       <Box sx={{
         px: 2,
@@ -212,8 +187,7 @@ function EventWorkflowPage() {
       {/* Layout Container - Full Width */}
       <Box sx={{
         display: 'flex',
-        minHeight: '100vh',
-        pt: 8 // Account for fixed header
+        minHeight: '100%'
       }}>
         {/* Main Content - Takes full width */}
         <Box sx={{
@@ -289,8 +263,8 @@ function EventWorkflowPage() {
 
             {/* --- FEEDBACK BLOCK --- */}
             <Box sx={{ mt: 4, mb: 2 }}>
-              <PublisherProgress 
-                sessionId={publishSessionId || "active-session"} 
+              <PublisherProgress
+                sessionId={publishSessionId || 'active-session'}
                 onComplete={handlePublishComplete}
                 onRetry={handleRetryPlatform}
               />
@@ -384,7 +358,7 @@ function EventWorkflowPage() {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
-    </>
+    </PageShell>
   )
 }
 

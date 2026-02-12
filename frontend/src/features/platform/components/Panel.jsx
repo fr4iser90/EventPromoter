@@ -12,7 +12,6 @@
 
 import React, { useState, useEffect } from 'react'
 import {
-  Paper,
   Typography,
   Box,
   CircularProgress,
@@ -24,8 +23,8 @@ import SchemaRenderer from '../../schema/components/Renderer'
 import SettingsModal from './SettingsModal'
 import axios from 'axios'
 import useStore from '../../../store'
-import config from '../../../config'
 import { getApiUrl } from '../../../shared/utils/api'
+import SectionPanel from '../../../shared/components/layout/SectionPanel'
 
 function DynamicPanelWrapper({ platform }) {
   const { platformContent, setPlatformContent } = useStore()
@@ -239,18 +238,18 @@ function DynamicPanelWrapper({ platform }) {
 
   if (loading) {
     return (
-      <Paper sx={{ p: 3, textAlign: 'center' }}>
+      <SectionPanel sx={{ textAlign: 'center' }}>
         <CircularProgress sx={{ mb: 2 }} />
         <Typography variant="body2" color="text.secondary">
           Loading {platform} panel...
         </Typography>
-      </Paper>
+      </SectionPanel>
     )
   }
 
   return (
     <>
-      <Paper sx={{ p: 3, mb: 2 }}>
+      <SectionPanel sx={{ mb: 2, p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6">
             {panelConfig?.title || `${platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Unknown'} Options`}
@@ -326,7 +325,7 @@ function DynamicPanelWrapper({ platform }) {
             )}
           </Box>
         )}
-      </Paper>
+      </SectionPanel>
 
       {/* Settings Modal - for credentials/API keys */}
       <SettingsModal

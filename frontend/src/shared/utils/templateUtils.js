@@ -251,6 +251,33 @@ export function isAutoFilledVariable(variableName, parsedData) {
 }
 
 /**
+ * Map variable aliases to a canonical variable key for editor deduplication.
+ *
+ * @param variableName - Variable name from template.variables
+ * @returns Canonical variable name
+ */
+export function getCanonicalVariableName(variableName) {
+  const aliasToCanonical = {
+    eventDate: 'date',
+    eventTime: 'time',
+    location: 'venue',
+    eventTitle: 'title',
+    name: 'title',
+    desc: 'description',
+    text: 'description',
+    ticketPrice: 'price',
+    category: 'genre',
+    organiser: 'organizer',
+    url: 'website',
+    link: 'website',
+    performers: 'lineup',
+    artists: 'lineup',
+  }
+
+  return aliasToCanonical[variableName] || variableName
+}
+
+/**
  * Get label and icon for a template variable
  * 
  * @param variableName - Name of the variable

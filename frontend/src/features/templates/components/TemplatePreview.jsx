@@ -5,9 +5,7 @@ import {
   TextField,
   Divider,
   Chip,
-  Button,
-  CircularProgress,
-  Alert
+  Button
 } from '@mui/material'
 import {
   Edit as EditIcon
@@ -18,6 +16,8 @@ import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
 import { PlatformPreview } from '../../platform'
 import { replaceTemplateVariables } from '../../../shared/utils/templateUtils'
 import { getUserLocale } from '../../../shared/utils/localeUtils'
+import PageToolbar from '../../../shared/components/layout/PageToolbar'
+import SectionPanel from '../../../shared/components/layout/SectionPanel'
 
 // Sample data for template variables (same structure as getTemplateVariables returns)
 const SAMPLE_DATA = {
@@ -115,7 +115,7 @@ function TemplatePreview({ template, platform, onEdit }) {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+      <PageToolbar sx={{ bgcolor: 'background.paper' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6">
             👁️ {template.name}
@@ -130,7 +130,7 @@ function TemplatePreview({ template, platform, onEdit }) {
             </Button>
           )}
         </Box>
-      </Box>
+      </PageToolbar>
 
       {/* Content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
@@ -220,20 +220,13 @@ function TemplatePreview({ template, platform, onEdit }) {
         </Typography>
 
         {previewContent && (
-          <Box sx={{
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1,
-            overflow: 'hidden',
-            mb: 2,
-            minHeight: 400
-          }}>
+          <SectionPanel sx={{ p: 0, overflow: 'hidden', mb: 2, minHeight: 400 }}>
             <PlatformPreview
               platform={platform}
               content={previewContent}
               isActive={true}
             />
-          </Box>
+          </SectionPanel>
         )}
 
         {/* Actions */}

@@ -11,21 +11,18 @@ import {
   Tab,
   Grid,
   CircularProgress,
-  Alert,
-  useMediaQuery,
-  useTheme
+  Alert
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
-import Header from '../shared/components/Header'
+import PageShell from '../shared/components/layout/PageShell'
+import PageToolbar from '../shared/components/layout/PageToolbar'
 import { EventCard } from '../features/event'
 import { getApiUrl } from '../shared/utils/api'
 
 function EventHistoryPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  
+
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -87,25 +84,20 @@ function EventHistoryPage() {
 
   if (error) {
     return (
-      <>
-        <Header title={t('history.title', { defaultValue: 'Event History' })} showSettings={false} />
-        <Box sx={{ pt: 8, p: 3 }}>
+      <PageShell title={t('history.title', { defaultValue: 'Event History' })} headerProps={{ showSettings: false }}>
+        <Box sx={{ p: 3 }}>
           <Alert severity="error">{error}</Alert>
         </Box>
-      </>
+      </PageShell>
     )
   }
 
   return (
-    <>
-      {/* Fixed Header */}
-      <Header title={t('history.title', { defaultValue: 'Event History' })} showSettings={false} />
-
+    <PageShell title={t('history.title', { defaultValue: 'Event History' })} headerProps={{ showSettings: false }}>
       {/* Content Container */}
       <Box sx={{
         display: 'flex',
-        minHeight: '100vh',
-        pt: 8,
+        minHeight: '100%',
         width: '100%'
       }}>
         {/* Left Panel - Event List */}
@@ -116,7 +108,7 @@ function EventHistoryPage() {
           overflow: 'hidden'
         }}>
           {/* Toolbar */}
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <PageToolbar>
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
               <TextField
                 size="small"
@@ -143,11 +135,7 @@ function EventHistoryPage() {
                 scrollButtons="auto"
                 sx={{
                   borderBottom: 1,
-                  borderColor: 'divider',
-                  '& .MuiTab-root': {
-                    minHeight: 48,
-                    textTransform: 'none'
-                  }
+                  borderColor: 'divider'
                 }}
               >
                 <Tab value="all" label={t('history.all', { defaultValue: 'All' })} />
@@ -156,7 +144,7 @@ function EventHistoryPage() {
                 <Tab value="archived" label={t('history.archived', { defaultValue: 'Archived' })} />
               </Tabs>
             </Paper>
-          </Box>
+          </PageToolbar>
 
           {/* Event List */}
           <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
@@ -181,7 +169,7 @@ function EventHistoryPage() {
           </Box>
         </Box>
       </Box>
-    </>
+    </PageShell>
   )
 }
 

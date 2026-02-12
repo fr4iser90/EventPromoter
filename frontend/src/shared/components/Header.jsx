@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
+import { LAYOUT } from '../../app/theme'
 import {
   Box,
   Typography,
@@ -60,22 +61,39 @@ const Header = ({
 
   return (
     <Box sx={{
-      position: 'fixed',
+      position: 'sticky',
       top: 0,
-      left: 0,
-      right: 0,
       zIndex: 1100,
       bgcolor: 'background.paper',
       borderBottom: 1,
       borderColor: 'divider',
       px: 2,
-      py: 1
+      py: 1,
+      minHeight: LAYOUT.headerHeight,
+      display: 'flex',
+      alignItems: 'center'
     }}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', maxWidth: '100%' }}>
-        <Typography variant="h4" component="h1" sx={{ flexGrow: 1, textAlign: 'center' }}>
+      <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
+        <Typography
+          variant="h5"
+          component="h1"
+          sx={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center',
+            pointerEvents: 'none',
+            maxWidth: { xs: '45%', md: '60%' },
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            px: 1,
+          }}
+        >
           {title || t('app.title')}
         </Typography>
-        
+
+        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
         {/* Platform Badges */}
         {selectedPlatforms.length > 0 && (
           <Box sx={{ display: 'flex', gap: 0.5, mr: 1, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -208,6 +226,7 @@ const Header = ({
         >
           {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
         </IconButton>
+        </Box>
       </Box>
     </Box>
   )

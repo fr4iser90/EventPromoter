@@ -14,7 +14,8 @@ import {
 import SearchIcon from '@mui/icons-material/Search'
 import { List as TemplateList } from '../features/templates'
 import { TemplatePreview, TemplateEditor } from '../features/templates'
-import Header from '../shared/components/Header'
+import PageShell from '../shared/components/layout/PageShell'
+import PageToolbar from '../shared/components/layout/PageToolbar'
 import useStore from '../store'
 import { usePlatforms } from '../features/platform/hooks/usePlatformSchema'
 
@@ -26,10 +27,10 @@ const RIGHT_PANEL_STATES = {
 }
 
 function TemplateManagementPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
-  const { platforms, loading: platformsLoading } = usePlatforms()
+  const { platforms } = usePlatforms()
   const [selectedPlatform, setSelectedPlatform] = useState(null)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [rightPanelState, setRightPanelState] = useState(RIGHT_PANEL_STATES.EMPTY)
@@ -78,15 +79,11 @@ function TemplateManagementPage() {
   }
 
   return (
-    <>
-      {/* Fixed Header */}
-      <Header title={t('templates.title')} showSettings={false} />
-
+    <PageShell title={t('templates.title')} headerProps={{ showSettings: false }}>
       {/* Content Container - Split View */}
       <Box sx={{
         display: 'flex',
-        minHeight: '100vh',
-        pt: 8, // Account for fixed header
+        minHeight: '100%',
         width: '100%'
       }}>
         {/* Left Panel - Template List (60% on desktop, 100% on mobile) */}
@@ -99,7 +96,7 @@ function TemplateManagementPage() {
           overflow: 'hidden'
         }}>
           {/* Toolbar */}
-          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <PageToolbar>
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
               <TextField
                 size="small"
@@ -126,11 +123,7 @@ function TemplateManagementPage() {
                 scrollButtons="auto"
                 sx={{
                   borderBottom: 1,
-                  borderColor: 'divider',
-                  '& .MuiTab-root': {
-                    minHeight: 48,
-                    textTransform: 'none'
-                  }
+                  borderColor: 'divider'
                 }}
               >
                 {platforms && platforms.map((platform) => (
@@ -147,7 +140,7 @@ function TemplateManagementPage() {
                 ))}
               </Tabs>
             </Paper>
-          </Box>
+          </PageToolbar>
 
           {/* Template List */}
           <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
@@ -212,7 +205,7 @@ function TemplateManagementPage() {
           </Box>
         )}
       </Box>
-    </>
+    </PageShell>
   )
 }
 

@@ -15,7 +15,6 @@ import {
   Card,
   CardMedia,
   CardContent,
-  Divider,
   Accordion,
   AccordionSummary,
   AccordionDetails
@@ -30,7 +29,7 @@ import {
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material'
 import { getApiUrl, getFileUrl } from '../shared/utils/api'
-import Header from '../shared/components/Header'
+import PageShell from '../shared/components/layout/PageShell'
 import { PlatformStatsCard } from '../features/event'
 
 function EventDetailPage() {
@@ -144,14 +143,9 @@ function EventDetailPage() {
 
   if (error || !event) {
     return (
-      <>
-        <Header 
-          title={t('history.untitled', { defaultValue: 'Untitled Event' })}
-          showSettings={false}
-        />
+      <PageShell title={t('history.untitled', { defaultValue: 'Untitled Event' })} headerProps={{ showSettings: false }}>
         <Box sx={{
-          pt: 8, // Account for fixed header
-          minHeight: '100vh',
+          minHeight: '100%',
           width: '100%'
         }}>
           <Box sx={{ px: 3, pb: 3 }}>
@@ -161,22 +155,18 @@ function EventDetailPage() {
             </Button>
           </Box>
         </Box>
-      </>
+      </PageShell>
     )
   }
 
   return (
-    <>
-      {/* Fixed Header */}
-      <Header 
-        title={event.title || t('history.untitled', { defaultValue: 'Untitled Event' })}
-        showSettings={false}
-      />
-      
+    <PageShell
+      title={event.title || t('history.untitled', { defaultValue: 'Untitled Event' })}
+      headerProps={{ showSettings: false }}
+    >
       {/* Content Container */}
       <Box sx={{
-        pt: 8, // Account for fixed header
-        minHeight: '100vh',
+        minHeight: '100%',
         width: '100%'
       }}>
         <Box sx={{ px: 3, pb: 3 }}>
@@ -405,7 +395,7 @@ function EventDetailPage() {
         </Paper>
         </Box>
       </Box>
-    </>
+    </PageShell>
   )
 }
 

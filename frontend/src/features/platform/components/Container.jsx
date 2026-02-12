@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Paper,
   Box,
   Tabs,
   Tab,
@@ -8,12 +7,7 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  IconButton
+  Button
 } from '@mui/material'
 import {
   AutoAwesome as TemplateIcon,
@@ -23,17 +17,16 @@ import PlatformEditor from './PlatformEditor'
 import PlatformPreview from './PlatformPreview'
 import BulkApplier from '../../templates/components/BulkApplier'
 import { usePlatforms } from '../hooks/usePlatformSchema'
-import { useTemplateCategories } from '../../templates/hooks/useTemplateCategories'
 import SettingsModal from './SettingsModal'
+import SectionPanel from '../../../shared/components/layout/SectionPanel'
+import PageToolbar from '../../../shared/components/layout/PageToolbar'
 
 function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentChange, disabled = false }) {
   const [activeTab, setActiveTab] = useState(0)
   const [bulkApplierOpen, setBulkApplierOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [currentPlatformForSettings, setCurrentPlatformForSettings] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState('')
   const { platforms, loading, error } = usePlatforms()
-  const { categories, loading: categoriesLoading } = useTemplateCategories()
 
   // Get available platforms - show all selected platforms, even if backend hasn't loaded yet
   // This ensures email and other platforms are always visible
@@ -99,33 +92,33 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
 
   if (loading) {
     return (
-      <Paper sx={{ p: 3, textAlign: 'center' }}>
+      <SectionPanel sx={{ textAlign: 'center' }}>
         <CircularProgress sx={{ mb: 2 }} />
         <Typography>Loading platforms...</Typography>
-      </Paper>
+      </SectionPanel>
     )
   }
 
   if (error) {
     return (
-      <Paper sx={{ p: 3 }}>
+      <SectionPanel>
         <Alert severity="error">
           Failed to load platforms: {error}
         </Alert>
-      </Paper>
+      </SectionPanel>
     )
   }
 
   if (availablePlatforms.length === 0) {
     return (
-      <Paper sx={{ p: 3, textAlign: 'center' }}>
+      <SectionPanel sx={{ textAlign: 'center' }}>
         <Typography variant="h6" color="text.secondary">
           No platforms selected
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Please select platforms above to start creating content.
         </Typography>
-      </Paper>
+      </SectionPanel>
     )
   }
 
@@ -145,10 +138,10 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
   }
 
   return (
-    <Paper sx={{ p: 0 }}>
+    <SectionPanel sx={{ p: 0 }}>
       {/* Tabs Header with Bulk Apply Button */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, pt: 1 }}>
+      <PageToolbar sx={{ px: 2, pt: 1, pb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Tabs
             value={activeTab}
             onChange={(e, newValue) => setActiveTab(newValue)}
@@ -212,7 +205,7 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
             </Button>
           </Box>
         </Box>
-      </Box>
+      </PageToolbar>
 
       {/* Content Area */}
       <Box sx={{ p: 3 }}>
@@ -250,7 +243,7 @@ function ContentEditor({ selectedPlatforms, platformContent, onPlatformContentCh
         open={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}
       />
-    </Paper>
+    </SectionPanel>
   )
 }
 

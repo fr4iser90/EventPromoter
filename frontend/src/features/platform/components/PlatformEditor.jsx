@@ -37,7 +37,8 @@ import {
   replaceTemplateVariables, 
   extractTemplateVariables,
   isAutoFilledVariable,
-  getVariableLabel
+  getVariableLabel,
+  getCanonicalVariableName
 } from '../../../shared/utils/templateUtils'
 import { getLocaleDisplayName, getValidLocale } from '../../../shared/utils/localeUtils'
 import config from '../../../config'
@@ -421,16 +422,21 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
   }
   
   // Handle disabling/enabling a template variable
-  const handleToggleVariable = (variableName) => {
+  const handleToggleVariable = (variableNames) => {
+    const names = Array.isArray(variableNames) ? variableNames : [variableNames]
     const newDisabled = new Set(disabledVariables)
-    if (newDisabled.has(variableName)) {
-      newDisabled.delete(variableName)
-      // Remove disabled flag from content
-      onChange(`_disabled_${variableName}`, false)
+
+    const shouldEnable = names.some(name => newDisabled.has(name))
+    if (shouldEnable) {
+      names.forEach((name) => {
+        newDisabled.delete(name)
+        onChange(`_disabled_${name}`, false)
+      })
     } else {
-      newDisabled.add(variableName)
-      // Set disabled flag in content
-      onChange(`_disabled_${variableName}`, true)
+      names.forEach((name) => {
+        newDisabled.add(name)
+        onChange(`_disabled_${name}`, true)
+      })
     }
     setDisabledVariables(newDisabled)
   }
@@ -622,8 +628,22 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
         const templateVars = extractTemplateVariables(activeTemplate)
         const templateVariables = getTemplateVariables(parsedData, uploadedFileRefs)
         
-        // Show ALL variables from template.variables array (no filtering)
-        const displayVars = templateVars
+        // Dedupe aliases into canonical editor fields (e.g. title/eventTitle/name -> title)
+        const aliasGroups = templateVars.reduce((acc, varName) => {
+          const canonicalName = getCanonicalVariableName(varName)
+          if (!acc[canonicalName]) {
+            acc[canonicalName] = []
+          }
+          if (!acc[canonicalName].includes(varName)) {
+            acc[canonicalName].push(varName)
+          }
+          return acc
+        }, {})
+
+        const displayVars = Object.entries(aliasGroups).map(([canonicalName, aliases]) => ({
+          canonicalName,
+          aliases
+        }))
         
         if (displayVars.length === 0) return null
         
@@ -642,20 +662,26 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
               sx={{ mb: 1 }}
             />
             
-            {displayVars.map(varName => {
-              const varValue = content?.[`_var_${varName}`] || templateVariables[varName] || ''
-              const isDisabled = disabledVariables.has(varName)
-              const isAutoFilled = isAutoFilledVariable(varName, parsedData)
-              const { label, icon } = getVariableLabel(varName)
+            {displayVars.map(({ canonicalName, aliases }) => {
+              const explicitValue = aliases
+                .map(alias => content?.[`_var_${alias}`])
+                .find(value => value !== undefined && value !== null && String(value).length > 0)
+              const fallbackValue = aliases
+                .map(alias => templateVariables[alias])
+                .find(value => value !== undefined && value !== null && String(value).length > 0)
+              const varValue = explicitValue || fallbackValue || templateVariables[canonicalName] || ''
+              const isDisabled = aliases.some(alias => disabledVariables.has(alias))
+              const isAutoFilled = aliases.some(alias => isAutoFilledVariable(alias, parsedData))
+              const { label, icon } = getVariableLabel(canonicalName)
               
               // Hide auto-filled variables if checkbox is checked
               if (hideAutoFilled && isAutoFilled && !isDisabled) return null
               
               // Check if this is an image variable
-              const isImageVar = /^(img|image)\d*$/i.test(varName) || varName === 'image'
+              const isImageVar = aliases.some(alias => /^(img|image)\d*$/i.test(alias) || alias === 'image')
               
               return (
-                <Box key={varName} sx={{ mb: 2 }}>
+                <Box key={canonicalName} sx={{ mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                     <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
                       {icon} {label}:
@@ -663,7 +689,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                     {isAutoFilled && (
                       <IconButton
                         size="small"
-                        onClick={() => handleToggleVariable(varName)}
+                        onClick={() => handleToggleVariable(aliases)}
                         sx={{ 
                           ml: 'auto',
                           color: isDisabled ? 'text.disabled' : 'text.secondary',
@@ -683,7 +709,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                         value={varValue || ''}
                         onChange={(e) => {
                           if (!isAutoFilled) {
-                            onChange(`_var_${varName}`, e.target.value)
+                            aliases.forEach(alias => onChange(`_var_${alias}`, e.target.value))
                           }
                         }}
                         renderValue={(selected) => {
@@ -745,7 +771,7 @@ function GenericPlatformEditor({ platform, content, onChange, onCopy, isActive, 
                       onChange={(e) => {
                         // Allow manual editing if not auto-filled
                         if (!isAutoFilled) {
-                          onChange(`_var_${varName}`, e.target.value)
+                          aliases.forEach(alias => onChange(`_var_${alias}`, e.target.value))
                         }
                       }}
                       sx={{

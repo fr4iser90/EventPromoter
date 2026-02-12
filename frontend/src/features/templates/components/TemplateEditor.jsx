@@ -9,8 +9,6 @@ import {
   Chip,
   Alert,
   CircularProgress,
-  Divider,
-  Paper,
   ToggleButton,
   ToggleButtonGroup
 } from '@mui/material'
@@ -26,6 +24,8 @@ import { usePlatformSchema } from '../../platform/hooks/usePlatformSchema'
 import SchemaRenderer from '../../schema/components/Renderer'
 import { useTemplateCategories } from '../hooks/useTemplateCategories'
 import TemplateBuilder from './VisualBuilder/TemplateBuilder'
+import SectionPanel from '../../../shared/components/layout/SectionPanel'
+import PageToolbar from '../../../shared/components/layout/PageToolbar'
 
 function TemplateEditor({ template, platform, onCancel, onSave }) {
   const { t } = useTranslation()
@@ -128,7 +128,7 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Header */}
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+      <PageToolbar sx={{ bgcolor: 'background.paper' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="h6">
             ✏️ {t('template.editTemplate')}
@@ -163,12 +163,12 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
             {error}
           </Alert>
         )}
-      </Box>
+      </PageToolbar>
 
       {/* Form Content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {/* Basic Info */}
-        <Paper sx={{ p: 2, mb: 2 }}>
+        <SectionPanel sx={{ mb: 2 }}>
           <Typography variant="subtitle1" gutterBottom>
             {t('template.basicInfo', { defaultValue: 'Basic Information' })}
           </Typography>
@@ -210,10 +210,10 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
               <MenuItem disabled>{t('template.loadingCategories')}</MenuItem>
             )}
           </TextField>
-        </Paper>
+        </SectionPanel>
 
         {/* Template Content */}
-        <Paper sx={{ p: 2, mb: 2 }}>
+        <SectionPanel sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="subtitle1">
               {t('template.templateContent', { defaultValue: 'Template Content' })}
@@ -288,11 +288,11 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
               placeholder={t('template.variablePlaceholder')}
             />
           )}
-        </Paper>
+        </SectionPanel>
 
         {/* Variables Info */}
         {templateSchema?.variables && templateSchema.variables.length > 0 && (
-          <Paper sx={{ p: 2 }}>
+          <SectionPanel>
             <Typography variant="subtitle2" gutterBottom>
               {t('template.availableVariables')}
             </Typography>
@@ -311,7 +311,7 @@ function TemplateEditor({ template, platform, onCancel, onSave }) {
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
               {t('template.variablesHint', { defaultValue: 'Use variables in curly braces, e.g., {title}, {date}' })}
             </Typography>
-          </Paper>
+          </SectionPanel>
         )}
       </Box>
     </Box>

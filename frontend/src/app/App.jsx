@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { ThemeProvider, createTheme } from '@mui/material/styles'
+import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import '../i18n' // Initialize i18n
 import '../shared/utils/axiosConfig' // Initialize axios interceptors (language headers)
@@ -11,18 +11,7 @@ import EventDetailPage from '../pages/EventDetailPage'
 import PlatformSettingsPage from '../pages/PlatformSettingsPage'
 import useStore from '../store'
 import { getApiUrl } from '../shared/utils/api'
-
-const createAppTheme = (darkMode) => createTheme({
-  palette: {
-    mode: darkMode ? 'dark' : 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-})
+import { createAppTheme } from './theme'
 
 // Main App Component with Router
 function App() {
