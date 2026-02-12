@@ -11,6 +11,7 @@ const router = Router()
 // Get available template categories
 router.get('/categories', TemplateController.getCategories)
 router.get('/by-category/:category', TemplateController.getTemplatesByCategory)
+router.post('/variables/resolve', TemplateController.resolveVariables)
 
 // Get all templates for a platform (default + custom)
 router.get('/:platform', TemplateController.getTemplates)

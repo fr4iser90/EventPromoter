@@ -118,9 +118,22 @@ export function getTemplateVariables(
   )
 
   imageFiles.forEach((file, index) => {
-    const imageUrl = file.url.startsWith('http')
-      ? file.url
-      : `http://localhost:4000${file.url}`
+    const imageUrl = (() => {
+      if (file.url.startsWith('http://') || file.url.startsWith('https://')) {
+        return file.url
+      }
+
+      const cleanPath = file.url.startsWith('/') ? file.url : `/${file.url}`
+
+      // In production/docker setups frontend and backend can run on different hosts.
+      // Prefer explicit BASE_URL when configured; otherwise keep relative path.
+      const baseUrl = process.env.BASE_URL
+      if (baseUrl && (baseUrl.startsWith('http://') || baseUrl.startsWith('https://'))) {
+        return `${baseUrl}${cleanPath}`
+      }
+
+      return cleanPath
+    })()
     const imageNum = index + 1
 
     // Support multiple variable names for images

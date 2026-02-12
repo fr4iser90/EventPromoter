@@ -3,6 +3,7 @@
 import { Request, Response } from 'express'
 import { TemplateService } from '../services/templateService.js'
 import { TemplateMappingService, TemplateMappingRequest } from '../services/templateMappingService.js'
+import { getTemplateVariables, UploadedFileRef } from '../services/parsing/templateVariables.js'
 import { resolveTemplates, TemplateMode } from '../utils/templateResolver.js'
 import {
   TemplateCreateRequest,
@@ -13,6 +14,38 @@ import {
 } from '../types/templateTypes.js'
 
 export class TemplateController {
+
+  // POST /api/templates/variables/resolve - Resolve template variables via backend source of truth
+  static async resolveVariables(req: Request, res: Response) {
+    try {
+      const lang = (req as any).language || (req as any).i18n?.language || 'en'
+      const normalizedLang = lang.split('-')[0]
+      const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
+
+      const body = (req.body || {}) as {
+        parsedData?: Record<string, unknown> | null
+        uploadedFileRefs?: UploadedFileRef[]
+      }
+
+      const parsedData =
+        body.parsedData && typeof body.parsedData === 'object' ? (body.parsedData as any) : null
+      const uploadedFileRefs = Array.isArray(body.uploadedFileRefs) ? body.uploadedFileRefs : []
+
+      const variables = getTemplateVariables(parsedData, uploadedFileRefs, validLang)
+
+      res.json({
+        success: true,
+        variables
+      })
+    } catch (error: any) {
+      console.error('Resolve template variables error:', error)
+      res.status(500).json({
+        success: false,
+        error: 'Failed to resolve template variables',
+        details: error.message
+      })
+    }
+  }
 
   // GET /api/templates/:platform - Get all templates for a platform
   // Query parameter: ?mode=preview|export|raw (default: raw)

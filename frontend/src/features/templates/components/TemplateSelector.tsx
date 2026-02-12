@@ -48,10 +48,11 @@ import { usePlatformTranslations } from '../../platform/hooks/usePlatformTransla
 import CompositeRenderer from '../../schema/components/CompositeRenderer'
 import FileSelectionBlock from '../../platform/components/blocks/FileSelectionBlock'
 import useStore from '../../../store'
-import { getTemplateVariables, replaceTemplateVariables } from '../../../shared/utils/templateUtils'
+import { replaceTemplateVariables } from '../../../shared/utils/templateRenderUtils'
 import { getApiUrl } from '../../../shared/utils/api'
 import { getUserLocale, getLocaleMap, getLocaleDisplayName, getValidLocale } from '../../../shared/utils/localeUtils'
 import { resolveTargetsLocale, resolveGroupsLocale } from '../../../shared/utils/targetUtils'
+import { resolveTemplateVariablesFromBackend } from '../../../shared/utils/templateVariableResolver'
 import type { TemplateRecord, TemplateSelectorFileRef as FileRef, TargetsSelection } from '../types'
 
 const TemplateSelector = ({
@@ -182,17 +183,19 @@ const TemplateSelector = ({
       templateContent = template.translations[previewLocale]
     }
     
-    // Generate preview content using parsedData and uploadedFileRefs
-    // Note: Backend will format dates based on target locale when rendering
-    const templateVariables = getTemplateVariables(parsedData ?? undefined, uploadedFileRefs)
-    
-    const previewText = templateContent.html || templateContent.text || ''
-    const filledContent = replaceTemplateVariables(previewText, templateVariables)
-    
     // ✅ Use Backend Preview API for consistent rendering (same as Platform Preview)
     // This ensures Markdown is rendered the same way everywhere
     // ✅ Follow app theme: Preview uses dark mode if app is in dark mode
     try {
+      // Resolve variables from backend source of truth.
+      const templateVariables = await resolveTemplateVariablesFromBackend(
+        parsedData,
+        uploadedFileRefs as unknown as Array<Record<string, unknown>>,
+        i18n.language
+      )
+      const previewText = templateContent.html || templateContent.text || ''
+      const filledContent = replaceTemplateVariables(previewText, templateVariables)
+
       // Create temporary content object for preview
       const previewContentObj = templateContent.html 
         ? { bodyText: filledContent } // HTML template

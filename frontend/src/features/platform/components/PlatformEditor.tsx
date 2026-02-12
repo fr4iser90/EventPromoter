@@ -32,12 +32,10 @@ import CompositeRenderer from '../../schema/components/CompositeRenderer'
 import { TemplateSelector } from '../../templates'
 import { useTemplates } from '../../templates/hooks/useTemplates'
 import useStore from '../../../store'
-import { 
-  getTemplateVariables
-} from '../../../shared/utils/templateUtils'
 import { getLocaleDisplayName, getValidLocale } from '../../../shared/utils/localeUtils'
 import config from '../../../config'
 import { getApiUrl, getFileUrl } from '../../../shared/utils/api'
+import { resolveTemplateVariablesFromBackend } from '../../../shared/utils/templateVariableResolver'
 import { usePlatformTranslations } from '../hooks/usePlatformTranslations'
 import type {
   ContentState,
@@ -96,6 +94,7 @@ function GenericPlatformEditor({
   const [hideAutoFilled, setHideAutoFilled] = useState(true) // Hide auto-filled variables by default
   const [targetsExpanded, setTargetsExpanded] = useState(false) // For collapsible targets summary
   const [translatedTemplateNames, setTranslatedTemplateNames] = useState<Record<string, string>>({}) // Cache for translated template names
+  const [resolvedTemplateVariables, setResolvedTemplateVariables] = useState<Record<string, string>>({})
 
   // ✅ Translate template names based on current language
   useEffect(() => {
@@ -171,6 +170,35 @@ function GenericPlatformEditor({
     
     setPersistentVarFields(newPersistentVars)
   }, [content])
+
+  // Resolve template variables via backend source of truth.
+  useEffect(() => {
+    let cancelled = false
+
+    const resolveVariables = async () => {
+      try {
+        const variables = await resolveTemplateVariablesFromBackend(
+          parsedData ?? null,
+          uploadedFileRefs as unknown as Array<Record<string, unknown>>,
+          i18n.language
+        )
+        if (!cancelled) {
+          setResolvedTemplateVariables(variables)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setResolvedTemplateVariables({})
+        }
+        console.warn('Failed to resolve template variables from backend:', err)
+      }
+    }
+
+    void resolveVariables()
+
+    return () => {
+      cancelled = true
+    }
+  }, [parsedData, uploadedFileRefs, i18n.language])
 
 
   // Load platform configuration from backend - NO FALLBACKS
@@ -698,7 +726,7 @@ function GenericPlatformEditor({
 
       {/* ✅ Template Variables: Show template variables as separate fields */}
       {activeTemplate && (() => {
-        const templateVariables = getTemplateVariables(parsedData ?? undefined, uploadedFileRefs)
+        const templateVariables = resolvedTemplateVariables
         const definitionList = Array.isArray(activeTemplate.variableDefinitions) ? activeTemplate.variableDefinitions : []
 
         if (definitionList.length === 0) {
