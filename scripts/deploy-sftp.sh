@@ -96,6 +96,7 @@ rsync -avz --progress ${DRY_RUN} \
   --exclude='.git/' \
   --exclude='.dockerignore' \
   --exclude='docker-compose.override.yml' \
+  --exclude='docker-compose.yml' \
   --delete \
   "${LOCAL_PATH}/" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/"
 
