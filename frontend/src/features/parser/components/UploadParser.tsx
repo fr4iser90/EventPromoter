@@ -119,6 +119,16 @@ function UploadParser() {
   const editedVenue = typeof editedData?.venue === 'object' && editedData?.venue !== null
     ? (editedData.venue as VenueData)
     : undefined
+  const hasCoreEventData = Boolean(
+    parsedData?.date ||
+    parsedData?.time ||
+    parsedData?.venue ||
+    parsedData?.city ||
+    parsedData?.description ||
+    parsedData?.website ||
+    (Array.isArray(parsedData?.performers) && parsedData.performers.length > 0)
+  )
+  const showNoEventDataWarning = Boolean(parsedData && !hasCoreEventData)
 
   // Set first platform as active when platforms are loaded
   useEffect(() => {
@@ -340,6 +350,14 @@ function UploadParser() {
       {/* Parsed Data Display */}
       {parsedData && (
         <>
+          {showNoEventDataWarning && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <strong>{t('upload.noEventDataWarning')}</strong>
+              <br />
+              {t('upload.noEventDataHint')}
+            </Alert>
+          )}
+
           <Tabs
             value={activeTab}
             onChange={(_, newValue: number) => setActiveTab(newValue)}

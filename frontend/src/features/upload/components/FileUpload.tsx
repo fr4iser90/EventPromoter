@@ -14,7 +14,8 @@ import {
   Chip,
   Alert,
   Button,
-  Collapse
+  Collapse,
+  CircularProgress
 } from '@mui/material'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import FolderIcon from '@mui/icons-material/Folder'
@@ -40,7 +41,7 @@ const ACCEPTED_TYPES = {
 
 function FileUpload() {
   const { t } = useTranslation()
-  const { uploadedFileRefs, uploadFiles, removeUploadedFile, error, setError, workflowState, fileUploadExpanded, setFileUploadExpanded } = useStore() as unknown as {
+  const { uploadedFileRefs, uploadFiles, removeUploadedFile, error, setError, workflowState, fileUploadExpanded, setFileUploadExpanded, isProcessing } = useStore() as unknown as {
     uploadedFileRefs: Array<{ id: string; name: string; filename?: string; type?: string; size?: number }>
     uploadFiles: (files: File[]) => Promise<unknown>
     removeUploadedFile: (fileId: string) => Promise<unknown>
@@ -49,6 +50,7 @@ function FileUpload() {
     workflowState: string
     fileUploadExpanded: boolean
     setFileUploadExpanded: (expanded: boolean) => void
+    isProcessing: boolean
   }
   const folderInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -97,7 +99,8 @@ function FileUpload() {
     onDrop,
     accept: ACCEPTED_TYPES,
     maxSize: MAX_FILE_SIZE,
-    multiple: true
+    multiple: true,
+    disabled: isProcessing
   })
 
   const removeFile = async (fileId: string) => {
@@ -202,22 +205,28 @@ function FileUpload() {
           borderRadius: 2,
           p: 4,
           textAlign: 'center',
-          cursor: 'pointer',
+          cursor: isProcessing ? 'not-allowed' : 'pointer',
           bgcolor: isDragActive ? 'action.hover' : 'background.paper',
+          opacity: isProcessing ? 0.65 : 1,
           transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            borderColor: 'primary.main',
-            bgcolor: 'action.hover'
+            borderColor: isProcessing ? 'divider' : 'primary.main',
+            bgcolor: isProcessing ? 'background.paper' : 'action.hover'
           }
         }}
       >
         <input {...getInputProps()} />
+        {isProcessing && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <CircularProgress size={28} />
+          </Box>
+        )}
         <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
         <Typography variant="h6" gutterBottom>
           {isDragActive ? t('common.dropActive') : t('common.dropInactive')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t('upload.browsePrompt')}
+          {isProcessing ? t('upload.processingHint') : t('upload.browsePrompt')}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, mt: 1 }}>
           <Typography variant="caption">
@@ -245,11 +254,18 @@ function FileUpload() {
             startIcon={<FolderIcon />}
             onClick={() => folderInputRef.current?.click()}
             size="small"
+            disabled={isProcessing}
           >
             {t('upload.selectFolder')}
           </Button>
         </Box>
       </Box>
+
+      {isProcessing && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          {t('status.parsingDocument')}
+        </Alert>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
@@ -289,6 +305,7 @@ function FileUpload() {
                     edge="end"
                     onClick={() => removeFile(fileData.id)}
                     color="error"
+                    disabled={isProcessing}
                   >
                     <DeleteIcon />
                   </IconButton>

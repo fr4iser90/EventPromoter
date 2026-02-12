@@ -500,7 +500,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
   // Upload files to server
   uploadFiles: async (files: File[]) => {
     try {
-      set({ isProcessing: true, error: null })
+      set({ isProcessing: true, parsingStatus: 'parsing', error: null })
 
       const formData = new FormData()
       // Backend entscheidet selbst über die eventId basierend auf geparsten Daten
@@ -524,7 +524,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
           uploadedFileRefs: newRefs,
           parsedData: response.data.parsedData || null, // Use parsed data from backend
           duplicateFound: null, // Reset duplicate state
-          parsingStatus: response.data.parsedData ? 'completed' : 'idle' // Set completed if parsed
+          parsingStatus: 'completed'
         })
 
         // If backend created an event automatically, use it
@@ -549,7 +549,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
       }
     } catch (error: unknown) {
       console.error('File upload error:', error)
-      set({ error: getErrorMessage(error, 'Upload failed') })
+      set({ error: getErrorMessage(error, 'Upload failed'), parsingStatus: 'error' })
       throw error
     } finally {
       set({ isProcessing: false })

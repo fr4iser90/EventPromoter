@@ -97,6 +97,8 @@
     "filesProcessing": "Archivos subidos (procesamiento backend en curso...):",
     "processingHint": "El backend esta procesando tus archivos. Los datos analizados apareceran aqui automaticamente...",
     "parseFilesHint": "Haz clic en \"Analizar archivos\" para comenzar a procesar tus archivos subidos.",
+    "noEventDataWarning": "No se pudieron detectar datos del evento automaticamente.",
+    "noEventDataHint": "Este evento se creo como borrador vacio. Agrega titulo/fecha/lugar manualmente antes de publicar.",
     "rawExtractedData": "Datos extraidos en bruto",
     "contentCreationStudio": "🎨 Estudio de creacion de contenido",
     "editorPanel": "✏️ Panel de editor",

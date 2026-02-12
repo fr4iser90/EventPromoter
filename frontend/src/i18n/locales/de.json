@@ -97,6 +97,8 @@
     "filesProcessing": "Hochgeladene Dateien (Backend-Parsing läuft...):",
     "processingHint": "Das Backend verarbeitet deine Dateien. Geparste Daten erscheinen hier automatisch...",
     "parseFilesHint": "Klicke auf \"Dateien parsen\", um die Verarbeitung deiner hochgeladenen Dateien zu starten.",
+    "noEventDataWarning": "Es konnten keine Eventdaten automatisch erkannt werden.",
+    "noEventDataHint": "Dieses Event wurde als leerer Entwurf erstellt. Bitte Titel/Datum/Ort vor dem Veröffentlichen manuell ergänzen.",
     "rawExtractedData": "Roh extrahierte Daten",
     "contentCreationStudio": "🎨 Content Creation Studio",
     "editorPanel": "✏️ Editor-Bereich",

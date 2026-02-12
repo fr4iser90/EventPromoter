@@ -38,7 +38,7 @@ export class ContentExtractionService {
           const content = fs.readFileSync(file.path, 'utf8')
           const structuredData = this.parseStructuredData(content)
 
-          if (structuredData && structuredData.title) {
+          if (structuredData) {
             // Merge with existing data (txt data takes priority, then md fills gaps)
             if (!mergedData) {
               mergedData = structuredData
@@ -66,7 +66,45 @@ export class ContentExtractionService {
       }
     }
 
-    return mergedData
+    // If TXT/MD parsing worked, use it directly.
+    if (mergedData) {
+      return mergedData
+    }
+
+    // Fallback: allow uploads without info.md/.txt by parsing non-text files (PDF/images).
+    for (const file of sortedFiles) {
+      if (file.mimetype === 'text/plain' || file.mimetype === 'text/markdown') {
+        continue
+      }
+
+      try {
+        const { text, confidence } = await this.extractText(file.path, file.mimetype)
+        if (!text || text.trim().length === 0) {
+          continue
+        }
+
+        return this.parseEventData(text, confidence)
+      } catch (error) {
+        console.warn(`Fallback parsing failed for ${file.originalname}:`, error)
+      }
+    }
+
+    // Last fallback: create a minimal draft payload so event creation is still possible.
+    // This keeps upload flow usable even when no parseable content exists.
+    const firstFileName = files[0]?.originalname
+    const fallbackTitle = firstFileName ? path.parse(firstFileName).name : 'Unbenanntes Event'
+    const fallbackRawText = files.map((file) => file.originalname || file.filename).join('\n')
+
+    const fallbackParsedData: ParsedEventData = {
+      title: fallbackTitle,
+      rawText: fallbackRawText,
+      confidence: 0,
+      parsedAt: new Date().toISOString(),
+      hash: ''
+    }
+    fallbackParsedData.hash = this.generateEventHash(fallbackParsedData)
+
+    return fallbackParsedData
   }
 
   // Initialize OCR worker

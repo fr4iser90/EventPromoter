@@ -97,6 +97,8 @@
     "filesProcessing": "Uploaded Files (Backend parsing in progress...):",
     "processingHint": "Backend is processing your files. Parsed data will appear here automatically...",
     "parseFilesHint": "Click \"Parse Files\" to start processing your uploaded files.",
+    "noEventDataWarning": "No event data could be detected automatically.",
+    "noEventDataHint": "This event was created as an empty draft. Please add title/date/venue manually before publishing.",
     "rawExtractedData": "Raw Extracted Data",
     "contentCreationStudio": "🎨 Content Creation Studio",
     "editorPanel": "✏️ Editor Panel",
