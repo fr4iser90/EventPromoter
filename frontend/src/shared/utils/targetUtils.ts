@@ -9,6 +9,7 @@
 
 import { getValidLocale } from './localeUtils'
 import { getApiUrl } from './api'
+import type { LocaleCode } from '@eventpromoter/types'
 
 /**
  * Extract locale from target object
@@ -17,7 +18,7 @@ import { getApiUrl } from './api'
  * @param target - Target object (may have locale or metadata.locale)
  * @returns Valid locale or undefined
  */
-export const extractTargetLocale = (target: any): 'en' | 'de' | 'es' | undefined => {
+export const extractTargetLocale = (target: any): LocaleCode | undefined => {
   if (!target) return undefined
   
   // Check direct locale field
@@ -40,7 +41,7 @@ export const extractTargetLocale = (target: any): 'en' | 'de' | 'es' | undefined
  * @param group - Group object (may have metadata.locale)
  * @returns Valid locale or undefined
  */
-export const extractGroupLocale = (group: any): 'en' | 'de' | 'es' | undefined => {
+export const extractGroupLocale = (group: any): LocaleCode | undefined => {
   if (!group) return undefined
   
   // Check metadata.locale
@@ -64,7 +65,7 @@ export const resolveTargetsLocale = async (
   targetIds: string[],
   platform: string,
   dataEndpoint: string
-): Promise<'en' | 'de' | 'es' | undefined> => {
+): Promise<LocaleCode | undefined> => {
   if (!targetIds || targetIds.length === 0) return undefined
   
   try {
@@ -85,7 +86,7 @@ export const resolveTargetsLocale = async (
         const target = option.target || option
         return extractTargetLocale(target)
       })
-      .filter((locale): locale is 'en' | 'de' | 'es' => locale !== undefined)
+      .filter((locale): locale is LocaleCode => locale !== undefined)
     
     if (locales.length === 0) return undefined
     
@@ -111,7 +112,7 @@ export const resolveGroupsLocale = async (
   groupIds: string[],
   platform: string,
   dataEndpoint: string
-): Promise<'en' | 'de' | 'es' | undefined> => {
+): Promise<LocaleCode | undefined> => {
   if (!groupIds || groupIds.length === 0) return undefined
   
   try {
@@ -130,7 +131,7 @@ export const resolveGroupsLocale = async (
         if (!group) return undefined
         return extractGroupLocale(group)
       })
-      .filter((locale): locale is 'en' | 'de' | 'es' => locale !== undefined)
+      .filter((locale): locale is LocaleCode => locale !== undefined)
     
     if (locales.length === 0) return undefined
     

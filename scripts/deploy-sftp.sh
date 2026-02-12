@@ -26,6 +26,12 @@ if ! command -v rsync &> /dev/null; then
     exit 1
 fi
 
+# Check if pnpm is installed (required for lockfile/workspace validation)
+if ! command -v pnpm &> /dev/null; then
+    echo -e "${RED}Error: pnpm is not installed. Please install pnpm first.${NC}"
+    exit 1
+fi
+
 # Check for dry-run flag
 DRY_RUN=""
 if [[ "$1" == "--dry-run" ]] || [[ "$1" == "-n" ]]; then
@@ -35,6 +41,19 @@ fi
 
 echo -e "${GREEN}Starting SFTP deployment...${NC}"
 echo -e "${YELLOW}Target: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}${NC}"
+
+# Ensure critical deployment files exist
+for required_file in "pnpm-lock.yaml" "docker-compose.yml" "backend/Dockerfile" "frontend/Dockerfile"; do
+    if [[ ! -f "${required_file}" ]]; then
+        echo -e "${RED}Error: Missing required file '${required_file}'.${NC}"
+        exit 1
+    fi
+done
+
+# Preflight: ensure lockfile and workspace dependencies are consistent before upload
+echo -e "${BLUE}Running preflight checks (pnpm lockfile/workspace consistency)...${NC}"
+pnpm install --frozen-lockfile --ignore-scripts
+echo -e "${GREEN}✓ Preflight checks passed${NC}"
 
 # Use rsync over SSH to sync files
 # Exclude build directories and unnecessary files
@@ -77,8 +96,6 @@ rsync -avz --progress ${DRY_RUN} \
   --exclude='.git/' \
   --exclude='.dockerignore' \
   --exclude='docker-compose.override.yml' \
-  --exclude='pnpm-lock.yaml' \
-  --exclude='docker-compose.yml' \
   --delete \
   "${LOCAL_PATH}/" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}/"
 

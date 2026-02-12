@@ -103,7 +103,7 @@ export class EmailPlaywrightPublisher implements EmailPublisher, EventAwarePubli
       
       // ✅ RESOLVE RECIPIENTS: Use extractRecipients utility (same as API publisher)
       const { extractRecipients } = await import('../api/utils/extractRecipients.js')
-      const recipients = await extractRecipients(firstTemplate.targets)
+      const recipients = await extractRecipients(firstTemplate.targets) as string[]
 
       if (recipients.length === 0) {
         if (this.eventEmitter) {

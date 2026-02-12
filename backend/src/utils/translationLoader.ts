@@ -88,6 +88,16 @@ export async function getPlatformTranslations(
 }
 
 /**
+ * Backwards-compatible alias used by some publisher modules.
+ */
+export async function loadTranslations(
+  platformId: string,
+  lang: string
+): Promise<Record<string, any>> {
+  return getPlatformTranslations(platformId, lang)
+}
+
+/**
  * Get all platform translations for a specific language
  */
 export async function getAllPlatformTranslations(

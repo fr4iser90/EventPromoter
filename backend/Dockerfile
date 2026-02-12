@@ -13,16 +13,19 @@ WORKDIR /app
 # Copy root package.json and pnpm workspace config
 COPY package*.json ./
 COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
 
 # Copy backend package.json
 COPY backend/package*.json ./backend/
+COPY packages/types/package*.json ./packages/types/
 
 # Install dependencies with pnpm (works better with workspaces)
 # Include devDependencies for build tools like tsc
-RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copy backend source code
 COPY backend/ ./backend/
+COPY packages/types/ ./packages/types/
 
 # Copy config directory
 COPY config/ ./config/
@@ -30,7 +33,8 @@ COPY config/ ./config/
 # Build TypeScript (from root, using workspace filter)
 # pnpm resolves binaries from root node_modules in workspace setup
 WORKDIR /app
-RUN pnpm --filter @eventpromoter/backend run build
+RUN pnpm --filter @eventpromoter/types run build && \
+    pnpm --filter @eventpromoter/backend run build
 
 # Stage 2: Production
 FROM node:20-alpine
@@ -47,13 +51,18 @@ WORKDIR /app
 # Copy root package.json and pnpm workspace config
 COPY package*.json ./
 COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
 
 # Copy backend package.json
 COPY backend/package*.json ./backend/
+COPY packages/types/package*.json ./packages/types/
 
 # Install dependencies with pnpm - need all for jsdom to work correctly
 # jsdom has ES module dependencies that require full install
-RUN pnpm install --prod=false
+RUN pnpm install --prod=false --frozen-lockfile
+
+# Copy compiled shared workspace package so Node loads JS (not TS) at runtime
+COPY --from=builder /app/packages/types ./packages/types
 
 # Copy built files from builder
 COPY --from=builder /app/backend/dist ./backend/dist

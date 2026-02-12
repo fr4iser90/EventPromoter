@@ -103,7 +103,7 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
         console.log(`\n🔍 Extracting subreddits from targets configuration...`)
         console.log(`   Targets config:`, JSON.stringify(content.subreddits, null, 2))
         
-        const { RedditTargetService } = await import('../../../services/targetService.js')
+        const { RedditTargetService } = await import('../../services/targetService.js')
         const targetService = new RedditTargetService()
         const allTargets = await targetService.getTargets('subreddit')
         const groups = await targetService.getGroups()
@@ -200,7 +200,7 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
 
           console.log(`\n📝 Starting to fill forms for ${uniqueSubreddits.length} subreddit(s)...`)
 
-          for (const sub of uniqueSubreddits) {
+          for (const [subIdx, sub] of uniqueSubreddits.entries()) {
             const subreddit = sub.name
             const metadata = sub.metadata
             try {
@@ -285,7 +285,7 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
               console.log(`✅ Completed processing r/${subreddit}`)
 
               // Rate limiting: wait 2 seconds between posts (except for last one)
-              if (subreddits.indexOf(subreddit) < subreddits.length - 1) {
+              if (subIdx < uniqueSubreddits.length - 1) {
                 console.log(`  ⏳ Waiting 2 seconds before next subreddit...`)
                 await page.waitForTimeout(2000)
               }
@@ -320,8 +320,8 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
             postId: firstSuccess.postId,
             url: firstSuccess.url,
             message: dryMode 
-              ? `Formular für ${successful.length}/${subreddits.length} Subreddits ausgefüllt. ${failed.length > 0 ? `Fehler: ${failed.map(f => f.subreddit).join(', ')}` : 'Alle erfolgreich.'}`
-              : `Posted to ${successful.length}/${subreddits.length} subreddits. ${failed.length > 0 ? `Failed: ${failed.map(f => f.subreddit).join(', ')}` : 'All successful.'}`
+              ? `Formular für ${successful.length}/${uniqueSubreddits.length} Subreddits ausgefüllt. ${failed.length > 0 ? `Fehler: ${failed.map(f => f.subreddit).join(', ')}` : 'Alle erfolgreich.'}`
+              : `Posted to ${successful.length}/${uniqueSubreddits.length} subreddits. ${failed.length > 0 ? `Failed: ${failed.map(f => f.subreddit).join(', ')}` : 'All successful.'}`
           }
         } finally {
           // DRY MODE: Browser NICHT schließen, damit User sehen kann was passiert

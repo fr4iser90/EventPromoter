@@ -11,15 +11,19 @@ WORKDIR /app
 # Copy package files and pnpm workspace config
 COPY package*.json ./
 COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
 COPY frontend/package*.json ./frontend/
+COPY packages/types/package*.json ./packages/types/
 
 # Copy frontend source code BEFORE installing dependencies
 # This avoids conflicts with pnpm's symlinks in node_modules
 COPY frontend/ ./frontend/
+COPY packages/types/ ./packages/types/
 
 # Install dependencies with pnpm (works better with workspaces)
 # pnpm will create symlinks in frontend/node_modules pointing to root node_modules
-RUN pnpm install --frozen-lockfile || pnpm install
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @eventpromoter/types run build
 
 # Build with Vite
 # pnpm handles workspace dependencies better than npm

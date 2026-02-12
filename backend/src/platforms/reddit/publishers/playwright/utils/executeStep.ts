@@ -1,6 +1,6 @@
 import { Page } from 'playwright'
 import { waitForPageFullyLoaded } from './waitForPageFullyLoaded.js'
-import { PublisherEventService } from '../../../../../../services/publisherEventService.js'
+import { PublisherEventService } from '../../../../../services/publisherEventService.js'
 
 /**
  * ✅ STEP ORCHESTRATION: Automatically waits AFTER each step

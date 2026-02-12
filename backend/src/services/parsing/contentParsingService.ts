@@ -116,7 +116,7 @@ export class ContentExtractionService {
         // PDF parsing - dynamic import for CommonJS module
         if (!pdfParse) {
           const pdfModule = await import('pdf-parse')
-          pdfParse = pdfModule.default || pdfModule
+          pdfParse = (pdfModule as any).default || (pdfModule as any)
         }
 
         const dataBuffer = fs.readFileSync(filePath)
