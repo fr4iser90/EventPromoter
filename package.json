@@ -33,7 +33,10 @@
       "lint": "npm run lint --workspaces",
       "lint:fix": "npm run lint:fix --workspaces",
       "deploy:sftp": "bash scripts/deploy-sftp.sh",
-      "deploy:sftp:dry-run": "bash scripts/deploy-sftp.sh --dry-run"
+      "deploy:sftp:dry-run": "bash scripts/deploy-sftp.sh --dry-run",
+      "tree:all": "tree -a -I 'node_modules|.git|.env|dist|build|logs|config|events|workflows'",
+      "tree:frontend": "tree -a -I 'node_modules|.git|.env|dist|build|logs|config|events|workflows' frontend",
+      "tree:backend": "tree -a -I 'node_modules|.git|.env|dist|build|logs|config|events|workflows' backend"
     },
     "devDependencies": {
       "concurrently": "^8.2.2"
