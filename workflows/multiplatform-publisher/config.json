@@ -72,6 +72,24 @@
       "main": [
         [
           {
+            "node": "⚠️ Twitter Publish Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Twitter Publish Failed?": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Twitter Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "✅ Emit Twitter Completed",
             "type": "main",
             "index": 0
@@ -80,6 +98,68 @@
       ]
     },
     "✅ Emit Twitter Completed": {
+      "main": [
+        [
+          {
+            "node": "📡 Emit Twitter Verify Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Twitter Failed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📡 Emit Twitter Verify Started": {
+      "main": [
+        [
+          {
+            "node": "🔎 Verify Twitter Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔎 Verify Twitter Result": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Twitter Verify Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Emit Twitter Verify Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Twitter Verify Completed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Twitter Verify Failed": {
       "main": [
         [
           {
@@ -117,6 +197,24 @@
       "main": [
         [
           {
+            "node": "⚠️ Instagram Publish Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Instagram Publish Failed?": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Instagram Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "✅ Emit Instagram Completed",
             "type": "main",
             "index": 0
@@ -125,6 +223,68 @@
       ]
     },
     "✅ Emit Instagram Completed": {
+      "main": [
+        [
+          {
+            "node": "📡 Emit Instagram Verify Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Instagram Failed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📡 Emit Instagram Verify Started": {
+      "main": [
+        [
+          {
+            "node": "🔎 Verify Instagram Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔎 Verify Instagram Result": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Instagram Verify Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Emit Instagram Verify Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Instagram Verify Completed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Instagram Verify Failed": {
       "main": [
         [
           {
@@ -162,6 +322,24 @@
       "main": [
         [
           {
+            "node": "⚠️ Facebook Publish Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Facebook Publish Failed?": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Facebook Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "✅ Emit Facebook Completed",
             "type": "main",
             "index": 0
@@ -170,6 +348,68 @@
       ]
     },
     "✅ Emit Facebook Completed": {
+      "main": [
+        [
+          {
+            "node": "📡 Emit Facebook Verify Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Facebook Failed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📡 Emit Facebook Verify Started": {
+      "main": [
+        [
+          {
+            "node": "🔎 Verify Facebook Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔎 Verify Facebook Result": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Facebook Verify Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Emit Facebook Verify Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Facebook Verify Completed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Facebook Verify Failed": {
       "main": [
         [
           {
@@ -207,6 +447,24 @@
       "main": [
         [
           {
+            "node": "⚠️ LinkedIn Publish Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ LinkedIn Publish Failed?": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit LinkedIn Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "✅ Emit LinkedIn Completed",
             "type": "main",
             "index": 0
@@ -215,6 +473,68 @@
       ]
     },
     "✅ Emit LinkedIn Completed": {
+      "main": [
+        [
+          {
+            "node": "📡 Emit LinkedIn Verify Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit LinkedIn Failed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📡 Emit LinkedIn Verify Started": {
+      "main": [
+        [
+          {
+            "node": "🔎 Verify LinkedIn Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔎 Verify LinkedIn Result": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit LinkedIn Verify Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Emit LinkedIn Verify Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit LinkedIn Verify Completed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit LinkedIn Verify Failed": {
       "main": [
         [
           {
@@ -336,7 +656,7 @@
       "main": [
         [
           {
-            "node": "✅ Emit Email Completed",
+            "node": "⚠️ Email Publish Failed? (With Attachments)",
             "type": "main",
             "index": 0
           }
@@ -347,6 +667,42 @@
       "main": [
         [
           {
+            "node": "⚠️ Email Publish Failed? (No Attachments)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Email Publish Failed? (With Attachments)": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Email Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "✅ Emit Email Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Email Publish Failed? (No Attachments)": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Email Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "✅ Emit Email Completed",
             "type": "main",
             "index": 0
@@ -355,6 +711,68 @@
       ]
     },
     "✅ Emit Email Completed": {
+      "main": [
+        [
+          {
+            "node": "📡 Emit Email Verify Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Email Failed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📡 Emit Email Verify Started": {
+      "main": [
+        [
+          {
+            "node": "🔎 Verify Email Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔎 Verify Email Result": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Email Verify Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Emit Email Verify Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Email Verify Completed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Email Verify Failed": {
       "main": [
         [
           {
@@ -392,6 +810,24 @@
       "main": [
         [
           {
+            "node": "⚠️ Reddit Publish Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Reddit Publish Failed?": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Reddit Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "✅ Emit Reddit Completed",
             "type": "main",
             "index": 0
@@ -400,6 +836,68 @@
       ]
     },
     "✅ Emit Reddit Completed": {
+      "main": [
+        [
+          {
+            "node": "📡 Emit Reddit Verify Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Reddit Failed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📡 Emit Reddit Verify Started": {
+      "main": [
+        [
+          {
+            "node": "🔎 Verify Reddit Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔎 Verify Reddit Result": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Reddit Verify Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Emit Reddit Verify Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Reddit Verify Completed": {
+      "main": [
+        [
+          {
+            "node": "🔧 Structure Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Reddit Verify Failed": {
       "main": [
         [
           {

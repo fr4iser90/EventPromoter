@@ -26,6 +26,7 @@
       "additionalFields": {}
     },
     "position": [400, -200],
+    "onError": "continueRegularOutput",
     "typeVersion": 2
   },
   {
@@ -56,6 +57,100 @@
       "options": {}
     },
     "position": [520, -200],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-twitter-check-failed",
+    "name": "⚠️ Twitter Publish Failed?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.error !== undefined || $json.errorMessage !== undefined || $json.success === false }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [460, -140],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-twitter-emit-failed",
+    "name": "❌ Emit Twitter Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'twitter', method: 'n8n', step: 'publish.submit', error: $json.error?.message || $json.error || $json.errorMessage || 'Twitter publish failed', errorCode: 'N8N_NODE_ERROR', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [640, -120],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-twitter-verify-emit-started",
+    "name": "📡 Emit Twitter Verify Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'twitter', method: 'n8n', step: 'publish.verify_result', message: 'Starting publish.verify_result via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [760, -220],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-twitter-verify-check",
+    "name": "🔎 Verify Twitter Result",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.id !== undefined || $json.data?.id !== undefined || $json.url !== undefined || $json.link !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [940, -200],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-twitter-verify-emit-completed",
+    "name": "✅ Emit Twitter Verify Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'twitter', method: 'n8n', step: 'publish.verify_result', duration: 0, data: { verified: true }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1120, -240],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-twitter-verify-emit-failed",
+    "name": "❌ Emit Twitter Verify Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'twitter', method: 'n8n', step: 'publish.verify_result', error: 'Could not verify Twitter publish result', errorCode: 'VERIFY_RESULT_FAILED', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1120, -140],
     "typeVersion": 4.2
   }
 ]

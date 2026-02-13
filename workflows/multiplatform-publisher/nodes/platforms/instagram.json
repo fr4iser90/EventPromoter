@@ -25,6 +25,7 @@
       "additionalFields": {}
     },
     "position": [400, 0],
+    "onError": "continueRegularOutput",
     "typeVersion": 1
   },
   {
@@ -55,6 +56,100 @@
       "options": {}
     },
     "position": [520, 0],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-instagram-check-failed",
+    "name": "⚠️ Instagram Publish Failed?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.error !== undefined || $json.errorMessage !== undefined || $json.success === false }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [460, 60],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-instagram-emit-failed",
+    "name": "❌ Emit Instagram Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'instagram', method: 'n8n', step: 'publish.submit', error: $json.error?.message || $json.error || $json.errorMessage || 'Instagram publish failed', errorCode: 'N8N_NODE_ERROR', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [640, 80],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-instagram-verify-emit-started",
+    "name": "📡 Emit Instagram Verify Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'instagram', method: 'n8n', step: 'publish.verify_result', message: 'Starting publish.verify_result via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [760, -20],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-instagram-verify-check",
+    "name": "🔎 Verify Instagram Result",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.id !== undefined || $json.media_id !== undefined || $json.url !== undefined || $json.permalink !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [940, 0],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-instagram-verify-emit-completed",
+    "name": "✅ Emit Instagram Verify Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'instagram', method: 'n8n', step: 'publish.verify_result', duration: 0, data: { verified: true }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1120, -40],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-instagram-verify-emit-failed",
+    "name": "❌ Emit Instagram Verify Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'instagram', method: 'n8n', step: 'publish.verify_result', error: 'Could not verify Instagram publish result', errorCode: 'VERIFY_RESULT_FAILED', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1120, 60],
     "typeVersion": 4.2
   }
 ]

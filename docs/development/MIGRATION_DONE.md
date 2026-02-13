@@ -88,21 +88,25 @@ Audit focus:
 - Service wrapper events now consistently include `publishRunId`.
 - Service wrapper no longer emits `success/error/info` status events.
 
-## Remaining Gaps (Not Yet Fully Contract-Aligned)
+## n8n Step-Level Parity (Now Contract-Aligned)
 
-### n8n step-level parity
+### Callback ingest + workflow emission
 - Callback ingest endpoint is implemented:
   - `POST /api/publish/event`
   - accepts single event (`event`/direct body) or batch (`events[]`)
   - maps to contract events in `PublisherEventService`
 - n8n workflow nodes now emit callback events for all configured platform branches:
   - `step_started` before platform submit node
-  - `step_completed` after platform submit node
+  - `step_completed` after successful platform submit node
+  - `step_failed` on platform submit failures
+  - `publish.verify_result` lifecycle:
+    - `step_started`
+    - `step_completed` when verification check passes
+    - `step_failed` when verification check fails
 - Payload forwarding now includes:
   - `sessionId`
   - `publishRunId`
   - `callbackUrl`
-- Remaining gap: explicit `step_failed` callback branches in n8n are not yet wired.
 
 ## Decision Snapshot
 
@@ -110,5 +114,5 @@ Current migration status:
 - Platform Playwright path is standardized.
 - API path is standardized.
 - Service-level orchestration layer is standardized.
-- n8n started/completed callback wiring is in place.
-- Remaining work is primarily explicit n8n failure-branch callback wiring.
+- n8n started/completed/failed callback wiring is in place.
+- n8n `publish.verify_result` callback wiring is in place.

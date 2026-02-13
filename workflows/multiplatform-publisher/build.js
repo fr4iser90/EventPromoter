@@ -312,12 +312,12 @@ function buildWorkflow() {
   const enabledNodeNames = new Set();
   if (enabledPlatforms) {
     const platformNodeMap = {
-      'email': ['📧 Has Email Content?', '📡 Emit Email Started', '📧 Prepare Email Data', '📧 Send Email', '📧 Send Email (No Attachments)', '✅ Emit Email Completed'],
-      'facebook': ['👥 Has Facebook Content?', '📡 Emit Facebook Started', '👥 Post to Facebook Page', '✅ Emit Facebook Completed'],
-      'twitter': ['🐦 Has Twitter Content?', '📡 Emit Twitter Started', '🐦 Post to Twitter/X', '✅ Emit Twitter Completed'],
-      'instagram': ['📸 Has Instagram Content?', '📡 Emit Instagram Started', '📸 Post to Instagram', '✅ Emit Instagram Completed'],
-      'linkedin': ['💼 Has LinkedIn Content?', '📡 Emit LinkedIn Started', '💼 Post to LinkedIn', '✅ Emit LinkedIn Completed'],
-      'reddit': ['🔴 Has Reddit Content?', '📡 Emit Reddit Started', '🔴 Post to Reddit', '✅ Emit Reddit Completed']
+      'email': ['📧 Has Email Content?', '📡 Emit Email Started', '📧 Prepare Email Data', '📧 Send Email', '📧 Send Email (No Attachments)', '⚠️ Email Publish Failed? (With Attachments)', '⚠️ Email Publish Failed? (No Attachments)', '✅ Emit Email Completed', '❌ Emit Email Failed', '📡 Emit Email Verify Started', '🔎 Verify Email Result', '✅ Emit Email Verify Completed', '❌ Emit Email Verify Failed'],
+      'facebook': ['👥 Has Facebook Content?', '📡 Emit Facebook Started', '👥 Post to Facebook Page', '⚠️ Facebook Publish Failed?', '✅ Emit Facebook Completed', '❌ Emit Facebook Failed', '📡 Emit Facebook Verify Started', '🔎 Verify Facebook Result', '✅ Emit Facebook Verify Completed', '❌ Emit Facebook Verify Failed'],
+      'twitter': ['🐦 Has Twitter Content?', '📡 Emit Twitter Started', '🐦 Post to Twitter/X', '⚠️ Twitter Publish Failed?', '✅ Emit Twitter Completed', '❌ Emit Twitter Failed', '📡 Emit Twitter Verify Started', '🔎 Verify Twitter Result', '✅ Emit Twitter Verify Completed', '❌ Emit Twitter Verify Failed'],
+      'instagram': ['📸 Has Instagram Content?', '📡 Emit Instagram Started', '📸 Post to Instagram', '⚠️ Instagram Publish Failed?', '✅ Emit Instagram Completed', '❌ Emit Instagram Failed', '📡 Emit Instagram Verify Started', '🔎 Verify Instagram Result', '✅ Emit Instagram Verify Completed', '❌ Emit Instagram Verify Failed'],
+      'linkedin': ['💼 Has LinkedIn Content?', '📡 Emit LinkedIn Started', '💼 Post to LinkedIn', '⚠️ LinkedIn Publish Failed?', '✅ Emit LinkedIn Completed', '❌ Emit LinkedIn Failed', '📡 Emit LinkedIn Verify Started', '🔎 Verify LinkedIn Result', '✅ Emit LinkedIn Verify Completed', '❌ Emit LinkedIn Verify Failed'],
+      'reddit': ['🔴 Has Reddit Content?', '📡 Emit Reddit Started', '🔴 Post to Reddit', '⚠️ Reddit Publish Failed?', '✅ Emit Reddit Completed', '❌ Emit Reddit Failed', '📡 Emit Reddit Verify Started', '🔎 Verify Reddit Result', '✅ Emit Reddit Verify Completed', '❌ Emit Reddit Verify Failed']
     };
     
     enabledPlatforms.forEach(platform => {

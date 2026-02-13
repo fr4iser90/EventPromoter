@@ -28,6 +28,7 @@
       "additionalFields": {}
     },
     "position": [400, 800],
+    "onError": "continueRegularOutput",
     "typeVersion": 1
   },
   {
@@ -36,7 +37,7 @@
     "type": "httpRequest",
     "parameters": {
       "method": "POST",
-      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
       "sendBody": true,
       "specifyBody": "json",
       "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'reddit', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
@@ -51,13 +52,107 @@
     "type": "httpRequest",
     "parameters": {
       "method": "POST",
-      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
       "sendBody": true,
       "specifyBody": "json",
       "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'reddit', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.name, url: $json.url || $json.permalink }, timestamp: $now.toISO() } }}",
       "options": {}
     },
     "position": [520, 800],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-reddit-check-failed",
+    "name": "⚠️ Reddit Publish Failed?",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.error !== undefined || $json.errorMessage !== undefined || $json.success === false }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [460, 860],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-reddit-emit-failed",
+    "name": "❌ Emit Reddit Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'reddit', method: 'n8n', step: 'publish.submit', error: $json.error?.message || $json.error || $json.errorMessage || 'Reddit publish failed', errorCode: 'N8N_NODE_ERROR', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [640, 880],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-reddit-verify-emit-started",
+    "name": "📡 Emit Reddit Verify Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'reddit', method: 'n8n', step: 'publish.verify_result', message: 'Starting publish.verify_result via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [760, 780],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-reddit-verify-check",
+    "name": "🔎 Verify Reddit Result",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.id !== undefined || $json.name !== undefined || $json.url !== undefined || $json.permalink !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [940, 800],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-reddit-verify-emit-completed",
+    "name": "✅ Emit Reddit Verify Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'reddit', method: 'n8n', step: 'publish.verify_result', duration: 0, data: { verified: true }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1120, 760],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-reddit-verify-emit-failed",
+    "name": "❌ Emit Reddit Verify Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'reddit', method: 'n8n', step: 'publish.verify_result', error: 'Could not verify Reddit publish result', errorCode: 'VERIFY_RESULT_FAILED', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1120, 860],
     "typeVersion": 4.2
   }
 ]

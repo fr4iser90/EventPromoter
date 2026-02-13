@@ -128,7 +128,8 @@
         }
       }
     },
-      "position": [1800, 500],
+    "position": [1800, 500],
+    "onError": "continueRegularOutput",
     "typeVersion": 2.1
   },
   {
@@ -142,6 +143,7 @@
       "html": "={{ $json.email.html }}"
     },
     "position": [800, 700],
+    "onError": "continueRegularOutput",
     "typeVersion": 2.1
   },
   {
@@ -150,7 +152,7 @@
     "type": "httpRequest",
     "parameters": {
       "method": "POST",
-      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
       "sendBody": true,
       "specifyBody": "json",
       "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'email', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
@@ -165,13 +167,124 @@
     "type": "httpRequest",
     "parameters": {
       "method": "POST",
-      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
       "sendBody": true,
       "specifyBody": "json",
       "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'email', method: 'n8n', step: 'publish.submit', duration: 0, data: { messageId: $json.messageId || $json.id }, timestamp: $now.toISO() } }}",
       "options": {}
     },
     "position": [1960, 600],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-email-check-failed",
+    "name": "⚠️ Email Publish Failed? (With Attachments)",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.error !== undefined || $json.errorMessage !== undefined || $json.success === false }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [1880, 560],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-check-failed-no-attachments",
+    "name": "⚠️ Email Publish Failed? (No Attachments)",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.error !== undefined || $json.errorMessage !== undefined || $json.success === false }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [980, 760],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-emit-failed",
+    "name": "❌ Emit Email Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'email', method: 'n8n', step: 'publish.submit', error: $json.error?.message || $json.error || $json.errorMessage || 'Email publish failed', errorCode: 'N8N_NODE_ERROR', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1960, 700],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-email-verify-emit-started",
+    "name": "📡 Emit Email Verify Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'email', method: 'n8n', step: 'publish.verify_result', message: 'Starting publish.verify_result via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [2140, 560],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-email-verify-check",
+    "name": "🔎 Verify Email Result",
+    "type": "if",
+    "parameters": {
+      "conditions": {
+        "boolean": [
+          {
+            "value1": "={{ $json.messageId !== undefined || $json.id !== undefined }}",
+            "value2": true
+          }
+        ]
+      }
+    },
+    "position": [2320, 580],
+    "typeVersion": 2
+  },
+  {
+    "id": "platform-email-verify-emit-completed",
+    "name": "✅ Emit Email Verify Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'email', method: 'n8n', step: 'publish.verify_result', duration: 0, data: { verified: true }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [2500, 540],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-email-verify-emit-failed",
+    "name": "❌ Emit Email Verify Failed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'email', method: 'n8n', step: 'publish.verify_result', error: 'Could not verify Email publish result', errorCode: 'VERIFY_RESULT_FAILED', retryable: false, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [2500, 640],
     "typeVersion": 4.2
   }
 ]

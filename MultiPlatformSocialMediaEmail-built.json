@@ -219,7 +219,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'email', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
@@ -237,7 +237,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'email', method: 'n8n', step: 'publish.submit', duration: 0, data: { messageId: $json.messageId || $json.id }, timestamp: $now.toISO() } }}",
@@ -257,70 +257,19 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.facebook !== undefined }}",
+              "value1": "={{ $json.error !== undefined || $json.errorMessage !== undefined || $json.success === false }}",
               "value2": true
             }
           ]
         }
       },
-      "id": "2b3674c3-9ad8-5f3b-4b8a-8844a4829632",
-      "name": "👥 Has Facebook Content?",
+      "id": "f5b884ee-7ea0-de77-4bc9-992edea15d65",
+      "name": "⚠️ Email Publish Failed? (With Attachments)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
         14160,
-        5280
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "post",
-        "message": "={{ $json.facebook.text }}",
-        "additionalFields": {}
-      },
-      "id": "bc4d5d06-12ab-45fd-4c7d-81ec0d2322db",
-      "name": "👥 Post to Facebook Page",
-      "type": "n8n-nodes-base.facebook",
-      "typeVersion": 2.1,
-      "position": [
-        14460,
-        5280
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'facebook', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
-        "options": {}
-      },
-      "id": "213bb1af-8a1f-5882-4d86-9f8045b34861",
-      "name": "📡 Emit Facebook Started",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        300,
-        140
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'facebook', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.post_id, url: $json.url || $json.link }, timestamp: $now.toISO() } }}",
-        "options": {}
-      },
-      "id": "b4eccbc7-2518-d04c-4d6d-8fa887db9997",
-      "name": "✅ Emit Facebook Completed",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        520,
-        200
+        5680
       ]
     },
     {
@@ -328,69 +277,55 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.instagram !== undefined }}",
+              "value1": "={{ $json.error !== undefined || $json.errorMessage !== undefined || $json.success === false }}",
               "value2": true
             }
           ]
         }
       },
-      "id": "780e148d-85b9-639f-4d15-836c6d558325",
-      "name": "📸 Has Instagram Content?",
+      "id": "7a750bec-b9cf-219d-4a5a-9baa1fabc699",
+      "name": "⚠️ Email Publish Failed? (No Attachments)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        14160,
-        5080
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "createPost",
-        "additionalFields": {}
-      },
-      "id": "0088e969-08ca-7f61-457e-9b96c9b9ae29",
-      "name": "📸 Post to Instagram",
-      "type": "n8n-nodes-base.instagram",
-      "typeVersion": 1,
-      "position": [
-        14460,
-        5080
+        980,
+        760
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'instagram', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
+        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'email', method: 'n8n', step: 'publish.submit', error: $json.error?.message || $json.error || $json.errorMessage || 'Email publish failed', errorCode: 'N8N_NODE_ERROR', retryable: false, timestamp: $now.toISO() } }}",
         "options": {}
       },
-      "id": "0a067862-5da1-34da-44be-90f9e44864ac",
-      "name": "📡 Emit Instagram Started",
+      "id": "71500ef8-3bc8-01ad-4919-b1244e26b19e",
+      "name": "❌ Emit Email Failed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        300,
-        -60
+        1960,
+        700
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'instagram', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.media_id, url: $json.url || $json.permalink }, timestamp: $now.toISO() } }}",
+        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'email', method: 'n8n', step: 'publish.verify_result', message: 'Starting publish.verify_result via n8n', timestamp: $now.toISO() } }}",
         "options": {}
       },
-      "id": "3f18bc9b-4b5f-d6ce-4b02-9ae37b80cb65",
-      "name": "✅ Emit Instagram Completed",
+      "id": "3b6f7520-b685-dfdd-42f0-a5d26de36f60",
+      "name": "📡 Emit Email Verify Started",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        520,
-        0
+        2140,
+        560
       ]
     },
     {
@@ -398,373 +333,56 @@
         "conditions": {
           "boolean": [
             {
-              "value1": "={{ $json.linkedin !== undefined }}",
+              "value1": "={{ $json.messageId !== undefined || $json.id !== undefined }}",
               "value2": true
             }
           ]
         }
       },
-      "id": "fc65904b-3706-7780-4226-b3416b384a85",
-      "name": "💼 Has LinkedIn Content?",
+      "id": "af4661b7-7278-ab61-404c-9649f1cb630b",
+      "name": "🔎 Verify Email Result",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        14160,
-        5480
-      ]
-    },
-    {
-      "parameters": {
-        "additionalFields": {}
-      },
-      "id": "f9b38ec4-95d1-2ef2-4fa3-90e70845597a",
-      "name": "💼 Post to LinkedIn",
-      "type": "n8n-nodes-base.linkedIn",
-      "typeVersion": 1,
-      "position": [
-        14460,
-        5480
+        2320,
+        580
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'linkedin', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
+        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'email', method: 'n8n', step: 'publish.verify_result', duration: 0, data: { verified: true }, timestamp: $now.toISO() } }}",
         "options": {}
       },
-      "id": "9a10eba5-7de4-7be6-4b99-93cec29a2106",
-      "name": "📡 Emit LinkedIn Started",
+      "id": "10d1c348-5d61-8cbd-435c-b25b9fd1446d",
+      "name": "✅ Emit Email Verify Completed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        300,
-        340
+        2500,
+        540
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'linkedin', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.postId, url: $json.url || $json.permalink }, timestamp: $now.toISO() } }}",
+        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_failed', platform: 'email', method: 'n8n', step: 'publish.verify_result', error: 'Could not verify Email publish result', errorCode: 'VERIFY_RESULT_FAILED', retryable: false, timestamp: $now.toISO() } }}",
         "options": {}
       },
-      "id": "70aa19f8-f871-23e1-4e56-b004b36fddef",
-      "name": "✅ Emit LinkedIn Completed",
+      "id": "33d59f72-d814-7b62-4d34-a70e847ebf0d",
+      "name": "❌ Emit Email Verify Failed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        520,
-        400
+        2500,
+        640
       ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.reddit !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "a4723b69-5eea-653b-4de3-834ea019da1d",
-      "name": "🔴 Has Reddit Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        14160,
-        6080
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "post",
-        "subreddit": "={{ $json.reddit.subreddit }}",
-        "title": "={{ $json.reddit.title }}",
-        "text": "={{ $json.reddit.text }}",
-        "additionalFields": {}
-      },
-      "id": "ebab7789-9a78-84d0-4746-823b1570e99c",
-      "name": "🔴 Post to Reddit",
-      "type": "n8n-nodes-base.reddit",
-      "typeVersion": 1,
-      "position": [
-        14460,
-        6080
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'reddit', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
-        "options": {}
-      },
-      "id": "4c2e410d-3ef9-821d-4da3-822e2599969e",
-      "name": "📡 Emit Reddit Started",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        300,
-        740
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'reddit', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.name, url: $json.url || $json.permalink }, timestamp: $now.toISO() } }}",
-        "options": {}
-      },
-      "id": "df621140-b83a-a6b2-4c69-b8ebf8e161ef",
-      "name": "✅ Emit Reddit Completed",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        520,
-        800
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "boolean": [
-            {
-              "value1": "={{ $json.twitter !== undefined }}",
-              "value2": true
-            }
-          ]
-        }
-      },
-      "id": "9b235081-7c85-c87b-4929-becf7057566d",
-      "name": "🐦 Has Twitter Content?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        14160,
-        4880
-      ]
-    },
-    {
-      "parameters": {
-        "resource": "tweet",
-        "text": "={{ $json.twitter.text }}",
-        "additionalFields": {}
-      },
-      "id": "2c3fe310-333f-277b-4f32-ab8676d78d8b",
-      "name": "🐦 Post to Twitter/X",
-      "type": "n8n-nodes-base.twitter",
-      "typeVersion": 2,
-      "position": [
-        14460,
-        4880
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'twitter', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
-        "options": {}
-      },
-      "id": "831d33fb-b923-f9a2-48b4-9410d5c5ffaf",
-      "name": "📡 Emit Twitter Started",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        300,
-        -260
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'twitter', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.data?.id, url: $json.url || $json.link }, timestamp: $now.toISO() } }}",
-        "options": {}
-      },
-      "id": "95457adb-192d-63ef-4e0f-88b52716d369",
-      "name": "✅ Emit Twitter Completed",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        520,
-        -200
-      ]
-    },
-    {
-      "parameters": {
-        "content": "# 🚀 Multi-Platform Social Media & Email Publisher\n\n**EN:** This workflow publishes DJ events (or any events) to multiple social media platforms and sends emails simultaneously.\n\n**DE:** Dieser Workflow veröffentlicht DJ-Events (oder beliebige Events) auf mehreren Social-Media-Plattformen und sendet gleichzeitig E-Mails.\n\n## 📋 Supported Platforms / Unterstützte Plattformen\n\n- 🐦 **Twitter/X** - Text + Images\n- 📷 **Instagram** - Images + Captions\n- 👤 **Facebook** - Posts + Images\n- 💼 **LinkedIn** - Professional Posts\n- 🔴 **Reddit** - Subreddit Posts with Flairs\n- 📧 **Email** - HTML + Plain Text\n\n## ⚙️ How to Use / Verwendung\n\n1. **Configure Credentials** - See panels below for each platform\n2. **Send POST request** to webhook with event data\n3. **Enable/Disable platforms** via `publishTo` object\n\n## 📝 Input Format\n\nSee \"📥 Input Format\" panel below for complete example.\n\n---\n\n*(Doppelklick zum Bearbeiten | [n8n Sticky Notes Guide](https://docs.n8n.io/workflows/sticky-notes/))*\n",
-        "height": 900,
-        "width": 800,
-        "color": 5
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        14240,
-        3820
-      ],
-      "id": "overview",
-      "name": "📋 Overview"
-    },
-    {
-      "parameters": {
-        "content": "# 📥 Input Format / Eingabeformat\n\n## Required Fields / Pflichtfelder\n\n```json\n{\n  \"eventTitle\": \"DJ Night @ Club XYZ\",\n  \"eventDate\": \"2025-05-15\",\n  \"venue\": \"Club XYZ\",\n  \"city\": \"Berlin\"\n}\n```\n\n## Complete Example / Vollständiges Beispiel\n\n```json\n{\n  \"eventTitle\": \"Techno Night @ Berghain\",\n  \"eventDate\": \"2025-05-15\",\n  \"eventTime\": \"23:00\",\n  \"venue\": \"Berghain\",\n  \"city\": \"Berlin\",\n  \"description\": \"Join us for an unforgettable night!\",\n  \"imageUrl\": \"https://example.com/image.jpg\",\n  \"ticketUrl\": \"https://tickets.example.com\",\n  \"publishTo\": {\n    \"twitter\": true,\n    \"instagram\": true,\n    \"facebook\": true,\n    \"linkedin\": false,\n    \"reddit\": true,\n    \"email\": true\n  },\n  \"emailRecipients\": [\"fan@example.com\"],\n  \"redditSubreddit\": \"DJs\",\n  \"redditFlair\": \"Event\",\n  \"redditNsfw\": false,\n  \"redditSpoiler\": false\n}\n```\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 900,
-        "width": 600,
-        "color": 1
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        12920,
-        3820
-      ],
-      "id": "input-format",
-      "name": "📥 Input Format"
-    },
-    {
-      "parameters": {
-        "content": "# 🔐 Credentials Setup / Credentials einrichten\n\n## ⚠️ WICHTIG: Separate Credentials!\n\n**Jede Plattform benötigt EIGENE Credentials!**\n\n## Checklist / Checkliste\n\n- [ ] **Twitter/X**: `TWITTER_CREDENTIALS_ID`\n- [ ] **Instagram**: `INSTAGRAM_CREDENTIALS_ID`\n- [ ] **Facebook**: `FACEBOOK_CREDENTIALS_ID`\n- [ ] **LinkedIn**: `LINKEDIN_CREDENTIALS_ID`\n- [ ] **Reddit**: `REDDIT_CREDENTIALS_ID`\n- [ ] **Email**: `SMTP_CREDENTIALS_ID`\n\n## 📚 Detailed Instructions\n\nSee individual credential panels below for each platform.\n\nSiehe einzelne Credential-Panels unten für jede Plattform.\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 900,
-        "width": 600,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        14240,
-        3820
-      ],
-      "id": "credentials-overview",
-      "name": "🔐 Credentials Overview"
-    },
-    {
-      "parameters": {
-        "content": "# 🐦 Twitter/X Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://developer.twitter.com/**\n2. Create App → **API Keys & Tokens**\n3. You need:\n   - **API Key** (Consumer Key)\n   - **API Secret** (Consumer Secret)\n   - **Access Token**\n   - **Access Token Secret**\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Twitter OAuth1 API**\n3. Enter all 4 values\n4. Assign to node: **🐦 Post to Twitter/X**\n\n---\n\n**Credential ID:** `TWITTER_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 690,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17140,
-        4220
-      ],
-      "id": "twitter-credentials",
-      "name": "🐦 Twitter Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 📷 Instagram Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n⚠️ **Requires Facebook Business Account**\n\n1. Go to: **https://developers.facebook.com/**\n2. Create **Meta App** (Type: **Business**)\n3. Add **Instagram Graph API** product\n4. You need:\n   - **App ID**\n   - **App Secret**\n   - **Access Token** (with permissions)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Instagram OAuth2 API**\n3. Enter credentials\n4. Assign to node: **📷 Post to Instagram**\n\n---\n\n**Credential ID:** `INSTAGRAM_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 690,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17700,
-        4220
-      ],
-      "id": "instagram-credentials",
-      "name": "📷 Instagram Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 👤 Facebook Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://developers.facebook.com/**\n2. Create **Meta App** (Type: **Business**)\n3. Add **Facebook Login** product\n4. You need:\n   - **App ID**\n   - **App Secret**\n   - **Page Access Token** (with `pages_manage_posts`)\n   - **Page ID** (set as env var `FACEBOOK_PAGE_ID`)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **Facebook OAuth2 API**\n3. Enter credentials\n4. Set env var: `FACEBOOK_PAGE_ID=your_page_id`\n5. Assign to node: **👤 Post to Facebook Page**\n\n---\n\n**Credential ID:** `FACEBOOK_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 680,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        18260,
-        4220
-      ],
-      "id": "facebook-credentials",
-      "name": "👤 Facebook Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 💼 LinkedIn Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://www.linkedin.com/developers/apps**\n2. Create new app\n3. You need:\n   - **Client ID**\n   - **Client Secret**\n4. Configure **OAuth Redirect URL**:\n   `https://your-n8n-instance.com/rest/oauth2-credential/callback`\n5. Request permissions: `w_member_social`, `w_organization_social`\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **LinkedIn OAuth2 API**\n3. Enter Client ID and Secret\n4. Complete OAuth flow\n5. Assign to node: **💼 Post to LinkedIn**\n\n---\n\n**Credential ID:** `LINKEDIN_CREDENTIALS_ID`\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 700,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        16580,
-        4220
-      ],
-      "id": "linkedin-credentials",
-      "name": "💼 LinkedIn Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 🔴 Reddit Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n1. Go to: **https://www.reddit.com/prefs/apps**\n2. Click **\"create app\"**\n3. Fill in:\n   - **Name**: Your app name\n   - **App type**: **\"script\"**\n   - **Redirect URI**: `http://localhost:8080`\n4. Note:\n   - **Client ID** (under app name)\n   - **Client Secret** (only shown once!)\n5. Get OAuth Token:\n   - Use: https://not-an-aardvark.github.io/reddit-oauth-helper/\n   - Token format: `Bearer YOUR_ACCESS_TOKEN`\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **HTTP Header Auth**\n3. Configure:\n   - **Name**: `Authorization`\n   - **Value**: `Bearer YOUR_ACCESS_TOKEN`\n4. Assign to node: **🔴 Post to Reddit**\n\n---\n\n**Credential ID:** `REDDIT_CREDENTIALS_ID`\n\n**Reddit Fields:**\n- `redditSubreddit`: Required (e.g., \"DJs\")\n- `redditFlair`: Optional\n- `redditNsfw`: true/false\n- `redditSpoiler`: true/false\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 960,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        18820,
-        4220
-      ],
-      "id": "reddit-credentials",
-      "name": "🔴 Reddit Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 📧 Email (SMTP) Credentials\n\n## CREDENTIALS REQUIRED / CREDENTIALS ERFORDERLICH\n\n### Gmail:\n1. Enable **2-Factor Authentication**\n2. Go to: **https://myaccount.google.com/apppasswords**\n3. Generate **App Password** for \"Mail\"\n4. Use this password (not your regular password)\n\n### SMTP Settings:\n- **Host**: `smtp.gmail.com`\n- **Port**: `587` (TLS) or `465` (SSL)\n- **User**: your-email@gmail.com\n- **Password**: App Password (for Gmail)\n\n## In n8n:\n\n1. **Settings** → **Credentials** → **Add Credential**\n2. Select **SMTP**\n3. Enter SMTP settings\n4. Optional: Set `EMAIL_FROM` env var\n5. Assign to node: **📧 Send Email**\n\n---\n\n**Credential ID:** `SMTP_CREDENTIALS_ID`\n\n**Other Providers:**\n- Outlook: `smtp.office365.com`\n- Custom: Use your provider's SMTP settings\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 870,
-        "width": 500,
-        "color": 2
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17140,
-        4960
-      ],
-      "id": "email-credentials",
-      "name": "📧 Email Credentials"
-    },
-    {
-      "parameters": {
-        "content": "# 📢 Discord & Telegram Notifications\n\n## Discord Webhook Setup\n\n1. **Go to your Discord server**\n2. **Right-click on a channel** → **Edit Channel** → **Integrations** → **Webhooks**\n3. **Create new Webhook** with a name (e.g., \"n8n-workflow\")\n4. **Copy the Webhook URL**\n\n## In n8n Environment Variables:\n```bash\nDISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN\n```\n\n## Telegram Bot Setup\n\n1. **Message @BotFather** on Telegram\n2. **Send:** `/newbot`\n3. **Follow instructions** to create your bot\n4. **Get your Bot Token** from BotFather\n\n## In n8n Environment Variables:\n```bash\nTELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\nTELEGRAM_CHAT_ID=123456789\n```\n\n### How to get Chat ID:\n1. **Message your bot** with any text\n2. **Visit:** `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`\n3. **Find your chat ID** in the response\n\n## Features:\n- ✅ **Rich Discord embeds** with colors and formatting\n- ✅ **HTML Telegram messages** with markup\n- ✅ **Success/Failure indicators** with colors\n- ✅ **Performance metrics** included\n- ✅ **Automatic fallbacks** to console logging\n\n## Example Notification:\n\n**Discord:** Rich embed with event details, success rates, and timing\n**Telegram:** Formatted message with HTML markup and statistics\n\n---\n\n*(Doppelklick zum Bearbeiten)*\n",
-        "height": 1300,
-        "width": 700,
-        "color": 6
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        17700,
-        4960
-      ],
-      "id": "discord-telegram-setup",
-      "name": "📢 Discord & Telegram Setup"
     }
   ],
   "connections": {
@@ -772,208 +390,7 @@
       "main": [
         [
           {
-            "node": "🐦 Has Twitter Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "📸 Has Instagram Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "👥 Has Facebook Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "💼 Has LinkedIn Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "📧 Has Email Content?",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "🔴 Has Reddit Content?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🐦 Has Twitter Content?": {
-      "main": [
-        [
-          {
-            "node": "📡 Emit Twitter Started",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📡 Emit Twitter Started": {
-      "main": [
-        [
-          {
-            "node": "🐦 Post to Twitter/X",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "🐦 Post to Twitter/X": {
-      "main": [
-        [
-          {
-            "node": "✅ Emit Twitter Completed",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "✅ Emit Twitter Completed": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📸 Has Instagram Content?": {
-      "main": [
-        [
-          {
-            "node": "📡 Emit Instagram Started",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📡 Emit Instagram Started": {
-      "main": [
-        [
-          {
-            "node": "📸 Post to Instagram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📸 Post to Instagram": {
-      "main": [
-        [
-          {
-            "node": "✅ Emit Instagram Completed",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "✅ Emit Instagram Completed": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "👥 Has Facebook Content?": {
-      "main": [
-        [
-          {
-            "node": "📡 Emit Facebook Started",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📡 Emit Facebook Started": {
-      "main": [
-        [
-          {
-            "node": "👥 Post to Facebook Page",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "👥 Post to Facebook Page": {
-      "main": [
-        [
-          {
-            "node": "✅ Emit Facebook Completed",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "✅ Emit Facebook Completed": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "💼 Has LinkedIn Content?": {
-      "main": [
-        [
-          {
-            "node": "📡 Emit LinkedIn Started",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "📡 Emit LinkedIn Started": {
-      "main": [
-        [
-          {
-            "node": "💼 Post to LinkedIn",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "💼 Post to LinkedIn": {
-      "main": [
-        [
-          {
-            "node": "✅ Emit LinkedIn Completed",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "✅ Emit LinkedIn Completed": {
-      "main": [
-        [
-          {
-            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
@@ -1090,7 +507,7 @@
       "main": [
         [
           {
-            "node": "✅ Emit Email Completed",
+            "node": "⚠️ Email Publish Failed? (With Attachments)",
             "type": "main",
             "index": 0
           }
@@ -1099,6 +516,42 @@
     },
     "📧 Send Email (No Attachments)": {
       "main": [
+        [
+          {
+            "node": "⚠️ Email Publish Failed? (No Attachments)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Email Publish Failed? (With Attachments)": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Email Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "✅ Emit Email Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Email Publish Failed? (No Attachments)": {
+      "main": [
+        [
+          {
+            "node": "❌ Emit Email Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "✅ Emit Email Completed",
@@ -1112,6 +565,17 @@
       "main": [
         [
           {
+            "node": "📡 Emit Email Verify Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❌ Emit Email Failed": {
+      "main": [
+        [
+          {
             "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
@@ -1119,40 +583,47 @@
         ]
       ]
     },
-    "🔴 Has Reddit Content?": {
+    "📡 Emit Email Verify Started": {
       "main": [
         [
           {
-            "node": "📡 Emit Reddit Started",
+            "node": "🔎 Verify Email Result",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "📡 Emit Reddit Started": {
+    "🔎 Verify Email Result": {
       "main": [
         [
           {
-            "node": "🔴 Post to Reddit",
+            "node": "✅ Emit Email Verify Completed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Emit Email Verify Failed",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "🔴 Post to Reddit": {
+    "✅ Emit Email Verify Completed": {
       "main": [
         [
           {
-            "node": "✅ Emit Reddit Completed",
+            "node": "🔧 Structure Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "✅ Emit Reddit Completed": {
+    "❌ Emit Email Verify Failed": {
       "main": [
         [
           {
