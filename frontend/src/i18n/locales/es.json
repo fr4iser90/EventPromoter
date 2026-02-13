@@ -309,6 +309,7 @@
     "done": "Hecho",
     "files": "Archivos",
     "platforms": "Plataformas",
+    "notSelected": "no seleccionado",
     "noSelection": "Sin selección",
     "selected": "Seleccionado ({{count}}):",
     "available": "Disponible ({{count}}):",
@@ -386,7 +387,14 @@
     "failedToLoadPreview": "No se pudo cargar la vista previa",
     "failedToLoadConfigurationWithPlatform": "No se pudo cargar la configuracion de {{platform}}: {{error}}",
     "ensureBackendRunningConfigured": "Asegurate de que el backend este en ejecucion y la plataforma este configurada correctamente.",
-    "noConfigurationForPlatform": "No hay configuracion disponible para la plataforma: {{platform}}"
+    "noConfigurationForPlatform": "No hay configuracion disponible para la plataforma: {{platform}}",
+    "noModeAvailable": "No hay ruta de publicacion disponible",
+    "tooltip": {
+      "n8nActiveNoLocalConfig": "N8N activo, no se requiere configuracion local",
+      "routeActiveConfigUnknown": "{{route}} activo, estado de configuracion desconocido",
+      "routeActiveConfigured": "{{route}} activo, configurado",
+      "routeActiveConfigMissing": "{{route}} activo, falta configuracion"
+    }
   },
   "validation": {
     "required": "Este campo es obligatorio",

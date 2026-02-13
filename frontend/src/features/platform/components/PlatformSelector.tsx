@@ -91,6 +91,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [platformModes, setPlatformModes] = useState<Record<string, string[]>>({}) // Store available modes per platform
+  const [platformConfigured, setPlatformConfigured] = useState<Record<string, boolean | null>>({})
 
   // Load platforms dynamically from backend - NO FALLBACKS
   useEffect(() => {
@@ -122,6 +123,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
         
         // Load available modes for each platform
         const modesMap: Record<string, string[]> = {}
+        const configuredMap: Record<string, boolean | null> = {}
         for (const platform of enhancedPlatforms) {
           try {
             const modesResponse = await fetch(getApiUrl(`platforms/${platform.id}/available-modes`))
@@ -135,8 +137,23 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
             console.warn(`Failed to load modes for ${platform.id}:`, err)
             modesMap[platform.id] = []
           }
+
+          try {
+            const settingsResponse = await fetch(getApiUrl(`platforms/${platform.id}/settings`))
+            if (settingsResponse.ok) {
+              const settingsData = await settingsResponse.json()
+              const configured = settingsData?.settings?.configured
+              configuredMap[platform.id] = typeof configured === 'boolean' ? configured : null
+            } else {
+              configuredMap[platform.id] = null
+            }
+          } catch (err) {
+            console.warn(`Failed to load settings status for ${platform.id}:`, err)
+            configuredMap[platform.id] = null
+          }
         }
         setPlatformModes(modesMap)
+        setPlatformConfigured(configuredMap)
         setError(null)
       } catch (err: unknown) {
         console.error('Failed to load platforms:', err)
@@ -153,6 +170,31 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
 
   // Ensure selectedPlatforms is always an array
   const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
+
+  const getBestDefaultRoute = (modes: string[], modeStatuses: Record<string, PlatformStatus>) => {
+    const priority = ['api', 'n8n', 'playwright']
+    return (
+      priority.find((route) => {
+        const status = modeStatuses[route]?.status || 'not-implemented'
+        return modes.includes(route) && status !== 'broken'
+      }) || modes[0] || null
+    )
+  }
+
+  const getEffectiveRoute = (platform: PlatformItem, modes: string[]) => {
+    const modeStatuses = (platform.publishingModeStatus || {}) as Record<string, PlatformStatus>
+    const isForcedMode = ['n8n', 'api', 'playwright'].includes(globalPublishingMode)
+
+    if (isForcedMode && modes.includes(globalPublishingMode)) {
+      return globalPublishingMode
+    }
+
+    if (globalPublishingMode === 'custom' && platformOverrides[platform.id] && modes.includes(platformOverrides[platform.id])) {
+      return platformOverrides[platform.id]
+    }
+
+    return getBestDefaultRoute(modes, modeStatuses)
+  }
 
   const handlePlatformToggle = (platformId: string) => {
     const newSelection = safeSelectedPlatforms.includes(platformId)
@@ -217,16 +259,48 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
         <Grid container spacing={2}>
           {platforms.map((platform) => {
             const isSelected = safeSelectedPlatforms.includes(platform.id)
+            const modes = platformModes[platform.id] || platform.availableModes || []
+            const effectiveRoute = getEffectiveRoute(platform, modes)
+            const configured = platformConfigured[platform.id]
+            const routeNeedsCredentials = effectiveRoute !== 'n8n'
+            const isConfiguredForRoute = effectiveRoute ? (!routeNeedsCredentials || configured === true) : false
+
+            const cardBorderColor = !isSelected
+              ? 'transparent'
+              : isConfiguredForRoute
+                ? 'success.main'
+                : 'warning.main'
+
+            const cardTooltip = (() => {
+              if (!isSelected) {
+                return `${platform.name}: ${t('common.notSelected')}`
+              }
+              if (!effectiveRoute) {
+                return `${platform.name}: ${t('platform.noModeAvailable')}`
+              }
+              if (effectiveRoute === 'n8n') {
+                return `${platform.name}: ${t('platform.tooltip.n8nActiveNoLocalConfig')}`
+              }
+              if (configured === null) {
+                return `${platform.name}: ${t('platform.tooltip.routeActiveConfigUnknown', { route: effectiveRoute.toUpperCase() })}`
+              }
+              if (configured) {
+                return `${platform.name}: ${t('platform.tooltip.routeActiveConfigured', { route: effectiveRoute.toUpperCase() })}`
+              }
+              return `${platform.name}: ${t('platform.tooltip.routeActiveConfigMissing', { route: effectiveRoute.toUpperCase() })}`
+            })()
 
             return (
               <Grid item xs={12} sm={6} md={4} key={platform.id}>
-                <Card
-                  sx={{
-                    border: isSelected ? `2px solid ${platform.color}` : '2px solid transparent',
-                    transition: 'border-color 0.2s ease-in-out'
-                  }}
-                >
-                  <CardContent>
+                <Tooltip title={cardTooltip} arrow placement="top">
+                  <Card
+                    sx={{
+                      border: `2px solid`,
+                      borderColor: cardBorderColor,
+                      transition: 'border-color 0.2s ease-in-out'
+                    }}
+                  >
+                    <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                             <FormControlLabel
                               control={
@@ -271,7 +345,6 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
                     {/* Publishing mode status badges */}
                     <Box sx={{ mt: 1, mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                       {(() => {
-                        const modes = platformModes[platform.id] || platform.availableModes || []
                         const modeStatuses = platform.publishingModeStatus || {}
                         
                         // Determine which route is active by "CUSTOM" logic (Default fallback)
@@ -370,8 +443,9 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
                         {t('platform.enabled')}
                       </Typography>
                     )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Tooltip>
               </Grid>
             )
           })}

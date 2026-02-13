@@ -309,6 +309,7 @@
     "done": "Done",
     "files": "Files",
     "platforms": "Platforms",
+    "notSelected": "not selected",
     "noSelection": "No selection",
     "selected": "Selected ({{count}}):",
     "available": "Available ({{count}}):",
@@ -386,7 +387,14 @@
     "failedToLoadPreview": "Failed to load preview",
     "failedToLoadConfigurationWithPlatform": "Failed to load {{platform}} configuration: {{error}}",
     "ensureBackendRunningConfigured": "Please ensure the backend server is running and the platform is properly configured.",
-    "noConfigurationForPlatform": "No configuration available for platform: {{platform}}"
+    "noConfigurationForPlatform": "No configuration available for platform: {{platform}}",
+    "noModeAvailable": "No publishing route available",
+    "tooltip": {
+      "n8nActiveNoLocalConfig": "N8N active, no local configuration required",
+      "routeActiveConfigUnknown": "{{route}} active, configuration status unknown",
+      "routeActiveConfigured": "{{route}} active, configured",
+      "routeActiveConfigMissing": "{{route}} active, configuration missing"
+    }
   },
   "validation": {
     "required": "This field is required",
