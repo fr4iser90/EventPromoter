@@ -25,5 +25,35 @@
     },
     "position": [400, 400],
     "typeVersion": 1
+  },
+  {
+    "id": "platform-linkedin-emit-started",
+    "name": "📡 Emit LinkedIn Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'linkedin', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [300, 340],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-linkedin-emit-completed",
+    "name": "✅ Emit LinkedIn Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'linkedin', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.postId, url: $json.url || $json.permalink }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [520, 400],
+    "typeVersion": 4.2
   }
 ]

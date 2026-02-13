@@ -72,7 +72,7 @@ Create a `.env` file in the interface root:
 
 ```env
 VITE_N8N_WEBHOOK_URL=http://your-n8n-instance.com/webhook/your-webhook-id
-VITE_API_BASE_URL=http://localhost:3001
+VITE_API_BASE_URL=http://localhost:3000
 ```
 
 ### Platform Settings

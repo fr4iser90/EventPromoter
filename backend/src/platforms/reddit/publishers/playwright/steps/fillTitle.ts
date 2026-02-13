@@ -1,6 +1,6 @@
 import { Page } from 'playwright'
 
-export async function step4_EnterTitle(page: Page, title: string): Promise<void> {
+export async function fillTitle(page: Page, title: string): Promise<void> {
   console.log(`  [Step 4] Entering title: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`)
   const titleSelectors = [
     'textarea[placeholder*="title"]',

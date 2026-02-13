@@ -312,12 +312,12 @@ function buildWorkflow() {
   const enabledNodeNames = new Set();
   if (enabledPlatforms) {
     const platformNodeMap = {
-      'email': ['📧 Has Email Content?', '📧 Prepare Email Data', '📧 Send Email', '📧 Send Email (No Attachments)'],
-      'facebook': ['👥 Has Facebook Content?', '👥 Post to Facebook Page'],
-      'twitter': ['🐦 Has Twitter Content?', '🐦 Post to Twitter/X'],
-      'instagram': ['📸 Has Instagram Content?', '📸 Post to Instagram'],
-      'linkedin': ['💼 Has LinkedIn Content?', '💼 Post to LinkedIn'],
-      'reddit': ['🔴 Has Reddit Content?', '🔴 Post to Reddit']
+      'email': ['📧 Has Email Content?', '📡 Emit Email Started', '📧 Prepare Email Data', '📧 Send Email', '📧 Send Email (No Attachments)', '✅ Emit Email Completed'],
+      'facebook': ['👥 Has Facebook Content?', '📡 Emit Facebook Started', '👥 Post to Facebook Page', '✅ Emit Facebook Completed'],
+      'twitter': ['🐦 Has Twitter Content?', '📡 Emit Twitter Started', '🐦 Post to Twitter/X', '✅ Emit Twitter Completed'],
+      'instagram': ['📸 Has Instagram Content?', '📡 Emit Instagram Started', '📸 Post to Instagram', '✅ Emit Instagram Completed'],
+      'linkedin': ['💼 Has LinkedIn Content?', '📡 Emit LinkedIn Started', '💼 Post to LinkedIn', '✅ Emit LinkedIn Completed'],
+      'reddit': ['🔴 Has Reddit Content?', '📡 Emit Reddit Started', '🔴 Post to Reddit', '✅ Emit Reddit Completed']
     };
     
     enabledPlatforms.forEach(platform => {

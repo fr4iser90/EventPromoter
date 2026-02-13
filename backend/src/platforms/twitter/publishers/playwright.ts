@@ -10,20 +10,92 @@
 import { chromium, Browser, Page } from 'playwright'
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
 
 export interface TwitterPublisher {
   publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult>
 }
+
+const TWITTER_STEP_IDS = {
+  COMMON_VALIDATE_INPUT: 'common.validate_input',
+  AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+  AUTH_LOGIN_CHECK: 'auth.login_check',
+  COMPOSE_OPEN_EDITOR: 'compose.open_editor',
+  COMPOSE_FILL_CONTENT: 'compose.fill_content',
+  MEDIA_UPLOAD: 'media.upload',
+  PUBLISH_SUBMIT: 'publish.submit',
+  PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+} as const
 
 /**
  * Playwright Publisher for Twitter
  */
-export class TwitterPlaywrightPublisher implements TwitterPublisher {
+export class TwitterPlaywrightPublisher implements TwitterPublisher, EventAwarePublisher {
   private browser: Browser | null = null
+  private eventEmitter?: PublisherEventService
+  private publishRunId?: string
+
+  setEventEmitter(emitter: PublisherEventService): void {
+    this.eventEmitter = emitter
+  }
+
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
+  }
+
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') return true
+    if (typeof status === 'number' && status >= 500 && status < 600) return true
+    if (status === 429) return true
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string,
+    fn: () => Promise<T> | T,
+    message?: string,
+    data?: any
+  ): Promise<T> {
+    const start = Date.now()
+    this.eventEmitter?.stepStarted('twitter', 'playwright', stepId, message || `Starting ${stepId}`, publishRunId)
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('twitter', 'playwright', stepId, Date.now() - start, publishRunId, data)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'twitter',
+        'playwright',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
+  }
 
   private async getCredentials(): Promise<any> {
     const config = await ConfigService.getConfig('twitter') || {}
@@ -37,74 +109,125 @@ export class TwitterPlaywrightPublisher implements TwitterPublisher {
   async publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
+    const currentPublishRunId = options?.sessionId || this.publishRunId || `twitter-${Date.now()}`
     try {
-      const credentials = await this.getCredentials()
+      const credentials = await this.executeContractStep(
+        TWITTER_STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          const loaded = await this.getCredentials()
+          if (!loaded.username || !loaded.password) {
+            throw this.createError('Twitter credentials not configured for Playwright publishing', 'MISSING_CREDENTIALS')
+          }
+          return loaded
+        },
+        'Loading and validating Twitter credentials'
+      )
 
-      if (!credentials.username || !credentials.password) {
-        return {
-          success: false,
-          error: 'Twitter credentials not configured for Playwright publishing'
-        }
-      }
+      const text = await this.executeContractStep(
+        TWITTER_STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          let formatted = content.text || content.body || ''
+          if (hashtags.length > 0) {
+            const formattedHashtags = hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')
+            formatted = `${formatted} ${formattedHashtags}`.trim()
+          }
+          if (!formatted || formatted.trim().length === 0) {
+            throw this.createError('Tweet text is required', 'INVALID_INPUT')
+          }
+          if (formatted.length > 280) {
+            throw this.createError(`Tweet exceeds 280 characters (${formatted.length} chars)`, 'INVALID_INPUT')
+          }
+          return formatted
+        },
+        'Validating tweet content'
+      )
 
       this.browser = await chromium.launch({ headless: true })
       const page = await this.browser.newPage()
 
       try {
-        // Navigate to Twitter login
-        await page.goto('https://twitter.com/i/flow/login', { waitUntil: 'networkidle' })
+        await this.executeContractStep(
+          TWITTER_STEP_IDS.AUTH_LOGIN_CHECK,
+          currentPublishRunId,
+          async () => {
+            await page.goto('https://twitter.com/i/flow/login', { waitUntil: 'networkidle' })
+            await page.fill('input[autocomplete="username"]', credentials.username || credentials.email)
+            await page.click('div[role="button"]:has-text("Next")')
+            await page.waitForTimeout(2000)
+            const phoneInput = await page.$('input[name="text"]').catch(() => null)
+            if (phoneInput) {
+              await page.click('div[role="button"]:has-text("Skip")').catch(() => {})
+            }
+            await page.fill('input[name="password"]', credentials.password)
+            await page.click('div[data-testid="LoginForm_Login_Button"]')
+            await page.waitForURL('**/home', { timeout: 15000 })
+          },
+          'Logging into Twitter'
+        )
 
-        // Enter username/email
-        await page.fill('input[autocomplete="username"]', credentials.username || credentials.email)
-        await page.click('div[role="button"]:has-text("Next")')
-        await page.waitForTimeout(2000)
+        await this.executeContractStep(
+          TWITTER_STEP_IDS.COMPOSE_OPEN_EDITOR,
+          currentPublishRunId,
+          async () => {
+            await page.goto('https://twitter.com/compose/tweet', { waitUntil: 'networkidle' })
+          },
+          'Opening tweet composer'
+        )
 
-        // Handle potential phone/email verification
-        const phoneInput = await page.$('input[name="text"]').catch(() => null)
-        if (phoneInput) {
-          // Skip if phone verification is required (user needs to handle manually)
-          await page.click('div[role="button"]:has-text("Skip")').catch(() => {})
-        }
+        await this.executeContractStep(
+          TWITTER_STEP_IDS.COMPOSE_FILL_CONTENT,
+          currentPublishRunId,
+          async () => {
+            const textArea = await page.waitForSelector('div[data-testid="tweetTextarea_0"]', { timeout: 5000 })
+            await textArea.fill(text)
+          },
+          'Filling tweet content'
+        )
 
-        // Enter password
-        await page.fill('input[name="password"]', credentials.password)
-        await page.click('div[data-testid="LoginForm_Login_Button"]')
-        await page.waitForURL('**/home', { timeout: 15000 })
-
-        // Navigate to compose tweet
-        await page.goto('https://twitter.com/compose/tweet', { waitUntil: 'networkidle' })
-
-        // Format text with hashtags
-        let text = content.text || content.body || ''
-        if (hashtags.length > 0) {
-          const formattedHashtags = hashtags
-            .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-            .join(' ')
-          text = `${text} ${formattedHashtags}`.trim()
-        }
-
-        // Enter tweet text
-        const textArea = await page.waitForSelector('div[data-testid="tweetTextarea_0"]', { timeout: 5000 })
-        await textArea.fill(text)
-
-        // Upload image if provided
         if (files.length > 0 && files[0].url) {
-          const filePaths = await this.downloadFilesIfNeeded(files)
-          const fileInput = await page.$('input[type="file"]')
-          if (fileInput) {
-            await fileInput.setInputFiles(filePaths)
-            await page.waitForTimeout(3000) // Wait for upload
-          }
+          await this.executeContractStep(
+            TWITTER_STEP_IDS.MEDIA_UPLOAD,
+            currentPublishRunId,
+            async () => {
+              const filePaths = await this.downloadFilesIfNeeded(files)
+              const fileInput = await page.$('input[type="file"]')
+              if (fileInput) {
+                await fileInput.setInputFiles(filePaths)
+                await page.waitForTimeout(3000)
+              }
+            },
+            `Uploading ${files.length} media file(s)`
+          )
         }
 
-        // Post tweet
-        await page.click('div[data-testid="tweetButton"]')
-        await page.waitForTimeout(3000)
+        await this.executeContractStep(
+          TWITTER_STEP_IDS.PUBLISH_SUBMIT,
+          currentPublishRunId,
+          async () => {
+            await page.click('div[data-testid="tweetButton"]')
+            await page.waitForTimeout(3000)
+          },
+          'Submitting tweet'
+        )
 
-        // Try to get tweet URL
-        const tweetUrl = await this.extractTweetUrl(page)
+        const tweetUrl = await this.executeContractStep(
+          TWITTER_STEP_IDS.PUBLISH_VERIFY_RESULT,
+          currentPublishRunId,
+          async () => {
+            const url = await this.extractTweetUrl(page)
+            const postId = this.extractTweetId(url)
+            if (!url || !postId) {
+              throw this.createError('Missing tweet URL or postId after publish', 'VERIFY_FAILED')
+            }
+            return url
+          },
+          'Verifying tweet result'
+        )
 
         return {
           success: true,

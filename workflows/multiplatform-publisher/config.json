@@ -49,7 +49,7 @@
       "main": [
         [
           {
-            "node": "🐦 Post to Twitter/X",
+            "node": "📡 Emit Twitter Started",
             "type": "main",
             "index": 0
           }
@@ -57,7 +57,29 @@
         []
       ]
     },
+    "📡 Emit Twitter Started": {
+      "main": [
+        [
+          {
+            "node": "🐦 Post to Twitter/X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "🐦 Post to Twitter/X": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Twitter Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Twitter Completed": {
       "main": [
         [
           {
@@ -72,7 +94,7 @@
       "main": [
         [
           {
-            "node": "📸 Post to Instagram",
+            "node": "📡 Emit Instagram Started",
             "type": "main",
             "index": 0
           }
@@ -80,7 +102,29 @@
         []
       ]
     },
+    "📡 Emit Instagram Started": {
+      "main": [
+        [
+          {
+            "node": "📸 Post to Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "📸 Post to Instagram": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Instagram Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Instagram Completed": {
       "main": [
         [
           {
@@ -95,7 +139,7 @@
       "main": [
         [
           {
-            "node": "👥 Post to Facebook Page",
+            "node": "📡 Emit Facebook Started",
             "type": "main",
             "index": 0
           }
@@ -103,7 +147,29 @@
         []
       ]
     },
+    "📡 Emit Facebook Started": {
+      "main": [
+        [
+          {
+            "node": "👥 Post to Facebook Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "👥 Post to Facebook Page": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Facebook Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Facebook Completed": {
       "main": [
         [
           {
@@ -118,7 +184,7 @@
       "main": [
         [
           {
-            "node": "💼 Post to LinkedIn",
+            "node": "📡 Emit LinkedIn Started",
             "type": "main",
             "index": 0
           }
@@ -126,7 +192,29 @@
         []
       ]
     },
+    "📡 Emit LinkedIn Started": {
+      "main": [
+        [
+          {
+            "node": "💼 Post to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "💼 Post to LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit LinkedIn Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit LinkedIn Completed": {
       "main": [
         [
           {
@@ -141,12 +229,23 @@
       "main": [
         [
           {
-            "node": "📧 Prepare Email Data",
+            "node": "📡 Emit Email Started",
             "type": "main",
             "index": 0
           }
         ],
         []
+      ]
+    },
+    "📡 Emit Email Started": {
+      "main": [
+        [
+          {
+            "node": "📧 Prepare Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "📧 Prepare Email Data": {
@@ -237,7 +336,7 @@
       "main": [
         [
           {
-            "node": "🔧 Structure Response",
+            "node": "✅ Emit Email Completed",
             "type": "main",
             "index": 0
           }
@@ -245,6 +344,17 @@
       ]
     },
     "📧 Send Email (No Attachments)": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Email Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Email Completed": {
       "main": [
         [
           {
@@ -259,7 +369,7 @@
       "main": [
         [
           {
-            "node": "🔴 Post to Reddit",
+            "node": "📡 Emit Reddit Started",
             "type": "main",
             "index": 0
           }
@@ -267,7 +377,29 @@
         []
       ]
     },
+    "📡 Emit Reddit Started": {
+      "main": [
+        [
+          {
+            "node": "🔴 Post to Reddit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "🔴 Post to Reddit": {
+      "main": [
+        [
+          {
+            "node": "✅ Emit Reddit Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Emit Reddit Completed": {
       "main": [
         [
           {

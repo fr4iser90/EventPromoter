@@ -8,22 +8,92 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
 import fs from 'fs'
 
 export interface TwitterPublisher {
   publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult>
 }
+
+const TWITTER_API_STEP_IDS = {
+  COMMON_VALIDATE_INPUT: 'common.validate_input',
+  AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+  MEDIA_UPLOAD: 'media.upload',
+  PUBLISH_SUBMIT: 'publish.submit',
+  PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+} as const
 
 /**
  * API Publisher for Twitter
  * 
  * Uses Twitter API v2 to post tweets with media support.
  */
-export class TwitterApiPublisher implements TwitterPublisher {
+export class TwitterApiPublisher implements TwitterPublisher, EventAwarePublisher {
+  private eventEmitter?: PublisherEventService
+  private publishRunId?: string
+
+  setEventEmitter(emitter: PublisherEventService): void {
+    this.eventEmitter = emitter
+  }
+
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
+  }
+
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') return true
+    if (typeof status === 'number' && status >= 500 && status < 600) return true
+    if (status === 429) return true
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string,
+    fn: () => Promise<T> | T,
+    message?: string,
+    data?: any
+  ): Promise<T> {
+    const start = Date.now()
+    this.eventEmitter?.stepStarted('twitter', 'api', stepId, message || `Starting ${stepId}`, publishRunId)
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('twitter', 'api', stepId, Date.now() - start, publishRunId, data)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'twitter',
+        'api',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
+  }
+
   private async getCredentials(): Promise<any> {
     const config = await ConfigService.getConfig('twitter') || {}
     return {
@@ -38,40 +108,52 @@ export class TwitterApiPublisher implements TwitterPublisher {
   async publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
+    const currentPublishRunId = options?.sessionId || this.publishRunId || `twitter-api-${Date.now()}`
     try {
-      const credentials = await this.getCredentials()
-
-      if (!credentials.bearerToken && !credentials.accessToken) {
-        return {
-          success: false,
-          error: 'Twitter API credentials not configured (need bearerToken or accessToken)'
+      const credentials = await this.executeContractStep(
+        TWITTER_API_STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          const loaded = await this.getCredentials()
+          if (!loaded.bearerToken && !loaded.accessToken) {
+            throw this.createError('Twitter API credentials not configured (need bearerToken or accessToken)', 'MISSING_CREDENTIALS')
+          }
+          return loaded
         }
-      }
+      )
 
-      // Format text with hashtags
-      let text = content.text || content.body || ''
-      if (hashtags.length > 0) {
-        const formattedHashtags = hashtags
-          .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-          .join(' ')
-        text = `${text} ${formattedHashtags}`.trim()
-      }
-
-      // Validate length (280 chars for Twitter)
-      if (text.length > 280) {
-        return {
-          success: false,
-          error: `Tweet exceeds 280 characters (${text.length} chars)`
+      const text = await this.executeContractStep(
+        TWITTER_API_STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          let formatted = content.text || content.body || ''
+          if (hashtags.length > 0) {
+            const formattedHashtags = hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')
+            formatted = `${formatted} ${formattedHashtags}`.trim()
+          }
+          if (!formatted || formatted.trim().length === 0) {
+            throw this.createError('Tweet text is required', 'INVALID_INPUT')
+          }
+          if (formatted.length > 280) {
+            throw this.createError(`Tweet exceeds 280 characters (${formatted.length} chars)`, 'INVALID_INPUT')
+          }
+          return formatted
         }
-      }
+      )
 
       // Upload media if provided
       let mediaId: string | undefined
       if (files.length > 0) {
         try {
-          mediaId = await this.uploadMedia(files[0], credentials)
+          mediaId = await this.executeContractStep(
+            TWITTER_API_STEP_IDS.MEDIA_UPLOAD,
+            currentPublishRunId,
+            async () => await this.uploadMedia(files[0], credentials),
+            `Uploading ${files.length} media file(s)`
+          )
         } catch (error: any) {
           console.warn('Media upload failed, posting text only:', error.message)
         }
@@ -88,30 +170,44 @@ export class TwitterApiPublisher implements TwitterPublisher {
         }
       }
 
-      const response = await fetch('https://api.twitter.com/2/tweets', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${credentials.bearerToken || credentials.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(tweetPayload)
-      })
+      const tweetId = await this.executeContractStep(
+        TWITTER_API_STEP_IDS.PUBLISH_SUBMIT,
+        currentPublishRunId,
+        async () => {
+          const response = await fetch('https://api.twitter.com/2/tweets', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${credentials.bearerToken || credentials.accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(tweetPayload)
+          })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        return {
-          success: false,
-          error: errorData.detail || `Twitter API error: ${response.status} ${response.statusText}`
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw this.createError(errorData.detail || `Twitter API error: ${response.status} ${response.statusText}`, 'SUBMIT_FAILED')
+          }
+
+          const data = await response.json()
+          return data.data?.id
         }
-      }
+      )
 
-      const data = await response.json()
-      const tweetId = data.data?.id
+      const url = await this.executeContractStep(
+        TWITTER_API_STEP_IDS.PUBLISH_VERIFY_RESULT,
+        currentPublishRunId,
+        async () => {
+          if (!tweetId) {
+            throw this.createError('Missing tweet ID after publish', 'VERIFY_FAILED')
+          }
+          return `https://twitter.com/i/web/status/${tweetId}`
+        }
+      )
 
       return {
         success: true,
         postId: tweetId,
-        url: tweetId ? `https://twitter.com/i/web/status/${tweetId}` : undefined
+        url
       }
     } catch (error: any) {
       return {

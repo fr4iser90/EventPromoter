@@ -1,9 +1,9 @@
 /**
- * Step 5: Process Attachments
+ * Process Attachments
  * 
  * Resolves specific attachments and processes embedded images
  * 
- * @module platforms/email/publishers/api/steps/step5_ProcessAttachments
+ * @module platforms/email/publishers/api/steps/processAttachments
  */
 
 import { UploadedFile } from '../../../../../types/index.js'
@@ -11,7 +11,7 @@ import { resolveAttachments, ResolvedAttachment } from '../utils/resolveAttachme
 import { mergeAttachments } from '../utils/mergeAttachments.js'
 import { processEmbeddedImages } from '../utils/processEmbeddedImages.js'
 
-export function step5_ProcessAttachments(
+export function processAttachments(
   run: any,
   files: UploadedFile[],
   globalAttachments: ResolvedAttachment[],

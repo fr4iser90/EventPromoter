@@ -7,30 +7,33 @@
  */
 
 // @ts-ignore - Playwright is optional dependency
-import { chromium, BrowserContext, Page } from 'playwright'
+import { chromium, BrowserContext } from 'playwright'
 import { PostResult } from '../../../../types/index.js'
-import { RedditTargets } from '../../types.js'
 import { RedditPublisher } from '../api.js'
 import { PublisherEventService, EventAwarePublisher } from '../../../../services/publisherEventService.js'
 
 // Utils
-import { waitForPageFullyLoaded } from './utils/waitForPageFullyLoaded.js'
 import { executeStep } from './utils/executeStep.js'
 import { getCredentials } from './utils/getCredentials.js'
-import { isLoggedIn } from './utils/isLoggedIn.js'
-import { getLoggedInUsername } from './utils/getLoggedInUsername.js'
-import { login } from './utils/login.js'
-import { extractSubredditsFromTargets } from './utils/extractSubredditsFromTargets.js'
-import { extractPostUrl } from './utils/extractPostUrl.js'
-import { extractPostId } from './utils/extractPostId.js'
 
 // Steps
-import { step1_LoginCheck } from './steps/step1_LoginCheck.js'
-import { step2_NavigateToSubmitPage } from './steps/step2_NavigateToSubmitPage.js'
-import { step3_SelectPostType } from './steps/step3_SelectPostType.js'
-import { step4_EnterTitle } from './steps/step4_EnterTitle.js'
-import { step5_EnterContent } from './steps/step5_EnterContent.js'
-import { step6_Submit } from './steps/step6_Submit.js'
+import { loginCheck } from './steps/loginCheck.js'
+import { openSubmitEditor } from './steps/openSubmitEditor.js'
+import { selectPostType } from './steps/selectPostType.js'
+import { fillTitle } from './steps/fillTitle.js'
+import { fillContent } from './steps/fillContent.js'
+import { submitPost } from './steps/submitPost.js'
+
+const REDDIT_STEP_IDS = {
+  COMMON_VALIDATE_INPUT: 'common.validate_input',
+  COMMON_RESOLVE_TARGETS: 'common.resolve_targets',
+  AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+  AUTH_LOGIN_CHECK: 'auth.login_check',
+  COMPOSE_OPEN_EDITOR: 'compose.open_editor',
+  COMPOSE_FILL_CONTENT: 'compose.fill_content',
+  PUBLISH_SUBMIT: 'publish.submit',
+  PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+} as const
 
 /**
  * Playwright Publisher for Reddit
@@ -51,6 +54,64 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
     this.publishRunId = runId
   }
 
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') {
+      return true
+    }
+
+    if (typeof status === 'number' && status >= 500 && status < 600) {
+      return true
+    }
+
+    if (status === 429) {
+      return true
+    }
+
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string | undefined,
+    fn: () => Promise<T>,
+    message?: string
+  ): Promise<T> {
+    const start = Date.now()
+    this.eventEmitter?.stepStarted('reddit', 'playwright', stepId, message || `Starting ${stepId}`, publishRunId)
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('reddit', 'playwright', stepId, Date.now() - start, publishRunId)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'reddit',
+        'playwright',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
+  }
+
   async publish(
     content: any,
     files: any[],
@@ -64,99 +125,101 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
     
     try {
       const credentials = await getCredentials()
-
-      if (!credentials.username || !credentials.password) {
-        return {
-          success: false,
-          error: 'Reddit credentials not configured for Playwright publishing'
+      await this.executeContractStep(
+        REDDIT_STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          if (!credentials.username || !credentials.password) {
+            throw this.createError('Reddit credentials not configured for Playwright publishing', 'MISSING_CREDENTIALS')
+          }
         }
-      }
+      )
 
-      // ✅ GENERIC: Validate that AT LEAST ONE target type is present
-      if (!content.subreddits && !content.users) {
-        return {
-          success: false,
-          error: 'At least one target configuration is required (subreddits or users)'
-        }
-      }
+      await this.executeContractStep(
+        REDDIT_STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          if (!content.subreddits && !content.users) {
+            throw this.createError('At least one target configuration is required (subreddits or users)', 'INVALID_INPUT')
+          }
 
-      // ✅ NO FALLBACKS - Validate required fields
-      if (!content.title || content.title.trim().length === 0) {
-        return {
-          success: false,
-          error: 'Title is required'
-        }
-      }
+          if (content.users) {
+            throw this.createError('User DMs not yet implemented in Playwright publisher', 'NOT_IMPLEMENTED')
+          }
 
-      if (!content.text || content.text.trim().length === 0) {
-        return {
-          success: false,
-          error: 'Text is required'
+          if (!content.title || content.title.trim().length === 0) {
+            throw this.createError('Title is required', 'INVALID_INPUT')
+          }
+
+          if (!content.text || content.text.trim().length === 0) {
+            throw this.createError('Text is required', 'INVALID_INPUT')
+          }
         }
-      }
+      )
 
       const title = content.title
       const text = content.text
 
-      // ✅ Support subreddits (posts) OR users (DMs)
       if (content.subreddits) {
         console.log(`\n🔍 Extracting subreddits from targets configuration...`)
         console.log(`   Targets config:`, JSON.stringify(content.subreddits, null, 2))
-        
-        const { RedditTargetService } = await import('../../services/targetService.js')
-        const targetService = new RedditTargetService()
-        const allTargets = await targetService.getTargets('subreddit')
-        const groups = await targetService.getGroups()
-        const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
+        let uniqueSubreddits: any[] = []
+        await this.executeContractStep(
+          REDDIT_STEP_IDS.COMMON_RESOLVE_TARGETS,
+          currentPublishRunId,
+          async () => {
+            const { RedditTargetService } = await import('../../services/targetService.js')
+            const targetService = new RedditTargetService()
+            const allTargets = await targetService.getTargets('subreddit')
+            const groups = await targetService.getGroups()
+            const groupsArray = Array.isArray(groups) ? groups : Object.values(groups)
 
-        const subredditsWithMetadata: any[] = []
-        
-        if (content.subreddits.mode === 'all') {
-          allTargets.forEach((t: any) => {
-            const baseField = targetService.getBaseField(t.targetType)
-            subredditsWithMetadata.push({
-              name: t[baseField],
-              metadata: t
-            })
-          })
-        } else if (content.subreddits.mode === 'groups' && content.subreddits.groups) {
-          for (const groupIdentifier of content.subreddits.groups) {
-            const group = groupsArray.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier) as any
-            if (!group || !group.targetIds) continue
-            group.targetIds.forEach((targetId: string) => {
-              const target = allTargets.find((t: any) => t.id === targetId)
-              if (target) {
-                const baseField = targetService.getBaseField(target.targetType)
+            const subredditsWithMetadata: any[] = []
+            
+            if (content.subreddits.mode === 'all') {
+              allTargets.forEach((t: any) => {
+                const baseField = targetService.getBaseField(t.targetType)
                 subredditsWithMetadata.push({
-                  name: target[baseField],
-                  metadata: target
+                  name: t[baseField],
+                  metadata: t
+                })
+              })
+            } else if (content.subreddits.mode === 'groups' && content.subreddits.groups) {
+              for (const groupIdentifier of content.subreddits.groups) {
+                const group = groupsArray.find((g: any) => g.id === groupIdentifier || g.name === groupIdentifier) as any
+                if (!group || !group.targetIds) continue
+                group.targetIds.forEach((targetId: string) => {
+                  const target = allTargets.find((t: any) => t.id === targetId)
+                  if (target) {
+                    const baseField = targetService.getBaseField(target.targetType)
+                    subredditsWithMetadata.push({
+                      name: target[baseField],
+                      metadata: target
+                    })
+                  }
                 })
               }
-            })
-          }
-        } else if (content.subreddits.mode === 'individual' && content.subreddits.individual) {
-          content.subreddits.individual.forEach((targetId: string) => {
-            const target = allTargets.find((t: any) => t.id === targetId)
-            if (target) {
-              const baseField = targetService.getBaseField(target.targetType)
-              subredditsWithMetadata.push({
-                name: target[baseField],
-                metadata: target
+            } else if (content.subreddits.mode === 'individual' && content.subreddits.individual) {
+              content.subreddits.individual.forEach((targetId: string) => {
+                const target = allTargets.find((t: any) => t.id === targetId)
+                if (target) {
+                  const baseField = targetService.getBaseField(target.targetType)
+                  subredditsWithMetadata.push({
+                    name: target[baseField],
+                    metadata: target
+                  })
+                }
               })
             }
-          })
-        }
 
-        // Remove duplicates
-        const uniqueSubreddits = Array.from(new Map(subredditsWithMetadata.map(s => [s.name, s])).values())
-
-        if (uniqueSubreddits.length === 0) {
-          console.error(`❌ No subreddits found in targets configuration`)
-          return {
-            success: false,
-            error: 'No subreddits found in targets configuration'
-          }
-        }
+            // Remove duplicates
+            uniqueSubreddits = Array.from(new Map(subredditsWithMetadata.map(s => [s.name, s])).values())
+            if (uniqueSubreddits.length === 0) {
+              throw this.createError('No subreddits found in targets configuration', 'NO_TARGETS_RESOLVED')
+            }
+          },
+          'Resolving target subreddits'
+        )
 
         // ✅ FIX: Use home directory in development to prevent Vite reloads
         const path = await import('path')
@@ -181,13 +244,16 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
         const page = this.browser.pages()[0] || await this.browser.newPage()
 
         try {
-          // ✅ STEP 1: Login/Login-Check (with orchestration)
-          // Note: Base events (started/completed) are handled by PublishingService.executeWithEvents
-          // These are additional detailed events for granular tracking
-          const step1Start = Date.now()
-          await executeStep(page, 'Step 1: Login/Login-Check', async () => {
-            await step1_LoginCheck(page, credentials)
-          }, this.eventEmitter, currentPublishRunId)
+          // Detailed sub-steps for Reddit Playwright flow
+          await executeStep(
+            page,
+            REDDIT_STEP_IDS.AUTH_LOGIN_CHECK,
+            async () => {
+            await loginCheck(page, credentials)
+            },
+            this.eventEmitter,
+            currentPublishRunId
+          )
 
           console.log(`\n✅ Step 1 complete. Starting form filling process...`)
           console.log(`📋 Subreddits to process: ${uniqueSubreddits.map(s => s.name).join(', ')}`)
@@ -205,10 +271,6 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
             const metadata = sub.metadata
             try {
               console.log(`\n🔹 Processing subreddit: r/${subreddit}`)
-              
-              if (this.eventEmitter) {
-                this.eventEmitter.info('reddit', 'playwright', `Processing subreddit: r/${subreddit}`, undefined, currentPublishRunId)
-              }
 
               // Personalized salutation
               let processedText = text
@@ -234,51 +296,83 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
                   .replace(/{target.lastName}/g, metadata.lastName || '')
               }
               
-              // ✅ STEP 2: Navigate to submit page (with orchestration)
-              // Note: These are detailed sub-steps within the main "Publishing to reddit via Playwright" step
-              const step2Start = Date.now()
-              await executeStep(page, `Step 2: Navigate to r/${subreddit}/submit`, async () => {
-                await step2_NavigateToSubmitPage(page, subreddit)
-              }, this.eventEmitter, currentPublishRunId)
+              await executeStep(
+                page,
+                REDDIT_STEP_IDS.COMPOSE_OPEN_EDITOR,
+                async () => {
+                  await openSubmitEditor(page, subreddit)
+                },
+                this.eventEmitter,
+                currentPublishRunId,
+                { message: `Opening submit editor for r/${subreddit}` }
+              )
 
-              // ✅ STEP 3: Select post type (with orchestration)
-              const step3Start = Date.now()
-              await executeStep(page, 'Step 3: Select post type', async () => {
-                await step3_SelectPostType(page, files.length > 0 && !!files[0].url)
-              }, this.eventEmitter, currentPublishRunId)
+              await executeStep(
+                page,
+                REDDIT_STEP_IDS.COMPOSE_FILL_CONTENT,
+                async () => {
+                  await selectPostType(page, files.length > 0 && !!files[0].url)
+                  await fillTitle(page, title)
+                  await fillContent(page, files, processedText)
+                },
+                this.eventEmitter,
+                currentPublishRunId,
+                { message: `Preparing post content for r/${subreddit}` }
+              )
 
-              // ✅ STEP 4: Enter title (with orchestration)
-              const step4Start = Date.now()
-              await executeStep(page, 'Step 4: Enter title', async () => {
-                await step4_EnterTitle(page, title)
-              }, this.eventEmitter, currentPublishRunId)
+              const step6Result = await executeStep(
+                page,
+                REDDIT_STEP_IDS.PUBLISH_SUBMIT,
+                async () => {
+                  return await submitPost(page, subreddit, dryMode)
+                },
+                this.eventEmitter,
+                currentPublishRunId,
+                {
+                  message: `Submitting post for r/${subreddit}`,
+                  data: { subreddit }
+                }
+              )
 
-              // ✅ STEP 5: Enter content (with orchestration)
-              const step5Start = Date.now()
-              await executeStep(page, 'Step 5: Enter content', async () => {
-                await step5_EnterContent(page, files, processedText)
-              }, this.eventEmitter, currentPublishRunId)
+              const verifiedResult = await executeStep(
+                page,
+                REDDIT_STEP_IDS.PUBLISH_VERIFY_RESULT,
+                async () => {
+                  if (dryMode) {
+                    if (!step6Result.url) {
+                      throw this.createError(`Missing form URL after dry-run submit for r/${subreddit}`, 'VERIFY_FAILED')
+                    }
+                    return step6Result
+                  }
 
-              // ✅ STEP 6: Submit (with orchestration)
-              const step6Start = Date.now()
-              const step6Result = await executeStep(page, 'Step 6: Submit', async () => {
-                return await step6_Submit(page, subreddit, dryMode)
-              }, this.eventEmitter, currentPublishRunId)
+                  if (!step6Result.url || !step6Result.postId) {
+                    throw this.createError(`Missing post URL or postId after submit for r/${subreddit}`, 'VERIFY_FAILED')
+                  }
+
+                  return step6Result
+                },
+                this.eventEmitter,
+                currentPublishRunId,
+                {
+                  message: `Verifying publish result for r/${subreddit}`,
+                  data: { subreddit, dryMode }
+                }
+              )
 
               // Handle results
               if (dryMode) {
                 results.push({
                   subreddit,
                   success: true,
-                  url: step6Result.url,
+                  url: verifiedResult.url,
                   postId: undefined
                 })
               } else {
                 results.push({
                   subreddit,
                   success: true,
-                  url: step6Result.url,
-                  postId: step6Result.postId
+                  url: verifiedResult.url,
+                  postId: verifiedResult.postId
                 })
               }
 
@@ -327,17 +421,10 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
           // DRY MODE: Browser NICHT schließen, damit User sehen kann was passiert
           // Browser bleibt offen für manuelles Posten
         }
-      } else if (content.users) {
-        // ✅ User DMs - not yet implemented
-        return {
-          success: false,
-          error: 'User DMs not yet implemented in Playwright publisher'
-        }
-      } else {
-        return {
-          success: false,
-          error: 'Either subreddits or users target configuration is required'
-        }
+      }
+      return {
+        success: false,
+        error: 'Invalid target configuration'
       }
     } catch (error: any) {
       console.error(`\n❌ CRITICAL ERROR in Reddit Playwright Publisher:`)

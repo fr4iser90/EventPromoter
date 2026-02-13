@@ -10,20 +10,92 @@
 import { chromium, Browser, Page } from 'playwright'
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
 
 export interface FacebookPublisher {
   publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult>
 }
+
+const FACEBOOK_STEP_IDS = {
+  COMMON_VALIDATE_INPUT: 'common.validate_input',
+  AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+  AUTH_LOGIN_CHECK: 'auth.login_check',
+  COMPOSE_OPEN_EDITOR: 'compose.open_editor',
+  COMPOSE_FILL_CONTENT: 'compose.fill_content',
+  MEDIA_UPLOAD: 'media.upload',
+  PUBLISH_SUBMIT: 'publish.submit',
+  PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+} as const
 
 /**
  * Playwright Publisher for Facebook
  */
-export class FacebookPlaywrightPublisher implements FacebookPublisher {
+export class FacebookPlaywrightPublisher implements FacebookPublisher, EventAwarePublisher {
   private browser: Browser | null = null
+  private eventEmitter?: PublisherEventService
+  private publishRunId?: string
+
+  setEventEmitter(emitter: PublisherEventService): void {
+    this.eventEmitter = emitter
+  }
+
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
+  }
+
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') return true
+    if (typeof status === 'number' && status >= 500 && status < 600) return true
+    if (status === 429) return true
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string,
+    fn: () => Promise<T> | T,
+    message?: string,
+    data?: any
+  ): Promise<T> {
+    const start = Date.now()
+    this.eventEmitter?.stepStarted('facebook', 'playwright', stepId, message || `Starting ${stepId}`, publishRunId)
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('facebook', 'playwright', stepId, Date.now() - start, publishRunId, data)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'facebook',
+        'playwright',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
+  }
 
   private async getCredentials(): Promise<any> {
     const config = await ConfigService.getConfig('facebook') || {}
@@ -37,90 +109,145 @@ export class FacebookPlaywrightPublisher implements FacebookPublisher {
   async publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
+    const currentPublishRunId = options?.sessionId || this.publishRunId || `facebook-${Date.now()}`
     try {
-      const credentials = await this.getCredentials()
+      const credentials = await this.executeContractStep(
+        FACEBOOK_STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          const loaded = await this.getCredentials()
+          if (!loaded.email || !loaded.password) {
+            throw this.createError('Facebook credentials not configured for Playwright publishing', 'MISSING_CREDENTIALS')
+          }
+          return loaded
+        },
+        'Loading and validating Facebook credentials'
+      )
 
-      if (!credentials.email || !credentials.password) {
-        return {
-          success: false,
-          error: 'Facebook credentials not configured for Playwright publishing'
-        }
-      }
+      const text = await this.executeContractStep(
+        FACEBOOK_STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          let formatted = content.text || content.body || content.message || ''
+          if (hashtags.length > 0) {
+            const formattedHashtags = hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')
+            formatted = `${formatted} ${formattedHashtags}`.trim()
+          }
+          if (!formatted || formatted.trim().length === 0) {
+            throw this.createError('Facebook post text is required', 'INVALID_INPUT')
+          }
+          return formatted
+        },
+        'Validating Facebook content'
+      )
 
       this.browser = await chromium.launch({ headless: true })
       const page = await this.browser.newPage()
 
       try {
-        // Navigate to Facebook login
-        await page.goto('https://www.facebook.com/login', { waitUntil: 'networkidle' })
+        await this.executeContractStep(
+          FACEBOOK_STEP_IDS.AUTH_LOGIN_CHECK,
+          currentPublishRunId,
+          async () => {
+            await page.goto('https://www.facebook.com/login', { waitUntil: 'networkidle' })
+            await page.fill('input[name="email"]', credentials.email)
+            await page.fill('input[name="pass"]', credentials.password)
+            await page.click('button[name="login"]')
+            await page.waitForURL('**/home**', { timeout: 15000 })
+          },
+          'Logging into Facebook'
+        )
 
-        // Login
-        await page.fill('input[name="email"]', credentials.email)
-        await page.fill('input[name="pass"]', credentials.password)
-        await page.click('button[name="login"]')
-        await page.waitForURL('**/home**', { timeout: 15000 })
+        await this.executeContractStep(
+          FACEBOOK_STEP_IDS.COMPOSE_OPEN_EDITOR,
+          currentPublishRunId,
+          async () => {
+            if (credentials.pageName) {
+              await page.goto(`https://www.facebook.com/${credentials.pageName}`, { waitUntil: 'networkidle' })
+            }
+          },
+          'Opening Facebook composer context'
+        )
 
-        // Navigate to page if specified
-        if (credentials.pageName) {
-          await page.goto(`https://www.facebook.com/${credentials.pageName}`, { waitUntil: 'networkidle' })
-        }
+        await this.executeContractStep(
+          FACEBOOK_STEP_IDS.COMPOSE_FILL_CONTENT,
+          currentPublishRunId,
+          async () => {
+            const createPostSelectors = [
+              'div[data-testid="status-attachment-mentions-input"]',
+              'div[aria-label*="What\'s on your mind"]',
+              'div[contenteditable="true"][data-testid="status-attachment-mentions-input"]'
+            ]
 
-        // Click "What's on your mind?" or create post button
-        const createPostSelectors = [
-          'div[data-testid="status-attachment-mentions-input"]',
-          'div[aria-label*="What\'s on your mind"]',
-          'div[contenteditable="true"][data-testid="status-attachment-mentions-input"]'
-        ]
+            let textArea: any = null
+            for (const selector of createPostSelectors) {
+              textArea = await page.$(selector).catch(() => null)
+              if (textArea) {
+                await textArea.click()
+                await page.waitForTimeout(1000)
+                break
+              }
+            }
 
-        let textArea: any = null
-        for (const selector of createPostSelectors) {
-          textArea = await page.$(selector).catch(() => null)
-          if (textArea) {
-            await textArea.click()
-            await page.waitForTimeout(1000)
-            break
-          }
-        }
+            if (!textArea) {
+              await page.click('div[aria-label*="Create"]').catch(() => {})
+              await page.waitForTimeout(1000)
+              textArea = await page.$('div[contenteditable="true"]')
+            }
 
-        if (!textArea) {
-          // Try clicking create post button
-          await page.click('div[aria-label*="Create"]').catch(() => {})
-          await page.waitForTimeout(1000)
-          textArea = await page.$('div[contenteditable="true"]')
-        }
+            if (!textArea) {
+              throw this.createError('Facebook composer text area not found', 'COMPOSER_NOT_FOUND')
+            }
 
-        // Format text with hashtags
-        let text = content.text || content.body || content.message || ''
-        if (hashtags.length > 0) {
-          const formattedHashtags = hashtags
-            .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-            .join(' ')
-          text = `${text} ${formattedHashtags}`.trim()
-        }
+            await textArea.fill(text)
+          },
+          'Filling Facebook post content'
+        )
 
-        // Enter post text
-        await textArea.fill(text)
-
-        // Upload image if provided
         if (files.length > 0 && files[0].url) {
-          const filePaths = await this.downloadFilesIfNeeded(files)
-          const fileInput = await page.$('input[type="file"]')
-          if (fileInput) {
-            await fileInput.setInputFiles(filePaths)
-            await page.waitForTimeout(3000) // Wait for upload
-          }
+          await this.executeContractStep(
+            FACEBOOK_STEP_IDS.MEDIA_UPLOAD,
+            currentPublishRunId,
+            async () => {
+              const filePaths = await this.downloadFilesIfNeeded(files)
+              const fileInput = await page.$('input[type="file"]')
+              if (fileInput) {
+                await fileInput.setInputFiles(filePaths)
+                await page.waitForTimeout(3000)
+              }
+            },
+            `Uploading ${files.length} media file(s)`
+          )
         }
 
-        // Post
-        await page.click('div[aria-label="Post"]').catch(() => {
-          return page.click('button:has-text("Post")')
-        })
-        await page.waitForTimeout(3000)
+        await this.executeContractStep(
+          FACEBOOK_STEP_IDS.PUBLISH_SUBMIT,
+          currentPublishRunId,
+          async () => {
+            await page.click('div[aria-label="Post"]').catch(() => {
+              return page.click('button:has-text("Post")')
+            })
+            await page.waitForTimeout(3000)
+          },
+          'Submitting Facebook post'
+        )
 
-        // Try to get post URL
-        const postUrl = await this.extractPostUrl(page)
+        const postUrl = await this.executeContractStep(
+          FACEBOOK_STEP_IDS.PUBLISH_VERIFY_RESULT,
+          currentPublishRunId,
+          async () => {
+            const url = await this.extractPostUrl(page)
+            const postId = this.extractPostId(url)
+            if (!url || !postId) {
+              throw this.createError('Missing Facebook post URL or postId after publish', 'VERIFY_FAILED')
+            }
+            return url
+          },
+          'Verifying Facebook post result'
+        )
 
         return {
           success: true,

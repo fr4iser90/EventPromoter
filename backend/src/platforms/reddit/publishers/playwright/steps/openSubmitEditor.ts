@@ -1,7 +1,7 @@
 import { Page } from 'playwright'
 import { waitForPageFullyLoaded } from '../utils/waitForPageFullyLoaded.js'
 
-export async function step2_NavigateToSubmitPage(page: Page, subreddit: string): Promise<void> {
+export async function openSubmitEditor(page: Page, subreddit: string): Promise<void> {
   console.log(`  [Step 2] Navigating to r/${subreddit}/submit...`)
   await page.goto(`https://www.reddit.com/r/${subreddit}/submit`, { 
     waitUntil: 'domcontentloaded',

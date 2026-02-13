@@ -29,5 +29,35 @@
     },
     "position": [400, 800],
     "typeVersion": 1
+  },
+  {
+    "id": "platform-reddit-emit-started",
+    "name": "📡 Emit Reddit Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'reddit', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [300, 740],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-reddit-emit-completed",
+    "name": "✅ Emit Reddit Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'reddit', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.name, url: $json.url || $json.permalink }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [520, 800],
+    "typeVersion": 4.2
   }
 ]

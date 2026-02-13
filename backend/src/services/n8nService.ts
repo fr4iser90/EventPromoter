@@ -58,7 +58,8 @@ export class N8nService {
     content: any,
     hashtags: string[],
     eventData: any,
-    baseUrl?: string
+    baseUrl?: string,
+    options?: { sessionId?: string; publishRunId?: string; callbackUrl?: string }
   ): Promise<any> {
     // Transform platformContent for N8N API format
     const n8nPayload: any = {
@@ -70,8 +71,21 @@ export class N8nService {
       metadata: {
         submittedAt: new Date().toISOString(),
         validationPassed: true,
-        eventData: eventData
+        eventData: eventData,
+        sessionId: options?.sessionId,
+        publishRunId: options?.publishRunId,
+        callbackUrl: options?.callbackUrl
       }
+    }
+
+    if (options?.sessionId) {
+      n8nPayload.sessionId = options.sessionId
+    }
+    if (options?.publishRunId) {
+      n8nPayload.publishRunId = options.publishRunId
+    }
+    if (options?.callbackUrl) {
+      n8nPayload.callbackUrl = options.callbackUrl
     }
 
     // ✅ GENERIC: Transform platformContent for N8N - delegate to platform services

@@ -1,9 +1,9 @@
 /**
- * Step 6: Send Email
+ * Send Email
  * 
  * Sends email via SMTP using nodemailer
  * 
- * @module platforms/email/publishers/api/steps/step6_SendEmail
+ * @module platforms/email/publishers/api/steps/sendEmail
  */
 
 import { PostResult } from '../../../../../types/index.js'
@@ -11,7 +11,7 @@ import { ResolvedAttachment } from '../utils/resolveAttachments.js'
 import { sendWithNodemailer } from '../utils/sendWithNodemailer.js'
 import { htmlToText } from '../utils/htmlToText.js'
 
-export async function step6_SendEmail(
+export async function sendEmail(
   credentials: any,
   recipients: string[],
   subject: string,

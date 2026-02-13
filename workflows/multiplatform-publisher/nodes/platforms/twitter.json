@@ -27,5 +27,35 @@
     },
     "position": [400, -200],
     "typeVersion": 2
+  },
+  {
+    "id": "platform-twitter-emit-started",
+    "name": "📡 Emit Twitter Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'twitter', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [300, -260],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-twitter-emit-completed",
+    "name": "✅ Emit Twitter Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3000/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'twitter', method: 'n8n', step: 'publish.submit', duration: 0, data: { postId: $json.id || $json.data?.id, url: $json.url || $json.link }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [520, -200],
+    "typeVersion": 4.2
   }
 ]

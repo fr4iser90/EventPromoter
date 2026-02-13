@@ -143,5 +143,35 @@
     },
     "position": [800, 700],
     "typeVersion": 2.1
+  },
+  {
+    "id": "platform-email-emit-started",
+    "name": "📡 Emit Email Started",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_started', platform: 'email', method: 'n8n', step: 'publish.submit', message: 'Starting publish.submit via n8n', timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [300, 540],
+    "typeVersion": 4.2
+  },
+  {
+    "id": "platform-email-emit-completed",
+    "name": "✅ Emit Email Completed",
+    "type": "httpRequest",
+    "parameters": {
+      "method": "POST",
+      "url": "={{ $json.callbackUrl || $json.metadata?.callbackUrl || 'http://localhost:3001/api/publish/event' }}",
+      "sendBody": true,
+      "specifyBody": "json",
+      "jsonBody": "={{ { sessionId: $json.sessionId || $json.metadata?.sessionId || $json.metadata?.eventData?.sessionId, publishRunId: $json.publishRunId || $json.metadata?.publishRunId || $json.metadata?.eventData?.publishRunId, type: 'step_completed', platform: 'email', method: 'n8n', step: 'publish.submit', duration: 0, data: { messageId: $json.messageId || $json.id }, timestamp: $now.toISO() } }}",
+      "options": {}
+    },
+    "position": [1960, 600],
+    "typeVersion": 4.2
   }
 ]

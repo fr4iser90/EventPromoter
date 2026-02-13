@@ -1,14 +1,14 @@
 /**
- * Step 4: Render Template
+ * Render Template
  * 
  * Loads and renders template with variables for target locale
  * 
- * @module platforms/email/publishers/api/steps/step4_RenderTemplate
+ * @module platforms/email/publishers/api/steps/renderTemplate
  */
 
 import { EmailRecipient } from '../../../types.js'
 
-export async function step4_RenderTemplate(
+export async function renderTemplate(
   run: any,
   content: any,
   targetMetadata?: EmailRecipient

@@ -8,6 +8,7 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -15,9 +16,18 @@ export interface InstagramPublisher {
   publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult>
 }
+
+const INSTAGRAM_API_STEP_IDS = {
+  COMMON_VALIDATE_INPUT: 'common.validate_input',
+  AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+  MEDIA_UPLOAD: 'media.upload',
+  PUBLISH_SUBMIT: 'publish.submit',
+  PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+} as const
 
 /**
  * API Publisher for Instagram
@@ -25,7 +35,67 @@ export interface InstagramPublisher {
  * Uses Instagram Graph API to post photos.
  * Note: Instagram API requires a Facebook Business account and app.
  */
-export class InstagramApiPublisher implements InstagramPublisher {
+export class InstagramApiPublisher implements InstagramPublisher, EventAwarePublisher {
+  private eventEmitter?: PublisherEventService
+  private publishRunId?: string
+
+  setEventEmitter(emitter: PublisherEventService): void {
+    this.eventEmitter = emitter
+  }
+
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
+  }
+
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') return true
+    if (typeof status === 'number' && status >= 500 && status < 600) return true
+    if (status === 429) return true
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string,
+    fn: () => Promise<T> | T,
+    message?: string,
+    data?: any
+  ): Promise<T> {
+    const start = Date.now()
+    this.eventEmitter?.stepStarted('instagram', 'api', stepId, message || `Starting ${stepId}`, publishRunId)
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('instagram', 'api', stepId, Date.now() - start, publishRunId, data)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'instagram',
+        'api',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
+  }
+
   private async getCredentials(): Promise<any> {
     const config = await ConfigService.getConfig('instagram') || {}
     return {
@@ -38,103 +108,119 @@ export class InstagramApiPublisher implements InstagramPublisher {
   async publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
+    const currentPublishRunId = options?.sessionId || this.publishRunId || `instagram-api-${Date.now()}`
     try {
-      const credentials = await this.getCredentials()
-
-      if (!credentials.accessToken || !credentials.instagramAccountId) {
-        return {
-          success: false,
-          error: 'Instagram API credentials not configured (need accessToken and instagramAccountId)'
+      const credentials = await this.executeContractStep(
+        INSTAGRAM_API_STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          const loaded = await this.getCredentials()
+          if (!loaded.accessToken || !loaded.instagramAccountId) {
+            throw this.createError('Instagram API credentials not configured (need accessToken and instagramAccountId)', 'MISSING_CREDENTIALS')
+          }
+          return loaded
         }
-      }
+      )
 
-      if (files.length === 0) {
-        return {
-          success: false,
-          error: 'Instagram requires at least one image'
+      const caption = await this.executeContractStep(
+        INSTAGRAM_API_STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          if (files.length === 0) {
+            throw this.createError('Instagram requires at least one image', 'INVALID_INPUT')
+          }
+          let formatted = content.caption || content.text || content.body || ''
+          if (hashtags.length > 0) {
+            const formattedHashtags = hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')
+            formatted = `${formatted} ${formattedHashtags}`.trim()
+          }
+          return formatted
         }
-      }
-
-      // Format caption with hashtags
-      let caption = content.caption || content.text || content.body || ''
-      if (hashtags.length > 0) {
-        const formattedHashtags = hashtags
-          .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-          .join(' ')
-        caption = `${caption} ${formattedHashtags}`.trim()
-      }
+      )
 
       // Step 1: Upload image to Facebook Photos first (to get public URL)
       // Instagram Graph API requires publicly accessible image URL
       // We upload to Facebook Photos, then use that URL for Instagram
-      const imageUrl = await this.uploadImageToFacebookPhotos(files[0], credentials)
+      const imageUrl = await this.executeContractStep(
+        INSTAGRAM_API_STEP_IDS.MEDIA_UPLOAD,
+        currentPublishRunId,
+        async () => await this.uploadImageToFacebookPhotos(files[0], credentials),
+        `Uploading ${files.length} media file(s)`
+      )
 
       // Step 2: Create media container with public image URL
-      const containerResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${credentials.instagramAccountId}/media`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image_url: imageUrl,
-            caption: caption,
-            access_token: credentials.accessToken
-          })
+      const mediaId = await this.executeContractStep(
+        INSTAGRAM_API_STEP_IDS.PUBLISH_SUBMIT,
+        currentPublishRunId,
+        async () => {
+          const containerResponse = await fetch(
+            `https://graph.facebook.com/v18.0/${credentials.instagramAccountId}/media`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                image_url: imageUrl,
+                caption,
+                access_token: credentials.accessToken
+              })
+            }
+          )
+
+          if (!containerResponse.ok) {
+            const errorData = await containerResponse.json().catch(() => ({}))
+            throw this.createError(errorData.error?.message || `Instagram API error: ${containerResponse.status}`, 'SUBMIT_FAILED')
+          }
+
+          const containerData = await containerResponse.json()
+          const creationId = containerData.id
+          if (!creationId) {
+            throw this.createError('Failed to create media container', 'SUBMIT_FAILED')
+          }
+
+          const publishResponse = await fetch(
+            `https://graph.facebook.com/v18.0/${credentials.instagramAccountId}/media_publish`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                creation_id: creationId,
+                access_token: credentials.accessToken
+              })
+            }
+          )
+
+          if (!publishResponse.ok) {
+            const errorData = await publishResponse.json().catch(() => ({}))
+            throw this.createError(errorData.error?.message || `Instagram publish error: ${publishResponse.status}`, 'SUBMIT_FAILED')
+          }
+
+          const publishData = await publishResponse.json()
+          return publishData.id
         }
       )
 
-      if (!containerResponse.ok) {
-        const errorData = await containerResponse.json().catch(() => ({}))
-        return {
-          success: false,
-          error: errorData.error?.message || `Instagram API error: ${containerResponse.status}`
-        }
-      }
-
-      const containerData = await containerResponse.json()
-      const creationId = containerData.id
-
-      if (!creationId) {
-        return {
-          success: false,
-          error: 'Failed to create media container'
-        }
-      }
-
-      // Step 2: Publish the media container
-      const publishResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${credentials.instagramAccountId}/media_publish`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            creation_id: creationId,
-            access_token: credentials.accessToken
-          })
+      const url = await this.executeContractStep(
+        INSTAGRAM_API_STEP_IDS.PUBLISH_VERIFY_RESULT,
+        currentPublishRunId,
+        async () => {
+          if (!mediaId) {
+            throw this.createError('Missing Instagram media ID after publish', 'VERIFY_FAILED')
+          }
+          return `https://instagram.com/p/${mediaId}/`
         }
       )
-
-      if (!publishResponse.ok) {
-        const errorData = await publishResponse.json().catch(() => ({}))
-        return {
-          success: false,
-          error: errorData.error?.message || `Instagram publish error: ${publishResponse.status}`
-        }
-      }
-
-      const publishData = await publishResponse.json()
-      const mediaId = publishData.id
 
       return {
         success: true,
         postId: mediaId,
-        url: mediaId ? `https://instagram.com/p/${mediaId}/` : undefined
+        url
       }
     } catch (error: any) {
       return {

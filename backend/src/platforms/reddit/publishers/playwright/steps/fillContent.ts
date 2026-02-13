@@ -1,6 +1,6 @@
 import { Page } from 'playwright'
 
-export async function step5_EnterContent(page: Page, files: any[], text: string): Promise<void> {
+export async function fillContent(page: Page, files: any[], text: string): Promise<void> {
   console.log(`  [Step 5] Entering content...`)
   if (files.length > 0 && files[0].url) {
     console.log(`    → Entering URL: ${files[0].url}`)

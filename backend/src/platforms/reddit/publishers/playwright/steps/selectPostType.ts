@@ -1,7 +1,7 @@
 import { Page } from 'playwright'
 import { waitForPageFullyLoaded } from '../utils/waitForPageFullyLoaded.js'
 
-export async function step3_SelectPostType(page: Page, hasFiles: boolean): Promise<void> {
+export async function selectPostType(page: Page, hasFiles: boolean): Promise<void> {
   console.log(`  [Step 3] Selecting post type...`)
   if (hasFiles) {
     console.log(`    → Detected file/URL, selecting "Link" post type...`)

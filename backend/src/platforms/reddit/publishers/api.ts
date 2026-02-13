@@ -8,6 +8,7 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
 import { RedditTargetService } from '../services/targetService.js'
 import { RedditTargets } from '../types.js'
 import fs from 'fs'
@@ -28,6 +29,76 @@ export interface RedditPublisher {
  * Uses Reddit API to submit posts to subreddits.
  */
 export class RedditApiPublisher implements RedditPublisher {
+  private eventEmitter?: PublisherEventService
+  private publishRunId?: string
+
+  setEventEmitter(emitter: PublisherEventService): void {
+    this.eventEmitter = emitter
+  }
+
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
+  }
+
+  private readonly STEP_IDS = {
+    COMMON_VALIDATE_INPUT: 'common.validate_input',
+    COMMON_RESOLVE_TARGETS: 'common.resolve_targets',
+    AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+    AUTH_LOGIN_CHECK: 'auth.login_check',
+    MEDIA_UPLOAD: 'media.upload',
+    PUBLISH_SUBMIT: 'publish.submit',
+    PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+  } as const
+
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') return true
+    if (typeof status === 'number' && status >= 500 && status < 600) return true
+    if (status === 429) return true
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string,
+    fn: () => Promise<T> | T,
+    message?: string,
+    data?: any
+  ): Promise<T> {
+    this.eventEmitter?.stepStarted('reddit', 'api', stepId, message || `Starting ${stepId}`, publishRunId)
+    const start = Date.now()
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('reddit', 'api', stepId, Date.now() - start, publishRunId, data)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'reddit',
+        'api',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
+  }
+
   private async getCredentials(): Promise<any> {
     const config = await ConfigService.getConfig('reddit') || {}
     return {
@@ -144,54 +215,56 @@ export class RedditApiPublisher implements RedditPublisher {
     hashtags: string[],
     options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
+    const currentPublishRunId = options?.sessionId || this.publishRunId || `reddit-api-${Date.now()}`
     try {
-      const credentials = await this.getCredentials()
-
-      if (!credentials.clientId || !credentials.clientSecret || !credentials.username || !credentials.password) {
-        return {
-          success: false,
-          error: 'Reddit API credentials not configured (need clientId, clientSecret, username, password)'
+      const credentials = await this.executeContractStep(
+        this.STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          const loaded = await this.getCredentials()
+          if (!loaded.clientId || !loaded.clientSecret || !loaded.username || !loaded.password) {
+            throw this.createError('Reddit API credentials not configured (need clientId, clientSecret, username, password)', 'MISSING_CREDENTIALS')
+          }
+          return loaded
         }
-      }
+      )
 
-      // ✅ GENERIC: Validate that AT LEAST ONE target type is present
-      if (!content.subreddits && !content.users) {
-        return {
-          success: false,
-          error: 'At least one target configuration is required (subreddits or users)'
+      await this.executeContractStep(
+        this.STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          if (!content.subreddits && !content.users) {
+            throw this.createError('At least one target configuration is required (subreddits or users)', 'INVALID_INPUT')
+          }
+          if (!content.title || content.title.trim().length === 0) {
+            throw this.createError('Title is required', 'INVALID_INPUT')
+          }
+          if (!content.text || content.text.trim().length === 0) {
+            throw this.createError('Text is required', 'INVALID_INPUT')
+          }
         }
-      }
-
-      // ✅ NO FALLBACKS - Validate required fields
-      if (!content.title || content.title.trim().length === 0) {
-        return {
-          success: false,
-          error: 'Title is required'
-        }
-      }
-
-      if (!content.text || content.text.trim().length === 0) {
-        return {
-          success: false,
-          error: 'Text is required'
-        }
-      }
+      )
 
       const title = content.title
       const text = content.text
 
       // ✅ Support subreddits (posts) OR users (DMs)
       if (content.subreddits) {
-        const subreddits = await this.extractSubredditsFromTargets(content.subreddits)
+        const subreddits = await this.executeContractStep(
+          this.STEP_IDS.COMMON_RESOLVE_TARGETS,
+          currentPublishRunId,
+          async () => await this.extractSubredditsFromTargets(content.subreddits)
+        )
         if (subreddits.length === 0) {
-          return {
-            success: false,
-            error: 'No subreddits found in targets configuration'
-          }
+          throw this.createError('No subreddits found in targets configuration', 'NO_TARGETS_RESOLVED')
         }
 
         // Get access token once for all posts
-        const accessToken = await this.getAccessToken(credentials)
+        const accessToken = await this.executeContractStep(
+          this.STEP_IDS.AUTH_LOGIN_CHECK,
+          currentPublishRunId,
+          async () => await this.getAccessToken(credentials)
+        )
 
         // ✅ Post to ALL subreddits
         const results: Array<{ subreddit: string; success: boolean; postId?: string; url?: string; error?: string }> = []
@@ -211,7 +284,12 @@ export class RedditApiPublisher implements RedditPublisher {
               if (isImage) {
                 // Image post using Reddit's 3-step lease-based upload system
                 try {
-                  const mediaAssetId = await this.uploadImageToReddit(file, accessToken, credentials.userAgent)
+                  const mediaAssetId = await this.executeContractStep(
+                    this.STEP_IDS.MEDIA_UPLOAD,
+                    currentPublishRunId,
+                    async () => await this.uploadImageToReddit(file, accessToken, credentials.userAgent),
+                    `Uploading media for r/${subreddit}`
+                  )
                   
                   payload = {
                     kind: 'image',
@@ -260,15 +338,21 @@ export class RedditApiPublisher implements RedditPublisher {
               }
             }
 
-            const response = await fetch('https://oauth.reddit.com/api/submit', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': credentials.userAgent
-              },
-              body: new URLSearchParams(payload as any)
-            })
+            const response = await this.executeContractStep(
+              this.STEP_IDS.PUBLISH_SUBMIT,
+              currentPublishRunId,
+              async () => await fetch('https://oauth.reddit.com/api/submit', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'User-Agent': credentials.userAgent
+                },
+                body: new URLSearchParams(payload as any)
+              }),
+              `Submitting post to r/${subreddit}`,
+              { subreddit }
+            )
 
             if (!response.ok) {
               const errorData = await response.json().catch(() => ({}))
@@ -294,6 +378,17 @@ export class RedditApiPublisher implements RedditPublisher {
 
             // Extract actual post ID from Reddit's format (e.g., "t3_abc123")
             const actualPostId = postId.replace('t3_', '')
+            await this.executeContractStep(
+              this.STEP_IDS.PUBLISH_VERIFY_RESULT,
+              currentPublishRunId,
+              async () => {
+                if (!actualPostId) {
+                  throw this.createError(`Missing post ID after publish for r/${subreddit}`, 'VERIFY_FAILED')
+                }
+              },
+              `Verifying publish result for r/${subreddit}`,
+              { subreddit, postId: actualPostId }
+            )
 
             results.push({
               subreddit,
@@ -336,15 +431,9 @@ export class RedditApiPublisher implements RedditPublisher {
         }
       } else if (content.users) {
         // ✅ User DMs - not yet implemented
-        return {
-          success: false,
-          error: 'User DMs not yet implemented in API publisher'
-        }
+        throw this.createError('User DMs not yet implemented in API publisher', 'NOT_IMPLEMENTED')
       } else {
-        return {
-          success: false,
-          error: 'Either subreddits or users target configuration is required'
-        }
+        throw this.createError('Either subreddits or users target configuration is required', 'INVALID_INPUT')
       }
     } catch (error: any) {
       return {

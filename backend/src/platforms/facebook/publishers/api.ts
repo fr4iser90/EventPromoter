@@ -8,6 +8,7 @@
 
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
+import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -15,16 +16,85 @@ export interface FacebookPublisher {
   publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult>
 }
+
+const FACEBOOK_API_STEP_IDS = {
+  COMMON_VALIDATE_INPUT: 'common.validate_input',
+  AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+  MEDIA_UPLOAD: 'media.upload',
+  PUBLISH_SUBMIT: 'publish.submit',
+  PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+} as const
 
 /**
  * API Publisher for Facebook
  * 
  * Uses Facebook Graph API to post to pages.
  */
-export class FacebookApiPublisher implements FacebookPublisher {
+export class FacebookApiPublisher implements FacebookPublisher, EventAwarePublisher {
+  private eventEmitter?: PublisherEventService
+  private publishRunId?: string
+
+  setEventEmitter(emitter: PublisherEventService): void {
+    this.eventEmitter = emitter
+  }
+
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
+  }
+
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') return true
+    if (typeof status === 'number' && status >= 500 && status < 600) return true
+    if (status === 429) return true
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string,
+    fn: () => Promise<T> | T,
+    message?: string,
+    data?: any
+  ): Promise<T> {
+    const start = Date.now()
+    this.eventEmitter?.stepStarted('facebook', 'api', stepId, message || `Starting ${stepId}`, publishRunId)
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('facebook', 'api', stepId, Date.now() - start, publishRunId, data)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'facebook',
+        'api',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
+  }
+
   private async getCredentials(): Promise<any> {
     const config = await ConfigService.getConfig('facebook') || {}
     return {
@@ -38,62 +108,105 @@ export class FacebookApiPublisher implements FacebookPublisher {
   async publish(
     content: any,
     files: any[],
-    hashtags: string[]
+    hashtags: string[],
+    options?: { dryMode?: boolean; sessionId?: string }
   ): Promise<PostResult> {
+    const currentPublishRunId = options?.sessionId || this.publishRunId || `facebook-api-${Date.now()}`
     try {
-      const credentials = await this.getCredentials()
-
-      if (!credentials.pageAccessToken || !credentials.pageId) {
-        return {
-          success: false,
-          error: 'Facebook API credentials not configured (need pageAccessToken and pageId)'
-        }
-      }
-
-      // Format message with hashtags
-      let message = content.text || content.body || content.message || ''
-      if (hashtags.length > 0) {
-        const formattedHashtags = hashtags
-          .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-          .join(' ')
-        message = `${message} ${formattedHashtags}`.trim()
-      }
-
-      // Upload photo if provided
-      if (files.length > 0) {
-        return await this.postWithPhoto(credentials, message, files[0])
-      }
-
-      // Post text only
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${credentials.pageId}/feed`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: message,
-            access_token: credentials.pageAccessToken
-          })
+      const credentials = await this.executeContractStep(
+        FACEBOOK_API_STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          const loaded = await this.getCredentials()
+          if (!loaded.pageAccessToken || !loaded.pageId) {
+            throw this.createError('Facebook API credentials not configured (need pageAccessToken and pageId)', 'MISSING_CREDENTIALS')
+          }
+          return loaded
         }
       )
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        return {
-          success: false,
-          error: errorData.error?.message || `Facebook API error: ${response.status} ${response.statusText}`
+      const message = await this.executeContractStep(
+        FACEBOOK_API_STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          let formatted = content.text || content.body || content.message || ''
+          if (hashtags.length > 0) {
+            const formattedHashtags = hashtags.map(tag => tag.startsWith('#') ? tag : `#${tag}`).join(' ')
+            formatted = `${formatted} ${formattedHashtags}`.trim()
+          }
+          if (!formatted || formatted.trim().length === 0) {
+            throw this.createError('Facebook post message is required', 'INVALID_INPUT')
+          }
+          return formatted
         }
+      )
+
+      // Upload photo if provided
+      if (files.length > 0) {
+        const mediaResult = await this.executeContractStep(
+          FACEBOOK_API_STEP_IDS.MEDIA_UPLOAD,
+          currentPublishRunId,
+          async () => await this.postWithPhoto(credentials, message, files[0]),
+          `Uploading ${files.length} media file(s)`
+        )
+        await this.executeContractStep(
+          FACEBOOK_API_STEP_IDS.PUBLISH_VERIFY_RESULT,
+          currentPublishRunId,
+          async () => {
+            if (!mediaResult.success || !mediaResult.postId || !mediaResult.url) {
+              throw this.createError('Missing Facebook post URL or postId after media publish', 'VERIFY_FAILED')
+            }
+          }
+        )
+        return mediaResult
       }
 
-      const data = await response.json()
-      const postId = data.id
+      const postId = await this.executeContractStep(
+        FACEBOOK_API_STEP_IDS.PUBLISH_SUBMIT,
+        currentPublishRunId,
+        async () => {
+          const response = await fetch(
+            `https://graph.facebook.com/v18.0/${credentials.pageId}/feed`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                message,
+                access_token: credentials.pageAccessToken
+              })
+            }
+          )
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw this.createError(
+              errorData.error?.message || `Facebook API error: ${response.status} ${response.statusText}`,
+              'SUBMIT_FAILED'
+            )
+          }
+
+          const data = await response.json()
+          return data.id
+        }
+      )
+
+      const url = await this.executeContractStep(
+        FACEBOOK_API_STEP_IDS.PUBLISH_VERIFY_RESULT,
+        currentPublishRunId,
+        async () => {
+          if (!postId) {
+            throw this.createError('Missing Facebook post ID after publish', 'VERIFY_FAILED')
+          }
+          return `https://facebook.com/${postId.replace('_', '/posts/')}`
+        }
+      )
 
       return {
         success: true,
-        postId: postId,
-        url: postId ? `https://facebook.com/${postId.replace('_', '/posts/')}` : undefined
+        postId,
+        url
       }
     } catch (error: any) {
       return {

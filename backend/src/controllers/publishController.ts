@@ -4,6 +4,93 @@ import { PublisherEventService } from '../services/publisherEventService.js'
 
 export class PublishController {
   /**
+   * Ingest external publisher step events (e.g. from n8n callbacks)
+   * POST /api/publish/event
+   */
+  static async ingestEvent(req: Request, res: Response) {
+    try {
+      const body = req.body || {}
+      const sessionId = body.sessionId
+      const publishRunIdFallback = body.publishRunId
+
+      if (!sessionId || typeof sessionId !== 'string') {
+        return res.status(400).json({
+          error: 'Invalid payload',
+          message: 'sessionId is required'
+        })
+      }
+
+      const eventCandidates = Array.isArray(body.events)
+        ? body.events
+        : [body.event || body]
+
+      const validTypes = new Set(['step_started', 'step_progress', 'step_completed', 'step_failed'])
+      const eventService = PublisherEventService.getInstance(sessionId)
+      let accepted = 0
+
+      for (const raw of eventCandidates) {
+        if (!raw || typeof raw !== 'object') continue
+
+        const type = raw.type
+        const platform = raw.platform
+        const method = raw.method
+        const step = raw.step
+        const publishRunId = raw.publishRunId || publishRunIdFallback
+
+        if (!validTypes.has(type)) continue
+        if (!platform || !method || !step) continue
+        if (!['api', 'playwright', 'n8n'].includes(method)) continue
+
+        if (type === 'step_started') {
+          eventService.stepStarted(platform, method, step, raw.message, publishRunId)
+          accepted += 1
+          continue
+        }
+
+        if (type === 'step_progress') {
+          const message = typeof raw.message === 'string' ? raw.message : `Progress update for ${step}`
+          const progress = typeof raw.progress === 'number' ? raw.progress : 0
+          eventService.stepProgress(platform, method, step, message, progress, publishRunId)
+          accepted += 1
+          continue
+        }
+
+        if (type === 'step_completed') {
+          const duration = typeof raw.duration === 'number' ? raw.duration : 0
+          eventService.stepCompleted(platform, method, step, duration, publishRunId, raw.data)
+          accepted += 1
+          continue
+        }
+
+        if (type === 'step_failed') {
+          eventService.stepFailed(
+            platform,
+            method,
+            step,
+            raw.error || 'Unknown error',
+            raw.errorCode,
+            !!raw.retryable,
+            publishRunId
+          )
+          accepted += 1
+        }
+      }
+
+      return res.json({
+        success: true,
+        accepted,
+        total: eventCandidates.length
+      })
+    } catch (error: any) {
+      console.error('Error ingesting publish callback event:', error)
+      return res.status(500).json({
+        error: 'Internal server error',
+        message: error.message
+      })
+    }
+  }
+
+  /**
    * Get publish session results
    */
   static async getPublishResults(req: Request, res: Response) {

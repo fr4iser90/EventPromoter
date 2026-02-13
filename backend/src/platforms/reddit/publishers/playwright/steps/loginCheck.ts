@@ -4,7 +4,7 @@ import { isLoggedIn } from '../utils/isLoggedIn.js'
 import { getLoggedInUsername } from '../utils/getLoggedInUsername.js'
 import { login } from '../utils/login.js'
 
-export async function step1_LoginCheck(page: Page, credentials: any): Promise<void> {
+export async function loginCheck(page: Page, credentials: any): Promise<void> {
   // Browser starten (wird bereits vorher gemacht)
   // Navigation zu Reddit
   console.log(`\n🌐 [Step 1] Starting navigation to Reddit...`)

@@ -21,12 +21,24 @@ export interface EmailPublisher {
 import { getCredentials } from './utils/getCredentials.js'
 
 // Steps
-import { step1_ValidateCredentials } from './steps/step1_ValidateCredentials.js'
-import { step2_ResolveGlobalAttachments } from './steps/step2_ResolveGlobalAttachments.js'
-import { step3_ExtractRecipients } from './steps/step3_ExtractRecipients.js'
-import { step4_RenderTemplate } from './steps/step4_RenderTemplate.js'
-import { step5_ProcessAttachments } from './steps/step5_ProcessAttachments.js'
-import { step6_SendEmail } from './steps/step6_SendEmail.js'
+import { validateCredentials } from './steps/validateCredentials.js'
+import { resolveGlobalAttachments } from './steps/resolveGlobalAttachments.js'
+import { extractRecipientsForRun } from './steps/extractRecipients.js'
+import { renderTemplate } from './steps/renderTemplate.js'
+import { processAttachments } from './steps/processAttachments.js'
+import { sendEmail } from './steps/sendEmail.js'
+
+const EMAIL_API_STEP_IDS = {
+  COMMON_VALIDATE_INPUT: 'common.validate_input',
+  COMMON_RESOLVE_TARGETS: 'common.resolve_targets',
+  AUTH_VALIDATE_CREDENTIALS: 'auth.validate_credentials',
+  MEDIA_RESOLVE_ATTACHMENTS: 'media.resolve_attachments',
+  COMPOSE_EXTRACT_RECIPIENTS: 'compose.extract_recipients',
+  COMPOSE_RENDER_TEMPLATE: 'compose.render_template',
+  MEDIA_PROCESS_ATTACHMENTS: 'media.process_attachments',
+  PUBLISH_SUBMIT: 'publish.submit',
+  PUBLISH_VERIFY_RESULT: 'publish.verify_result'
+} as const
 
 /**
  * API Publisher for Email
@@ -39,8 +51,61 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
 
   setEventEmitter(emitter: PublisherEventService): void {
     this.eventEmitter = emitter
-    // Generate publishRunId for correlation (will be used in all events)
-    this.publishRunId = `email-${Date.now()}`
+  }
+
+  setPublishRunId(runId: string): void {
+    this.publishRunId = runId
+  }
+
+  private getErrorCode(error: any): string {
+    if (error?.code) return String(error.code)
+    if (error?.status) return `HTTP_${error.status}`
+    if (error?.type) return String(error.type)
+    return 'UNKNOWN_ERROR'
+  }
+
+  private isRetryableError(error: any): boolean {
+    const code = error?.code
+    const status = error?.status
+
+    if (code === 'ECONNREFUSED' || code === 'ETIMEDOUT' || code === 'ENOTFOUND') return true
+    if (typeof status === 'number' && status >= 500 && status < 600) return true
+    if (status === 429) return true
+    return false
+  }
+
+  private createError(message: string, code: string): Error {
+    const err = new Error(message) as Error & { code?: string }
+    err.code = code
+    return err
+  }
+
+  private async executeContractStep<T>(
+    stepId: string,
+    publishRunId: string,
+    fn: () => Promise<T> | T,
+    message?: string,
+    data?: any
+  ): Promise<T> {
+    const start = Date.now()
+    this.eventEmitter?.stepStarted('email', 'api', stepId, message || `Starting ${stepId}`, publishRunId)
+
+    try {
+      const result = await fn()
+      this.eventEmitter?.stepCompleted('email', 'api', stepId, Date.now() - start, publishRunId, data)
+      return result
+    } catch (error: any) {
+      this.eventEmitter?.stepFailed(
+        'email',
+        'api',
+        stepId,
+        error?.message || 'Unknown error',
+        this.getErrorCode(error),
+        this.isRetryableError(error),
+        publishRunId
+      )
+      throw error
+    }
   }
 
   async publish(
@@ -48,50 +113,42 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
     files: UploadedFile[],
     hashtags: string[]
   ): Promise<PostResult> {
-    const platformId = 'email'
-    const method = 'api'
-    const sessionId = this.publishRunId || 'unknown'
+    const currentPublishRunId = this.publishRunId || `email-${Date.now()}`
 
     try {
-      // ✅ STEP 1: Get Credentials
-      if (this.eventEmitter) {
-        this.eventEmitter.stepStarted(platformId, method, 'Step 1: Get Credentials', 'Loading SMTP credentials...', this.publishRunId)
-      }
-      const step1Start = Date.now()
-      const credentials = await getCredentials()
-      if (this.eventEmitter) {
-        this.eventEmitter.stepCompleted(platformId, method, 'Step 1: Get Credentials', Date.now() - step1Start, this.publishRunId)
-      }
+      const credentials = await this.executeContractStep(
+        EMAIL_API_STEP_IDS.AUTH_VALIDATE_CREDENTIALS,
+        currentPublishRunId,
+        async () => {
+          const loaded = await getCredentials()
+          validateCredentials(loaded)
+          return loaded
+        },
+        'Loading and validating SMTP credentials'
+      )
 
-      // ✅ STEP 2: Validate Credentials
-      if (this.eventEmitter) {
-        this.eventEmitter.stepStarted(platformId, method, 'Step 2: Validate Credentials', 'Validating SMTP credentials...', this.publishRunId)
-      }
-      const step2Start = Date.now()
-      step1_ValidateCredentials(credentials)
-      if (this.eventEmitter) {
-        this.eventEmitter.stepCompleted(platformId, method, 'Step 2: Validate Credentials', Date.now() - step2Start, this.publishRunId)
-      }
+      const runs = await this.executeContractStep(
+        EMAIL_API_STEP_IDS.COMMON_VALIDATE_INPUT,
+        currentPublishRunId,
+        async () => {
+          const templateRuns = content._templates || []
+          if (templateRuns.length === 0) {
+            throw this.createError(
+              'Email content must use _templates format with targets configuration. Legacy recipients format is no longer supported.',
+              'INVALID_INPUT'
+            )
+          }
+          return templateRuns
+        },
+        'Validating email payload'
+      )
 
-      // ✅ STEP 3: Resolve Global Attachments
-      if (this.eventEmitter) {
-        this.eventEmitter.stepStarted(platformId, method, 'Step 3: Resolve Global Attachments', 'Resolving global attachments...', this.publishRunId)
-      }
-      const step3Start = Date.now()
-      const globalAttachments = step2_ResolveGlobalAttachments(content, files)
-      if (this.eventEmitter) {
-        this.eventEmitter.stepCompleted(platformId, method, 'Step 3: Resolve Global Attachments', Date.now() - step3Start, this.publishRunId)
-      }
-
-      // ✅ STEP 4: Handle multiple runs (templates) - _templates format is required
-      const runs = content._templates || []
-      
-      if (runs.length === 0) {
-        return { 
-          success: false, 
-          error: 'Email content must use _templates format with targets configuration. Legacy recipients format is no longer supported.' 
-        }
-      }
+      const globalAttachments = await this.executeContractStep(
+        EMAIL_API_STEP_IDS.MEDIA_RESOLVE_ATTACHMENTS,
+        currentPublishRunId,
+        () => resolveGlobalAttachments(content, files),
+        'Resolving global attachments'
+      )
 
       // Handle multiple runs
       const results: PostResult[] = []
@@ -99,53 +156,63 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
         console.log(`📧 Processing template run: ${run.templateId}`)
         
         try {
-          // ✅ STEP 5: Extract Recipients
-          if (this.eventEmitter) {
-            this.eventEmitter.stepStarted(platformId, method, `Step 5: Extract Recipients (${run.templateId})`, 'Extracting recipients from targets...', this.publishRunId)
-          }
-          const step5Start = Date.now()
-          const recipients = await step3_ExtractRecipients(run)
+          await this.executeContractStep(
+            EMAIL_API_STEP_IDS.COMMON_RESOLVE_TARGETS,
+            currentPublishRunId,
+            async () => {
+              if (!run.targets) {
+                throw this.createError(`Template run ${run.templateId} is missing targets`, 'INVALID_TARGETS')
+              }
+            },
+            `Resolving targets for template ${run.templateId}`
+          )
+
+          const recipients = await this.executeContractStep(
+            EMAIL_API_STEP_IDS.COMPOSE_EXTRACT_RECIPIENTS,
+            currentPublishRunId,
+            async () => extractRecipientsForRun(run),
+            `Extracting recipients for template ${run.templateId}`
+          )
           console.log(`📧 Found ${recipients.length} recipient(s)`)
-          if (this.eventEmitter) {
-            this.eventEmitter.stepCompleted(platformId, method, `Step 5: Extract Recipients (${run.templateId})`, Date.now() - step5Start, this.publishRunId)
-          }
 
           // Loop through recipients to send personalized emails
           for (const recipient of recipients) {
             const recipientEmail = recipient.email
             console.log(`📧 Processing recipient: ${recipientEmail}`)
 
-            // ✅ STEP 6: Render Template (Personalized)
-            if (this.eventEmitter) {
-              this.eventEmitter.stepStarted(platformId, method, `Step 6: Render Template (${run.templateId})`, `Rendering personalized template for ${recipientEmail}...`, this.publishRunId)
-            }
-            const step6Start = Date.now()
-            const { html, subject } = await step4_RenderTemplate(run, content, recipient)
-            if (this.eventEmitter) {
-              this.eventEmitter.stepCompleted(platformId, method, `Step 6: Render Template (${run.templateId})`, Date.now() - step6Start, this.publishRunId)
-            }
+            const { html, subject } = await this.executeContractStep(
+              EMAIL_API_STEP_IDS.COMPOSE_RENDER_TEMPLATE,
+              currentPublishRunId,
+              async () => renderTemplate(run, content, recipient),
+              `Rendering personalized template for ${recipientEmail}`
+            )
 
-            // ✅ STEP 7: Process Attachments
-            if (this.eventEmitter) {
-              this.eventEmitter.stepStarted(platformId, method, `Step 7: Process Attachments (${run.templateId})`, 'Processing attachments and embedded images...', this.publishRunId)
-            }
-            const step7Start = Date.now()
-            const { processedHtml, processedAttachments } = step5_ProcessAttachments(run, files, globalAttachments, html)
-            if (this.eventEmitter) {
-              this.eventEmitter.stepCompleted(platformId, method, `Step 7: Process Attachments (${run.templateId})`, Date.now() - step7Start, this.publishRunId)
-            }
+            const { processedHtml, processedAttachments } = await this.executeContractStep(
+              EMAIL_API_STEP_IDS.MEDIA_PROCESS_ATTACHMENTS,
+              currentPublishRunId,
+              () => processAttachments(run, files, globalAttachments, html),
+              `Processing attachments for ${recipientEmail}`
+            )
 
-            // ✅ STEP 8: Send Email
-            if (this.eventEmitter) {
-              this.eventEmitter.stepStarted(platformId, method, `Step 8: Send Email (${run.templateId})`, `Sending email to ${recipientEmail}...`, this.publishRunId)
-            }
-            const step8Start = Date.now()
-            const result = await step6_SendEmail(credentials, [recipientEmail], subject, processedHtml, processedAttachments, content)
-            if (this.eventEmitter) {
-              this.eventEmitter.stepCompleted(platformId, method, `Step 8: Send Email (${run.templateId})`, Date.now() - step8Start, this.publishRunId)
-            }
-            
-            results.push(result)
+            const sendResult = await this.executeContractStep(
+              EMAIL_API_STEP_IDS.PUBLISH_SUBMIT,
+              currentPublishRunId,
+              async () => sendEmail(credentials, [recipientEmail], subject, processedHtml, processedAttachments, content),
+              `Sending email to ${recipientEmail}`
+            )
+
+            await this.executeContractStep(
+              EMAIL_API_STEP_IDS.PUBLISH_VERIFY_RESULT,
+              currentPublishRunId,
+              async () => {
+                if (!sendResult.success || !sendResult.postId) {
+                  throw this.createError(`SMTP send did not return a valid messageId for ${recipientEmail}`, 'VERIFY_FAILED')
+                }
+              },
+              `Verifying send result for ${recipientEmail}`
+            )
+
+            results.push(sendResult)
           }
         } catch (error: any) {
           console.error(`Error processing template run ${run.templateId}:`, error)
@@ -164,9 +231,6 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
       }
 
     } catch (error: any) {
-      if (this.eventEmitter) {
-        this.eventEmitter.error(platformId, method, 'Email API Publish', error.message || 'Failed to send email via SMTP', this.publishRunId)
-      }
       return {
         success: false,
         error: error.message || 'Failed to send email via SMTP'

@@ -3,7 +3,7 @@ import { waitForPageFullyLoaded } from '../utils/waitForPageFullyLoaded.js'
 import { extractPostUrl } from '../utils/extractPostUrl.js'
 import { extractPostId } from '../utils/extractPostId.js'
 
-export async function step6_Submit(page: Page, subreddit: string, dryMode: boolean): Promise<{ url?: string, postId?: string }> {
+export async function submitPost(page: Page, subreddit: string, dryMode: boolean): Promise<{ url?: string, postId?: string }> {
   console.log(`  [Step 6] Finalizing...`)
   if (dryMode) {
     console.log(`    → DRY MODE: Formular ausgefüllt, kein automatisches Posten`)
