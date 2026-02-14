@@ -112,6 +112,15 @@ export class TemplateMappingService {
           newContent[fieldName] = processedValue
         }
       })
+
+      // If the schema has an image field but the template does not define one,
+      // auto-map the first uploaded image variable for a better default preview.
+      if (!newContent.image && (templateVariables.image || templateVariables.img1 || templateVariables.image1)) {
+        const hasImageBlock = editorBlocks.some((block: ContentBlock) => block.id === 'image')
+        if (hasImageBlock) {
+          newContent.image = templateVariables.image || templateVariables.img1 || templateVariables.image1
+        }
+      }
       
       // Special handling for platforms that use Markdown (Reddit, etc.)
       // If template has 'text' field and it contains Markdown, preserve it

@@ -153,7 +153,6 @@ export class FileController {
 
       // Security headers for cross-origin access
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
 
       // Set MIME type

@@ -36,7 +36,7 @@ export const personalInvitationTemplate: EmailTemplate = {
       {name}
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="personal-message">
       <p style="margin: 0; font-size: 16px; line-height: 1.6;">
@@ -116,7 +116,7 @@ export const personalInvitationTemplate: EmailTemplate = {
       {name}
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="personal-message">
       <p style="margin: 0; font-size: 16px; line-height: 1.6;">
@@ -195,7 +195,7 @@ export const personalInvitationTemplate: EmailTemplate = {
       {name}
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="personal-message">
       <p style="margin: 0; font-size: 16px; line-height: 1.6;">
@@ -243,7 +243,7 @@ export const personalInvitationTemplate: EmailTemplate = {
 </html>`
     }
   },
-  variables: ['name', 'title', 'eventTitle', 'date', 'time', 'venue', 'city', 'description', 'price', 'lineup', 'link', 'website', 'organizer', 'img1'],
+  variables: ['name', 'title', 'eventTitle', 'date', 'time', 'venue', 'city', 'description', 'price', 'lineup', 'link', 'website', 'organizer', 'image'],
   requiredTargetFields: ['name'], // Requires name (firstName+lastName or name field) on targets
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()

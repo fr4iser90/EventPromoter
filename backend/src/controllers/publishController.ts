@@ -1,14 +1,44 @@
 import { Request, Response } from 'express'
+import crypto from 'crypto'
 import { PublishTrackingService } from '../services/publishTrackingService.js'
 import { PublisherEventService } from '../services/publisherEventService.js'
 
 export class PublishController {
+  private static isValidCallbackSecret(provided: string, expected: string): boolean {
+    const providedBuffer = Buffer.from(provided, 'utf8')
+    const expectedBuffer = Buffer.from(expected, 'utf8')
+    if (providedBuffer.length !== expectedBuffer.length) return false
+    return crypto.timingSafeEqual(providedBuffer, expectedBuffer)
+  }
+
   /**
    * Ingest external publisher step events (e.g. from n8n callbacks)
    * POST /api/publish/event
    */
   static async ingestEvent(req: Request, res: Response) {
     try {
+      const callbackSecret = process.env.PUBLISH_CALLBACK_SECRET?.trim()
+      if (!callbackSecret) {
+        if (process.env.NODE_ENV === 'production') {
+          return res.status(503).json({
+            error: 'Callback security not configured',
+            message: 'Set PUBLISH_CALLBACK_SECRET in production'
+          })
+        }
+      } else {
+        const providedSecretHeader = req.headers['x-eventpromoter-callback-secret']
+        const providedSecret = Array.isArray(providedSecretHeader)
+          ? providedSecretHeader[0]
+          : providedSecretHeader
+
+        if (!providedSecret || !this.isValidCallbackSecret(String(providedSecret), callbackSecret)) {
+          return res.status(401).json({
+            error: 'UNAUTHORIZED_CALLBACK',
+            message: 'Invalid callback secret'
+          })
+        }
+      }
+
       const body = req.body || {}
       const sessionId = body.sessionId
       const publishRunIdFallback = body.publishRunId

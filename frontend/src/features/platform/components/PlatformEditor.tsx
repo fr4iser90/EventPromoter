@@ -346,7 +346,8 @@ function GenericPlatformEditor({
             templateId: template.id,
             parsedData: parsedData || null,
             uploadedFileRefs: uploadedFileRefs || [],
-            existingContent: content || {}
+            existingContent: content || {},
+            locale: targetsValue?.templateLocale || i18n.language
           })
         }
       )

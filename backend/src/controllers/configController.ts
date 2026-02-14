@@ -4,10 +4,19 @@ import { Request, Response } from 'express'
 import { ConfigService } from '../services/configService.js'
 import { EventService, EVENT_ID_PATTERNS } from '../services/eventService.js'
 
+const CONFIG_NAME_PATTERN = /^[a-z0-9][a-z0-9-_]{0,63}$/
+
+function isSafeConfigName(name: string): boolean {
+  return CONFIG_NAME_PATTERN.test(name)
+}
+
 export class ConfigController {
   static async getConfig(req: Request, res: Response) {
     try {
       const { name } = req.params
+      if (!isSafeConfigName(name)) {
+        return res.status(400).json({ error: 'Invalid configuration name' })
+      }
       if (process.env.DEBUG_API_REQUESTS === 'true') {
         console.log(`🌐 API Request: GET /api/config/${name}`)
       }
@@ -31,6 +40,9 @@ export class ConfigController {
   static async saveConfig(req: Request, res: Response) {
     try {
       const { name } = req.params
+      if (!isSafeConfigName(name)) {
+        return res.status(400).json({ error: 'Invalid configuration name' })
+      }
       const config = req.body
       if (process.env.DEBUG_API_REQUESTS === 'true') {
         console.log(`💾 API Request: POST /api/config/${name}`)

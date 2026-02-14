@@ -14,6 +14,43 @@ import {
 } from '../types/templateTypes.js'
 
 export class TemplateController {
+  private static resolveTemplateForLocale(template: any, locale: string): any {
+    const translations = template?.translations
+    const localeTranslation = translations?.[locale]
+    if (!localeTranslation || locale === 'en') return template
+
+    const localized: any = {
+      ...template,
+      name: localeTranslation.name || template.name,
+      description: localeTranslation.description || template.description
+    }
+
+    const translatedTemplateObject = localeTranslation.template && typeof localeTranslation.template === 'object'
+      ? localeTranslation.template
+      : null
+
+    if (translatedTemplateObject) {
+      localized.template = {
+        ...(template.template || {}),
+        ...translatedTemplateObject
+      }
+      return localized
+    }
+
+    // Backward-compatible fallback: map known fields if provided at translation root.
+    if (template.template && typeof template.template === 'object') {
+      localized.template = {
+        ...template.template
+      }
+      for (const key of ['title', 'text', 'subject', 'html', 'bodyText']) {
+        if (typeof localeTranslation[key] === 'string') {
+          localized.template[key] = localeTranslation[key]
+        }
+      }
+    }
+
+    return localized
+  }
 
   // POST /api/templates/variables/resolve - Resolve template variables via backend source of truth
   static async resolveVariables(req: Request, res: Response) {
@@ -555,11 +592,13 @@ export class TemplateController {
       const { platform, id } = req.params
       const mappingRequest: TemplateMappingRequest = req.body
 
-      // Get request language (from i18next middleware or default to 'en')
-      const lang = (req as any).language || (req as any).i18n?.language || 'en'
-      const normalizedLang = lang.split('-')[0] // Normalize 'de-DE' -> 'de'
+      // Resolve locale: explicit request locale wins, then i18n/request language.
+      const requestLocale = typeof mappingRequest.locale === 'string' ? mappingRequest.locale : ''
+      const fallbackLang = (req as any).language || (req as any).i18n?.language || 'en'
+      const rawLocale = requestLocale || fallbackLang
+      const normalizedLang = rawLocale.split('-')[0] // Normalize 'de-DE' -> 'de'
       const validLang = ['en', 'de', 'es'].includes(normalizedLang) ? normalizedLang : 'en'
-      
+
       // Add locale to mapping request for date/time formatting
       mappingRequest.locale = validLang
 
@@ -572,6 +611,8 @@ export class TemplateController {
         })
         return
       }
+
+      const localizedTemplate = this.resolveTemplateForLocale(template, validLang)
 
       // ✅ Validate template requirements against targets (if targets provided)
       if (mappingRequest.targets) {
@@ -691,7 +732,7 @@ export class TemplateController {
       // Map template to editor content
       const result = await TemplateMappingService.mapTemplateToEditorContent(
         platform,
-        template,
+        localizedTemplate,
         mappingRequest
       )
 

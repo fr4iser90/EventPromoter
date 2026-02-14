@@ -1,9 +1,10 @@
 import { Router } from 'express'
 import { AuthService } from '../services/authService.js'
+import { loginRateLimit } from '../middleware/rateLimit.js'
 
 const router = Router()
 
-router.post('/login', (req, res) => {
+router.post('/login', loginRateLimit, (req, res) => {
   const { username, password } = req.body || {}
 
   if (!AuthService.isConfigured()) {

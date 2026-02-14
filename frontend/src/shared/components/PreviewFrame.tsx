@@ -56,6 +56,32 @@ export function PreviewFrame({ document, dimensions, ...props }: {
   const theme = useTheme()
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
+  const sanitizePreviewHtml = (rawHtml: string): string => {
+    const parser = new DOMParser()
+    const parsed = parser.parseFromString(rawHtml || '', 'text/html')
+
+    // Remove high-risk elements completely.
+    parsed.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach((el) => el.remove())
+
+    // Remove inline event handlers and javascript: URLs.
+    parsed.querySelectorAll('*').forEach((node) => {
+      const element = node as HTMLElement
+      Array.from(element.attributes).forEach((attr) => {
+        const name = attr.name.toLowerCase()
+        const value = attr.value.trim().toLowerCase()
+        if (name.startsWith('on')) {
+          element.removeAttribute(attr.name)
+          return
+        }
+        if ((name === 'href' || name === 'src') && value.startsWith('javascript:')) {
+          element.removeAttribute(attr.name)
+        }
+      })
+    })
+
+    return parsed.body.innerHTML
+  }
+
   // ✅ Preview Shell HTML (Frontend-owned)
   // :root bleibt leer - wird komplett via setProperty gesetzt
   const shellHtml = `
@@ -154,8 +180,8 @@ export function PreviewFrame({ document, dimensions, ...props }: {
         structuralStyle.textContent = document.css
       }
 
-      // Mounte Backend-HTML
-      mount.innerHTML = document.html
+      // Mounte Backend-HTML (sanitized before injection)
+      mount.innerHTML = sanitizePreviewHtml(document.html)
       
       // ✅ FIX: Theme nach Content-Mounting nochmal setzen (falls Theme-Injection zu früh war)
       // Das stellt sicher, dass Theme auch nach Content-Update korrekt ist
@@ -174,6 +200,7 @@ export function PreviewFrame({ document, dimensions, ...props }: {
   return (
     <iframe
       ref={iframeRef}
+      sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
       style={{
         width: '100%',
         height: dimensions?.height || 'auto',

@@ -20,7 +20,7 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
 <body>
   <div class="container">
     <h1>🎉 {title}</h1>
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
     <p><strong>📅 Date:</strong> {date}</p>
     <p><strong>🕐 Time:</strong> {time}</p>
     <p><strong>📍 Location:</strong> {venue}, {city}</p>
@@ -47,7 +47,7 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
 <body>
   <div class="container">
     <h1>🎉 {title}</h1>
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
     <p><strong>📅 Datum:</strong> {date}</p>
     <p><strong>🕐 Uhrzeit:</strong> {time}</p>
     <p><strong>📍 Ort:</strong> {venue}, {city}</p>
@@ -73,7 +73,7 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
 <body>
   <div class="container">
     <h1>🎉 {title}</h1>
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
     <p><strong>📅 Fecha:</strong> {date}</p>
     <p><strong>🕐 Hora:</strong> {time}</p>
     <p><strong>📍 Ubicación:</strong> {venue}, {city}</p>
@@ -84,7 +84,7 @@ export const basicEventAnnouncementTemplate: EmailTemplate = {
 </html>`
     }
   },
-  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link', 'img1'],
+  variables: ['eventTitle', 'date', 'time', 'venue', 'city', 'description', 'link', 'image'],
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z'
 };

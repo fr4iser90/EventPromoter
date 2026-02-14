@@ -12,13 +12,19 @@ export function errorHandler(
 
   // Don't leak error details in production
   const isDevelopment = process.env.NODE_ENV !== 'production'
+  const statusCode = error.status || 500
 
-  res.status(error.status || 500).json({
-    error: error.message || 'Internal server error',
-    ...(isDevelopment && {
-      stack: error.stack,
-      details: error
+  if (!isDevelopment) {
+    res.status(statusCode).json({
+      error: statusCode >= 500 ? 'Internal server error' : (error.message || 'Request failed')
     })
+    return
+  }
+
+  res.status(statusCode).json({
+    error: error.message || 'Internal server error',
+    stack: error.stack,
+    details: error
   })
 }
 

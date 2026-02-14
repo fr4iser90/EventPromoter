@@ -5,6 +5,42 @@ import path from 'path'
 import { Template, TemplateValidationResult, TemplateCreateRequest } from '../types/templateTypes.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
 
+function normalizeImagePlaceholder(value: string): string {
+  return value
+    .replace(/\{img1\}/g, '{image}')
+    .replace(/\{image1\}/g, '{image}')
+}
+
+function normalizeStringTree(value: any): any {
+  if (typeof value === 'string') return normalizeImagePlaceholder(value)
+  if (Array.isArray(value)) return value.map((entry) => normalizeStringTree(entry))
+  if (value && typeof value === 'object') {
+    const normalized: Record<string, any> = {}
+    for (const [key, entry] of Object.entries(value)) {
+      normalized[key] = normalizeStringTree(entry)
+    }
+    return normalized
+  }
+  return value
+}
+
+function normalizeTemplateCompatibility(template: Template): Template {
+  const normalizedVariables = Array.isArray(template.variables)
+    ? Array.from(new Set(template.variables.map((name) => (name === 'img1' || name === 'image1' ? 'image' : name))))
+    : []
+
+  return {
+    ...template,
+    variables: normalizedVariables,
+    template: normalizeStringTree(template.template),
+    ...(template as any).translations
+      ? {
+          translations: normalizeStringTree((template as any).translations)
+        }
+      : {}
+  } as Template
+}
+
 export class TemplateService {
   private static readonly TEMPLATES_DIR = path.join(process.cwd(), 'events', 'templates')
 
@@ -30,7 +66,7 @@ export class TemplateService {
 
       const data = fs.readFileSync(filePath, 'utf8')
       const jsonData = JSON.parse(data)
-      return jsonData.templates || []
+      return (jsonData.templates || []).map((template: Template) => normalizeTemplateCompatibility(template))
     } catch (error) {
       console.warn(`Failed to load custom templates for ${platform}:`, error)
       return []
@@ -49,7 +85,8 @@ export class TemplateService {
         templates
       }
 
-      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8')
+      const normalizedTemplates = templates.map((template) => normalizeTemplateCompatibility(template))
+      fs.writeFileSync(filePath, JSON.stringify({ ...data, templates: normalizedTemplates }, null, 2), 'utf8')
       return true
     } catch (error) {
       console.error(`Failed to save custom templates for ${platform}:`, error)
@@ -91,7 +128,7 @@ export class TemplateService {
             return null
           }
           
-          return {
+          return normalizeTemplateCompatibility({
             id: template.id,
             name: template.name,
             description: template.description,
@@ -105,7 +142,7 @@ export class TemplateService {
             updatedAt: template.updatedAt,
             // Keep translations for later use in controller
             translations: template.translations
-          }
+          } as Template)
         }).filter((t: any): t is NonNullable<typeof t> => t !== null)
       } catch (importError) {
         // If templates file doesn't exist, check if platform has templates in module
@@ -120,7 +157,7 @@ export class TemplateService {
               return null
             }
             
-            return {
+            return normalizeTemplateCompatibility({
               id: template.id,
               name: template.name,
               description: template.description,
@@ -134,7 +171,7 @@ export class TemplateService {
               updatedAt: template.updatedAt,
               // Keep translations for later use in controller
               translations: template.translations
-            }
+            } as Template)
           }).filter((t: any): t is NonNullable<typeof t> => t !== null)
         }
         return []

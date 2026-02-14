@@ -136,11 +136,12 @@ export function getTemplateVariables(
     })()
     const imageNum = index + 1
 
-    // Support multiple variable names for images
+    // Canonical image variable is `image`.
+    // Legacy aliases (`img1`, `image1`, `imgN`) are still written for backwards compatibility.
     if (imageNum === 1) {
+      variables.image = imageUrl
       variables.image1 = imageUrl
       variables.img1 = imageUrl
-      variables.image = imageUrl              // Alias for first image
     } else {
       variables[`image${imageNum}`] = imageUrl
       variables[`img${imageNum}`] = imageUrl
@@ -234,7 +235,7 @@ export function getTemplateVariableNames(
   imageFiles.forEach((_, index) => {
     const num = index + 1
     if (num === 1) {
-      variableNames.push('image1', 'img1', 'image')
+      variableNames.push('image', 'image1', 'img1')
     } else {
       variableNames.push(`image${num}`, `img${num}`)
     }

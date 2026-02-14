@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 import express from 'express'
 import { corsMiddleware } from './middleware/cors.js'
+import { helmetMiddleware } from './middleware/helmet.js'
 import { i18nMiddleware } from './i18n/index.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 import routes from './routes/index.js'
@@ -23,7 +24,8 @@ console.log(`📁 Config directory: ${process.cwd()}/config`)
 // 0. Trust proxy - REQUIRED for X-Forwarded-* headers (Case 3-5)
 app.set('trust proxy', true)
 
-// 1. Global middleware (CORS, i18n)
+// 1. Global middleware (security headers, CORS, i18n)
+app.use(helmetMiddleware)
 app.use(corsMiddleware)
 app.use(i18nMiddleware)
 

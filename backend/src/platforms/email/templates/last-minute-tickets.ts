@@ -33,7 +33,7 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
       <p style="font-size: 18px; color: #666;">{date} at {venue}</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="price">
       🎫 Only {remainingTickets} tickets left!<br>
@@ -96,7 +96,7 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
       <p style="font-size: 18px; color: #666;">{date} in {venue}</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="price">
       🎫 Nur noch {remainingTickets} Tickets!<br>
@@ -158,7 +158,7 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
       <p style="font-size: 18px; color: #666;">{date} en {venue}</p>
     </div>
 
-    <img src="{img1}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
+    <img src="{image}" alt="Event Image" style="max-width: 600px; width: 100%; height: auto; margin: 20px 0; border-radius: 8px; display: block;" />
 
     <div class="price">
       🎫 ¡Solo quedan {remainingTickets} entradas!<br>
@@ -192,7 +192,7 @@ export const lastMinuteTicketsTemplate: EmailTemplate = {
 </html>`
     }
   },
-  variables: ['eventTitle', 'date', 'venue', 'remainingTickets', 'originalPrice', 'discountedPrice', 'hoursUntilEvent', 'link', 'highlights', 'unsubscribeLink', 'img1'],
+  variables: ['eventTitle', 'date', 'venue', 'remainingTickets', 'originalPrice', 'discountedPrice', 'hoursUntilEvent', 'link', 'highlights', 'unsubscribeLink', 'image'],
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z'
 };

@@ -210,9 +210,9 @@ export const emailTemplateSchema: TemplateSchema = {
       icon: '👤'
     },
     {
-      name: 'img1',
-      canonicalName: 'img1',
-      aliases: ['image1'],
+      name: 'image',
+      canonicalName: 'image',
+      aliases: ['img1', 'image1'],
       label: 'event.primaryImage',
       type: 'image',
       source: 'computed',

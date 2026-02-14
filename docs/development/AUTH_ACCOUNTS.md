@@ -33,10 +33,14 @@ Set in backend environment:
 
 ```env
 AUTH_SESSION_SECRET=replace-with-strong-secret
+SECRETS_ENCRYPTION_KEY=replace-with-stable-secret-for-encryption
+PUBLISH_CALLBACK_SECRET=replace-with-strong-callback-secret
+CORS_DISABLE=true
+# or: CORS_ORIGINS=https://eventpromoter.example.com
 ```
 
 ## Enforcement
 
 - Frontend platform selector only shows allowed platforms from `/api/auth/me`.
 - Backend submit route enforces allowed platform list and returns `403` on violations.
-- `POST /api/publish/event` remains open for external callbacks (for n8n event parity).
+- `POST /api/publish/event` is callback-only and protected by `X-EventPromoter-Callback-Secret`.

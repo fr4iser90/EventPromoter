@@ -22,6 +22,50 @@ Have you heard this? What do you think? Any similar recommendations?
 
 #Music #Discovery #Electronic #Techno`
   },
+  translations: {
+    de: {
+      name: 'Musik-Discovery Share',
+      description: 'Reddit-Post-Vorlage zum Teilen neuer Musik-Entdeckungen von Events',
+      template: {
+        title: 'Neuen Track entdeckt - was sagt ihr?',
+        text: `Habe den Track ueber {title} im {venue} entdeckt und hoere ihn seitdem rauf und runter!
+
+**Track:** {trackName}
+**Artist:** {artist}
+**Gespielt bei:** {title} - {venue}, {city}
+
+**Warum ich ihn feiere:**
+- {reasons}
+
+Kennt ihr den schon? Was denkt ihr? Aehnliche Empfehlungen?
+
+**Hier reinhoeren:** {link}
+
+#Musik #Discovery #Elektronisch #Techno`
+      }
+    },
+    es: {
+      name: 'Compartir Descubrimiento Musical',
+      description: 'Plantilla de Reddit para compartir descubrimientos musicales desde eventos',
+      template: {
+        title: 'Acabo de descubrir este track - opiniones?',
+        text: `Descubri este track en {title} en {venue} y no he parado de escucharlo.
+
+**Track:** {trackName}
+**Artista:** {artist}
+**Sonando en:** {title} - {venue}, {city}
+
+**Por que me encanta:**
+- {reasons}
+
+Ya lo habian escuchado? Que opinan? Recomendaciones similares?
+
+**Escuchalo aqui:** {link}
+
+#Musica #Discovery #Electronica #Techno`
+      }
+    }
+  },
   variables: ['eventTitle', 'venue', 'trackName', 'artist', 'city', 'reasons', 'link'],
   recommendedSubreddits: ['r/electronicmusic', 'r/Techno', 'r/Music'],
   createdAt: '2025-01-01T00:00:00Z',

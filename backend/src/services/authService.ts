@@ -44,7 +44,17 @@ const ACCOUNT_DEFS: AccountDef[] = [
 ]
 
 function getSessionSecret(): string {
-  return process.env.AUTH_SESSION_SECRET || process.env.SECRETS_ENCRYPTION_KEY || 'eventpromoter-dev-secret'
+  const explicitSessionSecret = process.env.AUTH_SESSION_SECRET?.trim()
+  const fallbackEncryptionKey = process.env.SECRETS_ENCRYPTION_KEY?.trim()
+
+  if (explicitSessionSecret) return explicitSessionSecret
+  if (fallbackEncryptionKey) return fallbackEncryptionKey
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('AUTH_SESSION_SECRET (or SECRETS_ENCRYPTION_KEY) must be set in production')
+  }
+
+  return 'eventpromoter-dev-secret'
 }
 
 function normalizeAllowedPlatforms(platforms?: string): string[] {

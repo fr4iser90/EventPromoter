@@ -54,5 +54,5 @@ export const VARIABLE_ALIASES: Record<string, string[]> = {
  */
 export const IMAGE_ALIASES = {
   first: ['image', 'img1', 'image1'],
-  others: (index: number) => [`img${index}`, `image${index}`]
+  others: (index: number) => [`image${index}`, `img${index}`]
 }

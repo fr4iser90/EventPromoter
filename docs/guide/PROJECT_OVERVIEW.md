@@ -68,6 +68,7 @@ Design goals:
 - observability and retry logic through consistent event payloads.
 
 For implementation status and migration details, see `docs/development/MIGRATION_DONE.md`.
+For preview quality validation before releases, see `docs/guide/PREVIEW_REALISM_CHECKLIST.md`.
 
 ## 5) Development Workflow
 
