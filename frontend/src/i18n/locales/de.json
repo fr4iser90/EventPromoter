@@ -74,7 +74,9 @@
   "navigation": {
     "home": "Start",
     "templates": "Vorlagen",
-    "history": "Verlauf"
+    "history": "Verlauf",
+    "logout": "Abmelden",
+    "loggingOut": "Melde ab..."
   },
   "upload": {
     "formats": "Unterstützte Formate",

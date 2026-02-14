@@ -74,7 +74,9 @@
   "navigation": {
     "home": "Inicio",
     "templates": "Plantillas",
-    "history": "Historial"
+    "history": "Historial",
+    "logout": "Cerrar sesion",
+    "loggingOut": "Cerrando sesion..."
   },
   "upload": {
     "formats": "Formatos compatibles",

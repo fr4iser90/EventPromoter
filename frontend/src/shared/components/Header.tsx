@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
@@ -26,6 +26,7 @@ import {
   SmartToy as PlaywrightIcon
 } from '@mui/icons-material'
 import useStore from '../../store'
+import { getApiUrl } from '../utils/api'
 
 type HeaderProps = {
   title?: string
@@ -46,6 +47,7 @@ const Header = ({
   const navigate = useNavigate()
   const location = useLocation()
   const { darkMode, setDarkMode, globalPublishingMode, setGlobalPublishingMode } = useStore()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
@@ -64,6 +66,20 @@ const Header = ({
   const handleSettingsClick = () => {
     if (onSettingsClick) {
       onSettingsClick()
+    }
+  }
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+    try {
+      await fetch(getApiUrl('auth/logout'), {
+        method: 'POST',
+        credentials: 'include'
+      })
+    } finally {
+      navigate('/login', { replace: true })
+      setIsLoggingOut(false)
     }
   }
 
@@ -199,6 +215,16 @@ const Header = ({
             📊 {t('navigation.history')}
           </Button>
         )}
+
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          sx={{ mr: 1 }}
+        >
+          {isLoggingOut ? t('navigation.loggingOut') : t('navigation.logout')}
+        </Button>
 
         {/* Language Selector */}
         <FormControl size="small" sx={{ mr: 1, minWidth: 80 }}>
