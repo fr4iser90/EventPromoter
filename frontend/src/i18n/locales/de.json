@@ -507,7 +507,25 @@
     "statusPending": "AUSSTEHEND",
     "statusRunning": "LAUFEND",
     "statusCompleted": "ABGESCHLOSSEN",
-    "statusFailed": "FEHLGESCHLAGEN"
+    "statusFailed": "FEHLGESCHLAGEN",
+    "steps": {
+      "common.validate_input": "Eingabedaten validieren",
+      "common.resolve_targets": "Ziele aufloesen",
+      "auth.validate_credentials": "Zugangsdaten pruefen",
+      "auth.login_check": "Login-Status pruefen",
+      "compose.open_editor": "Editor oeffnen",
+      "compose.select_post_type": "Beitragstyp auswaehlen",
+      "compose.fill_title": "Titel ausfuellen",
+      "compose.fill_content": "Inhalt ausfuellen",
+      "compose.extract_recipients": "Empfaenger extrahieren",
+      "compose.render_template": "Template rendern",
+      "media.resolve_attachments": "Anhaenge aufloesen",
+      "media.process_attachments": "Anhaenge verarbeiten",
+      "media.upload": "Medien hochladen",
+      "publish.submit": "Veroeffentlichung absenden",
+      "publish.verify_result": "Ergebnis verifizieren",
+      "n8n.execute_subworkflow": "n8n-Subworkflow ausfuehren"
+    }
   },
   "publish": {
     "readyHint": "Bereit zum Senden. Klicke unten auf \"Publish\", um den Live-Status zu starten.",

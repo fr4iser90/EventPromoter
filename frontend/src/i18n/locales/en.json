@@ -507,7 +507,25 @@
     "statusPending": "PENDING",
     "statusRunning": "RUNNING",
     "statusCompleted": "COMPLETED",
-    "statusFailed": "FAILED"
+    "statusFailed": "FAILED",
+    "steps": {
+      "common.validate_input": "Validate input",
+      "common.resolve_targets": "Resolve targets",
+      "auth.validate_credentials": "Validate credentials",
+      "auth.login_check": "Check login status",
+      "compose.open_editor": "Open editor",
+      "compose.select_post_type": "Select post type",
+      "compose.fill_title": "Fill title",
+      "compose.fill_content": "Fill content",
+      "compose.extract_recipients": "Extract recipients",
+      "compose.render_template": "Render template",
+      "media.resolve_attachments": "Resolve attachments",
+      "media.process_attachments": "Process attachments",
+      "media.upload": "Upload media",
+      "publish.submit": "Submit publication",
+      "publish.verify_result": "Verify result",
+      "n8n.execute_subworkflow": "Execute n8n subworkflow"
+    }
   },
   "publish": {
     "readyHint": "Ready to send. Click \"Publish\" below to start live status.",

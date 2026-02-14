@@ -415,6 +415,11 @@ function PublisherProgress({
     }
   }
 
+  const getTranslatedStepLabel = (stepId?: string) => {
+    if (!stepId) return t('common.unknown')
+    return t(`publishProgress.steps.${stepId}`, { defaultValue: stepId })
+  }
+
   const stepsArray = Array.from(steps.values())
 
   return (
@@ -593,7 +598,7 @@ function PublisherProgress({
                             primary={
                               <Box component="div" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                                 <Typography variant="body2" component="span" sx={{ fontWeight: step.status === 'running' ? 'bold' : 'normal' }}>
-                                  {step.step}
+                                  {getTranslatedStepLabel(step.step)}
                                 </Typography>
                                 {step.duration && (
                                   <Typography variant="caption" component="span" sx={{ color: theme.palette.text.disabled }}>

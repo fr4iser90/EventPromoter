@@ -507,7 +507,25 @@
     "statusPending": "PENDIENTE",
     "statusRunning": "EN CURSO",
     "statusCompleted": "COMPLETADO",
-    "statusFailed": "FALLIDO"
+    "statusFailed": "FALLIDO",
+    "steps": {
+      "common.validate_input": "Validar entrada",
+      "common.resolve_targets": "Resolver destinos",
+      "auth.validate_credentials": "Validar credenciales",
+      "auth.login_check": "Comprobar estado de login",
+      "compose.open_editor": "Abrir editor",
+      "compose.select_post_type": "Seleccionar tipo de publicacion",
+      "compose.fill_title": "Completar titulo",
+      "compose.fill_content": "Completar contenido",
+      "compose.extract_recipients": "Extraer destinatarios",
+      "compose.render_template": "Renderizar plantilla",
+      "media.resolve_attachments": "Resolver adjuntos",
+      "media.process_attachments": "Procesar adjuntos",
+      "media.upload": "Subir medios",
+      "publish.submit": "Enviar publicacion",
+      "publish.verify_result": "Verificar resultado",
+      "n8n.execute_subworkflow": "Ejecutar subflujo de n8n"
+    }
   },
   "publish": {
     "readyHint": "Listo para enviar. Haz clic en \"Publish\" para iniciar el estado en vivo.",
