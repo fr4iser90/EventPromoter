@@ -9,6 +9,11 @@ import TemplateManagementPage from '../pages/TemplateManagementPage'
 import EventHistoryPage from '../pages/EventHistoryPage'
 import EventDetailPage from '../pages/EventDetailPage'
 import PlatformSettingsPage from '../pages/PlatformSettingsPage'
+import LoginPage from '../pages/LoginPage'
+import PrivacyPage from '../pages/PrivacyPage'
+import TermsPage from '../pages/TermsPage'
+import ContactPage from '../pages/ContactPage'
+import RequireAuth from '../shared/components/layout/RequireAuth'
 import useStore from '../store'
 import { getApiUrl } from '../shared/utils/api'
 import { createAppTheme } from './theme'
@@ -42,11 +47,18 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          <Route path="/" element={<EventWorkflowPage />} />
-          <Route path="/templates" element={<TemplateManagementPage />} />
-          <Route path="/history" element={<EventHistoryPage />} />
-          <Route path="/history/:eventId" element={<EventDetailPage />} />
-          <Route path="/platforms" element={<PlatformSettingsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/impressum" element={<ContactPage />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<EventWorkflowPage />} />
+            <Route path="/templates" element={<TemplateManagementPage />} />
+            <Route path="/history" element={<EventHistoryPage />} />
+            <Route path="/history/:eventId" element={<EventDetailPage />} />
+            <Route path="/platforms" element={<PlatformSettingsPage />} />
+          </Route>
         </Routes>
       </Router>
     </ThemeProvider>

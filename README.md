@@ -69,6 +69,8 @@ Read:
 
 - `ARCHITECTURE.md`
 - `docs/guide/PROJECT_OVERVIEW.md`
+- `docs/guide/API_ACCESS_READINESS.md`
+- `docs/development/AUTH_ACCOUNTS.md`
 - `docs/development/`
 
 ## Backend API Highlights
@@ -138,6 +140,16 @@ Notes:
 Non-secret runtime settings are stored in `config/` (JSON files).
 
 Sensitive data (tokens, passwords, API keys) should be provided via environment variables. Publishers support config values with env fallbacks.
+
+Auth-related variables for app login:
+
+- `APP_LOGIN_USER`
+- `APP_LOGIN_PASSWORD`
+- `AUTH_SESSION_SECRET`
+- `APP_LOGIN_REVIEW_REDDIT_USER`, `APP_LOGIN_REVIEW_REDDIT_PASSWORD`, `APP_LOGIN_REVIEW_REDDIT_PLATFORMS`
+- `APP_LOGIN_REVIEW_META_USER`, `APP_LOGIN_REVIEW_META_PASSWORD`, `APP_LOGIN_REVIEW_META_PLATFORMS`
+- `APP_LOGIN_REVIEW_LINKEDIN_USER`, `APP_LOGIN_REVIEW_LINKEDIN_PASSWORD`, `APP_LOGIN_REVIEW_LINKEDIN_PLATFORMS`
+- `APP_LOGIN_REVIEW_X_USER`, `APP_LOGIN_REVIEW_X_PASSWORD`, `APP_LOGIN_REVIEW_X_PLATFORMS`
 
 See:
 

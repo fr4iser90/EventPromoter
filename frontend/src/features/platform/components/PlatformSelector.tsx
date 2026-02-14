@@ -92,6 +92,24 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
   const [error, setError] = useState<string | null>(null)
   const [platformModes, setPlatformModes] = useState<Record<string, string[]>>({}) // Store available modes per platform
   const [platformConfigured, setPlatformConfigured] = useState<Record<string, boolean | null>>({})
+  const [allowedPlatforms, setAllowedPlatforms] = useState<string[] | null>(null)
+
+  useEffect(() => {
+    const loadAuthContext = async () => {
+      try {
+        const response = await fetch(getApiUrl('auth/me'), { credentials: 'include' })
+        if (!response.ok) return
+        const data = await response.json()
+        if (Array.isArray(data.allowedPlatforms)) {
+          setAllowedPlatforms(data.allowedPlatforms.map((p: string) => String(p).toLowerCase()))
+        }
+      } catch {
+        // Ignore; route guard handles auth failures.
+      }
+    }
+
+    loadAuthContext()
+  }, [])
 
   // Load platforms dynamically from backend - NO FALLBACKS
   useEffect(() => {
@@ -119,12 +137,16 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
           name: platform.name || platform.metadata?.displayName || platform.displayName || platform.id
         }))
 
-        setPlatforms(enhancedPlatforms)
+        const filteredPlatforms = !allowedPlatforms || allowedPlatforms.includes('*')
+          ? enhancedPlatforms
+          : enhancedPlatforms.filter((p) => allowedPlatforms.includes(String(p.id).toLowerCase()))
+
+        setPlatforms(filteredPlatforms)
         
         // Load available modes for each platform
         const modesMap: Record<string, string[]> = {}
         const configuredMap: Record<string, boolean | null> = {}
-        for (const platform of enhancedPlatforms) {
+        for (const platform of filteredPlatforms) {
           try {
             const modesResponse = await fetch(getApiUrl(`platforms/${platform.id}/available-modes`))
             if (modesResponse.ok) {
@@ -166,10 +188,12 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
     }
 
     loadPlatforms()
-  }, [t])
+  }, [t, allowedPlatforms])
 
   // Ensure selectedPlatforms is always an array
   const safeSelectedPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : []
+  const availablePlatformIds = new Set(platforms.map((p) => p.id))
+  const visibleSelectedPlatforms = safeSelectedPlatforms.filter((id) => availablePlatformIds.has(id))
 
   const getBestDefaultRoute = (modes: string[], modeStatuses: Record<string, PlatformStatus>) => {
     const priority = ['api', 'n8n', 'playwright']
@@ -197,9 +221,9 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
   }
 
   const handlePlatformToggle = (platformId: string) => {
-    const newSelection = safeSelectedPlatforms.includes(platformId)
-      ? safeSelectedPlatforms.filter(id => id !== platformId)
-      : [...safeSelectedPlatforms, platformId]
+    const newSelection = visibleSelectedPlatforms.includes(platformId)
+      ? visibleSelectedPlatforms.filter(id => id !== platformId)
+      : [...visibleSelectedPlatforms, platformId]
     setSelectedPlatforms(newSelection)
   }
 
@@ -258,7 +282,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
 
         <Grid container spacing={2}>
           {platforms.map((platform) => {
-            const isSelected = safeSelectedPlatforms.includes(platform.id)
+            const isSelected = visibleSelectedPlatforms.includes(platform.id)
             const modes = platformModes[platform.id] || platform.availableModes || []
             const effectiveRoute = getEffectiveRoute(platform, modes)
             const configured = platformConfigured[platform.id]
@@ -455,11 +479,11 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
 
         <Box sx={{ textAlign: 'center' }}>
           <Typography variant="h6" gutterBottom>
-            {t('platform.selectedPlatformsCount', { count: safeSelectedPlatforms.length })}
+            {t('platform.selectedPlatformsCount', { count: visibleSelectedPlatforms.length })}
           </Typography>
-          {safeSelectedPlatforms.length > 0 && (
+          {visibleSelectedPlatforms.length > 0 && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1, mt: 2 }}>
-              {safeSelectedPlatforms.map(platformId => {
+              {visibleSelectedPlatforms.map(platformId => {
                 const platform = platforms.find(p => p.id === platformId)
                 return (
                   <Typography key={platformId} variant="body2" sx={{ color: platform?.color || '#666' }}>

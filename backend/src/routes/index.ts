@@ -14,10 +14,14 @@ import translationRoutes from './translations.js'
 import hashtagRoutes from './hashtags.js'
 import helperRoutes from './helpers.js'
 import telemetryRoutes from './telemetry.js'
+import authRoutes from './auth.js'
+import { authRequiredMiddleware } from '../middleware/auth.js'
 
 const router = Router()
 
-// Mount route modules
+// Protect all routes by default. Public exceptions are handled in authRequiredMiddleware.
+router.use(authRequiredMiddleware)
+router.use('/auth', authRoutes)
 router.use('/event', eventRoutes)
 router.use('/parsing', parsingRoutes)
 router.use('/publish', publishRoutes)

@@ -9,6 +9,7 @@ import { ConfigService } from '../services/configService.js'
 import { EventService } from '../services/eventService.js'
 import { PublishTrackingService, PublishResult } from '../services/publishTrackingService.js'
 import { getBaseUrlFromRequest } from '../utils/requestUtils.js'
+import { AuthService } from '../services/authService.js'
 
 export class SubmitController {
   static async submit(req: Request, res: Response) {
@@ -60,6 +61,17 @@ export class SubmitController {
         return res.status(400).json({
           error: 'No platforms selected',
           details: 'Please select at least one platform before publishing'
+        })
+      }
+
+      // Enforce account-level platform restrictions (for review/user separation).
+      const allowedPlatforms = ((req as any).authAllowedPlatforms || ['*']) as string[]
+      const forbiddenPlatforms = selectedPlatforms.filter((platformId) => !AuthService.isPlatformAllowed(allowedPlatforms, platformId))
+      if (forbiddenPlatforms.length > 0) {
+        return res.status(403).json({
+          error: 'Platform access denied',
+          details: `Your account cannot publish to: ${forbiddenPlatforms.join(', ')}`,
+          allowedPlatforms
         })
       }
 

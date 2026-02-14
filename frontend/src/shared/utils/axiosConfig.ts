@@ -8,6 +8,7 @@
  */
 
 import axios from 'axios'
+import config from '../../config'
 
 /**
  * Default language fallback
@@ -63,6 +64,14 @@ axios.interceptors.request.use(
     return Promise.reject(error)
   }
 )
+
+// Ensure cookie-based auth works when frontend and backend run on different origins in dev.
+axios.defaults.withCredentials = true
+
+// Keep same-origin behavior untouched; this only affects absolute API base URLs.
+if (typeof axios.defaults.baseURL === 'undefined' && typeof config.apiUrl === 'string' && config.apiUrl.startsWith('http')) {
+  axios.defaults.baseURL = config.apiUrl
+}
 
 /**
  * Export configured axios instance
