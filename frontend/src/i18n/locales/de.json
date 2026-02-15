@@ -255,7 +255,12 @@
     },
     "failedToLoadCategories": "Kategorien konnten nicht geladen werden",
     "failedToLoadTemplates": "Templates konnten nicht geladen werden",
-    "platformRequired": "Plattform ist erforderlich"
+    "platformRequired": "Plattform ist erforderlich",
+    "linkPrompt": "Link-URL eingeben (leer lassen zum Entfernen)",
+    "link": "Link",
+    "clear": "Leeren",
+    "textColor": "Textfarbe",
+    "backgroundColor": "Hintergrundfarbe"
   },
   "duplicate": {
     "title": "Ähnliches Event gefunden!",

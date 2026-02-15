@@ -255,7 +255,12 @@
     },
     "failedToLoadCategories": "No se pudieron cargar las categorias",
     "failedToLoadTemplates": "No se pudieron cargar las plantillas",
-    "platformRequired": "La plataforma es obligatoria"
+    "platformRequired": "La plataforma es obligatoria",
+    "linkPrompt": "Introduce URL del enlace (dejar vacio para quitar)",
+    "link": "Enlace",
+    "clear": "Limpiar",
+    "textColor": "Color de texto",
+    "backgroundColor": "Color de fondo"
   },
   "duplicate": {
     "title": "¡Evento Similar Encontrado!",

@@ -255,7 +255,12 @@
     },
     "failedToLoadCategories": "Failed to load categories",
     "failedToLoadTemplates": "Failed to load templates",
-    "platformRequired": "Platform is required"
+    "platformRequired": "Platform is required",
+    "linkPrompt": "Enter link URL (leave empty to remove)",
+    "link": "Link",
+    "clear": "Clear",
+    "textColor": "Text color",
+    "backgroundColor": "Background color"
   },
   "duplicate": {
     "title": "Similar Event Found!",
