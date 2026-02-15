@@ -624,7 +624,7 @@ export abstract class BaseTargetService {
         throw error
       }
     } catch (error) {
-      console.error(`Error reading target data for ${this.platformId}:`, error)
+      console.error('Error reading target data for platform', { platformId: this.platformId, error })
       return { targets: [], groups: {} }
     }
   }
@@ -644,7 +644,7 @@ export abstract class BaseTargetService {
       await fs.writeFile(dataPath, jsonString, 'utf8')
       return true
     } catch (error) {
-      console.error(`Error writing target data for ${this.platformId}:`, error)
+      console.error('Error writing target data for platform', { platformId: this.platformId, error })
       return false
     }
   }

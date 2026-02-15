@@ -116,7 +116,7 @@ async function loadPlatformRoutes() {
           if (ENFORCE_PLATFORM_ROUTE_GUARD) {
             throw new Error(message)
           }
-          console.warn(`⚠️  ${message}`)
+          console.warn('Platform validation warning', { message })
           continue
         }
         

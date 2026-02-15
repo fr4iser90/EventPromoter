@@ -68,7 +68,7 @@ export class TemplateService {
       const jsonData = JSON.parse(data)
       return (jsonData.templates || []).map((template: Template) => normalizeTemplateCompatibility(template))
     } catch (error) {
-      console.warn(`Failed to load custom templates for ${platform}:`, error)
+      console.warn('Failed to load custom templates for platform', { platform, error })
       return []
     }
   }
@@ -89,7 +89,7 @@ export class TemplateService {
       fs.writeFileSync(filePath, JSON.stringify({ ...data, templates: normalizedTemplates }, null, 2), 'utf8')
       return true
     } catch (error) {
-      console.error(`Failed to save custom templates for ${platform}:`, error)
+      console.error('Failed to save custom templates for platform', { platform, error })
       return false
     }
   }
@@ -106,7 +106,7 @@ export class TemplateService {
 
       const platformModule = registry.getPlatform(platform.toLowerCase())
       if (!platformModule) {
-        console.warn(`Platform '${platform}' not found in registry`)
+        console.warn('Platform not found in registry', { platform })
         return []
       }
 
@@ -177,7 +177,7 @@ export class TemplateService {
         return []
       }
     } catch (error) {
-      console.warn(`Failed to load default templates for ${platform}:`, error)
+      console.warn('Failed to load default templates for platform', { platform, error })
       return []
     }
   }

@@ -161,8 +161,8 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
       const text = content.text
 
       if (content.subreddits) {
-        console.log(`\n🔍 Extracting subreddits from targets configuration...`)
-        console.log(`   Targets config:`, JSON.stringify(content.subreddits, null, 2))
+        console.log('[Reddit Playwright] Extracting subreddits from targets configuration')
+        console.log('[Reddit Playwright] Targets config', { subreddits: content.subreddits })
         let uniqueSubreddits: any[] = []
         await this.executeContractStep(
           REDDIT_STEP_IDS.COMMON_RESOLVE_TARGETS,
@@ -233,7 +233,10 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
           userDataDir = path.join(path.dirname(getConfigPath('dummy')), 'reddit-browser-data')
         }
         
-        console.log(`🔍 Using browser context: ${userDataDir} (Mode: ${process.env.NODE_ENV || 'development'})`)
+        console.log('[Reddit Playwright] Using browser context', {
+          userDataDir,
+          mode: process.env.NODE_ENV || 'development'
+        })
         
         // DRY MODE: headless false, damit User sehen kann was passiert
         // ✅ BEST PRACTICE: Persistenter Context speichert Cookies, localStorage, etc. automatisch
@@ -255,22 +258,23 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
             currentPublishRunId
           )
 
-          console.log(`\n✅ Step 1 complete. Starting form filling process...`)
-          console.log(`📋 Subreddits to process: ${uniqueSubreddits.map(s => s.name).join(', ')}`)
-          console.log(`📋 Title: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`)
-          console.log(`📋 Text length: ${text.length} characters`)
-          console.log(`📋 Files: ${files.length}`)
+          console.log('[Reddit Playwright] Step 1 complete, starting form filling process', {
+            subreddits: uniqueSubreddits.map(s => s.name),
+            titlePreview: `${title.substring(0, 50)}${title.length > 50 ? '...' : ''}`,
+            textLength: text.length,
+            fileCount: files.length
+          })
 
           // ✅ Post to ALL subreddits
           const results: Array<{ subreddit: string; success: boolean; url?: string; postId?: string; error?: string }> = []
 
-          console.log(`\n📝 Starting to fill forms for ${uniqueSubreddits.length} subreddit(s)...`)
+          console.log('[Reddit Playwright] Starting to fill forms for subreddits', { count: uniqueSubreddits.length })
 
           for (const [subIdx, sub] of uniqueSubreddits.entries()) {
             const subreddit = sub.name
             const metadata = sub.metadata
             try {
-              console.log(`\n🔹 Processing subreddit: r/${subreddit}`)
+              console.log('[Reddit Playwright] Processing subreddit', { subreddit })
 
               // Personalized salutation
               let processedText = text
@@ -376,16 +380,19 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
                 })
               }
 
-              console.log(`✅ Completed processing r/${subreddit}`)
+              console.log('[Reddit Playwright] Completed subreddit', { subreddit })
 
               // Rate limiting: wait 2 seconds between posts (except for last one)
               if (subIdx < uniqueSubreddits.length - 1) {
-                console.log(`  ⏳ Waiting 2 seconds before next subreddit...`)
+                console.log('[Reddit Playwright] Waiting before next subreddit', { waitMs: 2000 })
                 await page.waitForTimeout(2000)
               }
             } catch (error: any) {
-              console.error(`❌ Error processing r/${subreddit}: ${error.message}`)
-              console.error(`   Stack: ${error.stack}`)
+              console.error('[Reddit Playwright] Error processing subreddit', {
+                subreddit,
+                error: error.message,
+                stack: error.stack
+              })
               results.push({
                 subreddit,
                 success: false,
@@ -394,7 +401,10 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
             }
           }
           
-          console.log(`\n📊 Summary: ${results.filter(r => r.success).length}/${results.length} subreddits processed successfully`)
+          console.log('[Reddit Playwright] Processing summary', {
+            successful: results.filter(r => r.success).length,
+            total: results.length
+          })
 
           // Return aggregated result
           const successful = results.filter(r => r.success)
@@ -427,10 +437,11 @@ export class RedditPlaywrightPublisher implements RedditPublisher, EventAwarePub
         error: 'Invalid target configuration'
       }
     } catch (error: any) {
-      console.error(`\n❌ CRITICAL ERROR in Reddit Playwright Publisher:`)
-      console.error(`   Message: ${error.message}`)
-      console.error(`   Stack: ${error.stack}`)
-      console.error(`   Error type: ${error.constructor.name}`)
+      console.error('[Reddit Playwright] Critical error', {
+        message: error.message,
+        stack: error.stack,
+        errorType: error.constructor?.name
+      })
       return {
         success: false,
         error: error.message || 'Failed to publish to Reddit via Playwright'

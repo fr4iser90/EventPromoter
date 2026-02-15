@@ -16,7 +16,7 @@ const loadTranslations = () => {
       const content = fs.readFileSync(filePath, 'utf-8');
       translations[lang] = JSON.parse(content);
     } catch (error) {
-      console.error(`Failed to load ${lang} translations for Instagram:`, error);
+      console.error('Failed to load translations for Instagram', { lang, error });
     }
   });
 };

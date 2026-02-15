@@ -445,7 +445,7 @@ export class TelemetryService {
       
       return publishResults
     } catch (error) {
-      console.warn(`Failed to load publish results for ${eventId}:`, error)
+      console.warn('Failed to load publish results for event', { eventId, error })
       return {}
     }
   }

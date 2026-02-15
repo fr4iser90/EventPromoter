@@ -38,7 +38,7 @@ export class TargetController {
       // targetType is REQUIRED - no fallbacks
       const options = targets.map((target: Target) => {
         if (!target.targetType) {
-          console.error(`Target ${target.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: target.id })
           return {
             label: target.id,
             value: target.id
@@ -235,7 +235,7 @@ export class TargetController {
       const targets = await service.getTargets()
       const targetMap = new Map(targets.map((t: Target) => {
         if (!t.targetType) {
-          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: t.id })
           return [t.id, t.id]
         }
         const baseField = service.getBaseField(t.targetType)
@@ -306,7 +306,7 @@ export class TargetController {
       const targets = await service.getTargets()
       const targetMap = new Map(targets.map((t: Target) => {
         if (!t.targetType) {
-          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: t.id })
           return [t.id, t.id]
         }
         const baseField = service.getBaseField(t.targetType)

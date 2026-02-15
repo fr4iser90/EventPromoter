@@ -15,7 +15,7 @@ export class UploadService {
           fs.unlinkSync(file.path)
         }
       } catch (error) {
-        console.warn(`Failed to cleanup temp file: ${file.path}`, error)
+        console.warn('Failed to cleanup temp file', { filePath: file.path, error })
       }
     })
   }
@@ -42,7 +42,7 @@ export class UploadService {
         try {
           fs.renameSync(file.path, finalPath)
         } catch (renameError) {
-          console.error(`Failed to move file ${file.path} to ${finalPath}:`, renameError)
+          console.error('Failed to move file', { from: file.path, to: finalPath, error: renameError })
           throw renameError
         }
       }
@@ -73,7 +73,7 @@ export class UploadService {
           const content = fs.readFileSync(file.path, 'utf8')
           return { ...file, content }
         } catch (error) {
-          console.warn(`Failed to read content for ${file.name}:`, error)
+          console.warn('Failed to read content for file', { fileName: file.name, error })
           return file
         }
       }

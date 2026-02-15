@@ -159,7 +159,7 @@ export class EmailService {
     // targetType is REQUIRED - no fallbacks
     const available = targets.map((t: any) => {
       if (!t.targetType) {
-        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        console.error('Target missing targetType - this should not happen', { targetId: t.id })
         return undefined
       }
       const baseField = service.getBaseField(t.targetType)
@@ -170,7 +170,7 @@ export class EmailService {
     const groupEmails: Record<string, string[]> = {}
     const targetMap = new Map(targets.map((t: any) => {
       if (!t.targetType) {
-        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        console.error('Target missing targetType - this should not happen', { targetId: t.id })
         return [t.id, undefined]
       }
       const baseField = service.getBaseField(t.targetType)
@@ -556,7 +556,7 @@ export class EmailService {
         const targetMap = new Map(allTargets
           .map((t: any) => {
             if (!t.targetType) {
-              console.error(`Target ${t.id} missing targetType - this should not happen`)
+              console.error('Target missing targetType - this should not happen', { targetId: t.id })
               return undefined
             }
             const baseField = targetService.getBaseField(t.targetType)

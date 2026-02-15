@@ -101,7 +101,7 @@ function stripStyles(template: Template): Template {
               }
             } catch (error) {
               // If parsing fails, fallback to original value
-              console.warn(`[TemplateResolver] Failed to parse HTML for key ${key}:`, error)
+              console.warn('[TemplateResolver] Failed to parse HTML for key', { key, error })
               processedContent[key] = value
             }
           } else {

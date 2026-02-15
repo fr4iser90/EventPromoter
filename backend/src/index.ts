@@ -17,7 +17,7 @@ schemaRegistry.loadAllSchemas();
 const app = express()
 const PORT = Number(process.env.PORT) || 4000
 
-console.log(`🚀 Starting EventPromoter Backend...`)
+console.log('Starting EventPromoter Backend')
 console.log('EventPromoter Backend running', { url: `http://0.0.0.0:${PORT}` })
 console.log('Config directory', { configDir: `${process.cwd()}/config` })
 

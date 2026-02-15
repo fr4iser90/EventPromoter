@@ -50,7 +50,7 @@ export class PublishTrackingService {
     // Save to file
     this.saveSessionToFile(session)
 
-    console.log(`Started publish session: ${sessionId} for event: ${eventId}`)
+    console.log('Started publish session', { sessionId, eventId })
     return sessionId
   }
 
@@ -58,7 +58,7 @@ export class PublishTrackingService {
   static addPublishResult(sessionId: string, result: PublishResult): void {
     const session = this.publishSessions.get(sessionId)
     if (!session) {
-      console.warn(`Session ${sessionId} not found`)
+      console.warn('Session not found', { sessionId })
       return
     }
 
@@ -75,7 +75,11 @@ export class PublishTrackingService {
       this.saveSessionToFile(session)
     }
 
-    console.log(`Added result for ${result.platform} in session ${sessionId}: ${result.success ? 'SUCCESS' : 'FAILED'}`)
+    console.log('Added publish result for session', {
+      sessionId,
+      platform: result.platform,
+      status: result.success ? 'SUCCESS' : 'FAILED'
+    })
   }
 
   // Complete session and calculate final metrics
@@ -93,7 +97,10 @@ export class PublishTrackingService {
     // Save final session
     this.saveSessionToFile(session)
 
-    console.log(`Completed publish session ${sessionId}: ${session.overallSuccess ? 'SUCCESS' : 'PARTIAL'}`)
+    console.log('Completed publish session', {
+      sessionId,
+      status: session.overallSuccess ? 'SUCCESS' : 'PARTIAL'
+    })
   }
 
   // Get session by ID
@@ -127,7 +134,7 @@ export class PublishTrackingService {
 
       fs.writeFileSync(sessionFile, JSON.stringify(session, null, 2))
     } catch (error) {
-      console.error(`Failed to save publish session ${session.id}:`, error)
+      console.error('Failed to save publish session', { sessionId: session.id, error })
     }
   }
 
@@ -144,7 +151,7 @@ export class PublishTrackingService {
       this.publishSessions.set(sessionId, data)
       return data
     } catch (error) {
-      console.error(`Failed to load publish session ${sessionId}:`, error)
+      console.error('Failed to load publish session', { sessionId, error })
       return null
     }
   }
@@ -165,9 +172,9 @@ export class PublishTrackingService {
         this.publishSessions.delete(session.id)
       }
 
-      console.log(`Cleaned up ${sessionsToDelete.length} old sessions for event ${eventId}`)
+      console.log('Cleaned up old sessions for event', { eventId, deletedCount: sessionsToDelete.length })
     } catch (error) {
-      console.error(`Failed to cleanup old sessions for event ${eventId}:`, error)
+      console.error('Failed to cleanup old sessions for event', { eventId, error })
     }
   }
 

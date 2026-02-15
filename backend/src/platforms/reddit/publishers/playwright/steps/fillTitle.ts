@@ -1,7 +1,7 @@
 import { Page } from 'playwright'
 
 export async function fillTitle(page: Page, title: string): Promise<void> {
-  console.log(`  [Step 4] Entering title: "${title.substring(0, 50)}${title.length > 50 ? '...' : ''}"`)
+  console.log('[Step 4] Entering title', { preview: `${title.substring(0, 50)}${title.length > 50 ? '...' : ''}` })
   const titleSelectors = [
     'textarea[placeholder*="title"]',
     'textarea[placeholder*="Title"]',
@@ -18,7 +18,7 @@ export async function fillTitle(page: Page, title: string): Promise<void> {
       if (titleField) {
         await titleField.fill(title)
         titleFilled = true
-        console.log(`  ✅ [Step 4] Title filled using selector: ${selector}`)
+        console.log('[Step 4] Title filled', { selector })
         break
       }
     } catch (e) {
@@ -30,7 +30,7 @@ export async function fillTitle(page: Page, title: string): Promise<void> {
     const anyTextarea = await page.$('textarea').catch(() => null)
     if (anyTextarea) {
       await anyTextarea.fill(title)
-      console.log(`  ✅ [Step 4] Title filled using generic textarea selector`)
+      console.log('[Step 4] Title filled using generic textarea selector')
       titleFilled = true
     }
   }

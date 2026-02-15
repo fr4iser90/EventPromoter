@@ -7,12 +7,12 @@ import { login } from '../utils/login.js'
 export async function loginCheck(page: Page, credentials: any): Promise<void> {
   // Browser starten (wird bereits vorher gemacht)
   // Navigation zu Reddit
-  console.log(`\n🌐 [Step 1] Starting navigation to Reddit...`)
+  console.log('[Step 1] Starting navigation to Reddit')
   await page.goto('https://www.reddit.com', { 
     waitUntil: 'domcontentloaded',
     timeout: 60000
   })
-  console.log(`✅ [Step 1] Navigation successful!`)
+  console.log('[Step 1] Navigation successful')
   
   // Warten auf vollständiges Laden
   await waitForPageFullyLoaded(page, 'Step 1: After initial navigation to Reddit')
@@ -20,20 +20,20 @@ export async function loginCheck(page: Page, credentials: any): Promise<void> {
   // Cookie-Banner handhaben (falls vorhanden)
   const pageText = await page.textContent('body').catch(() => '') || ''
   if (pageText.includes('You are already logged in') || pageText.includes('already logged in')) {
-    console.log(`🌐 [Step 1] Redirect page detected - handling cookie banner...`)
+    console.log('[Step 1] Redirect page detected - handling cookie banner')
     
     try {
       const acceptCookiesButton = await page.$('button:has-text("Accept All"), button:has-text("Alle akzeptieren")').catch(() => null)
       if (acceptCookiesButton) {
         const isVisible = await acceptCookiesButton.isVisible().catch(() => false)
         if (isVisible) {
-          console.log(`🌐 [Step 1] Cookie banner found - accepting cookies...`)
+          console.log('[Step 1] Cookie banner found - accepting cookies')
           await acceptCookiesButton.click()
           await waitForPageFullyLoaded(page, 'Step 1: After accepting cookies')
         }
       }
     } catch (e) {
-      console.log(`⚠️ [Step 1] Cookie banner handling failed: ${(e as Error).message}`)
+      console.log('[Step 1] Cookie banner handling failed', { error: (e as Error).message })
     }
     
     // Redirect handhaben
@@ -41,7 +41,7 @@ export async function loginCheck(page: Page, credentials: any): Promise<void> {
       await page.waitForURL('https://www.reddit.com/**', { timeout: 30000 })
       await waitForPageFullyLoaded(page, 'Step 1: After redirect to main page')
     } catch (e) {
-      console.log(`⚠️ [Step 1] Redirect timeout, but continuing...`)
+      console.log('[Step 1] Redirect timeout, continuing')
     }
   }
   
@@ -74,7 +74,7 @@ export async function loginCheck(page: Page, credentials: any): Promise<void> {
   await waitForPageFullyLoaded(page, 'Step 1: Final check before login check')
   
   // isLoggedIn() prüfen
-  console.log(`\n🔍 [Step 1] Starting login check...`)
+  console.log('[Step 1] Starting login check')
   const loggedIn = await isLoggedIn(page)
   let needsLogin = !loggedIn
   
@@ -91,10 +91,10 @@ export async function loginCheck(page: Page, credentials: any): Promise<void> {
     
     // Username vergleichen
     if (actualUser && actualUser === expectedUser) {
-      console.log(`✅ [Step 1] Already logged in as correct user: ${loggedInUser}`)
+      console.log('[Step 1] Already logged in as expected user', { loggedInUser })
       needsLogin = false
     } else if (actualUser) {
-      console.warn(`⚠️ [Step 1] Wrong user logged in: ${loggedInUser} (expected: ${credentials.username})`)
+      console.warn('[Step 1] Wrong user logged in', { loggedInUser, expectedUser: credentials.username })
       needsLogin = true
       // Logout
       try {
@@ -109,7 +109,7 @@ export async function loginCheck(page: Page, credentials: any): Promise<void> {
     } else {
       // ✅ FIX: Wenn Username nicht extrahiert werden kann, aber isLoggedIn() true ist,
       // dann sind wir trotzdem eingeloggt - KEIN Login-Versuch!
-      console.log(`✅ [Step 1] Already logged in (username detection failed, but login markers present)`)
+      console.log('[Step 1] Already logged in (username detection failed, login markers present)')
       needsLogin = false  // ✅ WICHTIG: Nicht versuchen zu loggen!
     }
   }
@@ -132,6 +132,6 @@ export async function loginCheck(page: Page, credentials: any): Promise<void> {
       throw new Error(`Logged in as wrong user: ${verifyUser} (expected: ${credentials.username})`)
     }
     
-    console.log(`✅ [Step 1] Login verification passed!`)
+    console.log('[Step 1] Login verification passed')
   }
 }

@@ -1,9 +1,9 @@
 import { Page } from 'playwright'
 
 export async function fillContent(page: Page, files: any[], text: string): Promise<void> {
-  console.log(`  [Step 5] Entering content...`)
+  console.log('[Step 5] Entering content')
   if (files.length > 0 && files[0].url) {
-    console.log(`    → Entering URL: ${files[0].url}`)
+    console.log('[Step 5] Entering URL', { url: files[0].url })
     const urlSelectors = [
       'input[placeholder*="url"]',
       'input[placeholder*="URL"]',
@@ -19,7 +19,7 @@ export async function fillContent(page: Page, files: any[], text: string): Promi
         if (urlField) {
           await urlField.fill(files[0].url)
           urlFilled = true
-          console.log(`  ✅ [Step 5] URL filled using selector: ${selector}`)
+          console.log('[Step 5] URL filled', { selector })
           break
         }
       } catch (e) {
@@ -31,7 +31,7 @@ export async function fillContent(page: Page, files: any[], text: string): Promi
       throw new Error('URL field not found - tried multiple selectors')
     }
   } else {
-    console.log(`    → Entering text content (${text.length} characters)`)
+    console.log('[Step 5] Entering text content', { length: text.length })
     const textSelectors = [
       'div[contenteditable="true"]',
       'textarea[placeholder*="text"]',
@@ -48,7 +48,7 @@ export async function fillContent(page: Page, files: any[], text: string): Promi
         if (textField) {
           await textField.fill(text)
           textFilled = true
-          console.log(`  ✅ [Step 5] Text filled using selector: ${selector}`)
+          console.log('[Step 5] Text filled', { selector })
           break
         }
       } catch (e) {

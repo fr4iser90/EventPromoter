@@ -134,7 +134,7 @@ async function loadPlatformModule(
       try {
         validatePlatformSchema(platformModule.schema)
       } catch (error) {
-        console.error(`❌ Platform ${platformName} has invalid schema:`, error)
+        console.error('Platform has invalid schema', { platformName, error })
         if (config.throwOnError) {
           throw new PlatformDiscoveryError(
             `Platform ${platformName} has invalid schema: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -148,7 +148,7 @@ async function loadPlatformModule(
 
     return platformModule
   } catch (error) {
-    console.error(`  ❌ Error loading platform ${platformName}:`, error)
+    console.error('Error loading platform', { platformName, error })
     if (config.throwOnError) {
       throw new PlatformDiscoveryError(
         `Failed to load platform ${platformName}: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -183,7 +183,7 @@ export async function scanPlatformDirectories(
 
     return platformDirs.sort()
   } catch (error) {
-    console.error(`❌ Failed to scan platform directory ${platformsPath}:`, error)
+    console.error('Failed to scan platform directory', { platformsPath, error })
     throw new PlatformDiscoveryError(
       `Failed to scan platform directory: ${error instanceof Error ? error.message : 'Unknown error'}`,
       platformsPath,
@@ -218,11 +218,11 @@ export async function discoverPlatforms(
         if (platformModule) {
           platforms.set(platformModule.metadata.id, platformModule)
         } else {
-          console.warn(`⚠️  Platform ${platformName} loaded but module is null`)
+          console.warn('Platform loaded but module is null', { platformName })
         }
       } catch (error) {
         // Log error but continue with other platforms
-        console.error(`❌ Failed to load platform ${platformName}:`, error)
+        console.error('Failed to load platform', { platformName, error })
         if (finalConfig.throwOnError) {
           throw error
         }
@@ -231,7 +231,7 @@ export async function discoverPlatforms(
 
     return platforms
   } catch (error) {
-    console.error(`❌ Platform discovery failed:`, error)
+    console.error('Platform discovery failed', { error })
     throw new PlatformDiscoveryError(
       `Platform discovery failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       finalConfig.platformsPath,

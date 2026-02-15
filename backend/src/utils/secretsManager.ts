@@ -494,7 +494,7 @@ export async function decryptSecrets(
         try {
           decrypted[key] = await decryptValue(value)
         } catch (error) {
-          console.error(`Failed to decrypt ${key}:`, error)
+          console.error('Failed to decrypt key', { key, error })
           // Keep encrypted value if decryption fails
         }
       }

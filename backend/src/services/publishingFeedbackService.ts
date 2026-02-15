@@ -93,7 +93,7 @@ export class PublishingFeedbackService {
       
       return 'Unknown'
     } catch (error) {
-      console.warn(`Failed to extract target for platform ${platformId}:`, error)
+      console.warn('Failed to extract target for platform', { platformId, error })
       return 'Unknown'
     }
   }

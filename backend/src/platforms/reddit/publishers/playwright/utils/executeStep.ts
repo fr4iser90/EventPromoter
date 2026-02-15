@@ -48,7 +48,7 @@ export async function executeStep<T>(
 ): Promise<T> {
   const startTime = Date.now()
   const stepMessage = options?.message || `Starting ${stepId}`
-  console.log(`\n🔄 [Step Orchestration] Starting step: ${stepId}`)
+  console.log('[Step Orchestration] Starting step', { stepId })
   
   if (eventEmitter) {
     eventEmitter.stepStarted('reddit', 'playwright', stepId, stepMessage, publishRunId)
@@ -56,14 +56,14 @@ export async function executeStep<T>(
 
   try {
     // ✅ EXECUTE STEP
-    console.log(`▶️ [Step Orchestration] Executing step: ${stepId}`)
+    console.log('[Step Orchestration] Executing step', { stepId })
     const result = await stepFunction()
     
     // ✅ AFTER STEP: Wait for page to be fully loaded (this is the critical part)
     await waitForPageFullyLoaded(page, `After step: ${stepId}`)
     
     const duration = Date.now() - startTime
-    console.log(`✅ [Step Orchestration] Step completed: ${stepId} (${duration}ms)`)
+    console.log('[Step Orchestration] Step completed', { stepId, durationMs: duration })
     
     if (eventEmitter) {
       eventEmitter.stepCompleted('reddit', 'playwright', stepId, duration, publishRunId, options?.data)

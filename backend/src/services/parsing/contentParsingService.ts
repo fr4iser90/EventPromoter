@@ -61,7 +61,7 @@ export class ContentExtractionService {
             }
           }
         } catch (error) {
-          console.warn(`Failed to parse ${file.originalname}:`, error)
+          console.warn('Failed to parse file', { filename: file.originalname, error })
         }
       }
     }
@@ -85,7 +85,7 @@ export class ContentExtractionService {
 
         return this.parseEventData(text, confidence)
       } catch (error) {
-        console.warn(`Fallback parsing failed for ${file.originalname}:`, error)
+        console.warn('Fallback parsing failed for file', { filename: file.originalname, error })
       }
     }
 
@@ -689,7 +689,7 @@ export class ContentExtractionService {
     }
 
     // If no pattern matches, return original string
-    console.warn(`Could not parse date: ${dateStr}`)
+    console.warn('Could not parse date', { dateStr })
     return { normalized: dateStr, original: dateStr }
   }
 
@@ -755,7 +755,7 @@ export class ContentExtractionService {
             }
           }
         } catch (error) {
-          console.warn(`Failed to read parsed data for ${eventFolder}:`, error)
+          console.warn('Failed to read parsed data for event folder', { eventFolder, error })
         }
       }
     }
@@ -777,7 +777,7 @@ export class ContentExtractionService {
     const { platformContent, ...eventMetadata } = parsedData
 
     fs.writeFileSync(parsedDataPath, JSON.stringify(eventMetadata, null, 2))
-    console.log(`Saved parsed data for event ${eventId}`)
+    console.log('Saved parsed data for event', { eventId })
   }
 
   // Parse file from path (for backend parsing)
@@ -785,7 +785,7 @@ export class ContentExtractionService {
     parsedData: ParsedEventData
     duplicateCheck: DuplicateCheckResult
   }> {
-    console.log(`Starting backend parsing for file: ${filename}`)
+    console.log('Starting backend parsing for file', { filename })
 
     try {
       // Extract text from file
@@ -817,8 +817,11 @@ export class ContentExtractionService {
       // Save parsed data
       await this.saveParsedData(eventId, parsedData)
 
-      console.log(`Successfully parsed file: ${filename}`)
-      console.log(`Duplicate check: ${duplicateCheck.isDuplicate ? 'DUPLICATE FOUND' : 'NO DUPLICATE'}`)
+      console.log('Successfully parsed file', { filename })
+      console.log('Duplicate check completed', {
+        filename,
+        duplicate: duplicateCheck.isDuplicate
+      })
 
       return {
         parsedData,
@@ -826,7 +829,7 @@ export class ContentExtractionService {
       }
 
     } catch (error) {
-      console.error(`Failed to parse file ${filename}:`, error)
+      console.error('Failed to parse file', { filename, error })
       throw error
     }
   }
@@ -866,7 +869,7 @@ export class ContentExtractionService {
 
       return parsedData
     } catch (error) {
-      console.error(`Failed to load parsed data for event ${eventId}:`, error)
+      console.error('Failed to load parsed data for event', { eventId, error })
       return null
     }
   }
@@ -911,11 +914,11 @@ export class ContentExtractionService {
           
           platformContent[platform] = content
         } catch (error) {
-          console.warn(`Failed to load platform content for ${platform}:`, error)
+          console.warn('Failed to load platform content', { platform, error })
         }
       }
     } catch (error) {
-      console.warn(`Failed to read platform content directory:`, error)
+      console.warn('Failed to read platform content directory', { error })
     }
 
     return Object.keys(platformContent).length > 0 ? platformContent : null
@@ -953,7 +956,7 @@ export class ContentExtractionService {
     }
 
     fs.writeFileSync(platformFile, JSON.stringify(contentWithTimestamp, null, 2))
-    console.log(`Saved platform content for ${platform} in separate file`)
+    console.log('Saved platform content in separate file', { platform })
   }
 
   // Main parsing method
@@ -961,7 +964,7 @@ export class ContentExtractionService {
     parsedData: ParsedEventData
     duplicateCheck: DuplicateCheckResult
   }> {
-    console.log(`Starting smart parsing for file: ${file.name}`)
+    console.log('Starting smart parsing for file', { fileName: file.name })
 
     try {
       // Extract text
@@ -996,8 +999,11 @@ export class ContentExtractionService {
       // Save parsed data
       await this.saveParsedData(file.id.split('-')[1], parsedData)
 
-      console.log(`Successfully parsed file: ${file.name}`)
-      console.log(`Duplicate check: ${duplicateCheck.isDuplicate ? 'DUPLICATE FOUND' : 'NO DUPLICATE'}`)
+      console.log('Successfully parsed file', { fileName: file.name })
+      console.log('Duplicate check completed', {
+        fileName: file.name,
+        duplicate: duplicateCheck.isDuplicate
+      })
 
       return {
         parsedData,
@@ -1005,7 +1011,7 @@ export class ContentExtractionService {
       }
 
     } catch (error) {
-      console.error(`Failed to parse file ${file.name}:`, error)
+      console.error('Failed to parse file', { fileName: file.name, error })
       throw error
     }
   }
@@ -1038,7 +1044,7 @@ export class ContentExtractionService {
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
         if (!target.targetType) {
-          console.error(`Target ${target.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: target.id })
           targetNameMap[target.id] = target.id
           return
         }
@@ -1081,7 +1087,7 @@ export class ContentExtractionService {
         _templates: resolvedTemplates
       }
     } catch (error) {
-      console.warn(`Failed to resolve target names for platform ${platform}:`, error)
+      console.warn('Failed to resolve target names for platform', { platform, error })
       return content // Return content as-is if resolution fails
     }
   }

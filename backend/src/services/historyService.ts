@@ -52,7 +52,7 @@ export class HistoryService {
           events.push(eventEntry)
         }
       } catch (error) {
-        console.error(`[HistoryService] Error processing event ${eventId}:`, error)
+        console.error('[HistoryService] Error processing event', { eventId, error })
       }
     }
 
@@ -104,7 +104,7 @@ export class HistoryService {
       
       return entry
     } catch (resolverError) {
-      console.error(`[HistoryService] SchemaResolver FAILED for ${eventId}:`, resolverError)
+      console.error('[HistoryService] SchemaResolver failed', { eventId, error: resolverError })
       throw resolverError // No fallback!
     }
   }
@@ -176,7 +176,7 @@ export class HistoryService {
       
       return publishResults
     } catch (error) {
-      console.warn(`Failed to load publish results for ${eventId}:`, error)
+      console.warn('Failed to load publish results for event', { eventId, error })
       return {}
     }
   }
@@ -229,9 +229,9 @@ export class HistoryService {
     if (fs.existsSync(eventDir)) {
       try {
         fs.rmSync(eventDir, { recursive: true, force: true })
-        console.log(`Deleted event directory: ${eventDir}`)
+        console.log('Deleted event directory', { eventDir })
       } catch (error) {
-        console.error(`Failed to delete event directory ${eventDir}:`, error)
+        console.error('Failed to delete event directory', { eventDir, error })
         // Continue anyway - at least remove from history
       }
     }

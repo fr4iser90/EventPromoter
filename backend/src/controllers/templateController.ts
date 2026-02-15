@@ -394,7 +394,7 @@ export class TemplateController {
         try {
           const platformId = platform.metadata?.id
           if (!platformId) {
-            console.warn(`Platform has no ID:`, platform)
+            console.warn('Platform has no ID', { platform })
             continue
           }
           const templates = await TemplateService.getAllTemplates(platformId)
@@ -650,7 +650,7 @@ export class TemplateController {
                 // targetType is REQUIRED - no fallbacks
                 const missingDisplay = missing.map(t => {
                   if (!t.targetType) {
-                    console.error(`Target ${t.id} missing targetType - this should not happen`)
+                    console.error('Target missing targetType - this should not happen', { targetId: t.id })
                     return t.id
                   }
                   const baseField = service.getBaseField(t.targetType)
@@ -662,7 +662,7 @@ export class TemplateController {
                   details: `${missing.length} target(s) missing required fields: ${missingDisplay}`,
                   missingTargets: missing.map(t => {
                     if (!t.targetType) {
-                      console.error(`Target ${t.id} missing targetType - this should not happen`)
+                      console.error('Target missing targetType - this should not happen', { targetId: t.id })
                       return { id: t.id }
                     }
                     const baseField = service.getBaseField(t.targetType)
@@ -703,7 +703,7 @@ export class TemplateController {
                   // targetType is REQUIRED - no fallbacks
                   const missingDisplay = missing.map(t => {
                     if (!t.targetType) {
-                      console.error(`Target ${t.id} missing targetType - this should not happen`)
+                      console.error('Target missing targetType - this should not happen', { targetId: t.id })
                       return t.id
                     }
                     const baseField = service.getBaseField(t.targetType)
@@ -715,7 +715,7 @@ export class TemplateController {
                     details: `Group "${group.name}" has ${missing.length} target(s) missing required fields: ${missingDisplay}`,
                     missingTargets: missing.map(t => {
                       if (!t.targetType) {
-                        console.error(`Target ${t.id} missing targetType - this should not happen`)
+                        console.error('Target missing targetType - this should not happen', { targetId: t.id })
                         return { id: t.id }
                       }
                       const baseField = service.getBaseField(t.targetType)

@@ -10,7 +10,7 @@ export async function extractSubredditsFromTargets(targetsConfig: RedditTargets)
 
   const allSubreddits = allTargets.map((t: any) => {
     if (!t.targetType) {
-      console.error(`Target ${t.id} missing targetType - this should not happen`)
+      console.error('Target missing targetType - this should not happen', { targetId: t.id })
       return undefined
     }
     const baseField = targetService.getBaseField(t.targetType)
@@ -34,7 +34,7 @@ export async function extractSubredditsFromTargets(targetsConfig: RedditTargets)
           const target = allTargets.find((t: any) => t.id === targetId && t.targetType === 'subreddit')
           if (!target) return undefined
           if (!target.targetType) {
-            console.error(`Target ${target.id} missing targetType - this should not happen`)
+            console.error('Target missing targetType - this should not happen', { targetId: target.id })
             return undefined
           }
           const baseField = targetService.getBaseField(target.targetType)
@@ -48,7 +48,7 @@ export async function extractSubredditsFromTargets(targetsConfig: RedditTargets)
     // targetType is REQUIRED - no fallbacks
     const targetMap = new Map(allTargets.map((t: any) => {
       if (!t.targetType) {
-        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        console.error('Target missing targetType - this should not happen', { targetId: t.id })
         return [t.id, undefined]
       }
       const baseField = targetService.getBaseField(t.targetType)

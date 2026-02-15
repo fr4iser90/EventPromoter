@@ -160,7 +160,7 @@ export async function getAllPlatformTranslations(
       }
     }
   } catch (error) {
-    console.error(`Error discovering platforms for translations:`, error)
+    console.error('Error discovering platforms for translations', { error })
   }
 
   return translations
@@ -289,7 +289,7 @@ export async function preloadAllTranslations(
       }
     }
   } catch (error) {
-    console.error(`Error preloading translations:`, error)
+    console.error('Error preloading translations', { error })
   }
 }
 

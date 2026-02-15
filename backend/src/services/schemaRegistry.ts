@@ -63,7 +63,7 @@ export class SchemaRegistry {
                     console.info(`  Schema ${platformId}/${schemaId} has no default export.`);
                   }
                 } catch (importError: any) {
-                  console.error(`  Error importing schema ${platformId}/${schemaId}:`, importError);
+                  console.error('Error importing schema', { platformId, schemaId, error: importError });
                 }
               }
             }

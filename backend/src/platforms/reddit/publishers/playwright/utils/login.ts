@@ -37,7 +37,7 @@ export async function login(page: Page, credentials: any): Promise<boolean> {
         if (input) {
           await input.fill(credentials.username)
           usernameFilled = true
-          console.log(`✅ Filled username using selector: ${selector}`)
+          console.log('[Login] Filled username using selector', { selector })
           break
         }
       } catch (e) {
@@ -63,7 +63,7 @@ export async function login(page: Page, credentials: any): Promise<boolean> {
         if (input) {
           await input.fill(credentials.password)
           passwordFilled = true
-          console.log(`✅ Filled password using selector: ${selector}`)
+          console.log('[Login] Filled password using selector', { selector })
           break
         }
       } catch (e) {
@@ -99,7 +99,7 @@ export async function login(page: Page, credentials: any): Promise<boolean> {
           if (isVisible) {
             await button.click()
             submitClicked = true
-            console.log(`✅ Clicked submit using selector: ${selector}`)
+            console.log('[Login] Clicked submit using selector', { selector })
             
             // ✅ CRITICAL: Wait for page to be fully loaded after login submit
             await waitForPageFullyLoaded(page, 'After clicking login submit button')
@@ -124,7 +124,7 @@ export async function login(page: Page, credentials: any): Promise<boolean> {
             if (isVisible) {
               await button.click()
               submitClicked = true
-              console.log(`✅ Clicked submit by text/class: "${text}" / "${className}"`)
+              console.log('[Login] Clicked submit by text/class', { text, className })
               
               // ✅ CRITICAL: Wait for page to be fully loaded after login submit
               await waitForPageFullyLoaded(page, 'After clicking login submit button (text content)')
@@ -144,15 +144,15 @@ export async function login(page: Page, credentials: any): Promise<boolean> {
     // ✅ CRITICAL: Wait for page to be fully loaded after login
     await waitForPageFullyLoaded(page, 'After login submit (final check)')
     
-    console.log(`\n🔍 [Login] Checking if login was successful...`)
+    console.log('[Login] Checking if login was successful')
     const loggedIn = await isLoggedIn(page)
-    console.log(`🔍 [Login] Is logged in check result: ${loggedIn}`)
+    console.log('[Login] Is logged in check result', { loggedIn })
     
     if (loggedIn) {
-      console.log(`\n📋 [Login] Login check passed, now detecting username...`)
-      console.log(`📋 [Login] Calling getLoggedInUsername() to verify which user is logged in...`)
+      console.log('[Login] Login check passed, detecting username')
+      console.log('[Login] Calling getLoggedInUsername to verify active user')
       const loggedInUser = await getLoggedInUsername(page)
-      console.log(`\n✅ [Login] Login successful! Detected logged in user: ${loggedInUser || 'unknown'}`)
+      console.log('[Login] Login successful', { loggedInUser: loggedInUser || 'unknown' })
       return true
     }
     const errorSelectors = [

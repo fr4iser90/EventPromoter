@@ -72,12 +72,16 @@ export class EmailN8nService {
       // If attachment has base64 but no URL/fileId, we can't convert it
       // Log warning and skip it (n8n can't use base64 directly)
       if (attachment.base64) {
-        console.warn(`Attachment "${attachment.name || 'unknown'}" has base64 but no file ID/URL. Skipping for n8n.`)
+        console.warn('Attachment has base64 but no file ID/URL; skipping for n8n', {
+          attachmentName: attachment.name || 'unknown'
+        })
         return null
       }
 
       // Fallback: return as-is (might not work with n8n, but at least we tried)
-      console.warn(`Attachment "${attachment.name || 'unknown'}" could not be converted to URL format`)
+      console.warn('Attachment could not be converted to URL format', {
+        attachmentName: attachment.name || 'unknown'
+      })
       return attachment
     }).filter((att: any) => att !== null) // Remove null entries
   }
@@ -95,7 +99,7 @@ export class EmailN8nService {
     // targetType is REQUIRED - no fallbacks
     const allRecipients = allTargets.map((t: any) => {
       if (!t.targetType) {
-        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        console.error('Target missing targetType - this should not happen', { targetId: t.id })
         return undefined
       }
       const baseField = targetService.getBaseField(t.targetType)
@@ -118,7 +122,7 @@ export class EmailN8nService {
             const target = allTargets.find((t: any) => t.id === targetId)
             if (!target) return undefined
             if (!target.targetType) {
-              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              console.error('Target missing targetType - this should not happen', { targetId: target.id })
               return undefined
             }
             const baseField = targetService.getBaseField(target.targetType)
@@ -132,7 +136,7 @@ export class EmailN8nService {
       // targetType is REQUIRED - no fallbacks
       const targetMap = new Map(allTargets.map((t: any) => {
         if (!t.targetType) {
-          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: t.id })
           return [t.id, undefined]
         }
         const baseField = targetService.getBaseField(t.targetType)
@@ -171,14 +175,14 @@ export class EmailN8nService {
         const recipients = await this.extractRecipientsFromTargets(templateEntry.targets)
         
         if (recipients.length === 0) {
-          console.warn(`No recipients found for template ${templateEntry.templateId}, skipping`)
+          console.warn('No recipients found for template; skipping', { templateId: templateEntry.templateId })
           continue
         }
         
         // Filter out recipients that have already received an email
         const uniqueRecipients = recipients.filter(email => {
           if (sentRecipients.has(email)) {
-            console.warn(`Recipient ${email} already received an email, skipping duplicate`)
+            console.warn('Recipient already received an email; skipping duplicate', { recipientEmail: email })
             return false
           }
           sentRecipients.add(email)
@@ -186,7 +190,9 @@ export class EmailN8nService {
         })
         
         if (uniqueRecipients.length === 0) {
-          console.warn(`All recipients for template ${templateEntry.templateId} already received emails, skipping`)
+          console.warn('All recipients already received emails; skipping template', {
+            templateId: templateEntry.templateId
+          })
           continue
         }
 

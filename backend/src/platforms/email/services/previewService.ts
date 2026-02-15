@@ -440,7 +440,7 @@ export async function renderMultiPreview(
   // targetType is REQUIRED - no fallbacks
   const allRecipients = targets.map((t: any) => {
     if (!t.targetType) {
-      console.error(`Target ${t.id} missing targetType - this should not happen`)
+      console.error('Target missing targetType - this should not happen', { targetId: t.id })
       return undefined
     }
     const baseField = targetService.getBaseField(t.targetType)
@@ -500,7 +500,7 @@ export async function renderMultiPreview(
       // Get emails for this group (targetType is REQUIRED)
       const targetMap = new Map(targets.map((t: any) => {
         if (!t.targetType) {
-          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: t.id })
           return [t.id, undefined]
         }
         const baseField = targetService.getBaseField(t.targetType)
@@ -551,7 +551,7 @@ export async function renderMultiPreview(
     // targetType is REQUIRED - no fallbacks
     const targetMap = new Map(targets.map((t: any) => {
       if (!t.targetType) {
-        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        console.error('Target missing targetType - this should not happen', { targetId: t.id })
         return [t.id, undefined]
       }
       const baseField = targetService.getBaseField(t.targetType)

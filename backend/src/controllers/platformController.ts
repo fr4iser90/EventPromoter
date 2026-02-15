@@ -494,9 +494,12 @@ export class PlatformController {
       const { platformId } = req.params
       const { settings, validateOnly } = req.body
 
-      console.log(`🔍 [${platformId}] ${validateOnly ? 'Validating' : 'Saving'} platform settings`)
+      console.log('Platform settings request', {
+        platformId,
+        mode: validateOnly ? 'validate' : 'save'
+      })
       if (validateOnly) {
-        console.log(`   Mode: Validation only (no save)`)
+        console.log('Platform settings mode', { validateOnly: true })
       }
 
       const registry = await PlatformController.ensureRegistry()
@@ -529,20 +532,21 @@ export class PlatformController {
       
       if (!validation.isValid) {
         // 🔍 LOGGING: Log validation errors with details
-        console.error(`❌ [${platformId}] Validation failed for platform settings:`)
-        console.error(`   Platform: ${platformId}`)
-        console.error(`   Fields with errors: ${Object.keys(validation.errors).length}`)
+        console.error('Validation failed for platform settings', {
+          platformId,
+          fieldsWithErrors: Object.keys(validation.errors).length
+        })
         Object.entries(validation.errors).forEach(([field, errors]) => {
           const fieldDef = credentialsSchema.fields.find(f => f.name === field)
           const fieldLabel = fieldDef?.label || field
-          console.error(`   - ${fieldLabel} (${field}):`)
+          console.error('Validation errors for field', { platformId, field, fieldLabel })
           if (Array.isArray(errors)) {
-            errors.forEach(err => console.error(`     • ${err}`))
+            errors.forEach(err => console.error('Validation error detail', { platformId, field, error: err }))
           } else {
-            console.error(`     • ${errors}`)
+            console.error('Validation error detail', { platformId, field, error: errors })
           }
         })
-        console.error(`   Received values:`, Object.keys(settings || {}).reduce((acc, key) => {
+        console.error('Received values for failed validation', Object.keys(settings || {}).reduce((acc, key) => {
           // Mask sensitive fields for logging
           if (key === 'password') {
             acc[key] = settings[key] ? '***' : '<empty>'
@@ -561,7 +565,7 @@ export class PlatformController {
 
       // If validateOnly flag is set, return validation success without saving
       if (validateOnly) {
-        console.log(`✅ [${platformId}] Validation passed (validateOnly mode)`)
+        console.log('Validation passed for platform settings', { platformId, validateOnly: true })
         return res.json({
           success: true,
           message: 'Validation passed'
@@ -596,9 +600,11 @@ export class PlatformController {
           })
         }
         
-        console.log(`✅ [${platformId}] Platform settings saved successfully`)
-        console.log(`   Changed fields: ${Object.keys(changedValues).join(', ')}`)
-        console.log(`   Fields updated: ${Object.keys(changedValues).length}`)
+        console.log('Platform settings saved successfully', {
+          platformId,
+          changedFields: Object.keys(changedValues),
+          fieldsUpdated: Object.keys(changedValues).length
+        })
       }
 
       res.json({

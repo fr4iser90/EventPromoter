@@ -150,7 +150,7 @@ export class RedditApiPublisher implements RedditPublisher {
     // targetType is REQUIRED - no fallbacks
     const allSubreddits = allTargets.map((t: any) => {
       if (!t.targetType) {
-        console.error(`Target ${t.id} missing targetType - this should not happen`)
+        console.error('Target missing targetType - this should not happen', { targetId: t.id })
         return undefined
       }
       const baseField = targetService.getBaseField(t.targetType)
@@ -174,7 +174,7 @@ export class RedditApiPublisher implements RedditPublisher {
             const target = allTargets.find((t: any) => t.id === targetId && t.targetType === 'subreddit')
             if (!target) return undefined
             if (!target.targetType) {
-              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              console.error('Target missing targetType - this should not happen', { targetId: target.id })
               return undefined
             }
             const baseField = targetService.getBaseField(target.targetType)
@@ -189,7 +189,7 @@ export class RedditApiPublisher implements RedditPublisher {
       const targetMapEntries: [string, string][] = []
       for (const t of allTargets) {
         if (!t.targetType) {
-          console.error(`Target ${t.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: t.id })
           continue
         }
         const baseField = targetService.getBaseField(t.targetType)

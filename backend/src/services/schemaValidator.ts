@@ -17,7 +17,7 @@ export class SchemaValidator {
     const unresolved = SchemaValidator.findUnresolvedTemplates(schema);
     if (unresolved.size > 0) {
       const unresolvedList = Array.from(unresolved).join(', ');
-      console.warn(`Schema validation warning: Unresolved templates found: ${unresolvedList}`);
+      console.warn('Schema validation warning: unresolved templates found', { unresolvedList });
       // In a more strict environment, you might throw an error here:
       // throw new Error(`Unresolved templates in schema: ${unresolvedList}`);
     }

@@ -13,12 +13,10 @@ import { Page } from 'playwright'
  * 3. Specific elements to be visible (web assertions)
  */
 export async function waitForPageFullyLoaded(page: Page, stepName: string = 'Unknown step'): Promise<void> {
-  console.log(`⏳ [Page Load] ${stepName} - Waiting for page to be fully loaded...`)
   
   try {
     // Step 1: Wait for load event (current navigation)
     await page.waitForLoadState('load', { timeout: 30000 })
-    console.log(`✅ [Page Load] ${stepName} - Page load event completed`)
     
     // Step 2: Wait for DOM to be ready
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 })
@@ -38,12 +36,9 @@ export async function waitForPageFullyLoaded(page: Page, stepName: string = 'Unk
       timeout: 10000 
     }).catch(() => {
       // If no header/nav found, at least body should be visible
-      console.log(`⚠️ [Page Load] ${stepName} - No header/nav found, but body is visible`)
     })
     
-    console.log(`✅ [Page Load] ${stepName} - Page is fully loaded and ready`)
   } catch (error: any) {
-    console.error(`❌ [Page Load] ${stepName} - Error waiting for page load: ${error.message}`)
     throw error
   }
 }

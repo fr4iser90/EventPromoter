@@ -53,7 +53,7 @@ export class PublisherEventService extends EventEmitter {
   static getInstance(sessionId: string): PublisherEventService {
     const instances = this.getInstancesMap()
     if (!instances.has(sessionId)) {
-      console.log(`[EventService] Creating new instance for session: ${sessionId}`)
+      console.log('[EventService] Creating new instance for session', { sessionId })
       instances.set(sessionId, new PublisherEventService(sessionId))
     }
     return instances.get(sessionId)!
@@ -66,7 +66,7 @@ export class PublisherEventService extends EventEmitter {
     const instances = this.getInstancesMap()
     const instance = instances.get(sessionId)
     if (instance) {
-      console.log(`[EventService] Removing instance for session: ${sessionId}`)
+      console.log('[EventService] Removing instance for session', { sessionId })
       instance.removeAllListeners()
       instances.delete(sessionId)
     }

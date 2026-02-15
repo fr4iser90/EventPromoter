@@ -68,7 +68,7 @@ export async function sendWithNodemailer(
     mailOptions.bcc = bcc
   }
 
-  console.log(`[Email API] Calling transporter.sendMail()...`)
+  console.log('[Email API] Calling transporter.sendMail')
   try {
     const sendMailPromise = transporter.sendMail(mailOptions)
     const timeoutPromise = new Promise((_, reject) => {
@@ -76,14 +76,14 @@ export async function sendWithNodemailer(
     })
     
     const result = await Promise.race([sendMailPromise, timeoutPromise]) as any
-    console.log(`[Email API] sendMail() completed: ${result.messageId}`)
+    console.log('[Email API] sendMail completed', { messageId: result.messageId })
 
     return {
       success: true,
       postId: result.messageId
     }
   } catch (error: any) {
-    console.error(`[Email API] sendMail() failed:`, error.message)
+    console.error('[Email API] sendMail failed', { error: error.message })
     return {
       success: false,
       error: error.message || 'Failed to send email via SMTP'

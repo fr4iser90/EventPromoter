@@ -4,13 +4,12 @@ import { extractPostUrl } from '../utils/extractPostUrl.js'
 import { extractPostId } from '../utils/extractPostId.js'
 
 export async function submitPost(page: Page, subreddit: string, dryMode: boolean): Promise<{ url?: string, postId?: string }> {
-  console.log(`  [Step 6] Finalizing...`)
+  console.log('[Step 6] Finalizing')
   if (dryMode) {
-    console.log(`    → DRY MODE: Formular ausgefüllt, kein automatisches Posten`)
-    console.log(`  ✅ [Step 6] DRY MODE: Formular für r/${subreddit} ausgefüllt. Browser bleibt offen.`)
+    console.log('[Step 6] Dry mode: form filled, no automatic post', { subreddit })
     return { url: page.url() }
   } else {
-    console.log(`    → Submitting post...`)
+    console.log('[Step 6] Submitting post')
     const submitSelectors = [
       'button:has-text("Post")',
       'button:has-text("Submit")',
@@ -26,7 +25,7 @@ export async function submitPost(page: Page, subreddit: string, dryMode: boolean
           await submitButton.click()
           await waitForPageFullyLoaded(page, 'Step 6: After clicking submit button')
           submitted = true
-          console.log(`  ✅ [Step 6] Post submitted using selector: ${selector}`)
+          console.log('[Step 6] Post submitted using selector', { selector })
           break
         }
       } catch (e) {
@@ -41,7 +40,7 @@ export async function submitPost(page: Page, subreddit: string, dryMode: boolean
     const postUrl = await extractPostUrl(page, subreddit)
     const postId = postUrl ? extractPostId(postUrl) : undefined
     
-    console.log(`  ✅ [Step 6] Post submitted successfully! URL: ${postUrl || 'N/A'}, ID: ${postId || 'N/A'}`)
+    console.log('[Step 6] Post submitted successfully', { url: postUrl || 'N/A', postId: postId || 'N/A' })
     
     return { url: postUrl, postId }
   }

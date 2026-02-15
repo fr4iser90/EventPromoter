@@ -150,7 +150,7 @@ export class ConfigController {
     try {
       const { pattern } = req.body
       if (process.env.DEBUG_API_REQUESTS === 'true') {
-        console.log(`💾 API Request: POST /api/config/event-id-pattern`, { pattern })
+        console.log('API request: save event-id-pattern config', { pattern })
       }
 
       await EventService.setCurrentPattern(pattern)
