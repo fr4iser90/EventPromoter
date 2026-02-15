@@ -33,6 +33,22 @@ import TargetList from './TargetList'
 import HelperIcon from '../../../shared/components/ui/HelperIcon'
 import type { FieldGroup, SchemaErrors, SchemaField, SchemaValues } from '../types'
 
+const MAX_REGEX_SOURCE_LENGTH = 256
+const SAFE_REGEX_SOURCE_PATTERN = /^[\w\s.^$*+?()[\]{}|\\/-]+$/
+
+function createSafeValidationRegex(source: unknown): RegExp | null {
+  if (typeof source !== 'string') return null
+  if (!source || source.length > MAX_REGEX_SOURCE_LENGTH) return null
+  if (!SAFE_REGEX_SOURCE_PATTERN.test(source)) return null
+  // Basic backtracking guard for obviously dangerous constructs.
+  if (/(\+\+|\*\*|\+\*|\*\+|\)\+[^)]*\+|\)\*[^)]*\*)/.test(source)) return null
+  try {
+    return new RegExp(source)
+  } catch {
+    return null
+  }
+}
+
 type TranslationFn = (
   key: string,
   optionsOrFallback?: string | { defaultValue?: string; [key: string]: unknown }
@@ -279,8 +295,11 @@ function validateField(field: SchemaField & { name: string }, value: unknown, t:
         break
 
       case 'pattern':
-        if (typeof value === 'string' && rule.value !== undefined && !new RegExp(String(rule.value)).test(value)) {
-          return rule.message || (t ? t('validation.invalidFormat', { field: translatedLabel, defaultValue: `${translatedLabel} format is invalid` }) : `${translatedLabel} format is invalid`)
+        if (typeof value === 'string' && rule.value !== undefined) {
+          const regex = createSafeValidationRegex(String(rule.value))
+          if (!regex || !regex.test(value)) {
+            return rule.message || (t ? t('validation.invalidFormat', { field: translatedLabel, defaultValue: `${translatedLabel} format is invalid` }) : `${translatedLabel} format is invalid`)
+          }
         }
         break
 

@@ -47,6 +47,27 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
   return fallback
 }
 
+const DANGEROUS_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor'])
+
+const isSafePathSegment = (segment: string): boolean =>
+  /^[A-Za-z0-9_-]+$/.test(segment) && !DANGEROUS_PATH_SEGMENTS.has(segment)
+
+const getNestedValueSafely = (source: unknown, responsePath?: string): unknown => {
+  if (!responsePath) return source
+  const segments = responsePath.split('.').filter(Boolean)
+  let current: unknown = source
+  for (const segment of segments) {
+    if (!isSafePathSegment(segment) || !current || typeof current !== 'object') {
+      return undefined
+    }
+    if (!Object.prototype.hasOwnProperty.call(current, segment)) {
+      return undefined
+    }
+    current = (current as Record<string, unknown>)[segment]
+  }
+  return current
+}
+
 const EditModal = ({
   open,
   onClose,
@@ -125,10 +146,7 @@ const EditModal = ({
               // Extract data from response using responsePath
               let extractedData = responseData;
               if (field.optionsSource.responsePath) {
-                const paths = field.optionsSource.responsePath.split('.');
-                for (const path of paths) {
-                  extractedData = extractedData?.[path];
-                }
+                extractedData = getNestedValueSafely(responseData, field.optionsSource.responsePath);
               }
               
               // Transform to options format
@@ -138,8 +156,8 @@ const EditModal = ({
                 // If labelPath and valuePath are specified, transform the data
                 if (field.optionsSource.labelPath && field.optionsSource.valuePath) {
                   transformedOptions = extractedData.map((item: Record<string, unknown>) => ({
-                    label: item[field.optionsSource.labelPath as string],
-                    value: item[field.optionsSource.valuePath as string]
+                    label: getNestedValueSafely(item, field.optionsSource.labelPath as string),
+                    value: getNestedValueSafely(item, field.optionsSource.valuePath as string)
                   }));
                 } else {
                   // Assume already in {label, value} format

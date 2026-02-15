@@ -8,7 +8,7 @@
  */
 
 import { readFile, access } from 'fs/promises'
-import { join, dirname } from 'path'
+import { join, dirname, resolve, sep } from 'path'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -46,6 +46,54 @@ const helperIndexCache = new Map<string, HelperIndex>()
  * Supported languages
  */
 const SUPPORTED_LANGUAGES = ['en', 'de', 'es']
+const PLATFORM_ID_PATTERN = /^[a-z0-9-]+$/
+const SAFE_FILENAME_PATTERN = /^[a-zA-Z0-9._-]+$/
+
+function normalizeAndValidatePlatformId(platformId: string | 'global'): string | 'global' | null {
+  if (platformId === 'global') return 'global'
+  if (!platformId || !PLATFORM_ID_PATTERN.test(platformId)) return null
+  return platformId
+}
+
+function normalizeAndValidateHelperFilename(filename: string): string | null {
+  if (
+    !filename ||
+    filename.includes('\0') ||
+    filename.includes('/') ||
+    filename.includes('\\') ||
+    filename === '.' ||
+    filename === '..' ||
+    !SAFE_FILENAME_PATTERN.test(filename)
+  ) {
+    return null
+  }
+  return filename
+}
+
+function resolveHelpersDir(platformId: string | 'global'): string | null {
+  const normalizedPlatformId = normalizeAndValidatePlatformId(platformId)
+  if (!normalizedPlatformId) return null
+
+  const baseDir = resolve(__dirname, '..')
+  if (normalizedPlatformId === 'global') {
+    const globalHelpersDir = resolve(baseDir, 'helpers')
+    if (globalHelpersDir === baseDir || !globalHelpersDir.startsWith(`${baseDir}${sep}`)) {
+      return null
+    }
+    return globalHelpersDir
+  }
+
+  const platformsDir = resolve(baseDir, 'platforms')
+  if (platformsDir === baseDir || !platformsDir.startsWith(`${baseDir}${sep}`)) {
+    return null
+  }
+
+  const platformHelpersDir = resolve(platformsDir, normalizedPlatformId, 'helpers')
+  if (platformHelpersDir === platformsDir || !platformHelpersDir.startsWith(`${platformsDir}${sep}`)) {
+    return null
+  }
+  return platformHelpersDir
+}
 
 /**
  * Load helper index for a platform or global
@@ -59,9 +107,19 @@ async function loadHelperIndex(platformId: string | 'global'): Promise<HelperInd
   }
 
   try {
-    const helperPath = platformId === 'global'
-      ? join(__dirname, '../helpers/index.json')
-      : join(__dirname, `../platforms/${platformId}/helpers/index.json`)
+    const helpersDir = resolveHelpersDir(platformId)
+    if (!helpersDir) {
+      console.warn(`[helperService] Invalid platformId for helper index: ${platformId}`)
+      helperIndexCache.set(cacheKey, { version: '1.0.0', helpers: {} })
+      return null
+    }
+
+    const helperPath = resolve(helpersDir, 'index.json')
+    if (helperPath === helpersDir || !helperPath.startsWith(`${helpersDir}${sep}`)) {
+      console.warn(`[helperService] Unsafe helper index path for platform: ${platformId}`)
+      helperIndexCache.set(cacheKey, { version: '1.0.0', helpers: {} })
+      return null
+    }
     
     try {
       await access(helperPath)
@@ -90,9 +148,23 @@ async function loadMarkdownContent(
   filename: string
 ): Promise<string | null> {
   try {
-    const mdPath = platformId === 'global'
-      ? join(__dirname, `../helpers/${filename}`)
-      : join(__dirname, `../platforms/${platformId}/helpers/${filename}`)
+    const normalizedFileName = normalizeAndValidateHelperFilename(filename)
+    if (!normalizedFileName) {
+      console.warn(`[helperService] Invalid helper filename: ${filename}`)
+      return null
+    }
+
+    const helpersDir = resolveHelpersDir(platformId)
+    if (!helpersDir) {
+      console.warn(`[helperService] Invalid platformId for helper markdown: ${platformId}`)
+      return null
+    }
+
+    const mdPath = resolve(helpersDir, normalizedFileName)
+    if (mdPath === helpersDir || !mdPath.startsWith(`${helpersDir}${sep}`)) {
+      console.warn(`[helperService] Unsafe helper markdown path for platform: ${platformId}`)
+      return null
+    }
     
     try {
       await access(mdPath)
@@ -178,17 +250,18 @@ export async function getHelperContent(
 ): Promise<HelperContent | null> {
   // Normalize language code
   const normalizedLang = lang.split('-')[0]
+  const safeLang = SUPPORTED_LANGUAGES.includes(normalizedLang) ? normalizedLang : 'en'
   
   // Try platform-specific helper first
   if (platformId) {
-    const platformHelper = await loadHelper(platformId, helperId, normalizedLang)
+    const platformHelper = await loadHelper(platformId, helperId, safeLang)
     if (platformHelper) {
       return platformHelper
     }
   }
   
   // Fallback to global helper
-  const globalHelper = await loadHelper('global', helperId, normalizedLang)
+  const globalHelper = await loadHelper('global', helperId, safeLang)
   return globalHelper
 }
 
@@ -200,13 +273,14 @@ export async function getPlatformHelpers(
   lang: string = 'en'
 ): Promise<Record<string, HelperContent>> {
   const normalizedLang = lang.split('-')[0]
+  const safeLang = SUPPORTED_LANGUAGES.includes(normalizedLang) ? normalizedLang : 'en'
   const helpers: Record<string, HelperContent> = {}
   
   // Load global helpers first
   const globalIndex = await loadHelperIndex('global')
   if (globalIndex) {
     for (const helperId of Object.keys(globalIndex.helpers)) {
-      const helper = await loadHelper('global', helperId, normalizedLang)
+      const helper = await loadHelper('global', helperId, safeLang)
       if (helper) {
         helpers[helperId] = helper
       }
@@ -218,7 +292,7 @@ export async function getPlatformHelpers(
     const platformIndex = await loadHelperIndex(platformId)
     if (platformIndex) {
       for (const helperId of Object.keys(platformIndex.helpers)) {
-        const helper = await loadHelper(platformId, helperId, normalizedLang)
+        const helper = await loadHelper(platformId, helperId, safeLang)
         if (helper) {
           helpers[helperId] = helper
         }

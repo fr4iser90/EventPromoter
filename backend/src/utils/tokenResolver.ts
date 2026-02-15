@@ -14,6 +14,7 @@
  * First segment must start with a letter (to exclude version numbers like "1.0.0")
  */
 const TOKEN_PATTERN = /^[a-z][a-z0-9_-]*\.[a-z0-9_-]+(\.[a-z0-9_-]+)+$/
+const DANGEROUS_OBJECT_KEYS = new Set(['__proto__', 'prototype', 'constructor'])
 
 /**
  * Token value with Light/Dark variants
@@ -33,6 +34,10 @@ export type TokenMap = Record<string, any>
  */
 export function isValidToken(token: string): boolean {
   return TOKEN_PATTERN.test(token)
+}
+
+function isSafeObjectKey(key: string): boolean {
+  return !!key && !DANGEROUS_OBJECT_KEYS.has(key)
 }
 
 /**
@@ -76,7 +81,12 @@ export function resolveToken(
   // Navigate through token map
   let current: any = tokenMap
   for (const segment of path) {
-    if (current && typeof current === 'object' && segment in current) {
+    if (
+      isSafeObjectKey(segment) &&
+      current &&
+      typeof current === 'object' &&
+      Object.prototype.hasOwnProperty.call(current, segment)
+    ) {
       current = current[segment]
     } else {
       // Token path not found
@@ -121,8 +131,11 @@ export function resolveTokensInObject(
   }
 
   if (obj && typeof obj === 'object') {
-    const resolved: any = {}
+    const resolved = Object.create(null) as Record<string, unknown>
     for (const [key, value] of Object.entries(obj)) {
+      if (!isSafeObjectKey(key)) {
+        continue
+      }
       resolved[key] = resolveTokensInObject(value, tokenMap, darkMode)
     }
     return resolved

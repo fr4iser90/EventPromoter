@@ -28,6 +28,28 @@ import { getApiUrl } from '../../../shared/utils/api'
 import SectionPanel from '../../../shared/components/layout/SectionPanel'
 import type { PanelConfig, PanelField } from '../types'
 
+const DANGEROUS_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor'])
+
+function isSafePathSegment(segment: string): boolean {
+  return /^[A-Za-z0-9_-]+$/.test(segment) && !DANGEROUS_PATH_SEGMENTS.has(segment)
+}
+
+function getNestedValueSafely(source: unknown, responsePath?: string): unknown {
+  if (!responsePath) return source
+  const segments = responsePath.split('.').filter(Boolean)
+  let current: unknown = source
+  for (const segment of segments) {
+    if (!isSafePathSegment(segment) || !current || typeof current !== 'object') {
+      return undefined
+    }
+    if (!Object.prototype.hasOwnProperty.call(current, segment)) {
+      return undefined
+    }
+    current = (current as Record<string, unknown>)[segment]
+  }
+  return current
+}
+
 function DynamicPanelWrapper({ platform }: { platform: string }) {
   const { t } = useTranslation()
   const { platformContent, setPlatformContent } = useStore() as unknown as {
@@ -126,10 +148,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
             // Extract data from response using responsePath
             let data = response.data
             if (field.optionsSource.responsePath) {
-              const paths = field.optionsSource.responsePath.split('.')
-              for (const path of paths) {
-                data = data?.[path]
-              }
+              data = getNestedValueSafely(response.data, field.optionsSource.responsePath)
             }
 
             // Extract options from response (backend should return ready-to-use format)
@@ -137,11 +156,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
             
             // Use responsePath if specified (e.g., 'options', 'data.items')
             if (field.optionsSource.responsePath) {
-              const paths = field.optionsSource.responsePath.split('.')
-              let extractedData = response.data
-              for (const path of paths) {
-                extractedData = extractedData?.[path]
-              }
+              const extractedData = getNestedValueSafely(response.data, field.optionsSource.responsePath)
               if (Array.isArray(extractedData)) {
                 transformedOptions = extractedData
               }
