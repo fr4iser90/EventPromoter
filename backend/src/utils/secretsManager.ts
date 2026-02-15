@@ -135,7 +135,7 @@ export async function encryptValue(value: string): Promise<string> {
     // Derive a unique key for this encryption using the salt
     const derivedKey = crypto.pbkdf2Sync(key, salt, ITERATIONS, KEY_LENGTH, 'sha256')
     
-    const cipher = crypto.createCipheriv(ALGORITHM, derivedKey, iv)
+    const cipher = crypto.createCipheriv(ALGORITHM, derivedKey, iv, { authTagLength: TAG_LENGTH })
     
     let encrypted = cipher.update(value, 'utf8')
     encrypted = Buffer.concat([encrypted, cipher.final()])
@@ -174,7 +174,7 @@ export async function decryptValue(encryptedValue: string): Promise<string> {
     // Derive the same key used for encryption
     const derivedKey = crypto.pbkdf2Sync(key, salt, ITERATIONS, KEY_LENGTH, 'sha256')
     
-    const decipher = crypto.createDecipheriv(ALGORITHM, derivedKey, iv)
+    const decipher = crypto.createDecipheriv(ALGORITHM, derivedKey, iv, { authTagLength: TAG_LENGTH })
     decipher.setAuthTag(tag)
     
     let decrypted = decipher.update(encrypted)

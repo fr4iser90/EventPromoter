@@ -20,7 +20,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/jsdom": "^27.0.0",
     "@types/multer": "^2.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.13.5",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
@@ -35,7 +35,6 @@
     "nodemailer": "^8.0.1",
     "pdf-parse": "^2.4.5",
     "playwright": "^1.58.2",
-    "supertest": "^6.3.3",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
@@ -44,6 +43,7 @@
     "@types/form-data": "^2.5.0",
     "@types/node": "^20.10.0",
     "@vitest/coverage-v8": "^1.0.0",
+    "supertest": "^7.2.2",
     "tsc-alias": "^1.8.10",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",

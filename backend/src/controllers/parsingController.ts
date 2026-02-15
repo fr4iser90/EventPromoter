@@ -5,8 +5,31 @@ import { ContentExtractionService, DuplicateCheckResult } from '../services/pars
 import { ParsedEventData } from '../types/index.js'
 import { PlatformParsingService } from '../services/platformParsingService.js'
 import { UploadedFile } from '../types/index.js'
+import { PathConfig } from '../utils/pathConfig.js'
 
 export class ParsingController {
+  private static resolveSafeFilePath(eventId: string, filename: string): string {
+    if (
+      !filename ||
+      filename.includes('\0') ||
+      filename.includes('/') ||
+      filename.includes('\\') ||
+      filename === '.' ||
+      filename === '..'
+    ) {
+      throw new Error('Invalid filename')
+    }
+
+    const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
+    const filePath = path.resolve(filesDir, filename)
+
+    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
+      throw new Error('Invalid file path')
+    }
+
+    return filePath
+  }
+
   // Parse uploaded file and return structured data + duplicate check
   static async parseFile(req: Request, res: Response) {
     try {
@@ -24,8 +47,12 @@ export class ParsingController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
-      // Construct file path
-      const filePath = path.join(process.cwd(), 'events', eventId, 'files', filename)
+      let filePath: string
+      try {
+        filePath = ParsingController.resolveSafeFilePath(eventId, filename)
+      } catch {
+        return res.status(400).json({ error: 'Invalid file path' })
+      }
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -81,7 +108,7 @@ export class ParsingController {
           const optimizedContent = await PlatformParsingService.parseForPlatform(platform, parsedData)
           platformContent[platform] = optimizedContent
         } catch (error) {
-          console.warn(`Failed to parse for platform ${platform}:`, error)
+          console.warn('Failed to parse for platform', { platform, error })
           platformContent[platform] = null
         }
       }

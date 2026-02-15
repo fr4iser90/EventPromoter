@@ -9,6 +9,29 @@ import { EventCreationService } from '../services/eventCreationService.js'
 import { UploadedFile, ParsedEventData } from '../types/index.js'
 
 export class FileController {
+  private static resolveSafeFilePath(eventId: string, filename: string): string {
+    if (
+      !filename ||
+      filename.includes('\0') ||
+      filename.includes('/') ||
+      filename.includes('\\') ||
+      filename === '.' ||
+      filename === '..'
+    ) {
+      throw new Error('Invalid filename')
+    }
+
+    const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
+    const filePath = path.resolve(filesDir, filename)
+
+    // Enforce file path confinement to event files dir
+    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
+      throw new Error('Invalid file path')
+    }
+
+    return filePath
+  }
+
   // Upload single file
   static async uploadFile(req: Request, res: Response) {
     try {
@@ -143,8 +166,13 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
-      // PathConfig maps to events/EVENT_ID/files/FILENAME
-      const filePath = path.join(PathConfig.getFilesDir(eventId), filename)
+      let filePath: string
+      try {
+        // PathConfig maps to events/EVENT_ID/files/FILENAME
+        filePath = FileController.resolveSafeFilePath(eventId, filename)
+      } catch {
+        return res.status(400).json({ error: 'Invalid file path' })
+      }
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -202,7 +230,12 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
-      const filePath = path.join(PathConfig.getFilesDir(eventId), filename)
+      let filePath: string
+      try {
+        filePath = FileController.resolveSafeFilePath(eventId, filename)
+      } catch {
+        return res.status(400).json({ error: 'Invalid file path' })
+      }
 
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
@@ -317,7 +350,12 @@ export class FileController {
         return res.status(400).json({ error: 'Event ID and filename required' })
       }
 
-      const filePath = path.join(PathConfig.getFilesDir(eventId), filename)
+      let filePath: string
+      try {
+        filePath = FileController.resolveSafeFilePath(eventId, filename)
+      } catch {
+        return res.status(400).json({ error: 'Invalid file path' })
+      }
 
       // Check if file exists
       if (!fs.existsSync(filePath)) {

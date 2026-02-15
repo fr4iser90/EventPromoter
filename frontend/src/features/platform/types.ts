@@ -158,6 +158,7 @@ export type SettingsFieldConfig = {
 export type SettingsSectionConfig = {
   id: string
   title?: string
+  description?: string
   fields: SettingsFieldConfig[]
 }
 export type SettingsEditAction = {

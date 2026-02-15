@@ -23,6 +23,17 @@ const translationCache = new Map<string, Record<string, any>>()
  * Supported languages
  */
 const SUPPORTED_LANGUAGES = ['en', 'de', 'es']
+const PLATFORM_ID_PATTERN = /^[a-z0-9-]+$/
+
+function normalizeAndValidateLanguage(lang: string): string | null {
+  if (!lang || typeof lang !== 'string') return null
+  const normalized = lang.split('-')[0].toLowerCase()
+  return SUPPORTED_LANGUAGES.includes(normalized) ? normalized : null
+}
+
+function isValidPlatformId(platformId: string): boolean {
+  return !!platformId && PLATFORM_ID_PATTERN.test(platformId)
+}
 
 /**
  * Load translations for a specific platform and language
@@ -31,7 +42,18 @@ export async function getPlatformTranslations(
   platformId: string,
   lang: string
 ): Promise<Record<string, any>> {
-  const cacheKey = `${platformId}:${lang}`
+  if (!isValidPlatformId(platformId)) {
+    console.warn('[translationLoader] Invalid platformId', { platformId })
+    return {}
+  }
+
+  const normalizedLang = normalizeAndValidateLanguage(lang)
+  if (!normalizedLang) {
+    console.warn('[translationLoader] Invalid language', { platformId, lang })
+    return {}
+  }
+
+  const cacheKey = `${platformId}:${normalizedLang}`
   
   // Check cache first
   if (translationCache.has(cacheKey)) {
@@ -44,7 +66,7 @@ export async function getPlatformTranslations(
     
     console.log('[translationLoader] Loading translations', {
       platformId,
-      lang,
+      lang: normalizedLang,
       __dirname,
       platformPath,
       localesPath
@@ -56,20 +78,24 @@ export async function getPlatformTranslations(
       console.log('[translationLoader] Locales directory exists', { localesPath })
     } catch {
       // No locales directory, return empty object
-      console.warn(`[translationLoader] No locales directory for platform ${platformId}, language ${lang}`, { localesPath })
+      console.warn('[translationLoader] No locales directory', {
+        platformId,
+        lang: normalizedLang,
+        localesPath
+      })
       translationCache.set(cacheKey, {})
       return {}
     }
 
     // Load translation file
-    const translationFile = join(localesPath, `${lang}.json`)
+    const translationFile = join(localesPath, `${normalizedLang}.json`)
     console.log('[translationLoader] Loading file', { translationFile })
     try {
       const content = await readFile(translationFile, 'utf-8')
       const translations = JSON.parse(content)
       console.log('[translationLoader] Loaded translations', {
         platformId,
-        lang,
+        lang: normalizedLang,
         keys: Object.keys(translations),
         hasRecipients: !!translations.recipients
       })
@@ -77,12 +103,20 @@ export async function getPlatformTranslations(
       return translations
     } catch (error) {
       // File doesn't exist or is invalid, return empty object
-      console.warn(`[translationLoader] Failed to load translations for platform ${platformId}, language ${lang}:`, error)
+      console.warn('[translationLoader] Failed to load translation file', {
+        platformId,
+        lang: normalizedLang,
+        error
+      })
       translationCache.set(cacheKey, {})
       return {}
     }
   } catch (error) {
-    console.error(`[translationLoader] Error loading translations for platform ${platformId}, language ${lang}:`, error)
+    console.error('[translationLoader] Error loading translations', {
+      platformId,
+      lang: normalizedLang,
+      error
+    })
     return {}
   }
 }
@@ -172,10 +206,14 @@ export async function hasPlatformTranslations(
   platformId: string,
   lang: string
 ): Promise<boolean> {
+  if (!isValidPlatformId(platformId)) return false
+  const normalizedLang = normalizeAndValidateLanguage(lang)
+  if (!normalizedLang) return false
+
   try {
     const platformPath = join(__dirname, '../platforms', platformId)
     const localesPath = join(platformPath, 'locales')
-    const translationFile = join(localesPath, `${lang}.json`)
+    const translationFile = join(localesPath, `${normalizedLang}.json`)
     
     try {
       await access(translationFile)
@@ -192,6 +230,8 @@ export async function hasPlatformTranslations(
  * Get available languages for a platform
  */
 export async function getAvailableLanguages(platformId: string): Promise<string[]> {
+  if (!isValidPlatformId(platformId)) return []
+
   try {
     const platformPath = join(__dirname, '../platforms', platformId)
     const localesPath = join(platformPath, 'locales')
