@@ -60,7 +60,7 @@ export class SchemaRegistry {
                     }
                     loadedSchemas[platformId].push(schemaId);
                   } else {
-                    console.info(`  Schema ${platformId}/${schemaId} has no default export.`);
+                    console.info('Schema has no default export', { platformId, schemaId });
                   }
                 } catch (importError: any) {
                   console.error('Error importing schema', { platformId, schemaId, error: importError });
@@ -69,7 +69,7 @@ export class SchemaRegistry {
             }
           } catch (dirError: any) {
             if (dirError.code !== 'ENOENT') { // Ignore if schema directory doesn't exist
-              console.info(`  Could not read schema directory for platform ${platformId}:`, dirError.message);
+              console.info('Could not read schema directory for platform', { platformId, error: dirError.message });
             }
           }
         }
@@ -77,7 +77,7 @@ export class SchemaRegistry {
       
       // Summarize loaded schemas per platform
       for (const [platformId, schemas] of Object.entries(loadedSchemas)) {
-        console.info(`  Loaded ${schemas.length} schema(s) for ${platformId}: ${schemas.join(', ')}`);
+        console.info('Loaded schemas for platform', { platformId, count: schemas.length, schemas });
       }
       
       console.log('All schemas loaded.');

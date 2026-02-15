@@ -598,7 +598,7 @@ export class PublishingService {
       }
     } catch (error) {
       // Publisher not found for this platform
-      console.debug(`Publisher ${type} not found for platform ${platformId}:`, error)
+      console.debug('Publisher not found for platform', { type, platformId, error })
       return null
     }
   }

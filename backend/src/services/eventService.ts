@@ -3,6 +3,7 @@
 import { EventWorkspace, Event, UploadedFile } from '../types/index.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
 import { PathConfig } from '../utils/pathConfig.js'
+import { resolveSafePath } from '../utils/securityUtils.js'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -32,24 +33,8 @@ export class EventService {
   }
 
   private static resolveSafeEventFilePath(eventId: string, fileName: string): string {
-    const normalizedFileName = String(fileName || '')
-    if (
-      !normalizedFileName ||
-      normalizedFileName.includes('\0') ||
-      normalizedFileName.includes('/') ||
-      normalizedFileName.includes('\\') ||
-      normalizedFileName === '.' ||
-      normalizedFileName === '..'
-    ) {
-      throw new Error('Invalid file name')
-    }
-
     const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
-    const filePath = path.resolve(filesDir, normalizedFileName)
-    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
-      throw new Error('Invalid file path')
-    }
-    return filePath
+    return resolveSafePath(filesDir, fileName, 'filename')
   }
 
   // ✅ Generate stable Event ID (UUID v4)
@@ -619,7 +604,8 @@ export class EventService {
       return null
     }
 
-    console.debug(`Loading event data for ${eventId}:`, {
+    console.debug('Loading event data for event', {
+      eventId,
       hasSelectedPlatforms: !!eventData.selectedPlatforms,
       platformsCount: eventData.selectedPlatforms?.length || 0,
       platforms: eventData.selectedPlatforms || []
@@ -661,7 +647,10 @@ export class EventService {
               }
             } catch (error: any) {
               // Platform service not available - use content as-is
-              console.debug(`No content processing for platform ${platform} on load:`, error?.message || 'Unknown error')
+              console.debug('No content processing for platform on load', {
+                platform,
+                error: error?.message || 'Unknown error'
+              })
             }
             
             // ✅ Resolve target names for _templates array (if present)

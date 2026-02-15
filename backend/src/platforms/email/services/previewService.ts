@@ -9,6 +9,7 @@
 import { EmailService } from './emailService.js'
 import { markdownToHtml, isMarkdown } from '../../../utils/markdownRenderer.js'
 import { PathConfig } from '../../../utils/pathConfig.js'
+import { resolveSafePath } from '../../../utils/securityUtils.js'
 import path from 'path'
 
 /**
@@ -69,23 +70,8 @@ export async function renderEmailPreview(
   }
 ): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
   const resolveSafeEventImagePath = (eventId: string, filename: string): string => {
-    if (
-      !filename ||
-      filename.includes('\0') ||
-      filename.includes('/') ||
-      filename.includes('\\') ||
-      filename === '.' ||
-      filename === '..'
-    ) {
-      throw new Error('Invalid preview image filename')
-    }
-
     const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
-    const filePath = path.resolve(filesDir, filename)
-    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
-      throw new Error('Invalid preview image path')
-    }
-    return filePath
+    return resolveSafePath(filesDir, filename, 'preview image filename')
   }
 
   const { content, schema, mode = 'desktop', client, locale } = options

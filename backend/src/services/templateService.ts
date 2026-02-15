@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import { Template, TemplateValidationResult, TemplateCreateRequest } from '../types/templateTypes.js'
 import { readConfig, writeConfig } from '../utils/fileUtils.js'
+import { sanitizePlatformSegment, resolveSafePath } from '../utils/securityUtils.js'
 
 function normalizeImagePlaceholder(value: string): string {
   return value
@@ -53,7 +54,9 @@ export class TemplateService {
 
   // Get file path for platform templates
   private static getPlatformFilePath(platform: string): string {
-    return path.join(this.TEMPLATES_DIR, `${platform}.json`)
+    const safePlatform = sanitizePlatformSegment(platform)
+    const templatesDir = path.resolve(this.TEMPLATES_DIR)
+    return resolveSafePath(templatesDir, `${safePlatform}.json`, 'platform template filename')
   }
 
   // Load custom templates for a platform from JSON file

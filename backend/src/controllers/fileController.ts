@@ -7,29 +7,12 @@ import { ContentExtractionService } from '../services/parsing/contentParsingServ
 import { UploadService } from '../services/uploadService.js'
 import { EventCreationService } from '../services/eventCreationService.js'
 import { UploadedFile, ParsedEventData } from '../types/index.js'
+import { resolveSafePath } from '../utils/securityUtils.js'
 
 export class FileController {
   private static resolveSafeFilePath(eventId: string, filename: string): string {
-    if (
-      !filename ||
-      filename.includes('\0') ||
-      filename.includes('/') ||
-      filename.includes('\\') ||
-      filename === '.' ||
-      filename === '..'
-    ) {
-      throw new Error('Invalid filename')
-    }
-
     const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
-    const filePath = path.resolve(filesDir, filename)
-
-    // Enforce file path confinement to event files dir
-    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
-      throw new Error('Invalid file path')
-    }
-
-    return filePath
+    return resolveSafePath(filesDir, filename, 'filename')
   }
 
   // Upload single file

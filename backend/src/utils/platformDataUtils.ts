@@ -12,40 +12,16 @@ import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { getPlatformRegistry } from '../services/platformRegistry.js'
+import { sanitizePlatformSegment, sanitizeDataSourceSegment } from './securityUtils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const PLATFORM_ID_PATTERN = /^[a-z0-9_-]+$/i
-const DATA_SOURCE_PATTERN = /^[a-z0-9._-]+$/i
-
-function validatePlatformId(platformId: string): string {
-  const normalized = String(platformId || '').trim()
-  if (!normalized || !PLATFORM_ID_PATTERN.test(normalized)) {
-    throw new Error('Invalid platform ID')
-  }
-  return normalized
-}
-
-function validateDataSource(dataSource: string): string {
-  const normalized = String(dataSource || '').trim()
-  if (
-    !normalized ||
-    normalized.includes('/') ||
-    normalized.includes('\\') ||
-    normalized.includes('..') ||
-    normalized.includes('\0') ||
-    !DATA_SOURCE_PATTERN.test(normalized)
-  ) {
-    throw new Error('Invalid platform data source')
-  }
-  return normalized
-}
 
 /**
  * Get the data directory path for a platform
  */
 function getPlatformDataDir(platformId: string): string {
-  const safePlatformId = validatePlatformId(platformId)
+  const safePlatformId = sanitizePlatformSegment(platformId)
   return path.join(__dirname, '../platforms', safePlatformId, 'data')
 }
 
@@ -54,7 +30,7 @@ function getPlatformDataDir(platformId: string): string {
  */
 async function getPlatformDataSource(platformId: string): Promise<string | null> {
   try {
-    const safePlatformId = validatePlatformId(platformId)
+    const safePlatformId = sanitizePlatformSegment(platformId)
     const registry = getPlatformRegistry()
     const platform = registry.getPlatform(safePlatformId)
     
@@ -63,7 +39,7 @@ async function getPlatformDataSource(platformId: string): Promise<string | null>
       return null
     }
     
-    return platform.metadata.dataSource ? validateDataSource(platform.metadata.dataSource) : null
+    return platform.metadata.dataSource ? sanitizeDataSourceSegment(platform.metadata.dataSource) : null
   } catch (error) {
     console.error('Error getting data source for platform', { platformId, error })
     return null

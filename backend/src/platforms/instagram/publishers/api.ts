@@ -9,6 +9,7 @@
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
 import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
+import { sanitizeTempFilename, assertSafeDownloadUrl } from '../../../utils/securityUtils.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -245,14 +246,15 @@ export class InstagramApiPublisher implements InstagramPublisher, EventAwarePubl
       fileName = file.name || path.basename(file.path) || 'image.jpg'
     } else if (file.url) {
       // Fallback: Download from URL to temp file (if path not available)
-      fileName = file.name || 'image.jpg'
+      fileName = sanitizeTempFilename(file.name || 'image.jpg', 'image.jpg')
       const tempDir = path.join(process.cwd(), 'temp', 'instagram-uploads')
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true })
       }
       const tempPath = path.join(tempDir, `${Date.now()}-${fileName}`)
-      
-      const response = await fetch(file.url)
+      const safeUrl = assertSafeDownloadUrl(String(file.url))
+
+      const response = await fetch(safeUrl)
       if (!response.ok) {
         throw new Error(`Failed to download image: ${response.statusText}`)
       }

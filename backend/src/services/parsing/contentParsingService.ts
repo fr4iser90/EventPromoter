@@ -4,6 +4,7 @@ let PDFParseCtor: any = null
 import fs from 'fs'
 import path from 'path'
 import { PathConfig } from '../../utils/pathConfig.js'
+import { sanitizePlatformSegment, resolveSafePath } from '../../utils/securityUtils.js'
 import crypto from 'crypto'
 import yaml from 'js-yaml'
 import { UploadedFile, ParsedEventData } from '../../types/index.js'
@@ -17,6 +18,13 @@ export interface DuplicateCheckResult {
 
 export class ContentExtractionService {
   private static ocrWorker: Tesseract.Worker | null = null
+  private static resolveSafePlatformContentPath(eventId: string, platformOrFilename: string): string {
+    const input = String(platformOrFilename || '').trim()
+    const platform = input.endsWith('.json') ? input.slice(0, -5) : input
+    const safePlatform = sanitizePlatformSegment(platform)
+    const platformContentDir = path.resolve(PathConfig.getPlatformsDir(eventId))
+    return resolveSafePath(platformContentDir, `${safePlatform}.json`, 'platform content filename')
+  }
 
   // Parse uploaded files and extract event data
   static async parseUploadedFiles(files: Express.Multer.File[]): Promise<ParsedEventData | null> {
@@ -891,7 +899,7 @@ export class ContentExtractionService {
       
       for (const file of platformFiles) {
         const platform = file.replace('.json', '')
-        const platformFile = path.join(platformContentDir, file)
+        const platformFile = this.resolveSafePlatformContentPath(eventId, file)
         try {
           let content = JSON.parse(fs.readFileSync(platformFile, 'utf8'))
           
@@ -927,7 +935,7 @@ export class ContentExtractionService {
   // Save platform content to separate file
   static async savePlatformContent(eventId: string, platform: string, content: any): Promise<void> {
     const platformContentDir = PathConfig.getPlatformsDir(eventId)
-    const platformFile = path.join(platformContentDir, `${platform}.json`)
+    const platformFile = this.resolveSafePlatformContentPath(eventId, platform)
 
     // Ensure directory exists
     if (!fs.existsSync(platformContentDir)) {
@@ -946,7 +954,7 @@ export class ContentExtractionService {
       }
     } catch (error: any) {
       // Platform service not available or doesn't have processContentForSave - use content as-is
-      console.debug(`No content processing for platform ${platform}:`, error?.message || 'Unknown error')
+      console.debug('No content processing for platform', { platform, error: error?.message || 'Unknown error' })
     }
 
     // Add lastModified timestamp

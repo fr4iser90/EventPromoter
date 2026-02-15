@@ -3,6 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import { Request } from 'express'
 import { PathConfig } from '../utils/pathConfig.js'
+import { resolveSafePath } from '../utils/securityUtils.js'
 
 // Create temp upload directory
 const createTempUploadDir = (): string => {
@@ -71,5 +72,6 @@ export const getFileUrl = (eventId: string, filename: string): string => {
 
 // Get file path helper
 export const getFilePath = (eventId: string, filename: string): string => {
-  return path.join(PathConfig.getFilesDir(eventId), filename)
+  const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
+  return resolveSafePath(filesDir, filename, 'filename')
 }

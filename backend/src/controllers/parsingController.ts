@@ -6,28 +6,12 @@ import { ParsedEventData } from '../types/index.js'
 import { PlatformParsingService } from '../services/platformParsingService.js'
 import { UploadedFile } from '../types/index.js'
 import { PathConfig } from '../utils/pathConfig.js'
+import { resolveSafePath } from '../utils/securityUtils.js'
 
 export class ParsingController {
   private static resolveSafeFilePath(eventId: string, filename: string): string {
-    if (
-      !filename ||
-      filename.includes('\0') ||
-      filename.includes('/') ||
-      filename.includes('\\') ||
-      filename === '.' ||
-      filename === '..'
-    ) {
-      throw new Error('Invalid filename')
-    }
-
     const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
-    const filePath = path.resolve(filesDir, filename)
-
-    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
-      throw new Error('Invalid file path')
-    }
-
-    return filePath
+    return resolveSafePath(filesDir, filename, 'filename')
   }
 
   // Parse uploaded file and return structured data + duplicate check

@@ -9,6 +9,7 @@
 import { PostResult } from '../../../types/index.js'
 import { ConfigService } from '../../../services/configService.js'
 import { PublisherEventService, EventAwarePublisher } from '../../../services/publisherEventService.js'
+import { sanitizeTempFilename, assertSafeDownloadUrl } from '../../../utils/securityUtils.js'
 import fs from 'fs'
 import path from 'path'
 
@@ -231,16 +232,18 @@ export class FacebookApiPublisher implements FacebookPublisher, EventAwarePublis
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true })
       }
-      const tempPath = path.join(tempDir, `${Date.now()}-${file.name || 'photo.jpg'}`)
-      
-      const photoResponse = await fetch(file.url)
+      const safeFileName = sanitizeTempFilename(file.name || 'photo.jpg', 'photo.jpg')
+      const tempPath = path.join(tempDir, `${Date.now()}-${safeFileName}`)
+      const safeUrl = assertSafeDownloadUrl(String(file.url))
+
+      const photoResponse = await fetch(safeUrl)
       if (!photoResponse.ok) {
         throw new Error(`Failed to download photo: ${photoResponse.statusText}`)
       }
       const arrayBuffer = await photoResponse.arrayBuffer()
       fs.writeFileSync(tempPath, Buffer.from(arrayBuffer))
       photoPath = tempPath
-      fileName = file.name || 'photo.jpg'
+      fileName = safeFileName
     } else {
       throw new Error('File must have either path or url')
     }
