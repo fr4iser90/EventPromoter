@@ -253,7 +253,11 @@ export class EmailN8nService {
               throw new Error('Template not found or invalid')
             }
           } catch (error: any) {
-            console.warn(`Failed to re-render template ${templateEntry.templateId} with locale ${targetLocale}, using existing content:`, error.message)
+            console.warn('Failed to re-render template with locale, using existing content', {
+              templateId: templateEntry.templateId,
+              targetLocale,
+              error: error.message
+            })
             // Fallback: use existing content
             if (content.html && typeof content.html === 'string' && content.html.trim().length > 0) {
               html = content.html
@@ -332,7 +336,7 @@ export class EmailN8nService {
                 url: file.url // Will be transformed to absolute URL below
               })
             } else {
-              console.warn(`Global file not found in files array: ${fileId}`, globalFile)
+              console.warn('Global file not found in files array', { fileId, globalFile })
             }
           }
         }
@@ -361,7 +365,7 @@ export class EmailN8nService {
                 url: file.url
               })
             } else {
-              console.warn(`Specific file not found in files array: ${fileId}`, specificFile)
+              console.warn('Specific file not found in files array', { fileId, specificFile })
             }
           }
         }

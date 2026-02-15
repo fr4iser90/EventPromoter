@@ -59,13 +59,13 @@ async function getPlatformDataSource(platformId: string): Promise<string | null>
     const platform = registry.getPlatform(safePlatformId)
     
     if (!platform) {
-      console.warn(`Platform ${safePlatformId} not found in registry`)
+      console.warn('Platform not found in registry', { platformId: safePlatformId })
       return null
     }
     
     return platform.metadata.dataSource ? validateDataSource(platform.metadata.dataSource) : null
   } catch (error) {
-    console.error(`Error getting data source for ${platformId}:`, error)
+    console.error('Error getting data source for platform', { platformId, error })
     return null
   }
 }
@@ -124,7 +124,7 @@ export async function readPlatformData(platformId: string): Promise<any> {
     }
     if (error instanceof SyntaxError) {
       const dataSource = await getPlatformDataSource(platformId)
-      console.warn(`❌ Invalid JSON in ${platformId}/data/${dataSource}, returning null: ${error.message}`)
+      console.warn('Invalid JSON in platform data file, returning null', { platformId, dataSource, error: error.message })
       return null
     }
     throw error
@@ -140,7 +140,7 @@ export async function writePlatformData(platformId: string, data: any): Promise<
     const dataSource = await getPlatformDataSource(platformId)
     
     if (!dataSource) {
-      console.error(`No dataSource defined for platform ${platformId}`)
+      console.error('No dataSource defined for platform', { platformId })
       return false
     }
     
@@ -157,7 +157,7 @@ export async function writePlatformData(platformId: string, data: any): Promise<
     return true
   } catch (error) {
     const dataSource = await getPlatformDataSource(platformId)
-    console.error(`❌ Error writing ${platformId}/data/${dataSource}:`, error)
+    console.error('Error writing platform data file', { platformId, dataSource, error })
     return false
   }
 }

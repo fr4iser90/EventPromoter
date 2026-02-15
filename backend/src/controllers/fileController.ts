@@ -110,7 +110,7 @@ export class FileController {
           try {
             baseFile.content = fs.readFileSync(file.path, 'utf8')
           } catch (error) {
-            console.warn(`Failed to read content for ${file.originalname}:`, error)
+            console.warn('Failed to read content for uploaded file', { originalname: file.originalname, error })
           }
         }
 
@@ -132,7 +132,7 @@ export class FileController {
 
       await EventService.saveEventData(event.id, event)
 
-      console.log(`Upload: Event created ${event.id} (${event.title})`)
+      console.log('Upload: Event created', { eventId: event.id, title: event.title })
 
       res.json({
         success: true,

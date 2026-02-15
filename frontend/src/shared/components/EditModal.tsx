@@ -170,7 +170,7 @@ const EditModal = ({
               
               optionsMap[field.name] = transformedOptions;
             } catch (err: unknown) {
-              console.error(`Failed to load options for field ${field.name}:`, err);
+              console.error('Failed to load options for field', { fieldName: field.name, error: err });
               optionsMap[field.name] = []; // Set empty array on error
             }
           }
@@ -210,7 +210,7 @@ const EditModal = ({
   const handleFormChange = useCallback((fieldName: string, value: unknown) => {
     setFormData(prevFormData => {
       const updatedFormData = { ...prevFormData, [fieldName]: value };
-      console.log(`EditModal: handleFormChange - Field: ${fieldName}, Value: ${value}, Updated formData:`, updatedFormData); // Debugging log
+      console.log('EditModal: handleFormChange', { fieldName, value, updatedFormData }); // Debugging log
       return updatedFormData;
     });
   }, []);

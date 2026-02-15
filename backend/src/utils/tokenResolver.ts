@@ -68,7 +68,7 @@ export function resolveToken(
   // Validate token pattern
   if (!isValidToken(token)) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`[TokenResolver] Invalid token pattern: ${token}`)
+      console.warn('[TokenResolver] Invalid token pattern', { token })
     }
     return token
   }
@@ -91,7 +91,7 @@ export function resolveToken(
     } else {
       // Token path not found
       if (process.env.NODE_ENV === 'development') {
-        console.warn(`[TokenResolver] Token not found: ${token}`)
+        console.warn('[TokenResolver] Token not found', { token })
       }
       return token  // Return original token unchanged
     }
@@ -109,7 +109,7 @@ export function resolveToken(
 
   // Fallback: token not found
   if (process.env.NODE_ENV === 'development') {
-    console.warn(`[TokenResolver] Token value not resolved: ${token}`)
+    console.warn('[TokenResolver] Token value not resolved', { token })
   }
   return token
 }
@@ -178,7 +178,7 @@ export async function loadPlatformTokenMap(platformId: string): Promise<TokenMap
     // Platform doesn't have tokens.ts - that's OK
     if (!error.message.includes('Cannot find module')) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn(`[TokenResolver] Failed to load tokens for ${platformId}:`, error.message)
+        console.warn('[TokenResolver] Failed to load tokens', { platformId, error: error.message })
       }
     }
   }

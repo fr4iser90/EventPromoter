@@ -213,11 +213,11 @@ function CompositeRenderer({
                   })
                 : []
             } else {
-              console.warn(`[CompositeRenderer] Endpoint ${key} returned success=false:`, response.data.error)
+              console.warn('[CompositeRenderer] Endpoint returned success=false', { key, error: response.data.error })
               loadedData[key] = []
             }
           } catch (err: unknown) {
-            console.error(`[CompositeRenderer] Failed to load data for ${key} from ${endpoint}:`, err)
+            console.error('[CompositeRenderer] Failed to load data from endpoint', { key, endpoint, error: err })
             if (err instanceof Error) {
               console.error(`[CompositeRenderer] Error details:`, err.message)
             }
@@ -548,7 +548,7 @@ function CompositeRenderer({
                             console.log(`Added new target: ${newTarget}`)
                             setReloadTrigger(prev => prev + 1)
                           } catch (err: unknown) {
-                            console.error(`Failed to add target ${newTarget}:`, err)
+                            console.error('Failed to add target', { target: newTarget, error: err })
                             const message = err instanceof Error ? err.message : t('common.unknownError')
                             alert(translate('common.errorAdding', `Error adding: ${message}`))
                             return

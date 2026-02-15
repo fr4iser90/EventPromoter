@@ -156,7 +156,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
               }
             }
           } catch (err) {
-            console.warn(`Failed to load modes for ${platform.id}:`, err)
+            console.warn('Failed to load modes for platform', { platformId: platform.id, error: err })
             modesMap[platform.id] = []
           }
 
@@ -170,7 +170,7 @@ function PlatformSelector({ disabled = false }: { disabled?: boolean }) {
               configuredMap[platform.id] = null
             }
           } catch (err) {
-            console.warn(`Failed to load settings status for ${platform.id}:`, err)
+            console.warn('Failed to load settings status for platform', { platformId: platform.id, error: err })
             configuredMap[platform.id] = null
           }
         }

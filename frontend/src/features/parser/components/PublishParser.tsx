@@ -112,7 +112,7 @@ function PublishParser() {
             editorSchema = data.schema?.editor
           }
         } catch (err) {
-          console.warn(`Failed to load schema for ${platformId}:`, err)
+          console.warn('Failed to load schema for platform', { platformId, error: err })
         }
       }
 
@@ -178,7 +178,7 @@ function PublishParser() {
 
   // ✅ Retry failed platform
   const handleRetryPlatform = async (platformId: string) => {
-    console.log(`🔄 Retrying publish for platform: ${platformId}`)
+    console.log('Retrying publish for platform', { platformId })
     
     try {
       const eventId = useStore.getState().currentEvent?.id
@@ -203,10 +203,10 @@ function PublishParser() {
       if (newSessionId) {
         setPublishSessionId(newSessionId)
         setShowResults(true)
-        console.log(`✅ Retry started for ${platformId}, new session: ${newSessionId}`)
+        console.log('Retry started for platform', { platformId, newSessionId })
       }
     } catch (error: unknown) {
-      console.error(`Failed to retry platform ${platformId}:`, error)
+      console.error('Failed to retry platform', { platformId, error })
       setValidationErrors([t('publish.retryFailed', { platform: platformId, error: error instanceof Error ? error.message : t('common.unknown') })])
     }
   }

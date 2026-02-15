@@ -109,14 +109,14 @@ async function loadHelperIndex(platformId: string | 'global'): Promise<HelperInd
   try {
     const helpersDir = resolveHelpersDir(platformId)
     if (!helpersDir) {
-      console.warn(`[helperService] Invalid platformId for helper index: ${platformId}`)
+      console.warn('[helperService] Invalid platformId for helper index', { platformId })
       helperIndexCache.set(cacheKey, { version: '1.0.0', helpers: {} })
       return null
     }
 
     const helperPath = resolve(helpersDir, 'index.json')
     if (helperPath === helpersDir || !helperPath.startsWith(`${helpersDir}${sep}`)) {
-      console.warn(`[helperService] Unsafe helper index path for platform: ${platformId}`)
+      console.warn('[helperService] Unsafe helper index path for platform', { platformId })
       helperIndexCache.set(cacheKey, { version: '1.0.0', helpers: {} })
       return null
     }
@@ -134,7 +134,7 @@ async function loadHelperIndex(platformId: string | 'global'): Promise<HelperInd
     helperIndexCache.set(cacheKey, index)
     return index
   } catch (error) {
-    console.warn(`Failed to load helper index for ${platformId}:`, error)
+    console.warn('Failed to load helper index', { platformId, error })
     helperIndexCache.set(cacheKey, { version: '1.0.0', helpers: {} })
     return null
   }
@@ -150,19 +150,19 @@ async function loadMarkdownContent(
   try {
     const normalizedFileName = normalizeAndValidateHelperFilename(filename)
     if (!normalizedFileName) {
-      console.warn(`[helperService] Invalid helper filename: ${filename}`)
+      console.warn('[helperService] Invalid helper filename', { filename })
       return null
     }
 
     const helpersDir = resolveHelpersDir(platformId)
     if (!helpersDir) {
-      console.warn(`[helperService] Invalid platformId for helper markdown: ${platformId}`)
+      console.warn('[helperService] Invalid platformId for helper markdown', { platformId })
       return null
     }
 
     const mdPath = resolve(helpersDir, normalizedFileName)
     if (mdPath === helpersDir || !mdPath.startsWith(`${helpersDir}${sep}`)) {
-      console.warn(`[helperService] Unsafe helper markdown path for platform: ${platformId}`)
+      console.warn('[helperService] Unsafe helper markdown path for platform', { platformId })
       return null
     }
     
@@ -174,7 +174,7 @@ async function loadMarkdownContent(
 
     return await readFile(mdPath, 'utf-8')
   } catch (error) {
-    console.warn(`Failed to load markdown file ${filename} for ${platformId}:`, error)
+    console.warn('Failed to load markdown file', { filename, platformId, error })
     return null
   }
 }
@@ -234,7 +234,7 @@ async function loadHelper(
     helperCache.set(cacheKey, helper)
     return helper
   } catch (error) {
-    console.error(`Error loading helper ${helperId} for ${platformId}:`, error)
+    console.error('Error loading helper', { helperId, platformId, error })
     return null
   }
 }

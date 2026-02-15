@@ -600,7 +600,7 @@ export class TargetController {
                           serviceModule.TargetService
 
       if (!ServiceClass) {
-        console.warn(`No target service found for platform: ${platformId}`)
+        console.warn('No target service found for platform', { platformId })
         return null
       }
 
@@ -613,7 +613,7 @@ export class TargetController {
         return null
       }
       // Only log unexpected errors
-      console.error(`Error loading target service for ${platformId}:`, error)
+      console.error('Error loading target service for platform', { platformId, error })
       return null
     }
   }

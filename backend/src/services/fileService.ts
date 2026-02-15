@@ -19,7 +19,7 @@ export class FileService {
     // Hochgeladene Dateien befinden sich im 'temp/uploads' Verzeichnis relativ zum Projekt-Root
     // Dies muss an die tatsächliche Dateistruktur angepasst werden.
     this.uploadDir = path.resolve(__dirname, '../../../temp/uploads');
-    console.log(`FileService: Using upload directory: ${this.uploadDir}`);
+    console.log('FileService: Using upload directory', { uploadDir: this.uploadDir });
   }
 
   /**
@@ -41,7 +41,7 @@ export class FileService {
         filenameToLoad.includes('..') ||
         filenameToLoad.includes('\0')
       ) {
-        console.warn(`FileService: Rejected invalid file ID: ${fileId}`);
+        console.warn('FileService: Rejected invalid file ID', { fileId });
         return null;
       }
       let contentType = 'application/octet-stream'; // Standard-MIME-Typ
@@ -63,7 +63,7 @@ export class FileService {
 
       const filePath = path.resolve(this.uploadDir, filenameToLoad);
       if (filePath !== this.uploadDir && !filePath.startsWith(`${this.uploadDir}${path.sep}`)) {
-        console.warn(`FileService: Rejected path traversal attempt for file ID: ${fileId}`);
+        console.warn('FileService: Rejected path traversal attempt for file ID', { fileId });
         return null;
       }
 
@@ -77,7 +77,7 @@ export class FileService {
         contentType: contentType,
       };
     } catch (error) {
-      console.error(`FileService: Failed to get content for file ID ${fileId}:`, error);
+      console.error('FileService: Failed to get content for file ID', { fileId, error });
       return null;
     }
   }

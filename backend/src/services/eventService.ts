@@ -116,7 +116,7 @@ export class EventService {
       return event as Event
     } catch (error) {
       if (process.env.DEBUG_EVENT_ACCESS === 'true') {
-        console.warn(`⚠️ Event data not found for ${eventId}`)
+        console.warn('Event data not found', { eventId })
       }
       return null
     }
@@ -148,7 +148,7 @@ export class EventService {
       fs.writeFileSync(eventFilePath, JSON.stringify(eventData, null, 2), 'utf8')
       return true
     } catch (error) {
-      console.error(`Failed to save event data for ${eventId}:`, error)
+      console.error('Failed to save event data', { eventId, error })
       return false
     }
   }
@@ -227,7 +227,7 @@ export class EventService {
       fs.writeFileSync(parsedDataFilePath, JSON.stringify(parsedData, null, 2), 'utf8')
       return true
     } catch (error) {
-      console.error(`Failed to save parsed data for ${eventId}:`, error)
+      console.error('Failed to save parsed data', { eventId, error })
       return false
     }
   }
@@ -264,7 +264,7 @@ export class EventService {
       fs.writeFileSync(platformFilePath, JSON.stringify(content, null, 2), 'utf8')
       return true
     } catch (error) {
-      console.error(`Failed to save platform content for ${eventId}/${platform}:`, error)
+      console.error('Failed to save platform content', { eventId, platform, error })
       return false
     }
   }
@@ -308,7 +308,7 @@ export class EventService {
         }
       }
     } catch (error) {
-      console.error(`Failed to load platform content for ${eventId}:`, error)
+      console.error('Failed to load platform content', { eventId, error })
     }
 
     return platformContent
@@ -584,7 +584,7 @@ export class EventService {
     // Remove old directory
     fs.rmdirSync(oldEventDir)
 
-    console.log(`Migrated event folder: ${oldEventId} → ${newEventId}`)
+    console.log('Migrated event folder', { oldEventId, newEventId })
   }
 
   // Create event from uploaded files with extracted title
@@ -615,7 +615,7 @@ export class EventService {
     // First load event data from event.json
     const eventData = await this.getEventData(eventId)
     if (!eventData) {
-      console.warn(`Event data not found for ${eventId}`)
+      console.warn('Event data not found', { eventId })
       return null
     }
 
@@ -634,7 +634,7 @@ export class EventService {
       try {
         parsedData = JSON.parse(fs.readFileSync(parsedDataPath, 'utf8'))
       } catch (error) {
-        console.warn(`Failed to load parsed data for event ${eventId}:`, error)
+        console.warn('Failed to load parsed data for event', { eventId, error })
       }
     }
 
@@ -669,7 +669,7 @@ export class EventService {
             
             platformContent[platform] = content
           } catch (error) {
-            console.warn(`Failed to load platform content for ${platform}:`, error)
+            console.warn('Failed to load platform content for platform', { platform, error })
           }
         }
       }
@@ -742,7 +742,7 @@ export class EventService {
       const targetNameMap: Record<string, string> = {}
       targets.forEach((target: any) => {
         if (!target.targetType) {
-          console.error(`Target ${target.id} missing targetType - this should not happen`)
+          console.error('Target missing targetType - this should not happen', { targetId: target.id })
           targetNameMap[target.id] = target.id
           return
         }
@@ -775,7 +775,7 @@ export class EventService {
           // targetType is REQUIRED - no fallbacks
           targetsWithNames.targetNames = targets.map((target: any) => {
             if (!target.targetType) {
-              console.error(`Target ${target.id} missing targetType - this should not happen`)
+              console.error('Target missing targetType - this should not happen', { targetId: target.id })
               return target.id
             }
             const baseField = service.getBaseField(target.targetType)
@@ -797,7 +797,7 @@ export class EventService {
         _templates: resolvedTemplates
       }
     } catch (error) {
-      console.warn(`Failed to resolve target names for platform ${platform}:`, error)
+      console.warn('Failed to resolve target names for platform', { platform, error })
       return content // Return content as-is if resolution fails
     }
   }

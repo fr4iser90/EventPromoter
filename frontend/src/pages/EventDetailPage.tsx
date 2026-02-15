@@ -117,7 +117,7 @@ function EventDetailPage() {
         setFileContents(prev => ({ ...prev, [fileName]: data.content }))
       }
     } catch (err) {
-      console.error(`Failed to load content for ${fileName}:`, err)
+      console.error('Failed to load content for file', { fileName, error: err })
     } finally {
       setLoadingContents(prev => ({ ...prev, [fileName]: false }))
     }

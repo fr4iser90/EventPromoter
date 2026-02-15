@@ -153,7 +153,7 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
       // Handle multiple runs
       const results: PostResult[] = []
       for (const run of runs) {
-        console.log(`📧 Processing template run: ${run.templateId}`)
+        console.log('Processing template run', { templateId: run.templateId })
         
         try {
           await this.executeContractStep(
@@ -173,12 +173,12 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
             async () => extractRecipientsForRun(run),
             `Extracting recipients for template ${run.templateId}`
           )
-          console.log(`📧 Found ${recipients.length} recipient(s)`)
+          console.log('Found recipients for template run', { templateId: run.templateId, count: recipients.length })
 
           // Loop through recipients to send personalized emails
           for (const recipient of recipients) {
             const recipientEmail = recipient.email
-            console.log(`📧 Processing recipient: ${recipientEmail}`)
+            console.log('Processing recipient', { templateId: run.templateId, recipientEmail })
 
             const { html, subject } = await this.executeContractStep(
               EMAIL_API_STEP_IDS.COMPOSE_RENDER_TEMPLATE,
@@ -215,7 +215,7 @@ export class EmailApiPublisher implements EmailPublisher, EventAwarePublisher {
             results.push(sendResult)
           }
         } catch (error: any) {
-          console.error(`Error processing template run ${run.templateId}:`, error)
+          console.error('Error processing template run', { templateId: run.templateId, error })
           results.push({
             success: false,
             error: error.message || 'Failed to process template run'

@@ -18,17 +18,17 @@ export class ConfigController {
         return res.status(400).json({ error: 'Invalid configuration name' })
       }
       if (process.env.DEBUG_API_REQUESTS === 'true') {
-        console.log(`🌐 API Request: GET /api/config/${name}`)
+        console.log('API Request: GET /api/config/:name', { name })
       }
       const config = await ConfigService.getConfig(name)
 
       if (config) {
         if (process.env.DEBUG_API_REQUESTS === 'true') {
-          console.log(`✅ Sending ${name} config`)
+          console.log('Sending config', { name })
         }
         res.json(config)
       } else {
-        console.warn(`⚠️ Config ${name} not found`)
+        console.warn('Config not found', { name })
         res.status(404).json({ error: 'Configuration not found' })
       }
     } catch (error) {
@@ -45,17 +45,17 @@ export class ConfigController {
       }
       const config = req.body
       if (process.env.DEBUG_API_REQUESTS === 'true') {
-        console.log(`💾 API Request: POST /api/config/${name}`)
+        console.log('API Request: POST /api/config/:name', { name })
       }
       const success = await ConfigService.saveConfig(name, config)
 
       if (success) {
         if (process.env.DEBUG_API_REQUESTS === 'true') {
-          console.log(`✅ Config ${name} saved successfully`)
+          console.log('Config saved successfully', { name })
         }
         res.json({ success: true })
       } else {
-        console.error(`❌ Failed to save config ${name}`)
+        console.error('Failed to save config', { name })
         res.status(500).json({ error: 'Failed to save configuration' })
       }
     } catch (error) {

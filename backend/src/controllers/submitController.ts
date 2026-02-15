@@ -51,7 +51,7 @@ export class SubmitController {
       if (req.body.platforms && typeof req.body.platforms === 'object') {
         // ✅ Retry: Use platforms from request body (filter enabled platforms)
         selectedPlatforms = Object.keys(req.body.platforms).filter(p => req.body.platforms[p] === true)
-        console.log(`[Retry] Publishing only to platforms: ${selectedPlatforms.join(', ')}`)
+        console.log('[Retry] Publishing only to selected platforms', { selectedPlatforms })
       } else if (eventData.selectedPlatforms && Array.isArray(eventData.selectedPlatforms) && eventData.selectedPlatforms.length > 0) {
         // Normal publish: Use platforms from event data
         selectedPlatforms = eventData.selectedPlatforms
@@ -151,11 +151,11 @@ export class SubmitController {
 
       // ✅ FIX: Start publishing in background and return sessionId immediately
       // This allows the frontend to connect to the SSE stream BEFORE events are fired
-      console.log(`[Submit] Starting background publishing for session: ${publishSessionId}`)
+      console.log('[Submit] Starting background publishing', { publishSessionId })
       
       // We don't await this!
       PublishingService.publish(publishRequest, baseUrl, publishSessionId).then(async (publishResult) => {
-        console.log(`[Submit] Background publishing completed for session: ${publishSessionId}`)
+        console.log('[Submit] Background publishing completed', { publishSessionId })
         
         // Save to history
         try {
@@ -203,7 +203,7 @@ export class SubmitController {
           }
         }
       }).catch(async (error: any) => {
-        console.error(`[Submit] Background publishing failed for session: ${publishSessionId}`, error)
+        console.error('[Submit] Background publishing failed', { publishSessionId, error })
         
         // Track the error in publish session
         if (publishSessionId && eventId) {

@@ -136,14 +136,14 @@ async function loadPlatformRoutes() {
             if (ENFORCE_PLATFORM_ROUTE_GUARD) {
               throw error
             }
-            console.info(`⚠️  Failed to load routes for ${platformId}:`, error.message)
+            console.info('Failed to load routes for platform', { platformId, error: error.message })
           }
         }
       }
     }
     
     if (loadedPlatforms.length > 0) {
-      console.debug(`✅ Loaded routes for ${loadedPlatforms.length} platform(s): ${loadedPlatforms.join(', ')}`)
+      console.debug('Loaded routes for platforms', { count: loadedPlatforms.length, platforms: loadedPlatforms })
     }
   } catch (error) {
     console.error('Failed to load platform routes:', error)

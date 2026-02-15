@@ -224,7 +224,7 @@ function GenericPlatformEditor({
         setPlatformConfig(data.platform)
         setError(null)
       } catch (err: unknown) {
-        console.error(`Failed to load config for ${platform}:`, err)
+        console.error('Failed to load config for platform', { platform, error: err })
         setError(err instanceof Error ? err.message : t('editor.failedToLoadConfig'))
         // NO FALLBACK - show error instead
         setPlatformConfig(null)

@@ -123,7 +123,7 @@ export class PlatformController {
           }
         } catch (error) {
           // Use fallback if translation loading fails
-          console.warn(`Failed to load description translation for ${platform.metadata.id}:`, error)
+          console.warn('Failed to load description translation for platform', { platformId: platform.metadata.id, error })
         }
 
         // Get available publishing modes for this platform
@@ -131,7 +131,7 @@ export class PlatformController {
         try {
           availableModes = await PublishingService.getAvailableModes(platform.metadata.id)
         } catch (error) {
-          console.warn(`Failed to get available modes for ${platform.metadata.id}:`, error)
+          console.warn('Failed to get available modes for platform', { platformId: platform.metadata.id, error })
         }
 
         return {
@@ -156,7 +156,7 @@ export class PlatformController {
       }))
 
       if (process.env.DEBUG_API_REQUESTS === 'true') {
-        console.debug(`✅ Sending ${platforms.length} platforms to client`)
+        console.debug('Sending platforms to client', { count: platforms.length })
       }
       return res.json({
         success: true,
@@ -261,7 +261,7 @@ export class PlatformController {
         }
       } catch (error) {
         // Use fallback if translation loading fails
-        console.warn(`Failed to load description translation for ${platformId}:`, error)
+        console.warn('Failed to load description translation for platform', { platformId, error })
       }
 
       // Get available publishing modes for this platform
@@ -269,7 +269,7 @@ export class PlatformController {
       try {
         availableModes = await PublishingService.getAvailableModes(platformId)
       } catch (error) {
-        console.warn(`Failed to get available modes for ${platformId}:`, error)
+        console.warn('Failed to get available modes for platform', { platformId, error })
       }
 
       return res.json({

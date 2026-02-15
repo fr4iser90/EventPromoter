@@ -1,6 +1,7 @@
 import { BaseTargetService } from '../../../services/targetService.js'
 import { Target, Group, TargetSchema } from '@/types/schema/index.js'
 import { redditSettingsSchema } from '../schema/settings.js' // Import the settings schema
+import { createSafeValidationRegex } from '../../../utils/safeRegex.js'
 
 /**
  * Reddit Target Service
@@ -31,8 +32,11 @@ export class RedditTargetService extends BaseTargetService {
       if (rule.type === 'required' && (!value || value.trim() === '')) {
         return false
       }
-      if (rule.type === 'pattern' && typeof value === 'string' && !new RegExp(rule.value as string).test(value)) {
-        return false
+      if (rule.type === 'pattern' && typeof value === 'string') {
+        const regex = createSafeValidationRegex(rule.value)
+        if (!regex || !regex.test(value)) {
+          return false
+        }
       }
     }
     return true

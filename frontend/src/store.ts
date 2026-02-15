@@ -239,7 +239,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
   // Complete event restore (only event-specific data, no global overrides)
   restoreEvent: async (eventId: string) => {
     try {
-      console.log(`🔄 Starting complete restore of event ${eventId}...`)
+      console.log('Starting complete restore of event', { eventId })
 
       // Load complete event data from backend
       const response = await axios.get(getApiUrl(`event/${eventId}/restore`))
@@ -270,7 +270,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
 
       console.log(`✅ Platforms restored:`, restoredPlatforms)
 
-      console.log(`✅ Event ${eventId} completely restored:`, {
+      console.log('Event completely restored', { eventId,
         files: restoreData.files?.length || 0,
         platforms: restoreData.platforms?.length || 0,
         contentKeys: Object.keys(restoreData.content || {}).length
@@ -278,7 +278,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
 
       return restoreData
     } catch (error) {
-      console.error(`❌ Failed to restore event ${eventId}:`, error)
+      console.error('Failed to restore event', { eventId, error })
       throw error
     }
   },
@@ -320,7 +320,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
             if (fileExists) {
               validatedFileRefs.push(fileRef)
             } else {
-              console.warn(`File not found on server, removing from refs: ${fileRef.name}`)
+              console.warn('File not found on server, removing from refs', { fileName: fileRef.name })
             }
           }
         }
@@ -406,7 +406,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
         set({ fileUploadExpanded: true, eventHistoryExpanded: true })
       }
 
-      console.log(`Workflow state changed to: ${newWorkflowState}`)
+      console.log('Workflow state changed', { newWorkflowState })
     }
   },
 
@@ -473,7 +473,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
 
   setGlobalPublishingMode: (mode: string) => {
     set({ globalPublishingMode: mode, platformOverrides: {} })
-    console.log(`Global publishing mode set to: ${mode} (Overrides reset)`)
+    console.log('Global publishing mode set (overrides reset)', { mode })
   },
 
   setPlatformOverride: (platformId: string, route: string) => {
@@ -530,7 +530,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
         // If backend created an event automatically, use it
         if (response.data.createdEvent) {
           set({ currentEvent: response.data.createdEvent })
-          console.log(`Backend created event: ${response.data.createdEvent.id}`)
+          console.log('Backend created event', { eventId: response.data.createdEvent.id })
         }
 
         // If we have parsed data, generate platform content automatically
@@ -577,7 +577,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
         const updatedRefs = state.uploadedFileRefs.map(f => f.id === fileId ? { ...f, ...updatedFile } : f)
         set({ uploadedFileRefs: updatedRefs })
         get().saveEventWorkspace()
-        console.log(`File metadata updated: ${fileId}`, updates)
+        console.log('File metadata updated', { fileId, updates })
       }
     } catch (error) {
       console.error('Update file metadata error:', error)
@@ -606,7 +606,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
             platformContent[platform] = content
           }
         } catch (error) {
-          console.warn(`Failed to generate content for ${platform}:`, error)
+          console.warn('Failed to generate content for platform', { platform, error })
         }
       }
 
@@ -818,9 +818,9 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
           lastModified: new Date().toISOString()
         }
       })
-      console.log(`Platform content for ${platform} saved to backend`)
+      console.log('Platform content saved to backend', { platform })
     } catch (error) {
-      console.warn(`Failed to save platform content for ${platform}:`, error)
+      console.warn('Failed to save platform content', { platform, error })
       // Don't throw error for auto-save failures
     }
   },
@@ -838,7 +838,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
         parsedData: parsedData || null,
         parsingStatus: parsedData ? 'completed' : 'idle'
       })
-      console.log(`Parsed data loaded for event ${eventId}`)
+      console.log('Parsed data loaded for event', { eventId })
     } catch (error) {
       console.warn('Failed to load parsed data for event:', error)
       set({ parsedData: null, parsingStatus: 'idle' })
@@ -890,7 +890,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
       const response = await axios.get(getApiUrl(`event/${eventId}/platform-content`))
       const { platformContent } = response.data
       set({ platformContent: platformContent || {} })
-      console.log(`Platform content loaded for event ${eventId}`)
+      console.log('Platform content loaded for event', { eventId })
       // Update workflow state after loading content
       get().updateWorkflowState()
     } catch (error) {
@@ -905,7 +905,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
   saveEventPlatformContent: async (eventId: string, platformContent: Record<string, Record<string, unknown>>) => {
     try {
       await axios.put(getApiUrl(`event/${eventId}/platform-content`), platformContent)
-      console.log(`Platform content saved for event ${eventId}`)
+      console.log('Platform content saved for event', { eventId })
     } catch (error) {
       console.warn('Failed to save platform content for event:', error)
     }
@@ -955,7 +955,7 @@ const createStoreState = (set: SetStoreState, get: GetStoreState) => ({
           isImage: fileData.file.type.startsWith('image/')
         })
       } catch (error) {
-        console.error(`Error converting file ${fileData.name}:`, error)
+        console.error('Error converting file', { fileName: fileData.name, error })
       }
     }
 

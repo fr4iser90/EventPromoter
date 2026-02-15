@@ -18,8 +18,8 @@ const app = express()
 const PORT = Number(process.env.PORT) || 4000
 
 console.log(`🚀 Starting EventPromoter Backend...`)
-console.log(`🚀 EventPromoter Backend running on http://0.0.0.0:${PORT}`)
-console.log(`📁 Config directory: ${process.cwd()}/config`)
+console.log('EventPromoter Backend running', { url: `http://0.0.0.0:${PORT}` })
+console.log('Config directory', { configDir: `${process.cwd()}/config` })
 
 // 0. Trust proxy - REQUIRED for X-Forwarded-* headers (Case 3-5)
 app.set('trust proxy', true)
@@ -31,7 +31,7 @@ app.use(i18nMiddleware)
 
 // 2. Debug logging
 app.use((req, res, next) => {
-  console.log(`[Request] ${req.method} ${req.url}`);
+  console.log('[Request]', { method: req.method, url: req.url });
   next();
 })
 

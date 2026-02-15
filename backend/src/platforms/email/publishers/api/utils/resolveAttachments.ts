@@ -43,19 +43,19 @@ export function resolveAttachments(
       // Extract ID from object (could be id, filename, or name property)
       id = item.id || item.filename || item.name || String(item)
     } else {
-      console.warn(`Invalid file ID format: ${item}`)
+      console.warn('Invalid file ID format', { item })
       continue
     }
 
     const file = availableFiles.find(f => f.id === id || f.filename === id || f.name === id)
     if (!file) {
-      console.warn(`File not found for ID: ${id}`)
+      console.warn('File not found for ID', { id })
       continue
     }
 
     try {
       if (!file.path || file.path.includes('\0')) {
-        console.warn(`Invalid file path for attachment: ${id}`)
+        console.warn('Invalid file path for attachment', { id })
         continue
       }
 
@@ -65,7 +65,7 @@ export function resolveAttachments(
         : path.resolve(cwd, file.path)
 
       if (!isPathInsideAllowedRoot(absolutePath)) {
-        console.warn(`Attachment path outside allowed roots: ${absolutePath}`)
+        console.warn('Attachment path outside allowed roots', { absolutePath })
         continue
       }
 
@@ -76,10 +76,10 @@ export function resolveAttachments(
           contentType: file.type
         })
       } else {
-        console.warn(`File path not found: ${absolutePath}`)
+        console.warn('File path not found', { absolutePath })
       }
     } catch (err) {
-      console.error(`Failed to read file ${file.name}:`, err)
+      console.error('Failed to read file for attachment', { fileName: file.name, error: err })
     }
   }
 

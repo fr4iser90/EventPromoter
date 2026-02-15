@@ -1,5 +1,6 @@
 import { BaseTargetService } from '../../../services/targetService.js'
 import { twitterSettingsSchema } from '../schema/settings.js' // Import the settings schema
+import { createSafeValidationRegex } from '../../../utils/safeRegex.js'
 
 /**
  * Twitter Target Service
@@ -29,8 +30,11 @@ export class TwitterTargetService extends BaseTargetService {
       if (rule.type === 'required' && (!value || value.trim() === '')) {
         return false
       }
-      if (rule.type === 'pattern' && typeof value === 'string' && !new RegExp(rule.value as string).test(value)) {
-        return false
+      if (rule.type === 'pattern' && typeof value === 'string') {
+        const regex = createSafeValidationRegex(rule.value)
+        if (!regex || !regex.test(value)) {
+          return false
+        }
       }
     }
     return true

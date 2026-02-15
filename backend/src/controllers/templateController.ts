@@ -406,7 +406,7 @@ export class TemplateController {
         } catch (error) {
           // Skip platforms that fail to load templates
           const platformId = platform.metadata?.id || 'unknown'
-          console.warn(`Failed to load templates for ${platformId}:`, error)
+          console.warn('Failed to load templates for platform', { platformId, error })
         }
       }
 
@@ -560,7 +560,7 @@ export class TemplateController {
           }
         } catch (error) {
           // Skip platforms that fail to load
-          console.warn(`Failed to load templates for ${platformId}:`, error)
+          console.warn('Failed to load templates for platform', { platformId, error })
           result.push({
             platformId,
             templateId: null,

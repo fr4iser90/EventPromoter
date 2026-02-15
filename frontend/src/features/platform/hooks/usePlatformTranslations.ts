@@ -108,7 +108,7 @@ export function usePlatformTranslations(platformId?: string, lang?: string): Pla
           throw new Error('Invalid response format')
         }
       } catch (err: unknown) {
-        console.warn(`[usePlatformTranslations] Failed to load translations for platform ${platformId}:`, err)
+        console.warn('[usePlatformTranslations] Failed to load translations for platform', { platformId, error: err })
         setError(err instanceof Error ? err.message : 'platform.failedToLoadPlatformTranslations')
         // Don't fail completely - just log warning
         setLoaded(true)
@@ -190,7 +190,7 @@ export function useMultiplePlatformTranslations(platformIds: string[] = [], lang
               })
             }
           } catch (err: unknown) {
-            console.warn(`Failed to load translations for ${platformId}:`, err)
+            console.warn('Failed to load translations for platform', { platformId, error: err })
             setErrors(prev => ({
               ...prev,
               [platformId]: err instanceof Error ? err.message : 'platform.failedToLoadPlatformTranslation'

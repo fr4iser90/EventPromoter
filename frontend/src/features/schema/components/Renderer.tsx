@@ -32,22 +32,7 @@ import {
 import TargetList from './TargetList'
 import HelperIcon from '../../../shared/components/ui/HelperIcon'
 import type { FieldGroup, SchemaErrors, SchemaField, SchemaValues } from '../types'
-
-const MAX_REGEX_SOURCE_LENGTH = 256
-const SAFE_REGEX_SOURCE_PATTERN = /^[\w\s.^$*+?()[\]{}|\\/-]+$/
-
-function createSafeValidationRegex(source: unknown): RegExp | null {
-  if (typeof source !== 'string') return null
-  if (!source || source.length > MAX_REGEX_SOURCE_LENGTH) return null
-  if (!SAFE_REGEX_SOURCE_PATTERN.test(source)) return null
-  // Basic backtracking guard for obviously dangerous constructs.
-  if (/(\+\+|\*\*|\+\*|\*\+|\)\+[^)]*\+|\)\*[^)]*\*)/.test(source)) return null
-  try {
-    return new RegExp(source)
-  } catch {
-    return null
-  }
-}
+import { createSafeValidationRegex } from '../../../shared/utils/safeRegex'
 
 type TranslationFn = (
   key: string,

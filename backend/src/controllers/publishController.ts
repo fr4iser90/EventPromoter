@@ -226,7 +226,7 @@ export class PublishController {
     // ✅ SEND BUFFERED EVENTS: Send any events that happened before the client connected
     const bufferedEvents = eventService.getBufferedEvents()
     if (bufferedEvents.length > 0) {
-      console.log(`[SSE] Sending ${bufferedEvents.length} buffered events to session ${sessionId}`)
+      console.log('[SSE] Sending buffered events to session', { sessionId, count: bufferedEvents.length })
       for (const event of bufferedEvents) {
         res.write(`data: ${JSON.stringify(event)}\n\n`)
       }
@@ -235,7 +235,12 @@ export class PublishController {
     // Listen for publisher events
     const eventHandler = (event: any) => {
       try {
-        console.log(`[SSE Out] Session: ${sessionId}, Type: ${event.type}, Platform: ${event.platform}, Step: ${event.step || 'N/A'}`)
+        console.log('[SSE Out]', {
+          sessionId,
+          type: event.type,
+          platform: event.platform,
+          step: event.step || 'N/A'
+        })
         res.write(`data: ${JSON.stringify(event)}\n\n`)
       } catch (error) {
         console.error('Error writing SSE event:', error)
@@ -248,7 +253,7 @@ export class PublishController {
     req.on('close', () => {
       eventService.removeListener('publisher_event', eventHandler)
       // Don't remove instance immediately - might reconnect
-      console.log(`SSE connection closed for session ${sessionId}`)
+      console.log('SSE connection closed for session', { sessionId })
     })
 
     // Keep connection alive with heartbeat

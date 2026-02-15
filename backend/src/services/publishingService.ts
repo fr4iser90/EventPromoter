@@ -55,7 +55,7 @@ export class PublishingService {
     // Generate correlation ID for this publishing run
     const publishRunId = sessionId ? `${sessionId}-${Date.now()}` : `publish-${Date.now()}`
     
-    console.log(`[${publishRunId}] 🚀 Starting publish process (WYSIWYG Mode)`)
+    console.log('Starting publish process (WYSIWYG Mode)', { publishRunId })
 
     const platformList = Object.keys(request.platforms).filter(p => request.platforms[p])
     const results: Record<string, any> = {}
@@ -70,7 +70,7 @@ export class PublishingService {
       // The frontend MUST send the route. If not, we default to 'api' but log a warning.
       const method = explicitRoutes[platformId] || 'api'
 
-      console.log(`[${publishRunId}] Platform ${platformId} will use EXPLICIT method: ${method}`)
+      console.log('Platform will use explicit publishing method', { publishRunId, platformId, method })
 
       try {
         let platformResult: any
@@ -261,7 +261,7 @@ export class PublishingService {
     const startTime = Date.now()
     
     // ✅ LOG: publishRunId für besseres Debugging
-    console.log(`[${publishRunId}] Starting ${stepId} for ${platformId} via ${method}`)
+    console.log('Starting publish step', { publishRunId, stepId, platformId, method })
     
     // Emit step_started (standardized base event)
     if (eventEmitter) {
@@ -274,7 +274,7 @@ export class PublishingService {
       const duration = Date.now() - startTime
       
       // ✅ LOG: Success mit publishRunId
-      console.log(`[${publishRunId}] ✅ ${stepId} completed for ${platformId} in ${duration}ms`)
+      console.log('Publish step completed', { publishRunId, stepId, platformId, durationMs: duration })
       
       // Emit step_completed (standardized base event)
       if (eventEmitter) {
@@ -290,7 +290,14 @@ export class PublishingService {
       const retryable = this.isRetryableError(error)
       
       // ✅ LOG: Error mit publishRunId, errorCode und retryable
-      console.error(`[${publishRunId}] ❌ ${stepId} failed for ${platformId}: ${error.message} (${errorCode}, retryable: ${retryable})`)
+      console.error('Publish step failed', {
+        publishRunId,
+        stepId,
+        platformId,
+        error: error.message,
+        errorCode,
+        retryable
+      })
       
       // Emit step_failed (standardized base event)
       if (eventEmitter) {

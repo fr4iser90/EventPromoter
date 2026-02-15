@@ -26,7 +26,7 @@ router.get('/:platformId/:lang', async (req, res) => {
       translations
     });
   } catch (error: any) {
-    console.error(`Error loading translations for ${req.params.platformId}:`, error);
+    console.error('Error loading translations for platform', { platformId: req.params.platformId, error });
     res.status(500).json({
       error: 'Failed to load translations',
       details: error.message
@@ -56,7 +56,7 @@ router.get('/:lang', async (req, res) => {
       translations
     });
   } catch (error: any) {
-    console.error(`Error loading all translations for ${req.params.lang}:`, error);
+    console.error('Error loading all translations for language', { lang: req.params.lang, error });
     res.status(500).json({
       error: 'Failed to load translations',
       details: error.message

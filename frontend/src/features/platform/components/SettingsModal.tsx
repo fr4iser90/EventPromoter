@@ -209,7 +209,7 @@ function SettingsModal({
       const data = await response.json()
       
       if (!response.ok) {
-        console.error(`[SettingsModal] Backend validation failed for ${platformId}:`, data.errors)
+        console.error('[SettingsModal] Backend validation failed', { platformId, errors: data.errors })
         if (data.errors) {
           const formatted = formatErrors(data.errors)
           setErrors(formatted)
@@ -225,14 +225,14 @@ function SettingsModal({
         return false
       }
 
-      console.log(`[SettingsModal] Backend validation passed for ${platformId}`)
+      console.log('[SettingsModal] Backend validation passed', { platformId })
       setError(null)
       setSuccessMessage(t('platform.validationPassed'))
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(null), 3000)
       return true
     } catch (err: unknown) {
-      console.error(`[SettingsModal] Validation error for ${platformId}:`, err)
+      console.error('[SettingsModal] Validation error', { platformId, error: err })
       setError(getErrorMessage(err, t('platform.validationFailed')))
       return false
     } finally {
@@ -246,12 +246,12 @@ function SettingsModal({
       setError(null)
       setErrors({})
 
-      console.log(`[SettingsModal] Saving ${platformId} credentials`)
+      console.log('[SettingsModal] Saving credentials', { platformId })
 
       // Validate first
       const isValid = await handleValidate()
       if (!isValid) {
-        console.warn(`[SettingsModal] Save aborted - validation failed for ${platformId}`)
+        console.warn('[SettingsModal] Save aborted - validation failed', { platformId })
         setSaving(false)
         return
       }
@@ -266,7 +266,7 @@ function SettingsModal({
 
       if (!response.ok) {
         const data = await response.json()
-        console.error(`[SettingsModal] Save failed for ${platformId}:`, data)
+        console.error('[SettingsModal] Save failed', { platformId, data })
         if (data.errors) {
           const formatted = formatErrors(data.errors)
           setErrors(formatted)
@@ -274,11 +274,11 @@ function SettingsModal({
         throw new Error(data.error || t('platform.failedToSaveCredentials'))
       }
 
-      console.log(`[SettingsModal] Successfully saved ${platformId} credentials`)
+      console.log('[SettingsModal] Successfully saved credentials', { platformId })
       if (onSave) onSave(platformId, credentialsValues)
       onClose()
     } catch (err: unknown) {
-      console.error(`[SettingsModal] Save error for ${platformId}:`, err)
+      console.error('[SettingsModal] Save error', { platformId, error: err })
       setError(getErrorMessage(err, t('platform.failedToSaveCredentials')))
     } finally {
       setSaving(false)

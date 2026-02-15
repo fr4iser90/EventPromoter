@@ -135,7 +135,7 @@ export class EventController {
         hashtags: eventData.selectedHashtags || [],
       }
 
-      console.log(`Event ${eventId} restore data prepared:`, {
+      console.log('Event restore data prepared', { eventId,
         files: files.length,
         platforms: restoreData.platforms.length,
         contentKeys: Object.keys(restoreData.content).length

@@ -96,7 +96,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
         // If no panel config available, that's okay - panel just won't show much
         // Only log in development mode to reduce console noise
         if (import.meta.env.DEV) {
-          console.log(`[DynamicPanelWrapper] No panel config found for ${platform}`)
+          console.log('[DynamicPanelWrapper] No panel config found', { platform })
         }
         setPanelConfig(null)
       } catch (err: unknown) {
@@ -170,7 +170,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
 
             optionsMap[field.name] = transformedOptions
           } catch (err) {
-            console.error(`Failed to load options for field ${field.name}:`, err)
+            console.error('Failed to load options for field', { fieldName: field.name, error: err })
             optionsMap[field.name] = [] // Set empty array on error
           }
         }
@@ -248,7 +248,7 @@ function DynamicPanelWrapper({ platform }: { platform: string }) {
           }
         }
       } catch (err) {
-        console.error(`Failed to execute action for field ${fieldName}:`, err)
+        console.error('Failed to execute action for field', { fieldName, error: err })
       }
     }
   }
