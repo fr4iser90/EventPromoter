@@ -3,6 +3,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { resolveSafePath } from './securityUtils.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -10,7 +11,7 @@ const CONFIG_DIR = path.join(__dirname, '../../../config')
 
 export async function readConfig(filename: string): Promise<any> {
   try {
-    const filePath = path.join(CONFIG_DIR, filename)
+    const filePath = resolveSafePath(CONFIG_DIR, filename, 'config filename')
     const data = await fs.readFile(filePath, 'utf8')
     if (process.env.DEBUG_CONFIG_ACCESS === 'true') {
       console.log('Reading config', {
@@ -99,7 +100,7 @@ export async function readConfig(filename: string): Promise<any> {
 
 export async function writeConfig(filename: string, data: any): Promise<boolean> {
   try {
-    const filePath = path.join(CONFIG_DIR, filename)
+    const filePath = resolveSafePath(CONFIG_DIR, filename, 'config filename')
     const jsonString = JSON.stringify(data, null, 2)
     if (process.env.DEBUG_CONFIG_ACCESS === 'true') {
       console.log('Writing config', {
@@ -117,7 +118,7 @@ export async function writeConfig(filename: string, data: any): Promise<boolean>
 
 export async function configExists(filename: string): Promise<boolean> {
   try {
-    const filePath = path.join(CONFIG_DIR, filename)
+    const filePath = resolveSafePath(CONFIG_DIR, filename, 'config filename')
     await fs.access(filePath)
     return true
   } catch {
@@ -126,5 +127,5 @@ export async function configExists(filename: string): Promise<boolean> {
 }
 
 export function getConfigPath(filename: string): string {
-  return path.join(CONFIG_DIR, filename)
+  return resolveSafePath(CONFIG_DIR, filename, 'config filename')
 }

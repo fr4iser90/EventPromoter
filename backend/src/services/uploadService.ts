@@ -3,6 +3,7 @@
 import fs from 'fs'
 import path from 'path'
 import { PathConfig } from '../utils/pathConfig.js'
+import { resolveSafePath } from '../utils/securityUtils.js'
 import { UploadedFile } from '../types/index.js'
 
 export class UploadService {
@@ -30,7 +31,7 @@ export class UploadService {
     }
 
     return files.map(file => {
-      const finalPath = path.join(filesDir, file.filename)
+      const finalPath = resolveSafePath(filesDir, file.filename, 'filename')
       
       // Use copy + unlink instead of rename for cross-device compatibility
       // This works when temp/ is in container FS and events/ is mounted from host

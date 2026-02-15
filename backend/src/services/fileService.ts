@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveSafePath } from '../utils/securityUtils.js';
 
 // Bestimme __dirname für ES-Module
 const __filename = fileURLToPath(import.meta.url);
@@ -61,11 +62,7 @@ export class FileService {
         case '.txt': contentType = 'text/plain'; break;
       }
 
-      const filePath = path.resolve(this.uploadDir, filenameToLoad);
-      if (filePath !== this.uploadDir && !filePath.startsWith(`${this.uploadDir}${path.sep}`)) {
-        console.warn('FileService: Rejected path traversal attempt for file ID', { fileId });
-        return null;
-      }
+      const filePath = resolveSafePath(this.uploadDir, filenameToLoad, 'filename');
 
       // Prüfen, ob die Datei existiert
       await fs.access(filePath, fs.constants.F_OK);

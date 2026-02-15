@@ -914,7 +914,7 @@ export class ContentExtractionService {
             }
           } catch (error: any) {
             // Platform service not available - use content as-is
-            console.debug(`No content processing for platform ${platform} on load:`, error?.message || 'Unknown error')
+            console.debug('No content processing for platform on load', { platform, error: error?.message || 'Unknown error' })
           }
           
           // ✅ Resolve target names for _templates array (if present)
