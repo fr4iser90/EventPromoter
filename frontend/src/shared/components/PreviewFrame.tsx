@@ -13,6 +13,7 @@
 
 import React, { useRef, useEffect } from 'react'
 import { useTheme } from '@mui/material'
+import DOMPurify from 'dompurify'
 
 /**
  * Preview Document Interface (Platform-agnostic)
@@ -57,29 +58,27 @@ export function PreviewFrame({ document, dimensions, ...props }: {
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const sanitizePreviewHtml = (rawHtml: string): string => {
-    const parser = new DOMParser()
-    const parsed = parser.parseFromString(rawHtml || '', 'text/html')
-
-    // Remove high-risk elements completely.
-    parsed.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach((el) => el.remove())
-
-    // Remove inline event handlers and javascript: URLs.
-    parsed.querySelectorAll('*').forEach((node) => {
-      const element = node as HTMLElement
-      Array.from(element.attributes).forEach((attr) => {
-        const name = attr.name.toLowerCase()
-        const value = attr.value.trim().toLowerCase()
-        if (name.startsWith('on')) {
-          element.removeAttribute(attr.name)
-          return
-        }
-        if ((name === 'href' || name === 'src') && value.startsWith('javascript:')) {
-          element.removeAttribute(attr.name)
-        }
-      })
+    // Use DOMPurify for robust XSS protection
+    // Allow safe HTML elements and attributes, but block scripts, event handlers, etc.
+    return DOMPurify.sanitize(rawHtml || '', {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'img',
+        'div', 'span', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+        'hr', 'sub', 'sup', 'mark', 'del', 'ins'
+      ],
+      ALLOWED_ATTR: [
+        'href', 'title', 'alt', 'src', 'width', 'height', 'class', 'id',
+        'style', 'target', 'rel', 'colspan', 'rowspan', 'align', 'valign'
+      ],
+      ALLOW_DATA_ATTR: false,
+      FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'style'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
+      ALLOW_UNKNOWN_PROTOCOLS: false,
+      RETURN_DOM: false,
+      RETURN_DOM_FRAGMENT: false,
+      RETURN_TRUSTED_TYPE: false
     })
-
-    return parsed.body.innerHTML
   }
 
   // ✅ Preview Shell HTML (Frontend-owned)
