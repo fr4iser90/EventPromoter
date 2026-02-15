@@ -28,6 +28,7 @@ export abstract class BaseTargetService {
   protected platformId: string
   protected targetSchemas: Record<string, TargetSchema> // Multi-target support - required
   protected dataFileName: string = 'targets.json' // Override in subclasses if needed
+  private static readonly SAFE_SEGMENT = /^[a-z0-9._-]+$/i
   
   constructor(platformId: string, targetSchemas: Record<string, TargetSchema>) {
     this.platformId = platformId
@@ -563,6 +564,40 @@ export abstract class BaseTargetService {
     return value.trim().toLowerCase()
   }
 
+  private validateSafeSegment(value: string, fieldName: string): string {
+    const normalized = String(value || '').trim()
+    if (
+      !normalized ||
+      normalized.includes('/') ||
+      normalized.includes('\\') ||
+      normalized.includes('..') ||
+      normalized.includes('\0') ||
+      !BaseTargetService.SAFE_SEGMENT.test(normalized)
+    ) {
+      throw new Error(`Invalid ${fieldName}`)
+    }
+    return normalized
+  }
+
+  private async resolveTargetDataPaths(): Promise<{ dataDir: string; dataPath: string }> {
+    const path = await import('path')
+    const { fileURLToPath } = await import('url')
+
+    const safePlatformId = this.validateSafeSegment(this.platformId, 'platformId')
+    const safeDataFileName = this.validateSafeSegment(this.dataFileName, 'dataFileName')
+    const __filename = fileURLToPath(import.meta.url)
+    const __dirname = path.dirname(__filename)
+
+    const dataDir = path.resolve(__dirname, '../platforms', safePlatformId, 'data')
+    const dataPath = path.resolve(dataDir, safeDataFileName)
+
+    if (dataPath !== dataDir && !dataPath.startsWith(`${dataDir}${path.sep}`)) {
+      throw new Error('Invalid target data path')
+    }
+
+    return { dataDir, dataPath }
+  }
+
   /**
    * Read target data from file
    * Uses a custom data file name (targets.json) instead of the platform's default dataSource
@@ -570,12 +605,7 @@ export abstract class BaseTargetService {
   protected async readTargetData(): Promise<{ targets?: Target[]; groups?: Record<string, Group> }> {
     try {
       const fs = await import('fs/promises')
-      const path = await import('path')
-      const { fileURLToPath } = await import('url')
-      
-      const __filename = fileURLToPath(import.meta.url)
-      const __dirname = path.dirname(__filename)
-      const dataPath = path.join(__dirname, '../platforms', this.platformId, 'data', this.dataFileName)
+      const { dataPath } = await this.resolveTargetDataPaths()
       
       try {
         const data = await fs.readFile(dataPath, 'utf8')
@@ -601,13 +631,7 @@ export abstract class BaseTargetService {
   protected async writeTargetData(data: { targets?: Target[]; groups?: Record<string, Group> }): Promise<boolean> {
     try {
       const fs = await import('fs/promises')
-      const path = await import('path')
-      const { fileURLToPath } = await import('url')
-      
-      const __filename = fileURLToPath(import.meta.url)
-      const __dirname = path.dirname(__filename)
-      const dataDir = path.join(__dirname, '../platforms', this.platformId, 'data')
-      const dataPath = path.join(dataDir, this.dataFileName)
+      const { dataDir, dataPath } = await this.resolveTargetDataPaths()
       
       // Ensure directory exists
       await fs.mkdir(dataDir, { recursive: true })

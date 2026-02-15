@@ -8,6 +8,8 @@
 
 import { EmailService } from './emailService.js'
 import { markdownToHtml, isMarkdown } from '../../../utils/markdownRenderer.js'
+import { PathConfig } from '../../../utils/pathConfig.js'
+import path from 'path'
 
 /**
  * ✅ Helper-Funktion: Extrahiert Content-HTML aus vollständigem Template-HTML
@@ -66,6 +68,26 @@ export async function renderEmailPreview(
     locale?: string
   }
 ): Promise<{ html: string; css?: string; dimensions?: { width: number; height: number } }> {
+  const resolveSafeEventImagePath = (eventId: string, filename: string): string => {
+    if (
+      !filename ||
+      filename.includes('\0') ||
+      filename.includes('/') ||
+      filename.includes('\\') ||
+      filename === '.' ||
+      filename === '..'
+    ) {
+      throw new Error('Invalid preview image filename')
+    }
+
+    const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
+    const filePath = path.resolve(filesDir, filename)
+    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
+      throw new Error('Invalid preview image path')
+    }
+    return filePath
+  }
+
   const { content, schema, mode = 'desktop', client, locale } = options
   
   // ✅ PREVIEW: Use raw content directly, don't process it (processContentForSave creates HTML for sending, not preview)
@@ -199,8 +221,8 @@ export async function renderEmailPreview(
         const parts = cleanUrl.split('/')
         if (parts.length >= 2) {
           const eventId = parts[0]
-          const filename = parts.slice(1).join('/')
-          const filePath = path.join(process.cwd(), 'events', eventId, 'files', filename)
+          const filename = path.basename(parts.slice(1).join('/'))
+          const filePath = resolveSafeEventImagePath(eventId, filename)
           
           if (fs.existsSync(filePath)) {
             const imageBuffer = fs.readFileSync(filePath)

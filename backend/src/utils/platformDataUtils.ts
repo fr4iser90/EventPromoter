@@ -15,12 +15,38 @@ import { getPlatformRegistry } from '../services/platformRegistry.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+const PLATFORM_ID_PATTERN = /^[a-z0-9_-]+$/i
+const DATA_SOURCE_PATTERN = /^[a-z0-9._-]+$/i
+
+function validatePlatformId(platformId: string): string {
+  const normalized = String(platformId || '').trim()
+  if (!normalized || !PLATFORM_ID_PATTERN.test(normalized)) {
+    throw new Error('Invalid platform ID')
+  }
+  return normalized
+}
+
+function validateDataSource(dataSource: string): string {
+  const normalized = String(dataSource || '').trim()
+  if (
+    !normalized ||
+    normalized.includes('/') ||
+    normalized.includes('\\') ||
+    normalized.includes('..') ||
+    normalized.includes('\0') ||
+    !DATA_SOURCE_PATTERN.test(normalized)
+  ) {
+    throw new Error('Invalid platform data source')
+  }
+  return normalized
+}
 
 /**
  * Get the data directory path for a platform
  */
 function getPlatformDataDir(platformId: string): string {
-  return path.join(__dirname, '../platforms', platformId, 'data')
+  const safePlatformId = validatePlatformId(platformId)
+  return path.join(__dirname, '../platforms', safePlatformId, 'data')
 }
 
 /**
@@ -28,15 +54,16 @@ function getPlatformDataDir(platformId: string): string {
  */
 async function getPlatformDataSource(platformId: string): Promise<string | null> {
   try {
+    const safePlatformId = validatePlatformId(platformId)
     const registry = getPlatformRegistry()
-    const platform = registry.getPlatform(platformId)
+    const platform = registry.getPlatform(safePlatformId)
     
     if (!platform) {
-      console.warn(`Platform ${platformId} not found in registry`)
+      console.warn(`Platform ${safePlatformId} not found in registry`)
       return null
     }
     
-    return platform.metadata.dataSource || null
+    return platform.metadata.dataSource ? validateDataSource(platform.metadata.dataSource) : null
   } catch (error) {
     console.error(`Error getting data source for ${platformId}:`, error)
     return null

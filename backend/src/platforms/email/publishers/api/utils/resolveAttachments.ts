@@ -23,6 +23,16 @@ export function resolveAttachments(
   scope: 'global' | 'specific'
 ): ResolvedAttachment[] {
   const resolved: ResolvedAttachment[] = []
+  const cwd = process.cwd()
+  const allowedRoots = [
+    path.resolve(cwd, 'events'),
+    path.resolve(cwd, 'temp')
+  ]
+
+  const isPathInsideAllowedRoot = (targetPath: string): boolean => {
+    const normalizedTarget = path.resolve(targetPath)
+    return allowedRoots.some((root) => normalizedTarget === root || normalizedTarget.startsWith(`${root}${path.sep}`))
+  }
 
   for (const item of fileIds) {
     // Handle both string IDs and file objects
@@ -44,10 +54,20 @@ export function resolveAttachments(
     }
 
     try {
+      if (!file.path || file.path.includes('\0')) {
+        console.warn(`Invalid file path for attachment: ${id}`)
+        continue
+      }
+
       // Resolve path - handle both absolute and relative paths
-      const absolutePath = path.isAbsolute(file.path) 
-        ? file.path 
-        : path.join(process.cwd(), file.path)
+      const absolutePath = path.isAbsolute(file.path)
+        ? path.resolve(file.path)
+        : path.resolve(cwd, file.path)
+
+      if (!isPathInsideAllowedRoot(absolutePath)) {
+        console.warn(`Attachment path outside allowed roots: ${absolutePath}`)
+        continue
+      }
 
       if (fs.existsSync(absolutePath)) {
         resolved.push({

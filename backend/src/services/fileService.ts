@@ -33,7 +33,17 @@ export class FileService {
       // um den echten Dateinamen und MIME-Typ anhand der fileId zu ermitteln.
       // Für jetzt nehmen wir an, die fileId ist der Dateiname und der MIME-Typ muss geraten werden.
 
-      let filenameToLoad = fileId;
+      const filenameToLoad = String(fileId || '').trim();
+      if (
+        !filenameToLoad ||
+        filenameToLoad.includes('/') ||
+        filenameToLoad.includes('\\') ||
+        filenameToLoad.includes('..') ||
+        filenameToLoad.includes('\0')
+      ) {
+        console.warn(`FileService: Rejected invalid file ID: ${fileId}`);
+        return null;
+      }
       let contentType = 'application/octet-stream'; // Standard-MIME-Typ
 
       // Versuche MIME-Typ über Dateiendung zu erraten
@@ -51,7 +61,11 @@ export class FileService {
         case '.txt': contentType = 'text/plain'; break;
       }
 
-      const filePath = path.join(this.uploadDir, filenameToLoad);
+      const filePath = path.resolve(this.uploadDir, filenameToLoad);
+      if (filePath !== this.uploadDir && !filePath.startsWith(`${this.uploadDir}${path.sep}`)) {
+        console.warn(`FileService: Rejected path traversal attempt for file ID: ${fileId}`);
+        return null;
+      }
 
       // Prüfen, ob die Datei existiert
       await fs.access(filePath, fs.constants.F_OK);

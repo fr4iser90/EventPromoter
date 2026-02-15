@@ -21,6 +21,37 @@ export const EVENT_ID_PATTERNS = {
 export const EVENT_PATTERN = 'title-first' // ← DIESE ZEILE ÄNDERN!
 
 export class EventService {
+  private static readonly SAFE_PLATFORM_SEGMENT = /^[a-z0-9_-]+$/i
+
+  private static validatePlatformSegment(platform: string): string {
+    const normalized = String(platform || '').trim()
+    if (!normalized || !this.SAFE_PLATFORM_SEGMENT.test(normalized)) {
+      throw new Error('Invalid platform identifier')
+    }
+    return normalized
+  }
+
+  private static resolveSafeEventFilePath(eventId: string, fileName: string): string {
+    const normalizedFileName = String(fileName || '')
+    if (
+      !normalizedFileName ||
+      normalizedFileName.includes('\0') ||
+      normalizedFileName.includes('/') ||
+      normalizedFileName.includes('\\') ||
+      normalizedFileName === '.' ||
+      normalizedFileName === '..'
+    ) {
+      throw new Error('Invalid file name')
+    }
+
+    const filesDir = path.resolve(PathConfig.getFilesDir(eventId))
+    const filePath = path.resolve(filesDir, normalizedFileName)
+    if (filePath !== filesDir && !filePath.startsWith(`${filesDir}${path.sep}`)) {
+      throw new Error('Invalid file path')
+    }
+    return filePath
+  }
+
   // ✅ Generate stable Event ID (UUID v4)
   static generateEventId(): string {
     return randomUUID()
@@ -215,7 +246,14 @@ export class EventService {
   // Platform Content Management
   static async savePlatformContent(eventId: string, platform: string, content: any): Promise<boolean> {
     const platformsDir = PathConfig.getPlatformsDir(eventId)
-    const platformFilePath = path.join(platformsDir, `${platform}.json`)
+    let platformFilePath: string
+    try {
+      const safePlatform = this.validatePlatformSegment(platform)
+      platformFilePath = path.join(platformsDir, `${safePlatform}.json`)
+    } catch (error) {
+      console.error('Failed to save platform content: invalid platform segment', { eventId, platform, error })
+      return false
+    }
 
     // Ensure platforms directory exists
     if (!fs.existsSync(platformsDir)) {
@@ -232,7 +270,13 @@ export class EventService {
   }
 
   static async getPlatformContent(eventId: string, platform: string): Promise<any | null> {
-    const platformFilePath = path.join(PathConfig.getPlatformsDir(eventId), `${platform}.json`)
+    let platformFilePath: string
+    try {
+      const safePlatform = this.validatePlatformSegment(platform)
+      platformFilePath = path.join(PathConfig.getPlatformsDir(eventId), `${safePlatform}.json`)
+    } catch {
+      return null
+    }
     
     try {
       const data = fs.readFileSync(platformFilePath, 'utf8')
@@ -310,17 +354,24 @@ export class EventService {
     const loadedFiles: UploadedFile[] = []
 
     for (const fileId of fileIds) {
-      const filePath = path.join(eventDir, fileId)
+      let filePath: string
+      let safeFileId: string
+      try {
+        filePath = this.resolveSafeEventFilePath(eventId, fileId)
+        safeFileId = path.basename(fileId)
+      } catch {
+        continue
+      }
 
       if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath)
-        const fileName = path.basename(fileId)
+        const fileName = safeFileId
 
         loadedFiles.push({
-          id: fileId,
+          id: safeFileId,
           name: fileName,
           filename: fileName,
-          url: `/api/files/${eventId}/${fileId}`,
+          url: `/api/files/${eventId}/${safeFileId}`,
           path: path.join('events', eventId, 'files', fileName),
           size: stats.size,
           type: this.getMimeType(fileName),
