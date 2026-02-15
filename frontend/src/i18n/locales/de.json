@@ -612,5 +612,50 @@
   "helper": {
     "clickForHelp": "Hilfe anzeigen",
     "title": "Hilfe"
+  },
+  "legal": {
+    "lastUpdated": "Zuletzt aktualisiert: TODO",
+    "login": {
+      "title": "EventPromoter Login",
+      "description": "Diese Instanz nutzt App-Zugangsdaten. Bitte Benutzername und Passwort eingeben, um fortzufahren.",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "signingIn": "Anmeldung...",
+      "signIn": "Anmelden",
+      "publicPages": "Oeffentliche Rechtstexte",
+      "error": "Login fehlgeschlagen"
+    },
+    "contact": {
+      "title": "Kontakt",
+      "supportIntro": "Fuer Support, Reviewer-Zugaenge sowie Datenschutz-/Loeschanfragen kontaktiere den Betreiber dieser Instanz:",
+      "email": "E-Mail: TODO",
+      "websiteLabel": "Website:",
+      "reviewerAccessTitle": "Anfragen fuer Reviewer-Zugang",
+      "reviewerAccessBody": "Bitte \"Review Access Request\" im Betreff angeben und die zu pruefende Plattform nennen.",
+      "deletionTitle": "Loeschanfragen",
+      "deletionBody": "Bitte Account-Kennung und Plattformverbindungsdetails angeben, damit die Loeschung schneller bearbeitet werden kann."
+    },
+    "privacy": {
+      "title": "Datenschutzerklaerung",
+      "intro": "EventPromoter verarbeitet nur Daten, die noetig sind, um vom Nutzer freigegebene Event-Inhalte fuer verbundene Plattformen zu erstellen und zu veroeffentlichen.",
+      "dataWeProcessTitle": "Welche Daten wir verarbeiten",
+      "dataWeProcessItem1": "- Metadaten zur Kontoverknuepfung fuer verbundene Plattform-Integrationen",
+      "dataWeProcessItem2": "- Vom Nutzer erstellte Event-Inhalte",
+      "dataWeProcessItem3": "- Betriebsprotokolle (Publishing-Status, Fehler, Zeitstempel)",
+      "dataDeletionTitle": "Datenloeschung",
+      "dataDeletionBody": "Du kannst die Loeschung accountbezogener Daten ueber die Kontaktseite anfordern. Anfragen werden innerhalb von TODO Tagen nach Identitaetspruefung bearbeitet.",
+      "contactTitle": "Kontakt",
+      "contactBody": "Bitte nutze /contact fuer Datenschutz- und Loeschanfragen."
+    },
+    "terms": {
+      "title": "Nutzungsbedingungen",
+      "intro": "EventPromoter wird fuer kontrollierte Publishing-Workflows bereitgestellt. Nutzer muessen Plattformregeln, geltende Gesetze und lokale Vorschriften einhalten.",
+      "acceptableUseTitle": "Zulaessige Nutzung",
+      "acceptableUseItem1": "- Veroeffentliche nur Inhalte, fuer die du berechtigt bist",
+      "acceptableUseItem2": "- Nutze den Dienst nicht fuer Spam, Missbrauch oder Richtlinienverstoesse",
+      "acceptableUseItem3": "- Beachte die API- und Developer-Richtlinien jeder Plattform",
+      "availabilityTitle": "Verfuegbarkeit und Haftung",
+      "availabilityBody": "Die Verfuegbarkeit des Dienstes erfolgt auf Best-Effort-Basis. Der Betreiber kann den Zugang jederzeit aendern, einschraenken oder einstellen."
+    }
   }
 }

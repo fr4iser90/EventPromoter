@@ -1,46 +1,47 @@
 import React from 'react'
 import { Container, Paper, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 function PrivacyPage() {
+  const { t } = useTranslation()
+
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
       <Paper variant="outlined" sx={{ p: 4 }}>
         <Typography variant="h4" sx={{ mb: 2 }}>
-          Privacy Policy
+          {t('legal.privacy.title')}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Last updated: TODO
+          {t('legal.lastUpdated')}
         </Typography>
 
         <Typography variant="body1" sx={{ mb: 2 }}>
-          EventPromoter processes only data required to create and publish user-approved event
-          content to connected platforms.
+          {t('legal.privacy.intro')}
         </Typography>
 
         <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
-          Data we process
+          {t('legal.privacy.dataWeProcessTitle')}
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          - Account linkage metadata for connected platform integrations
+          {t('legal.privacy.dataWeProcessItem1')}
           <br />
-          - Event content created by the user
+          {t('legal.privacy.dataWeProcessItem2')}
           <br />
-          - Operational logs (publish status, errors, timestamps)
+          {t('legal.privacy.dataWeProcessItem3')}
         </Typography>
 
         <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
-          Data deletion
+          {t('legal.privacy.dataDeletionTitle')}
         </Typography>
         <Typography id="data-deletion" variant="body1" sx={{ mb: 2 }}>
-          You can request deletion of account-linked data via the contact page. Requests are handled
-          within TODO days after identity verification.
+          {t('legal.privacy.dataDeletionBody')}
         </Typography>
 
         <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
-          Contact
+          {t('legal.privacy.contactTitle')}
         </Typography>
-        <Typography variant="body1">Please use /contact for privacy and deletion requests.</Typography>
+        <Typography variant="body1">{t('legal.privacy.contactBody')}</Typography>
       </Paper>
     </Container>
   )

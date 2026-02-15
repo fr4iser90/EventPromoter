@@ -1,9 +1,11 @@
 import React, { FormEvent, useState } from 'react'
 import { Alert, Box, Button, Container, Link, Paper, TextField, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { getApiUrl } from '../shared/utils/api'
 
 function LoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -25,12 +27,12 @@ function LoginPage() {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}))
-        throw new Error(body.message || 'Login failed')
+        throw new Error(body.message || t('legal.login.error'))
       }
 
       navigate('/', { replace: true })
     } catch (err: any) {
-      setError(err?.message || 'Login failed')
+      setError(err?.message || t('legal.login.error'))
     } finally {
       setLoading(false)
     }
@@ -40,18 +42,17 @@ function LoginPage() {
     <Container maxWidth="md" sx={{ py: 6 }}>
       <Paper variant="outlined" sx={{ p: 4 }}>
         <Typography variant="h4" sx={{ mb: 2 }}>
-          EventPromoter Login
+          {t('legal.login.title')}
         </Typography>
 
         <Typography variant="body1" sx={{ mb: 2 }}>
-          This instance uses app-level credentials for access. Enter your username and password to
-          continue.
+          {t('legal.login.description')}
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit} sx={{ mb: 3, maxWidth: 420 }}>
           <TextField
             fullWidth
-            label="Username"
+            label={t('legal.login.username')}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             margin="normal"
@@ -61,7 +62,7 @@ function LoginPage() {
           <TextField
             fullWidth
             type="password"
-            label="Password"
+            label={t('legal.login.password')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             margin="normal"
@@ -72,13 +73,13 @@ function LoginPage() {
           {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
           <Button type="submit" variant="contained" sx={{ mt: 2 }} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? t('legal.login.signingIn') : t('legal.login.signIn')}
           </Button>
         </Box>
 
         <Box sx={{ mt: 3 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Public legal pages
+            {t('legal.login.publicPages')}
           </Typography>
           <Typography variant="body2">
             Privacy: <Link href="/privacy">/privacy</Link>

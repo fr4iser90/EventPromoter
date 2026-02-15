@@ -612,5 +612,50 @@
   "helper": {
     "clickForHelp": "Haz clic para ayuda",
     "title": "Ayuda"
+  },
+  "legal": {
+    "lastUpdated": "Ultima actualizacion: TODO",
+    "login": {
+      "title": "Inicio de sesion EventPromoter",
+      "description": "Esta instancia usa credenciales de la app para el acceso. Introduce tu usuario y contrasena para continuar.",
+      "username": "Usuario",
+      "password": "Contrasena",
+      "signingIn": "Iniciando sesion...",
+      "signIn": "Iniciar sesion",
+      "publicPages": "Paginas legales publicas",
+      "error": "Error de inicio de sesion"
+    },
+    "contact": {
+      "title": "Contacto",
+      "supportIntro": "Para soporte, acceso de revisores y solicitudes de privacidad/eliminacion de datos, contacta al operador de la instancia:",
+      "email": "Correo: TODO",
+      "websiteLabel": "Sitio web:",
+      "reviewerAccessTitle": "Solicitudes de acceso para revisores",
+      "reviewerAccessBody": "Incluye \"Review Access Request\" en el asunto y menciona la plataforma en revision.",
+      "deletionTitle": "Solicitudes de eliminacion de datos",
+      "deletionBody": "Incluye identificador de cuenta y detalles de conexion de plataforma para procesar la eliminacion mas rapidamente."
+    },
+    "privacy": {
+      "title": "Politica de privacidad",
+      "intro": "EventPromoter procesa solo los datos necesarios para crear y publicar contenido de eventos aprobado por el usuario en plataformas conectadas.",
+      "dataWeProcessTitle": "Datos que procesamos",
+      "dataWeProcessItem1": "- Metadatos de vinculacion de cuentas para integraciones de plataformas conectadas",
+      "dataWeProcessItem2": "- Contenido de eventos creado por el usuario",
+      "dataWeProcessItem3": "- Registros operativos (estado de publicacion, errores, marcas de tiempo)",
+      "dataDeletionTitle": "Eliminacion de datos",
+      "dataDeletionBody": "Puedes solicitar la eliminacion de datos vinculados a cuentas a traves de la pagina de contacto. Las solicitudes se gestionan en TODO dias tras verificar la identidad.",
+      "contactTitle": "Contacto",
+      "contactBody": "Usa /contact para solicitudes de privacidad y eliminacion."
+    },
+    "terms": {
+      "title": "Terminos del servicio",
+      "intro": "EventPromoter se ofrece para flujos de publicacion controlados y requiere que los usuarios cumplan las politicas de plataforma, leyes aplicables y normativas locales.",
+      "acceptableUseTitle": "Uso aceptable",
+      "acceptableUseItem1": "- Publica solo contenido que estes autorizado a distribuir",
+      "acceptableUseItem2": "- No uses este servicio para spam, abuso o violaciones de politicas",
+      "acceptableUseItem3": "- Respeta las politicas de API y desarrollo de cada plataforma",
+      "availabilityTitle": "Disponibilidad y responsabilidad",
+      "availabilityBody": "La disponibilidad del servicio se ofrece en base best-effort. El operador puede actualizar, restringir o interrumpir el acceso en cualquier momento."
+    }
   }
 }

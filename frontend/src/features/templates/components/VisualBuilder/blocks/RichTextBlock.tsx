@@ -78,7 +78,7 @@ function RichTextBlock({ block, fieldSchema, isSelected, onUpdate, onInsertVaria
     if (!editor) return
     const previousUrl = editor.getAttributes('link').href as string | undefined
     const url = window.prompt(
-      t('template.linkPrompt', { defaultValue: 'Enter link URL (leave empty to remove)' }),
+      t('template.linkPrompt'),
       previousUrl || 'https://'
     )
 
@@ -157,17 +157,17 @@ function RichTextBlock({ block, fieldSchema, isSelected, onUpdate, onInsertVaria
             <Button size="small" onClick={() => editor?.chain().focus().toggleStrike().run()} variant={editor?.isActive('strike') ? 'contained' : 'outlined'}><s>S</s></Button>
             <Button size="small" onClick={() => editor?.chain().focus().toggleOrderedList().run()} variant={editor?.isActive('orderedList') ? 'contained' : 'outlined'}>1.</Button>
             <Button size="small" onClick={() => editor?.chain().focus().toggleBulletList().run()} variant={editor?.isActive('bulletList') ? 'contained' : 'outlined'}>•</Button>
-            <Button size="small" onClick={setLink} variant={editor?.isActive('link') ? 'contained' : 'outlined'}>{t('template.link', { defaultValue: 'Link' })}</Button>
-            <Button size="small" onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()} variant="outlined">{t('template.clear', { defaultValue: 'Clear' })}</Button>
+            <Button size="small" onClick={setLink} variant={editor?.isActive('link') ? 'contained' : 'outlined'}>{t('template.link')}</Button>
+            <Button size="small" onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()} variant="outlined">{t('template.clear')}</Button>
             <input
               type="color"
-              title={t('template.textColor', { defaultValue: 'Text color' })}
+              title={t('template.textColor')}
               onChange={(e) => editor?.chain().focus().setColor(e.target.value).run()}
               style={{ width: 32, height: 28, border: 'none', background: 'transparent', cursor: 'pointer' }}
             />
             <input
               type="color"
-              title={t('template.backgroundColor', { defaultValue: 'Background color' })}
+              title={t('template.backgroundColor')}
               onChange={(e) => editor?.chain().focus().setHighlight({ color: e.target.value }).run()}
               style={{ width: 32, height: 28, border: 'none', background: 'transparent', cursor: 'pointer' }}
             />

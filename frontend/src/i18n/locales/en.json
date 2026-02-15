@@ -612,5 +612,50 @@
   "helper": {
     "clickForHelp": "Click for help",
     "title": "Help"
+  },
+  "legal": {
+    "lastUpdated": "Last updated: TODO",
+    "login": {
+      "title": "EventPromoter Login",
+      "description": "This instance uses app-level credentials for access. Enter your username and password to continue.",
+      "username": "Username",
+      "password": "Password",
+      "signingIn": "Signing in...",
+      "signIn": "Sign in",
+      "publicPages": "Public legal pages",
+      "error": "Login failed"
+    },
+    "contact": {
+      "title": "Contact",
+      "supportIntro": "For support, reviewer access, and privacy/data deletion requests, contact the instance operator:",
+      "email": "Email: TODO",
+      "websiteLabel": "Website:",
+      "reviewerAccessTitle": "Reviewer access requests",
+      "reviewerAccessBody": "Include \"Review Access Request\" in your subject and mention the platform under review.",
+      "deletionTitle": "Data deletion requests",
+      "deletionBody": "Include account identifier and platform connection details to process deletion quickly."
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "EventPromoter processes only data required to create and publish user-approved event content to connected platforms.",
+      "dataWeProcessTitle": "Data we process",
+      "dataWeProcessItem1": "- Account linkage metadata for connected platform integrations",
+      "dataWeProcessItem2": "- Event content created by the user",
+      "dataWeProcessItem3": "- Operational logs (publish status, errors, timestamps)",
+      "dataDeletionTitle": "Data deletion",
+      "dataDeletionBody": "You can request deletion of account-linked data via the contact page. Requests are handled within TODO days after identity verification.",
+      "contactTitle": "Contact",
+      "contactBody": "Please use /contact for privacy and deletion requests."
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "intro": "EventPromoter is provided for controlled publishing workflows and requires users to comply with platform terms, applicable laws, and local regulations.",
+      "acceptableUseTitle": "Acceptable use",
+      "acceptableUseItem1": "- Publish only content you are authorized to distribute",
+      "acceptableUseItem2": "- Do not use this service for spam, abuse, or policy violations",
+      "acceptableUseItem3": "- Respect each platform's API and developer policies",
+      "availabilityTitle": "Availability and liability",
+      "availabilityBody": "Service availability is provided on a best-effort basis. The operator may update, restrict, or discontinue access at any time."
+    }
   }
 }
