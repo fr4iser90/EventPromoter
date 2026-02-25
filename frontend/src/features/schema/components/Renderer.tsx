@@ -57,6 +57,8 @@ function renderField(
   const translatedLabel = field.label && t ? t(field.label, field.label) : field.label
   const translatedDescription = field.description && t ? t(field.description, field.description) : field.description
   const translatedPlaceholder = field.placeholder && t ? t(field.placeholder, field.placeholder) : field.placeholder
+  // ✅ Translate error messages if they are translation keys
+  const translatedError = error && t ? t(error, error) : error
   
   const commonProps = {
     fullWidth: true,
@@ -64,7 +66,7 @@ function renderField(
     placeholder: translatedPlaceholder,
     required: field.required,
     error: !!error,
-    helperText: error || translatedDescription,
+    helperText: translatedError || translatedDescription,
     value: value || field.default || '',
     onChange: (e: { target: { value: string } }) => onChange(field.name, e.target.value),
     disabled: field.ui?.disabled,
@@ -166,8 +168,8 @@ function renderField(
               </MenuItem>
             ))}
           </Select>
-          {(error || translatedDescription) && (
-            <FormHelperText>{error || translatedDescription}</FormHelperText>
+          {(translatedError || translatedDescription) && (
+            <FormHelperText>{translatedError || translatedDescription}</FormHelperText>
           )}
         </FormControl>
       )

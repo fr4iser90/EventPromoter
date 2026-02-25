@@ -1,5 +1,7 @@
 const MAX_REGEX_SOURCE_LENGTH = 256
-const SAFE_REGEX_SOURCE_PATTERN = /^[\w\s.^$*+?()[\]{}|\\/-]+$/
+// Allow common regex escape sequences: \s (whitespace), \d (digit), \w (word), \S, \D, \W (negated)
+// Also allow - (hyphen) and @ (at sign) which are commonly used in patterns like email validation
+const SAFE_REGEX_SOURCE_PATTERN = /^[\w\s.^$*+?()[\]{}|\\/\-@\\s\\d\\w\\S\\D\\W]+$/
 
 /**
  * Create a regex from dynamic schema input with conservative safety guards.

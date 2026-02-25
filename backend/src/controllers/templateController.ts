@@ -612,7 +612,7 @@ export class TemplateController {
         return
       }
 
-      const localizedTemplate = this.resolveTemplateForLocale(template, validLang)
+      const localizedTemplate = TemplateController.resolveTemplateForLocale(template, validLang)
 
       // ✅ Validate template requirements against targets (if targets provided)
       if (mappingRequest.targets) {
