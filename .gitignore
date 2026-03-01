@@ -149,12 +149,9 @@ playwright/.cache/
 screenshots/
 
 # API keys, credentials
-config/credentials/
-config/secrets/
 credentials.json
 keys.json
 .secrets-key
-config/.secrets-key
 
 # Database files
 *.db
@@ -174,4 +171,4 @@ test-data/
 
 # event files
 backend/events/*
-config/*
+
