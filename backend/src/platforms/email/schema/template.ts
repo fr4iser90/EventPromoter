@@ -28,6 +28,14 @@ export const emailTemplateSchema: TemplateSchema = {
       placeholder: 'platform.email.template.common.dynamicPlaceholder',
       required: true,
       description: 'platform.email.template.html.description'
+    },
+    image: {
+      label: 'platform.email.template.image.label',
+      type: 'image',
+      default: '{image}',
+      placeholder: 'platform.email.template.common.dynamicPlaceholder',
+      required: false,
+      description: 'platform.email.template.image.description'
     }
   },
   variables: [

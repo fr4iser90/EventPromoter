@@ -301,8 +301,10 @@ function TemplateEditor({
               value={formData.template.text || ''}
               onChange={(e) => handleTemplateFieldChange('text', e.target.value)}
               multiline
-              rows={6}
+              minRows={12}
+              maxRows={32}
               placeholder={t('template.variablePlaceholder')}
+              sx={{ '& textarea': { resize: 'vertical' } }}
             />
           )}
         </SectionPanel>

@@ -60,6 +60,7 @@ import { eventAnnouncementTemplate } from './event-announcement.js'
 import { lastMinuteTicketsTemplate } from './last-minute-tickets.js'
 import { eventReminderTemplate } from './event-reminder.js'
 import { personalInvitationTemplate } from './personal-invitation.js'
+import { blankTemplate } from './blank.js'
 
 // Export individual templates
 export { basicEventAnnouncementTemplate } from './basic-event-announcement.js'
@@ -68,9 +69,11 @@ export { eventAnnouncementTemplate } from './event-announcement.js'
 export { lastMinuteTicketsTemplate } from './last-minute-tickets.js'
 export { eventReminderTemplate } from './event-reminder.js'
 export { personalInvitationTemplate } from './personal-invitation.js'
+export { blankTemplate } from './blank.js'
 
-// Main templates array
+// Main templates array (blank first so it appears as "Leeres Template" option)
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
+  blankTemplate,
   basicEventAnnouncementTemplate,
   professionalEventAnnouncementTemplate,
   eventAnnouncementTemplate,

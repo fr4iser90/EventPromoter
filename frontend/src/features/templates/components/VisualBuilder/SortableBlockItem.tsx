@@ -12,7 +12,8 @@ import { useTranslation } from 'react-i18next'
 import {
   Delete as DeleteIcon,
   ArrowUpward as ArrowUpIcon,
-  ArrowDownward as ArrowDownIcon
+  ArrowDownward as ArrowDownIcon,
+  ContentCopy as DuplicateIcon
 } from '@mui/icons-material'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -33,6 +34,7 @@ function SortableBlockItem({
   onMoveUp,
   onMoveDown,
   onRemove,
+  onDuplicate,
   canMoveUp,
   canMoveDown,
 }: SortableBlockItemProps) {
@@ -132,6 +134,19 @@ function SortableBlockItem({
             <ArrowDownIcon fontSize="small" />
           </IconButton>
         </Tooltip>
+        {onDuplicate && (
+          <Tooltip title={t('template.duplicateBlock', { defaultValue: 'Duplicate block' })}>
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDuplicate()
+              }}
+            >
+              <DuplicateIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
         <Tooltip title={t('common.delete')}>
           <IconButton
             size="small"

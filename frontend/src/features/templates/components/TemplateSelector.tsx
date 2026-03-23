@@ -360,12 +360,15 @@ const TemplateSelector = ({
                     <Typography variant="body2" sx={{ flexGrow: 1 }}>
                       {template.name}
                     </Typography>
-                    {(template as any).isDefault && (
+                    {template.id === 'blank' && (
+                      <Chip label={t('template.emptyTemplate')} size="small" color="secondary" variant="outlined" sx={{ ml: 1, fontSize: '0.7rem' }} />
+                    )}
+                    {(template as any).isDefault && template.id !== 'blank' && (
                       <Chip label={t('template.default')} size="small" color="primary" variant="outlined" sx={{ ml: 1, fontSize: '0.7rem' }} />
                     )}
                   </Box>
                   <Typography variant="caption" color="text.secondary" sx={{ width: '100%' }}>
-                    {t('template.variablesUsed')} {(template.variables || []).join(', ')}
+                    {template.id === 'blank' ? template.description || t('template.emptyTemplate') : (t('template.variablesUsed') + ' ' + (template.variables || []).join(', '))}
                   </Typography>
                 </MenuItem>
               )),

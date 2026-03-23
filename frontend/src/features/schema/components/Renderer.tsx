@@ -84,7 +84,9 @@ function renderField(
           key={field.name}
           {...commonProps}
           multiline
-          rows={4}
+          minRows={12}
+          maxRows={32}
+          sx={{ '& textarea': { resize: 'vertical' } }}
         />
       )
 

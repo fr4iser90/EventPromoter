@@ -9,6 +9,7 @@
 import React from 'react'
 import TextBlock from './TextBlock'
 import RichTextBlock from './RichTextBlock'
+import ImageBlock from './ImageBlock'
 import type { BlockRendererBlock as TemplateBlock, TemplateFieldSchema as FieldSchema } from '../../../types'
 
 /**
@@ -66,7 +67,18 @@ function BlockRenderer({
           onInsertVariable={onInsertVariable}
         />
       )
-    
+
+    case 'image':
+      return (
+        <ImageBlock
+          block={block}
+          fieldSchema={fieldSchema}
+          isSelected={isSelected}
+          onUpdate={onUpdate}
+          onInsertVariable={onInsertVariable}
+        />
+      )
+
     default:
       // Fallback für unbekannte Typen
       return (

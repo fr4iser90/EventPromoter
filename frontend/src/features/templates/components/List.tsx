@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Box,
@@ -20,7 +20,9 @@ import {
   Add as AddIcon,
   Description as TemplateIcon,
   Visibility as VisibilityIcon,
-  ContentCopy as DuplicateIcon
+  ContentCopy as DuplicateIcon,
+  Download as DownloadIcon,
+  Upload as UploadIcon
 } from '@mui/icons-material'
 
 import { useTemplates } from '../hooks/useTemplates'
@@ -49,7 +51,7 @@ const TemplateList = ({
       filtered = filtered.filter(template => 
         template.name.toLowerCase().includes(query) ||
         (template.description && template.description.toLowerCase().includes(query)) ||
-        template.variables.some(v => v.toLowerCase().includes(query))
+        (template.variables || []).some((v: string) => v.toLowerCase().includes(query))
       )
     }
 
@@ -115,6 +117,76 @@ const TemplateList = ({
     }
   }
 
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importSuccess, setImportSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleExport = (template: TemplateRecord, event: React.MouseEvent) => {
+    event.stopPropagation()
+    const payload = {
+      name: template.name,
+      description: template.description,
+      category: template.category || 'general',
+      template: template.template || {},
+      variables: template.variables || [],
+      variableDefinitions: template.variableDefinitions
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `template-${(template.name || 'export').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportClick = () => {
+    setImportError(null)
+    setImportSuccess(false)
+    fileInputRef.current?.click()
+  }
+
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setImportError(null)
+    setImportSuccess(false)
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text) as Record<string, unknown>
+      if (typeof data.name !== 'string' || !data.name.trim()) {
+        setImportError(t('template.importInvalidFile', { defaultValue: 'Invalid file: missing or invalid "name".' }))
+        return
+      }
+      if (typeof data.category !== 'string' || !data.category.trim()) {
+        setImportError(t('template.importInvalidFile', { defaultValue: 'Invalid file: missing or invalid "category".' }))
+        return
+      }
+      if (!data.template || typeof data.template !== 'object' || Array.isArray(data.template)) {
+        setImportError(t('template.importInvalidFile', { defaultValue: 'Invalid file: "template" must be an object.' }))
+        return
+      }
+      const variables = Array.isArray(data.variables) ? data.variables : []
+      const result = await createTemplate({
+        name: String(data.name).trim(),
+        description: data.description != null ? String(data.description) : undefined,
+        category: String(data.category).trim(),
+        template: data.template as Record<string, string>,
+        variables: variables.map(String),
+        variableDefinitions: data.variableDefinitions as TemplateRecord['variableDefinitions']
+      })
+      if (result.success) {
+        setImportSuccess(true)
+        setTimeout(() => setImportSuccess(false), 3000)
+      } else {
+        setImportError(result.error || t('template.importError', { defaultValue: 'Import failed.' }))
+      }
+    } catch (err) {
+      setImportError(t('template.importInvalidFile', { defaultValue: 'Invalid JSON or file format.' }))
+    }
+  }
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={3}>
@@ -151,6 +223,33 @@ const TemplateList = ({
 
   return (
     <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          style={{ display: 'none' }}
+          onChange={handleImportFile}
+        />
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<UploadIcon />}
+          onClick={handleImportClick}
+        >
+          {t('template.import', { defaultValue: 'Import template' })}
+        </Button>
+        {importSuccess && (
+          <Typography variant="caption" color="success.main">
+            {t('template.importSuccess', { defaultValue: 'Template imported.' })}
+          </Typography>
+        )}
+        {importError && (
+          <Typography variant="caption" color="error.main">
+            {importError}
+          </Typography>
+        )}
+      </Box>
       {Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
         <Box key={category} mb={3}>
           <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
@@ -184,9 +283,14 @@ const TemplateList = ({
                 >
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                      <Typography variant="h6" component="h3" sx={{ flex: 1, mr: 1 }}>
-                        {template.name}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', flex: 1, mr: 1 }}>
+                        <Typography variant="h6" component="h3">
+                          {template.name}
+                        </Typography>
+                        {template.id === 'blank' && (
+                          <Chip label={t('template.emptyTemplate')} size="small" color="secondary" variant="outlined" sx={{ ml: 1, fontSize: '0.7rem' }} />
+                        )}
+                      </Box>
                       {template.isDefault && (
                         <Chip 
                           label={t('template.default')} 
@@ -260,6 +364,11 @@ const TemplateList = ({
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Tooltip title={t('template.export', { defaultValue: 'Export' })}>
+                        <IconButton size="small" onClick={(e) => handleExport(template, e)}>
+                          <DownloadIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title={t('template.duplicate')}>
                         <IconButton
                           size="small"
@@ -268,7 +377,6 @@ const TemplateList = ({
                           <DuplicateIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      
                       {!template.isDefault && (
                         <Tooltip title={t('template.delete')}>
                           <IconButton

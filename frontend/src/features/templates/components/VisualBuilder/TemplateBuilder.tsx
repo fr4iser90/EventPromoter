@@ -51,7 +51,7 @@ function TemplateBuilder({
   const { t } = useTranslation()
   const [blocks, setBlocks] = useState<TemplateBlock[]>([])
   const [selectedBlock, setSelectedBlock] = useState<TemplateBlock | null>(null)
-  const [showPreview, setShowPreview] = useState(false)
+  const [showPreview, setShowPreview] = useState(true)
   const [showPalette, setShowPalette] = useState(true)
 
   // Drag-and-Drop Sensoren
@@ -148,6 +148,24 @@ function TemplateBuilder({
     })
   }, [])
 
+  // Block duplizieren (fügt Kopie direkt unter dem Block ein)
+  const handleDuplicateBlock = useCallback((blockId: string) => {
+    setBlocks((prev) => {
+      const idx = prev.findIndex((b) => b.id === blockId)
+      if (idx === -1) return prev
+      const block = prev[idx]
+      const newBlock: TemplateBlock = {
+        ...block,
+        id: `block-${block.fieldName}-dup-${Date.now()}`,
+        position: block.position + 1,
+        data: { ...block.data }
+      }
+      const copy = [...prev]
+      copy.splice(idx + 1, 0, newBlock)
+      return copy.map((b, i) => ({ ...b, position: i }))
+    })
+  }, [])
+
   // Drag-and-Drop Handler
   const handleDragEnd = useCallback((event: { active: { id: string | number; data: { current?: { fieldName?: string; fieldSchema?: TemplateField } } }; over: { id: string | number } | null }) => {
     const { active, over } = event
@@ -207,9 +225,9 @@ function TemplateBuilder({
     )
   }
 
-  // Filtere nur Felder mit type: 'html' oder 'rich' für visuellen Builder
+  // Filtere nur visuelle Felder (html, rich, image) für den Builder
   const visualFields = Object.entries(schema.template.defaultStructure)
-    .filter(([_, field]) => field.type === 'html' || field.type === 'rich')
+    .filter(([_, field]) => field.type === 'html' || field.type === 'rich' || field.type === 'image')
     .map(([fieldName]) => fieldName)
 
   // Wenn keine visuellen Felder vorhanden, zeige normalen Editor
@@ -303,6 +321,7 @@ function TemplateBuilder({
                             onMoveUp={() => handleMoveUp(block.id)}
                             onMoveDown={() => handleMoveDown(block.id)}
                             onRemove={() => handleRemoveBlock(block.id)}
+                            onDuplicate={() => handleDuplicateBlock(block.id)}
                             canMoveUp={visualBlocks.findIndex(b => b.id === block.id) > 0}
                             canMoveDown={visualBlocks.findIndex(b => b.id === block.id) < visualBlocks.length - 1}
                           />

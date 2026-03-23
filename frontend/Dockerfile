@@ -36,6 +36,9 @@ FROM nginx:alpine
 # Copy built files from builder
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
+# Copy nginx configuration (for SPA routing, API proxying, and security headers)
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
 # Create nginx cache directories and set proper permissions before switching to nginx user
 RUN mkdir -p /var/cache/nginx/client_temp \
     /var/cache/nginx/proxy_temp \
@@ -45,30 +48,9 @@ RUN mkdir -p /var/cache/nginx/client_temp \
     chown -R nginx:nginx /var/cache/nginx && \
     chown -R nginx:nginx /var/log/nginx && \
     chown -R nginx:nginx /etc/nginx/conf.d && \
+    chown nginx:nginx /etc/nginx/conf.d/default.conf && \
     touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid
-
-# Copy nginx configuration (for SPA routing and API proxying)
-RUN echo 'server { \
-    listen 80; \
-    server_name _; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    location /api { \
-        proxy_pass http://backend:4000/api; \
-        proxy_http_version 1.1; \
-        proxy_set_header Upgrade $http_upgrade; \
-        proxy_set_header Connection "upgrade"; \
-        proxy_set_header Host $host; \
-        proxy_set_header X-Real-IP $remote_addr; \
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
-        proxy_set_header X-Forwarded-Proto $scheme; \
-    } \
-}' > /etc/nginx/conf.d/default.conf && \
-    chown nginx:nginx /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

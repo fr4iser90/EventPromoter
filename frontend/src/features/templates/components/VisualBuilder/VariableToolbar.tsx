@@ -42,28 +42,39 @@ function VariableToolbar({
       <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
         {t('template.variables')}
       </Typography>
-      {variables.map((variable: TemplateVariable) => (
-        <Tooltip
-          key={variable.name}
-          title={variable.description || variable.label || variable.name}
-          arrow
-        >
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => onInsertVariable(variable.name)}
-            sx={{
-              minWidth: 'auto',
-              px: 1,
-              py: 0.5,
-              fontSize: '0.75rem',
-              textTransform: 'none'
-            }}
-          >
-            {`{${variable.name}}`}
-          </Button>
-        </Tooltip>
-      ))}
+      {variables.map((variable: TemplateVariable) => {
+        const label = variable.label || variable.name
+        const desc = variable.description
+        const tooltipTitle = desc ? (
+          <Box component="span" sx={{ display: 'block' }}>
+            <strong>{label}</strong>
+            {desc && (
+              <>
+                <br />
+                <span style={{ fontWeight: 'normal', opacity: 0.95 }}>{desc}</span>
+              </>
+            )}
+          </Box>
+        ) : label
+        return (
+          <Tooltip key={variable.name} title={tooltipTitle} arrow placement="top">
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => onInsertVariable(variable.name)}
+              sx={{
+                minWidth: 'auto',
+                px: 1,
+                py: 0.5,
+                fontSize: '0.75rem',
+                textTransform: 'none'
+              }}
+            >
+              {`{${variable.name}}`}
+            </Button>
+          </Tooltip>
+        )
+      })}
     </Box>
   )
 }

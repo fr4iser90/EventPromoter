@@ -39,10 +39,10 @@ function LivePreview({
       return {}
     }
 
-    // Konvertiere nur visuelle Blöcke
+    // Konvertiere nur visuelle Blöcke (html, rich, image)
     const visualBlocks = blocks.filter((block: LivePreviewBlock) => {
       const fieldSchema = defaultStructure[block.fieldName]
-      return fieldSchema && (fieldSchema.type === 'html' || fieldSchema.type === 'rich')
+      return fieldSchema && (fieldSchema.type === 'html' || fieldSchema.type === 'rich' || fieldSchema.type === 'image')
     })
 
     return blocksToSchemaFormat(visualBlocks, schema)

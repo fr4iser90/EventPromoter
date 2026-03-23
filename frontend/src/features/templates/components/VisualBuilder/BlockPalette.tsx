@@ -87,13 +87,11 @@ function BlockPalette({ schema, existingBlocks = [] }: { schema: any; existingBl
     return null
   }
 
-  // Filtere nur visuelle Felder (html, rich)
+  // Filtere nur visuelle Felder (html, rich, image)
   const visualFields = Object.entries(schema.template.defaultStructure as Record<string, any>)
     .filter(([fieldName, field]) => {
-      // Nur visuelle Felder
-      if (field.type !== 'html' && field.type !== 'rich') return false
-      // Nur Felder, die noch nicht als Block vorhanden sind
-      return !existingBlocks.some(block => block.fieldName === fieldName)
+      if (field.type !== 'html' && field.type !== 'rich' && field.type !== 'image') return false
+      return !existingBlocks.some((block: { fieldName: string }) => block.fieldName === fieldName)
     })
 
   if (visualFields.length === 0) {

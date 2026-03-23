@@ -50,17 +50,24 @@ export function blocksToSchemaFormat(blocks: Block[], schema: SchemaTemplate): R
 
   const defaultStructure = schema.template.defaultStructure
   const template: Record<string, string> = {}
-  
-  blocks.forEach(block => {
-    if (defaultStructure[block.fieldName]) {
-      template[block.fieldName] = block.data.value || ''
-    }
+
+  // Group blocks by fieldName so duplicated blocks are merged (concatenated)
+  const byField = new Map<string, Block[]>()
+  blocks.forEach((block) => {
+    if (!defaultStructure[block.fieldName]) return
+    const list = byField.get(block.fieldName) || []
+    list.push(block)
+    byField.set(block.fieldName, list)
+  })
+  byField.forEach((blockList, fieldName) => {
+    const sorted = blockList.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    template[fieldName] = sorted.map((b) => b.data?.value ?? '').join('')
   })
 
-  // Stelle sicher, dass alle Schema-Felder vorhanden sind
+  // Ensure all schema fields exist
   Object.entries(defaultStructure).forEach(([fieldName, field]) => {
     if (!(fieldName in template)) {
-      template[fieldName] = field.default || ''
+      template[fieldName] = (field as { default?: string }).default ?? ''
     }
   })
 

@@ -181,6 +181,7 @@ export type SortableBlockItemProps = {
   onMoveUp: () => void
   onMoveDown: () => void
   onRemove: () => void
+  onDuplicate?: () => void
   canMoveUp: boolean
   canMoveDown: boolean
 }

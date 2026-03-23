@@ -51,7 +51,7 @@ export interface TemplateSchema {
     /** Field label */
     label: string;
     /** Field type */
-    type: 'text' | 'textarea' | 'html' | 'rich';
+    type: 'text' | 'textarea' | 'html' | 'rich' | 'image';
     /** Default value (with variable placeholders) */
     default?: string;
     /** Placeholder text */
