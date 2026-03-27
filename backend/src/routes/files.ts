@@ -1,8 +1,10 @@
 import express from 'express'
 import { FileController } from '../controllers/fileController.js'
 import { uploadSingle, uploadMultiple } from '../middleware/upload.js'
+import { fileOperationsRateLimit } from '../middleware/rateLimit.js'
 
 const router = express.Router()
+router.use(fileOperationsRateLimit)
 
 // Upload routes
 router.post('/upload', uploadSingle, FileController.uploadFile)

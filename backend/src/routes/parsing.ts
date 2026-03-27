@@ -1,7 +1,9 @@
 import { Router } from 'express'
 import { ParsingController } from '../controllers/parsingController.js'
+import { parsingRateLimit } from '../middleware/rateLimit.js'
 
 const router = Router()
+router.use(parsingRateLimit)
 
 // Parse single file
 router.post('/file/:fileId', ParsingController.parseFile)

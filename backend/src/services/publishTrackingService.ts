@@ -1,5 +1,8 @@
 import fs from 'fs'
 import path from 'path'
+import { randomUUID } from 'crypto'
+import { PathConfig } from '../utils/pathConfig.js'
+import { resolveSafePath } from '../utils/securityUtils.js'
 
 export interface PublishResult {
   platform: string
@@ -30,10 +33,26 @@ export interface PublishSession {
 
 export class PublishTrackingService {
   private static publishSessions: Map<string, PublishSession> = new Map()
+  private static readonly SESSION_ID_PATTERN = /^[a-z0-9-]+$/i
+
+  private static createSessionId(): string {
+    // Use cryptographically strong randomness for session identifiers.
+    const suffix = randomUUID().replace(/-/g, '').slice(0, 12)
+    return `publish-${Date.now()}-${suffix}`
+  }
+
+  private static resolveSessionFile(eventId: string, sessionId: string): string {
+    if (!this.SESSION_ID_PATTERN.test(sessionId)) {
+      throw new Error('Invalid publish session ID')
+    }
+
+    const eventDir = path.resolve(PathConfig.getEventDir(eventId))
+    return resolveSafePath(eventDir, `publish-session-${sessionId}.json`, 'publish session filename')
+  }
 
   // Start a new publish session
   static startPublishSession(eventId: string, platforms: string[]): string {
-    const sessionId = `publish-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const sessionId = this.createSessionId()
 
     const session: PublishSession = {
       id: sessionId,
@@ -124,8 +143,8 @@ export class PublishTrackingService {
   // Save session to file
   private static saveSessionToFile(session: PublishSession): void {
     try {
-      const eventDir = `events/${session.eventId}`
-      const sessionFile = `${eventDir}/publish-session-${session.id}.json`
+      const eventDir = PathConfig.getEventDir(session.eventId)
+      const sessionFile = this.resolveSessionFile(session.eventId, session.id)
 
       // Ensure directory exists
       if (!fs.existsSync(eventDir)) {
@@ -141,7 +160,7 @@ export class PublishTrackingService {
   // Load session from file
   static loadPublishSession(eventId: string, sessionId: string): PublishSession | null {
     try {
-      const sessionFile = `events/${eventId}/publish-session-${sessionId}.json`
+      const sessionFile = this.resolveSessionFile(eventId, sessionId)
 
       if (!fs.existsSync(sessionFile)) {
         return null
@@ -165,7 +184,13 @@ export class PublishTrackingService {
 
     try {
       for (const session of sessionsToDelete) {
-        const sessionFile = `events/${eventId}/publish-session-${session.id}.json`
+        let sessionFile: string
+        try {
+          sessionFile = this.resolveSessionFile(eventId, session.id)
+        } catch {
+          this.publishSessions.delete(session.id)
+          continue
+        }
         if (fs.existsSync(sessionFile)) {
           fs.unlinkSync(sessionFile)
         }

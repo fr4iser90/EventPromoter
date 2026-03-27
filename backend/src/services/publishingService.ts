@@ -6,6 +6,9 @@ import { getPlatformRegistry, initializePlatformRegistry } from './platformRegis
 import { PostResult } from '../types/index.js'
 import { PublishingFeedbackService, PublishingFeedback } from './publishingFeedbackService.js'
 import { PublisherEventService, EventAwarePublisher } from './publisherEventService.js'
+import path from 'path'
+import { pathToFileURL } from 'url'
+import { sanitizePlatformSegment } from '../utils/securityUtils.js'
 
 export type PublishingMode = 'n8n' | 'api' | 'playwright' | 'custom'
 
@@ -578,20 +581,21 @@ export class PublishingService {
     type: 'api' | 'playwright'
   ): Promise<{ publish: (content: any, files: any[], hashtags: string[], options?: { dryMode?: boolean; sessionId?: string }) => Promise<PostResult> } | null> {
     try {
+      const safePlatformId = sanitizePlatformSegment(platformId)
+
       // Try to load publisher from platform directory
       // Use dynamic import with proper path resolution
-      const basePath = process.cwd()
-      const publisherPath = `${basePath}/backend/src/platforms/${platformId}/publishers/${type}.ts`
+      const publisherPath = path.resolve(process.cwd(), 'backend', 'src', 'platforms', safePlatformId, 'publishers', `${type}.ts`)
       
       // Try relative import first (works in compiled JS)
       try {
-        const publisher = await import(`../platforms/${platformId}/publishers/${type}.js`)
-        return publisher.default || publisher[`${platformId.charAt(0).toUpperCase() + platformId.slice(1)}${type.charAt(0).toUpperCase() + type.slice(1)}Publisher`] || null
+        const publisher = await import(`../platforms/${safePlatformId}/publishers/${type}.js`)
+        return publisher.default || publisher[`${safePlatformId.charAt(0).toUpperCase() + safePlatformId.slice(1)}${type.charAt(0).toUpperCase() + type.slice(1)}Publisher`] || null
       } catch (relativeError) {
         // If relative import fails, try absolute path
         const fs = await import('fs')
         if (fs.existsSync(publisherPath)) {
-          const publisher = await import(publisherPath)
+          const publisher = await import(pathToFileURL(publisherPath).href)
           return publisher.default || publisher
         }
         return null

@@ -3,7 +3,7 @@
  * Runs i18n validation during build time
  */
 
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -18,7 +18,7 @@ export function i18nCheckPlugin() {
 
       try {
         const scriptPath = path.join(__dirname, 'validate-i18n.js')
-        execSync(`node ${scriptPath}`, {
+        execFileSync('node', [scriptPath], {
           stdio: 'inherit',
           cwd: path.join(__dirname, '..')
         })

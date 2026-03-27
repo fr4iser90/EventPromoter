@@ -11,6 +11,9 @@ import { HistoryService } from './historyService.js'
 import { EventService } from './eventService.js'
 import { getPlatformRegistry, initializePlatformRegistry } from './platformRegistry.js'
 import { ConfigService } from './configService.js'
+import path from 'path'
+import { PathConfig } from '../utils/pathConfig.js'
+import { resolveSafePath } from '../utils/securityUtils.js'
 
 export class TelemetryService {
   /**
@@ -403,7 +406,7 @@ export class TelemetryService {
       
       if (!latestSession) {
         // Try to load from file
-        const eventDir = `${process.cwd()}/events/${eventId}`
+        const eventDir = PathConfig.getEventDir(eventId)
         const fs = await import('fs')
         
         if (fs.existsSync(eventDir)) {
@@ -414,7 +417,9 @@ export class TelemetryService {
           
           if (sessionFiles.length > 0) {
             const latestFile = sessionFiles[0]
-            const sessionData = JSON.parse(fs.readFileSync(`${eventDir}/${latestFile}`, 'utf8'))
+            const safeFileName = path.basename(latestFile)
+            const safeSessionPath = resolveSafePath(path.resolve(eventDir), safeFileName, 'publish session filename')
+            const sessionData = JSON.parse(fs.readFileSync(safeSessionPath, 'utf8'))
             
             const publishResults: Record<string, { postId?: string; url?: string }> = {}
             for (const result of sessionData.results || []) {

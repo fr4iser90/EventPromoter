@@ -50,3 +50,15 @@ export const loginRateLimit = createRateLimit({
   maxRequests: 10,
   keyPrefix: 'auth:login'
 })
+
+export const fileOperationsRateLimit = createRateLimit({
+  windowMs: 60 * 1000,
+  maxRequests: 120,
+  keyPrefix: 'files:ops'
+})
+
+export const parsingRateLimit = createRateLimit({
+  windowMs: 60 * 1000,
+  maxRequests: 60,
+  keyPrefix: 'parsing:ops'
+})
