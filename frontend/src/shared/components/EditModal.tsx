@@ -60,7 +60,7 @@ const getNestedValueSafely = (source: unknown, responsePath?: string): unknown =
     if (!isSafePathSegment(segment) || !current || typeof current !== 'object') {
       return undefined
     }
-    if (!Object.prototype.hasOwnProperty.call(current, segment)) {
+    if (!Object.hasOwn(current as object, segment)) {
       return undefined
     }
     current = (current as Record<string, unknown>)[segment]

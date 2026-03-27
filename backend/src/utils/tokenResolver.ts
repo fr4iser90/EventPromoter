@@ -85,7 +85,7 @@ export function resolveToken(
       isSafeObjectKey(segment) &&
       current &&
       typeof current === 'object' &&
-      Object.prototype.hasOwnProperty.call(current, segment)
+      Object.hasOwn(current as object, segment)
     ) {
       current = current[segment]
     } else {

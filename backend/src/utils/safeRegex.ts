@@ -16,6 +16,8 @@ export function createSafeValidationRegex(source: unknown): RegExp | null {
   if (/(\+\+|\*\*|\+\*|\*\+|\)\+[^)]*\+|\)\*[^)]*\*)/.test(source)) return null
 
   try {
+    // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
+    // Source is user-configurable but constrained by strict charset/length and backtracking guards above.
     return new RegExp(source)
   } catch {
     return null

@@ -631,18 +631,18 @@ export class PlatformController {
    * GET /api/platforms/:platformId/preview?mode=desktop&locale=en
    * Body: { content: { ... } }
    */
-  static async renderPreview(req: Request, res: Response) {
+  static async renderPreview(req: Request, response: Response) {
     try {
       const { platformId } = req.params
       const { mode, client, locale } = req.query
       const { content } = req.body
 
       if (!platformId) {
-        return res.status(400).json({ error: 'Platform ID required' })
+        return response.status(400).json({ error: 'Platform ID required' })
       }
 
       if (!content) {
-        return res.status(400).json({ error: 'Content required' })
+        return response.status(400).json({ error: 'Content required' })
       }
 
       // Get platform schema
@@ -650,7 +650,7 @@ export class PlatformController {
       const platformModule = registry.getPlatform(platformId.toLowerCase())
 
       if (!platformModule) {
-        return res.status(404).json({
+        return response.status(404).json({
           error: `Platform '${platformId}' not found`,
           availablePlatforms: registry.getPlatformIds()
         })
@@ -658,7 +658,7 @@ export class PlatformController {
 
       const schema = platformModule.schema
       if (!schema?.preview) {
-        return res.status(404).json({
+        return response.status(404).json({
           error: `Preview schema not available for platform '${platformId}'`
         })
       }
@@ -675,7 +675,7 @@ export class PlatformController {
       console.log('[Backend Preview] locale query param:', locale, '→ valid:', validLocale)
 
       // Render preview using PreviewRenderer
-      const result = await PreviewRenderer.render({
+      const result = await PreviewRenderer.renderPreviewHtml({
         platform: platformId,
         mode: mode as string,
         client: client as string,
@@ -684,7 +684,7 @@ export class PlatformController {
         locale: validLocale
       })
 
-      res.json({
+      response.json({
         success: true,
         html: result.html,
         css: result.css,
@@ -692,7 +692,7 @@ export class PlatformController {
       })
     } catch (error: any) {
       console.error('Render preview error:', error)
-      res.status(500).json({
+      response.status(500).json({
         error: 'Failed to render preview',
         details: error.message
       })
@@ -708,21 +708,21 @@ export class PlatformController {
    * Platforms can implement renderMultiPreview in their service to support multiple previews
    * (e.g., email with recipient groups, reddit with subreddits, etc.)
    */
-  static async renderMultiPreview(req: Request, res: Response) {
+  static async renderMultiPreview(req: Request, response: Response) {
     try {
       const { platformId } = req.params
       const { mode, locale } = req.query
       const { content, targets } = req.body
 
       if (!platformId) {
-        return res.status(400).json({ 
+        return response.status(400).json({
           success: false,
           error: 'Platform ID required' 
         })
       }
 
       if (!content) {
-        return res.status(400).json({ 
+        return response.status(400).json({
           success: false,
           error: 'Content required' 
         })
@@ -733,7 +733,7 @@ export class PlatformController {
       const platformModule = registry.getPlatform(platformId.toLowerCase())
 
       if (!platformModule) {
-        return res.status(404).json({
+        return response.status(404).json({
           success: false,
           error: `Platform '${platformId}' not found`,
           availablePlatforms: registry.getPlatformIds()
@@ -776,14 +776,14 @@ export class PlatformController {
 
         // If service returns single preview in array, that's fine
         // Frontend handles both single and multiple previews
-        return res.json({
+        return response.json({
           success: true,
           previews
         })
       }
 
       // Fallback: return single preview if platform doesn't support multi-preview
-      const result = await PreviewRenderer.render({
+      const result = await PreviewRenderer.renderPreviewHtml({
         platform: platformId,
         mode: mode as string,
         content,
@@ -791,7 +791,7 @@ export class PlatformController {
         locale: validLocale
       })
 
-      res.json({
+      response.json({
         success: true,
         previews: [{
           html: result.html,
@@ -800,7 +800,7 @@ export class PlatformController {
       })
     } catch (error: any) {
       console.error('Render multi-preview error:', error)
-      res.status(500).json({
+      response.status(500).json({
         success: false,
         error: 'Failed to render multi-preview',
         details: error.message

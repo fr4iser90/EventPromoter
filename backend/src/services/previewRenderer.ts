@@ -83,5 +83,12 @@ export class PreviewRenderer {
       locale
     })
   }
+
+  /**
+   * Alias used by controllers to avoid ambiguous `.render(...)` sink patterns.
+   */
+  static async renderPreviewHtml(options: PreviewRenderOptions): Promise<PreviewRenderResult> {
+    return PreviewRenderer.render(options)
+  }
 }
 

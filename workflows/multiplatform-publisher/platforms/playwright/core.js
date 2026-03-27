@@ -77,9 +77,10 @@ class PlaywrightCore {
    * Navigate to URL with stability check
    */
   async goto(url, options = {}) {
-    console.log(`🌐 Navigating to ${url}...`);
+    const validatedUrl = this.validateNavigationUrl(url);
+    console.log(`🌐 Navigating to ${validatedUrl}...`);
 
-    await this.page.goto(url, {
+    await this.page.goto(validatedUrl, {
       waitUntil: 'networkidle',
       timeout: this.config.timeout,
       ...options
@@ -87,6 +88,46 @@ class PlaywrightCore {
 
     await this.antiDetection.waitForStability();
     console.log(`✅ Navigation complete`);
+  }
+
+  validateNavigationUrl(rawUrl) {
+    if (typeof rawUrl !== 'string' || rawUrl.length > 2048) {
+      throw new Error('Invalid navigation URL');
+    }
+    const parsed = new URL(rawUrl);
+    if (!['https:', 'http:'].includes(parsed.protocol)) {
+      throw new Error(`Blocked protocol for navigation: ${parsed.protocol}`);
+    }
+
+    const allowedHosts = this.getAllowedNavigationHosts();
+    if (!allowedHosts.has(parsed.hostname.toLowerCase())) {
+      throw new Error(`Blocked navigation host: ${parsed.hostname}`);
+    }
+    return parsed.toString();
+  }
+
+  getAllowedNavigationHosts() {
+    if (Array.isArray(this.config.allowedHosts) && this.config.allowedHosts.length > 0) {
+      return new Set(
+        this.config.allowedHosts
+          .filter(Boolean)
+          .map((host) => String(host).toLowerCase())
+      );
+    }
+
+    const defaultHosts = new Set();
+    try {
+      const loginUrl = this.getLoginUrl();
+      const parsedLoginUrl = new URL(loginUrl);
+      defaultHosts.add(parsedLoginUrl.hostname.toLowerCase());
+    } catch (error) {
+      console.error(`❌ Invalid login URL for ${this.platform}:`, error);
+    }
+
+    if (defaultHosts.size === 0) {
+      throw new Error(`No allowed hosts configured for ${this.platform}`);
+    }
+    return defaultHosts;
   }
 
   /**
