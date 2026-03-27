@@ -81,6 +81,28 @@ export function PreviewFrame({ document, dimensions, ...props }: {
     })
   }
 
+  const mountSanitizedHtml = (doc: Document, mount: HTMLElement, rawHtml: string) => {
+    const sanitized = sanitizePreviewHtml(rawHtml)
+
+    // Clear existing nodes without using innerHTML.
+    while (mount.firstChild) {
+      mount.removeChild(mount.firstChild)
+    }
+
+    if (!sanitized) return
+
+    // Parse sanitized HTML in an isolated document and import nodes safely.
+    const parser = new DOMParser()
+    const parsed = parser.parseFromString(`<div id="__preview_root__">${sanitized}</div>`, 'text/html')
+    const parsedRoot = parsed.getElementById('__preview_root__')
+    if (!parsedRoot) return
+
+    const nodes = Array.from(parsedRoot.childNodes)
+    for (const node of nodes) {
+      mount.appendChild(doc.importNode(node, true))
+    }
+  }
+
   // ✅ Preview Shell HTML (Frontend-owned)
   // :root bleibt leer - wird komplett via setProperty gesetzt
   const shellHtml = `
@@ -179,8 +201,8 @@ export function PreviewFrame({ document, dimensions, ...props }: {
         structuralStyle.textContent = document.css
       }
 
-      // Mounte Backend-HTML (sanitized before injection)
-      mount.innerHTML = sanitizePreviewHtml(document.html)
+      // Mount backend HTML without using insecure document methods.
+      mountSanitizedHtml(doc, mount, document.html)
       
       // ✅ FIX: Theme nach Content-Mounting nochmal setzen (falls Theme-Injection zu früh war)
       // Das stellt sicher, dass Theme auch nach Content-Update korrekt ist
