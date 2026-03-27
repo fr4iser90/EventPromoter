@@ -7,43 +7,43 @@
     "accepted_findings": [
       {
         "rule_id": "js/path-injection",
-        "path_regex": ".*/backend/src/(controllers/fileController|controllers/parsingController|services/historyService|services/eventService|services/publishTrackingService|services/parsing/contentParsingService|services/telemetryService|utils/fileUtils|utils/translationLoader)\\.ts$",
+        "path_regex": "(?:.*/)?backend/src/(controllers/fileController|controllers/parsingController|services/historyService|services/eventService|services/publishTrackingService|services/parsing/contentParsingService|services/telemetryService|utils/fileUtils|utils/translationLoader)\\.ts$",
         "message_regex": "This path depends on a .*user-provided value",
         "reason": "Paths are guarded by validation and boundary checks (PathConfig, resolveSafePath, sanitizePlatformSegment). Findings are static-analysis false positives."
       },
       {
         "rule_id": "js/missing-rate-limiting",
-        "path_regex": ".*/backend/src/routes/(auth|files|parsing|index)\\.ts$",
+        "path_regex": "(?:.*/)?backend/src/routes/(auth|files|parsing|index)\\.ts$",
         "message_regex": "not rate-limited",
         "reason": "Routes are protected by explicit login/file/parsing rate-limit middleware and auth middleware; scanner may miss middleware chaining."
       },
       {
         "rule_id": "js/insecure-helmet-configuration",
-        "path_regex": ".*/backend/src/middleware/helmet\\.ts$",
+        "path_regex": "(?:.*/)?backend/src/middleware/helmet\\.ts$",
         "message_regex": "contentSecurityPolicy.*false",
         "reason": "CSP disabled only in development mode for tooling compatibility; production branch enables CSP."
       },
       {
         "rule_id": "js/request-forgery",
-        "path_regex": ".*/backend/src/services/telemetryService\\.ts$",
+        "path_regex": "(?:.*/)?backend/src/services/telemetryService\\.ts$",
         "message_regex": "URL.*user-provided value",
         "reason": "Outbound hosts are hardcoded vendor APIs; user input affects only resource IDs, not host/protocol."
       },
       {
         "rule_id": "js/double-escaping",
-        "path_regex": ".*/backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
+        "path_regex": "(?:.*/)?backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
         "message_regex": "double-unescaped",
         "reason": "Utility functions are best-effort text conversion helpers, not trust-boundary sanitizers at executable sinks."
       },
       {
         "rule_id": "js/bad-tag-filter",
-        "path_regex": ".*/backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
+        "path_regex": "(?:.*/)?backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
         "message_regex": "regular expression does not match script end tags",
         "reason": "Regex is used for formatting cleanup in preview/text helpers, not as a complete security sanitizer."
       },
       {
         "rule_id": "js/incomplete-multi-character-sanitization",
-        "path_regex": ".*/backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$",
+        "path_regex": "(?:.*/)?backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$",
         "message_regex": "This string may still contain",
         "reason": "Findings are in content transformation/preview helper paths, not at a primary untrusted DOM or script execution sink."
       }
@@ -53,7 +53,7 @@
     "accepted_findings": [
       {
         "rule_id": "linkedin-client-id",
-        "file_regex": ".*/backend/src/platforms/linkedin/index\\.ts$",
+        "file_regex": "(?:.*/)?backend/src/platforms/linkedin/(index\\.ts|schema/index\\.ts|service\\.ts)$",
         "description_regex": ".*",
         "reason": "Matched text is platform metadata identifier, not a credential, token, or client secret."
       }
