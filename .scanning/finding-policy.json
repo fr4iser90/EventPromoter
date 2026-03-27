@@ -1,131 +1,62 @@
 {
-  "version": "1.0",
-  "tool": "multiple",
-  "generatedAt": "2026-03-27",
-  "policyType": "false-positive-suppressions",
-  "policies": [
-    {
-      "id": "fp-js-path-injection-safe-path-guards",
-      "tool": "CodeQL",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/path-injection",
-        "pathRegex": "^backend/src/(controllers/fileController|controllers/parsingController|services/historyService|services/eventService|services/publishTrackingService|services/parsing/contentParsingService|services/telemetryService|utils/fileUtils|utils/translationLoader)\\.ts$",
-        "messageRegex": "^This path depends on a \\[user-provided value\\].*$"
+  "dedupe": {
+    "enabled": true,
+    "line_window": 2
+  },
+  "codeql": {
+    "accepted_findings": [
+      {
+        "rule_id": "js/path-injection",
+        "path_regex": ".*/backend/src/(controllers/fileController|controllers/parsingController|services/historyService|services/eventService|services/publishTrackingService|services/parsing/contentParsingService|services/telemetryService|utils/fileUtils|utils/translationLoader)\\.ts$",
+        "message_regex": "This path depends on a .*user-provided value",
+        "reason": "Paths are guarded by validation and boundary checks (PathConfig, resolveSafePath, sanitizePlatformSegment). Findings are static-analysis false positives."
       },
-      "findingIds": [
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-        14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-        26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
-        38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-        50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
-        62, 63
-      ],
-      "reason": "Reported sinks are guarded by strict segment validation and path boundary enforcement (PathConfig, resolveSafePath, sanitizePlatformSegment, language/platform regex checks)."
-    },
-    {
-      "id": "fp-js-missing-rate-limiting-router-middleware-coverage",
-      "tool": "CodeQL",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/missing-rate-limiting",
-        "pathRegex": "^backend/src/routes/(auth|files|parsing|index)\\.ts$",
-        "messageRegex": "^This route handler performs \\[(authorization|a file system access)\\].*not rate-limited\\.$"
+      {
+        "rule_id": "js/missing-rate-limiting",
+        "path_regex": ".*/backend/src/routes/(auth|files|parsing|index)\\.ts$",
+        "message_regex": "not rate-limited",
+        "reason": "Routes are protected by explicit login/file/parsing rate-limit middleware and auth middleware; scanner may miss middleware chaining."
       },
-      "findingIds": [
-        64, 65, 66, 67, 68, 69, 70
-      ],
-      "reason": "Routes are protected by explicit rate-limit middleware and auth middleware, but static analysis can miss middleware chaining across router definitions."
-    },
-    {
-      "id": "fp-js-insecure-helmet-configuration-dev-only-csp-off",
-      "tool": "CodeQL",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/insecure-helmet-configuration",
-        "pathRegex": "^backend/src/middleware/helmet\\.ts$",
-        "messageRegex": "^Helmet security middleware, configured with security setting \\[contentSecurityPolicy\\] set to 'false'.*$"
+      {
+        "rule_id": "js/insecure-helmet-configuration",
+        "path_regex": ".*/backend/src/middleware/helmet\\.ts$",
+        "message_regex": "contentSecurityPolicy.*false",
+        "reason": "CSP disabled only in development mode for tooling compatibility; production branch enables CSP."
       },
-      "findingIds": [
-        71
-      ],
-      "reason": "CSP is disabled only in development mode for tooling compatibility; production branch enables CSP directives."
-    },
-    {
-      "id": "fp-js-request-forgery-fixed-host-api-calls",
-      "tool": "CodeQL",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/request-forgery",
-        "pathRegex": "^backend/src/services/telemetryService\\.ts$",
-        "messageRegex": "^The .*URL.* depends on a .*user-provided value.*$"
+      {
+        "rule_id": "js/request-forgery",
+        "path_regex": ".*/backend/src/services/telemetryService\\.ts$",
+        "message_regex": "URL.*user-provided value",
+        "reason": "Outbound hosts are hardcoded vendor APIs; user input affects only resource IDs, not host/protocol."
       },
-      "findingIds": [
-        72,
-        73,
-        74,
-        75
-      ],
-      "reason": "Outbound requests use hardcoded vendor API hosts; user input only affects post/resource IDs, not destination host/protocol."
-    },
-    {
-      "id": "fp-js-double-escaping-html-to-text-conversion",
-      "tool": "CodeQL",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/double-escaping",
-        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$"
+      {
+        "rule_id": "js/double-escaping",
+        "path_regex": ".*/backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
+        "message_regex": "double-unescaped",
+        "reason": "Utility functions are best-effort text conversion helpers, not trust-boundary sanitizers at executable sinks."
       },
-      "findingIds": [
-        76,
-        77,
-        78
-      ],
-      "reason": "Functions are best-effort text extraction helpers for preview/plain text, not trust-boundary HTML sanitizers before injection into executable contexts."
-    },
-    {
-      "id": "fp-js-bad-tag-filter-non-security-text-helper",
-      "tool": "CodeQL",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/bad-tag-filter",
-        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$"
+      {
+        "rule_id": "js/bad-tag-filter",
+        "path_regex": ".*/backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
+        "message_regex": "regular expression does not match script end tags",
+        "reason": "Regex is used for formatting cleanup in preview/text helpers, not as a complete security sanitizer."
       },
-      "findingIds": [
-        79,
-        80,
-        81,
-        82,
-        83
-      ],
-      "reason": "Regexes are used for formatting cleanup in rendering helpers; these code paths do not claim complete XSS sanitization guarantees."
-    },
-    {
-      "id": "fp-js-incomplete-multi-character-sanitization-preview-and-text-utils",
-      "tool": "CodeQL",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/incomplete-multi-character-sanitization",
-        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$"
-      },
-      "findingIds": [
-        84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98
-      ],
-      "reason": "Findings target content transformation and preview composition helpers; they are not used as a sole security sanitizer at an untrusted DOM sink."
-    },
-    {
-      "id": "fp-gitleaks-linkedin-client-id-metadata-string",
-      "tool": "GitLeaks",
-      "action": "accept",
-      "match": {
-        "ruleId": "linkedin-client-id",
-        "pathRegex": "^backend/src/platforms/linkedin/index\\.ts$",
-        "messageRegex": "^Found a LinkedIn Client ID.*$"
-      },
-      "findingIds": [
-        1
-      ],
-      "reason": "Matched value is platform metadata string ('linkedin' module identifier), not a credential, token, or client secret."
-    }
-  ]
+      {
+        "rule_id": "js/incomplete-multi-character-sanitization",
+        "path_regex": ".*/backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$",
+        "message_regex": "This string may still contain",
+        "reason": "Findings are in content transformation/preview helper paths, not at a primary untrusted DOM or script execution sink."
+      }
+    ]
+  },
+  "gitleaks": {
+    "accepted_findings": [
+      {
+        "rule_id": "linkedin-client-id",
+        "file_regex": ".*/backend/src/platforms/linkedin/index\\.ts$",
+        "description_regex": ".*",
+        "reason": "Matched text is platform metadata identifier, not a credential, token, or client secret."
+      }
+    ]
+  }
 }
