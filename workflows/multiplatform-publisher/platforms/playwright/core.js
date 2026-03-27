@@ -80,6 +80,8 @@ class PlaywrightCore {
     const validatedUrl = this.validateNavigationUrl(url);
     console.log(`🌐 Navigating to ${validatedUrl}...`);
 
+    // nosemgrep: javascript.playwright.security.audit.playwright-goto-injection.playwright-goto-injection
+    // URL is validated via protocol+host allowlist in `validateNavigationUrl`.
     await this.page.goto(validatedUrl, {
       waitUntil: 'networkidle',
       timeout: this.config.timeout,
@@ -138,6 +140,8 @@ class PlaywrightCore {
 
     try {
       // Navigate to login page
+      // nosemgrep: javascript.playwright.security.audit.playwright-goto-injection.playwright-goto-injection
+      // Login URL is platform-owned and validated in `goto`.
       await this.goto(this.getLoginUrl());
 
       // Enter credentials with human-like behavior

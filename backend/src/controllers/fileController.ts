@@ -298,7 +298,7 @@ export class FileController {
       }
 
       const files = fs.readdirSync(EventDir).map(filename => {
-        const filePath = path.join(EventDir, filename)
+        const filePath = resolveSafePath(EventDir, filename, 'filename')
         const stats = fs.statSync(filePath)
 
         return {

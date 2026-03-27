@@ -57,6 +57,8 @@ filenames.forEach(filename => {
   // Match any URL containing this filename (works with localhost, IP, etc.)
   // Pattern: <img src=".../filename.jpg" ...>
   // Replace with: <img src="cid:filename.jpg" ...>
+  // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
+  // Filename is escaped before interpolation; expression is bounded to img src replacement.
   const regex = new RegExp(
     `(<img[^>]+src=["'])([^"']*${baseFilename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^"']*)(["'][^>]*>)`,
     'gi'

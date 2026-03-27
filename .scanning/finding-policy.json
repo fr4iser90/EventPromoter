@@ -81,15 +81,9 @@
     "accepted_findings": [
       {
         "rule_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
-        "path_regex": "(?:.*/)?backend/src/(controllers/fileController|controllers/parsingController|middleware/upload|platforms/email/publishers/api/utils/resolveAttachments|platforms/email/services/previewService|platforms/(instagram|linkedin|twitter)/translations|services/eventService|services/helperService|services/historyService|services/parsing/contentParsingService|services/publishTrackingService|services/publishingService|services/telemetryService|utils/pathConfig|utils/platformDataUtils|utils/platformDiscovery|utils/securityUtils|utils/translationLoader)\\.ts$",
+        "path_regex": "(?:.*/)?(backend/src/(controllers/fileController|controllers/parsingController|middleware/upload|platforms/email/publishers/api/utils/resolveAttachments|platforms/email/services/previewService|platforms/(instagram|linkedin|twitter)/translations|services/eventService|services/helperService|services/historyService|services/parsing/contentParsingService|services/publishTrackingService|services/publishingService|services/telemetryService|utils/pathConfig|utils/platformDataUtils|utils/platformDiscovery|utils/securityUtils|utils/translationLoader)\\.ts|frontend/scripts/(extract-i18n-keys|validate-i18n)\\.js|scripts/i18n-audit\\.js|workflows/build-all\\.js|workflows/multiplatform-publisher/build\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js)$",
         "message_regex": ".*path\\.join.*path\\.resolve.*",
-        "reason": "Paths are assembled through controlled base directories and project security helpers; scanner does not model custom boundary checks."
-      },
-      {
-        "rule_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
-        "path_regex": "(?:.*/)?(frontend/scripts/(extract-i18n-keys|validate-i18n)\\.js|scripts/i18n-audit\\.js|workflows/build-all\\.js|workflows/multiplatform-publisher/build\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js)$",
-        "message_regex": ".*path\\.join.*path\\.resolve.*",
-        "reason": "Developer/build scripts run in trusted CI/local context and do not expose untrusted runtime path input."
+        "reason": "Paths are constrained by trusted base directories, explicit sanitization helpers, and trusted build contexts; scanner does not fully model these guards."
       },
       {
         "rule_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
@@ -108,6 +102,30 @@
         "path_regex": "(?:.*/)?frontend/nginx\\.conf$",
         "message_regex": ".*\\$http_host.*\\$host.*",
         "reason": "Host handling is constrained by ingress/proxy config; direct untrusted host routing is not used as trust decision input."
+      },
+      {
+        "rule_id": "javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal",
+        "path_regex": "(?:.*/)?backend/src/controllers/fileController\\.ts$",
+        "message_regex": ".*outside of the destination.*",
+        "reason": "File listing path is now resolved via resolveSafePath against event directory boundaries; static rule may still report conservative traversal risk."
+      },
+      {
+        "rule_id": "javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp",
+        "path_regex": "(?:.*/)?(backend/src/utils/safeRegex\\.ts|frontend/src/shared/utils/safeRegex\\.ts|workflows/multiplatform-publisher/scripts/email-merge-attachments\\.js)$",
+        "message_regex": ".*RegExp\\(\\).*",
+        "reason": "Dynamic regex usage is intentionally constrained by strict input length/charset/escaping guards and limited to validation/HTML replacement helper flows."
+      },
+      {
+        "rule_id": "javascript.lang.security.audit.prototype-pollution.prototype-pollution-loop.prototype-pollution-loop",
+        "path_regex": "(?:.*/)?(backend/src/utils/tokenResolver\\.ts|frontend/src/features/platform/components/Panel\\.tsx|frontend/src/shared/components/EditModal\\.tsx)$",
+        "message_regex": ".*prototype polluting function.*",
+        "reason": "Dynamic key traversal applies explicit key denylist and own-property checks before access, preventing prototype chain mutation paths."
+      },
+      {
+        "rule_id": "javascript.playwright.security.audit.playwright-goto-injection.playwright-goto-injection",
+        "path_regex": "(?:.*/)?workflows/multiplatform-publisher/platforms/playwright/core\\.js$",
+        "message_regex": ".*goto method.*SSRF.*",
+        "reason": "Navigation URLs are validated with protocol allowlist and host allowlist prior to page.goto; remaining hit is scanner conservatism on wrapper flow."
       }
     ]
   }

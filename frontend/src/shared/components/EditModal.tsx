@@ -63,6 +63,8 @@ const getNestedValueSafely = (source: unknown, responsePath?: string): unknown =
     if (!Object.hasOwn(current as object, segment)) {
       return undefined
     }
+    // nosemgrep: javascript.lang.security.audit.prototype-pollution.prototype-pollution-loop.prototype-pollution-loop
+    // Access only after segment sanitization + own-property guard.
     current = (current as Record<string, unknown>)[segment]
   }
   return current

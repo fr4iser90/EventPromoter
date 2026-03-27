@@ -87,6 +87,8 @@ export function resolveToken(
       typeof current === 'object' &&
       Object.hasOwn(current as object, segment)
     ) {
+      // nosemgrep: javascript.lang.security.audit.prototype-pollution.prototype-pollution-loop.prototype-pollution-loop
+      // Access only after `isSafeObjectKey` and `Object.hasOwn` checks.
       current = current[segment]
     } else {
       // Token path not found
