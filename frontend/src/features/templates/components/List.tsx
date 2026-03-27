@@ -8,16 +8,12 @@ import {
   Button,
   Alert,
   CircularProgress,
-  Paper,
   Card,
-  CardContent,
-  CardActions,
   Tooltip
 } from '@mui/material'
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Add as AddIcon,
   Description as TemplateIcon,
   Visibility as VisibilityIcon,
   ContentCopy as DuplicateIcon,
@@ -173,17 +169,16 @@ const TemplateList = ({
         description: data.description != null ? String(data.description) : undefined,
         category: String(data.category).trim(),
         template: data.template as Record<string, string>,
-        variables: variables.map(String),
-        variableDefinitions: data.variableDefinitions as TemplateRecord['variableDefinitions']
+        variables: variables.map(String)
       })
       if (result.success) {
         setImportSuccess(true)
         setTimeout(() => setImportSuccess(false), 3000)
       } else {
-        setImportError(result.error || t('template.importError', { defaultValue: 'Import failed.' }))
+        setImportError(result.error || t('template.importError'))
       }
     } catch (err) {
-      setImportError(t('template.importInvalidFile', { defaultValue: 'Invalid JSON or file format.' }))
+      setImportError(t('template.importInvalidFile'))
     }
   }
 
@@ -237,11 +232,11 @@ const TemplateList = ({
           startIcon={<UploadIcon />}
           onClick={handleImportClick}
         >
-          {t('template.import', { defaultValue: 'Import template' })}
+          {t('template.import')}
         </Button>
         {importSuccess && (
           <Typography variant="caption" color="success.main">
-            {t('template.importSuccess', { defaultValue: 'Template imported.' })}
+            {t('template.importSuccess')}
           </Typography>
         )}
         {importError && (
@@ -258,8 +253,8 @@ const TemplateList = ({
           
           <Box sx={{ 
             display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)' },
-            gap: 2 
+            gridTemplateColumns: '1fr',
+            gap: 1
           }}>
             {(categoryTemplates as TemplateRecord[]).map((template) => {
               const isSelected = selectedTemplate?.id === template.id
@@ -276,120 +271,119 @@ const TemplateList = ({
                     bgcolor: isSelected ? 'action.selected' : 'background.paper',
                     '&:hover': {
                       borderColor: 'primary.main',
-                      boxShadow: 2,
-                      transform: 'translateY(-2px)'
+                      boxShadow: 1
                     }
                   }}
                 >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', flex: 1, mr: 1 }}>
-                        <Typography variant="h6" component="h3">
-                          {template.name}
-                        </Typography>
-                        {template.id === 'blank' && (
-                          <Chip label={t('template.emptyTemplate')} size="small" color="secondary" variant="outlined" sx={{ ml: 1, fontSize: '0.7rem' }} />
-                        )}
-                      </Box>
-                      {template.isDefault && (
-                        <Chip 
-                          label={t('template.default')} 
-                          size="small" 
-                          color="primary" 
-                          variant="outlined"
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Box>
-
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
-                      sx={{ mb: 2, minHeight: 40 }}
-                    >
-                      {template.description || t('template.noDescription')}
-                    </Typography>
-
-                    {template.variables && template.variables.length > 0 && (
-                      <Box sx={{ mb: 1 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                          {t('template.availableVariables')}:
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {(template.variables || []).slice(0, 5).map((variable: string) => (
+                  <Box sx={{ p: 1.25 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                          <Typography variant="subtitle2" component="h3" noWrap sx={{ maxWidth: '100%' }}>
+                            {template.name}
+                          </Typography>
+                          {template.id === 'blank' && (
                             <Chip
-                              key={variable}
-                              label={`{${variable}}`}
+                              label={t('template.emptyTemplate')}
                               size="small"
+                              color="secondary"
                               variant="outlined"
-                              sx={{ fontSize: '0.7rem', height: 20 }}
+                              sx={{ fontSize: '0.65rem', height: 18 }}
                             />
-                          ))}
-                          {template.variables.length > 5 && (
+                          )}
+                          {template.isDefault && (
                             <Chip
-                              label={`+${template.variables.length - 5}`}
+                              label={t('template.default')}
                               size="small"
+                              color="primary"
                               variant="outlined"
-                              sx={{ fontSize: '0.7rem', height: 20 }}
+                              sx={{ fontSize: '0.65rem', height: 18 }}
                             />
                           )}
                         </Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          noWrap
+                          sx={{ display: 'block', mt: 0.25 }}
+                        >
+                          {template.description || t('template.noDescription')}
+                        </Typography>
+                        {template.variables && template.variables.length > 0 && (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.75 }}>
+                            {(template.variables || []).slice(0, 3).map((variable: string) => (
+                              <Chip
+                                key={variable}
+                                label={`{${variable}}`}
+                                size="small"
+                                variant="outlined"
+                                sx={{ fontSize: '0.65rem', height: 18 }}
+                              />
+                            ))}
+                            {template.variables.length > 3 && (
+                              <Chip
+                                label={`+${template.variables.length - 3}`}
+                                size="small"
+                                variant="outlined"
+                                sx={{ fontSize: '0.65rem', height: 18 }}
+                              />
+                            )}
+                          </Box>
+                        )}
                       </Box>
-                    )}
-                  </CardContent>
 
-                  <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title={t('template.preview')}>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleCardClick(template)
-                          }}
-                          color={isSelected ? 'primary' : 'default'}
-                        >
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      
-                      <Tooltip title={t('template.editTemplate')}>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleEdit(template, e)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <Tooltip title={t('template.export', { defaultValue: 'Export' })}>
-                        <IconButton size="small" onClick={(e) => handleExport(template, e)}>
-                          <DownloadIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={t('template.duplicate')}>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleDuplicate(template, e)}
-                        >
-                          <DuplicateIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      {!template.isDefault && (
-                        <Tooltip title={t('template.delete')}>
+                      <Box sx={{ display: 'flex', gap: 0.25, alignItems: 'center' }}>
+                        <Tooltip title={t('template.preview')}>
                           <IconButton
                             size="small"
-                            onClick={(e) => handleDelete(template.id, e)}
-                            color="error"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleCardClick(template)
+                            }}
+                            color={isSelected ? 'primary' : 'default'}
                           >
-                            <DeleteIcon fontSize="small" />
+                            <VisibilityIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                      )}
+
+                        <Tooltip title={t('template.editTemplate')}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleEdit(template, e)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title={t('template.export', { defaultValue: 'Export' })}>
+                          <IconButton size="small" onClick={(e) => handleExport(template, e)}>
+                            <DownloadIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+
+                        <Tooltip title={t('template.duplicate')}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleDuplicate(template, e)}
+                          >
+                            <DuplicateIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+
+                        {!template.isDefault && (
+                          <Tooltip title={t('template.delete')}>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleDelete(template.id, e)}
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
                     </Box>
-                  </CardActions>
+                  </Box>
                 </Card>
               )
             })}

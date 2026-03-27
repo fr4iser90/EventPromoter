@@ -26,6 +26,15 @@ function ImageBlock({
 }) {
   const { t } = useTranslation()
   void isSelected
+  const translatedLabel = fieldSchema?.label
+    ? t(fieldSchema.label, { defaultValue: fieldSchema.label })
+    : t('template.imageBlockLabel', { defaultValue: 'Image' })
+  const translatedDescription = fieldSchema?.description
+    ? t(fieldSchema.description, { defaultValue: fieldSchema.description })
+    : ''
+  const translatedPlaceholder = fieldSchema?.placeholder
+    ? t(fieldSchema.placeholder, { defaultValue: fieldSchema.placeholder })
+    : t('template.imageBlockPlaceholder', { defaultValue: 'URL or {image}' })
 
   const value = (block.data?.value as string) || ''
   const isUrl = value && !value.startsWith('{') && (value.startsWith('http') || value.startsWith('/'))
@@ -41,11 +50,11 @@ function ImageBlock({
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'medium' }}>
-        {fieldSchema?.label || t('template.imageBlockLabel', { defaultValue: 'Image' })}
+        {translatedLabel}
       </Typography>
-      {fieldSchema?.description && (
+      {translatedDescription && (
         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-          {fieldSchema.description}
+          {translatedDescription}
         </Typography>
       )}
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -54,7 +63,7 @@ function ImageBlock({
           size="small"
           value={value}
           onChange={handleChange}
-          placeholder={fieldSchema?.placeholder || t('template.imageBlockPlaceholder', { defaultValue: 'URL or {image}' })}
+          placeholder={translatedPlaceholder}
           variant="outlined"
           sx={{ flex: 1, minWidth: 200 }}
         />

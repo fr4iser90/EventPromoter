@@ -43,8 +43,12 @@ function VariableToolbar({
         {t('template.variables')}
       </Typography>
       {variables.map((variable: TemplateVariable) => {
-        const label = variable.label || variable.name
+        const label = variable.label
+          ? t(variable.label, { defaultValue: variable.label })
+          : variable.name
         const desc = variable.description
+          ? t(variable.description, { defaultValue: variable.description })
+          : undefined
         const tooltipTitle = desc ? (
           <Box component="span" sx={{ display: 'block' }}>
             <strong>{label}</strong>

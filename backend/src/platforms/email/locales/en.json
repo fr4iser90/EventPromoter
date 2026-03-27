@@ -237,6 +237,10 @@
       "default": "<h1>{title}</h1><p>{description}</p>",
       "description": "HTML email body template"
     },
+    "image": {
+      "label": "Template Image",
+      "description": "Image URL or variable used by the template"
+    },
     "variables": {
       "eventTitle": {
         "label": "Event Title",

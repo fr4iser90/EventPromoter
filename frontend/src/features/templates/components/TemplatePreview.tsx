@@ -53,7 +53,8 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
       return variableName
     }
     const variable = schema.template.variables.find((v) => v.name === variableName)
-    return variable?.label || variableName
+    const label = variable?.label || variableName
+    return t(label, { defaultValue: label })
   }
 
   // Create content from template (EXACTLY like main page)
@@ -86,6 +87,10 @@ function TemplatePreview({ template, platform, onEdit }: TemplatePreviewProps) {
     
     if (templateContent.subject) {
       content.subject = replaceTemplateVariables(templateContent.subject as string, templateVariables as Record<string, string>)
+    }
+
+    if (templateContent.image) {
+      content.headerImage = replaceTemplateVariables(templateContent.image as string, templateVariables as Record<string, string>)
     }
 
     setPreviewContent(content)

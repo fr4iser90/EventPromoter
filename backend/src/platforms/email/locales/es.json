@@ -224,6 +224,10 @@
       "default": "<h1>{title}</h1><p>{description}</p>",
       "description": "Plantilla para el cuerpo HTML del correo"
     },
+    "image": {
+      "label": "Imagen de la plantilla",
+      "description": "URL de imagen o variable usada por la plantilla"
+    },
     "variables": {
       "eventTitle": {
         "label": "Titulo del evento",

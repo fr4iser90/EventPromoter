@@ -37,6 +37,15 @@ function TextBlock({
   const { t } = useTranslation()
   void isSelected
   void onInsertVariable
+  const translatedLabel = fieldSchema.label
+    ? t(fieldSchema.label, { defaultValue: fieldSchema.label })
+    : ''
+  const translatedDescription = fieldSchema.description
+    ? t(fieldSchema.description, { defaultValue: fieldSchema.description })
+    : ''
+  const translatedPlaceholder = fieldSchema.placeholder
+    ? t(fieldSchema.placeholder, { defaultValue: fieldSchema.placeholder })
+    : ''
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdate({ value: e.target.value })
@@ -45,11 +54,11 @@ function TextBlock({
   return (
     <Box>
       <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'medium' }}>
-        {fieldSchema.label}
+        {translatedLabel}
       </Typography>
-      {fieldSchema.description && (
+      {translatedDescription && (
         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-          {fieldSchema.description}
+          {translatedDescription}
         </Typography>
       )}
       <TextField
@@ -58,7 +67,7 @@ function TextBlock({
         minRows={4}
         value={block.data.value || ''}
         onChange={handleChange}
-        placeholder={fieldSchema.placeholder || t('template.enterText')}
+        placeholder={translatedPlaceholder || t('template.enterText')}
         variant="outlined"
         size="small"
       />

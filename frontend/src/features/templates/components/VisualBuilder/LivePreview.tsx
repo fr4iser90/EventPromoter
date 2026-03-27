@@ -7,7 +7,7 @@
  */
 
 import React, { useMemo } from 'react'
-import { Box, Typography, CircularProgress } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { PlatformPreview } from '../../../platform'
 import { blocksToSchemaFormat } from '../utils/schemaConverter'
@@ -38,14 +38,17 @@ function LivePreview({
     if (!blocks || blocks.length === 0 || !defaultStructure) {
       return {}
     }
+    const mappedContent = blocksToSchemaFormat(blocks, schema)
 
-    // Konvertiere nur visuelle Blöcke (html, rich, image)
-    const visualBlocks = blocks.filter((block: LivePreviewBlock) => {
-      const fieldSchema = defaultStructure[block.fieldName]
-      return fieldSchema && (fieldSchema.type === 'html' || fieldSchema.type === 'rich' || fieldSchema.type === 'image')
-    })
+    // Bridge template fields to email preview contract.
+    if (mappedContent.html && !mappedContent.body && !mappedContent.bodyText) {
+      mappedContent.bodyText = mappedContent.html
+    }
+    if (mappedContent.image && !mappedContent.headerImage) {
+      mappedContent.headerImage = mappedContent.image
+    }
 
-    return blocksToSchemaFormat(visualBlocks, schema)
+    return mappedContent
   }, [blocks, schema])
 
   if (!platform) {

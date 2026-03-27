@@ -135,7 +135,7 @@ function SortableBlockItem({
           </IconButton>
         </Tooltip>
         {onDuplicate && (
-          <Tooltip title={t('template.duplicateBlock', { defaultValue: 'Duplicate block' })}>
+          <Tooltip title={t('template.duplicateBlock')}>
             <IconButton
               size="small"
               onClick={(e) => {

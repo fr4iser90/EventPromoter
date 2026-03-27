@@ -23,6 +23,7 @@ import type { DraggableBlockItemProps } from '../../types'
  * Draggable Block Item
  */
 function DraggableBlockItem({ fieldName, fieldSchema, icon }: DraggableBlockItemProps) {
+  const { t } = useTranslation()
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `palette-${fieldName}`,
     data: {
@@ -36,6 +37,13 @@ function DraggableBlockItem({ fieldName, fieldSchema, icon }: DraggableBlockItem
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.5 : 1,
   }
+
+  const translatedLabel = fieldSchema.label
+    ? t(fieldSchema.label, { defaultValue: fieldSchema.label })
+    : fieldName
+  const translatedDescription = fieldSchema.description
+    ? t(fieldSchema.description, { defaultValue: fieldSchema.description })
+    : ''
 
   return (
     <ListItem
@@ -63,8 +71,8 @@ function DraggableBlockItem({ fieldName, fieldSchema, icon }: DraggableBlockItem
           {icon}
         </ListItemIcon>
         <ListItemText
-          primary={fieldSchema.label}
-          secondary={fieldSchema.description}
+          primary={translatedLabel}
+          secondary={translatedDescription}
           primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
           secondaryTypographyProps={{ variant: 'caption' }}
         />

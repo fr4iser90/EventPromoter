@@ -57,7 +57,7 @@ function TemplateEditor({
     template: {} as Record<string, string>
   })
   const [isDirty, setIsDirty] = useState(false)
-  const [useVisualBuilder, setUseVisualBuilder] = useState(false)
+  const [useVisualBuilder, setUseVisualBuilder] = useState(true)
 
   // Initialize form data from template
   useEffect(() => {
@@ -232,9 +232,14 @@ function TemplateEditor({
         {/* Template Content */}
         <SectionPanel sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="subtitle1">
-              {t('template.templateContent')}
-            </Typography>
+            <Box>
+              <Typography variant="subtitle1">
+                {t('template.templateContent')}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t('template.editorGuidance')}
+              </Typography>
+            </Box>
             {hasVisualFields && (
               <ToggleButtonGroup
                 value={useVisualBuilder ? 'visual' : 'code'}
@@ -248,15 +253,21 @@ function TemplateEditor({
               >
                 <ToggleButton value="code">
                   <CodeIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  {t('template.codeEditor')}
+                  {t('template.advancedEditor')}
                 </ToggleButton>
                 <ToggleButton value="visual">
                   <VisualIcon fontSize="small" sx={{ mr: 0.5 }} />
-                  {t('template.visualEditor')}
+                  {t('template.simpleEditor')}
                 </ToggleButton>
               </ToggleButtonGroup>
             )}
           </Box>
+
+          {!useVisualBuilder && hasVisualFields && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t('template.advancedEditorHint')}
+            </Alert>
+          )}
 
           {schemaLoading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>

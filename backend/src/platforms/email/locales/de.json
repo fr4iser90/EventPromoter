@@ -237,6 +237,10 @@
       "default": "<h1>{title}</h1><p>{description}</p>",
       "description": "Template fuer den HTML-E-Mail-Body"
     },
+    "image": {
+      "label": "Template-Bild",
+      "description": "Bild-URL oder Variable, die im Template verwendet wird"
+    },
     "variables": {
       "eventTitle": {
         "label": "Event-Titel",

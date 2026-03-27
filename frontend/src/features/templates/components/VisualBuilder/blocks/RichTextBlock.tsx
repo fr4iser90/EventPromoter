@@ -25,6 +25,15 @@ import type { RichTextBlockProps } from '../../../types'
 function RichTextBlock({ block, fieldSchema, isSelected, onUpdate, onInsertVariable }: RichTextBlockProps) {
   const { t } = useTranslation()
   const [editorMode, setEditorMode] = React.useState<'visual' | 'code'>('visual') // 'visual' or 'code'
+  const translatedLabel = fieldSchema.label
+    ? t(fieldSchema.label, { defaultValue: fieldSchema.label })
+    : ''
+  const translatedDescription = fieldSchema.description
+    ? t(fieldSchema.description, { defaultValue: fieldSchema.description })
+    : ''
+  const translatedPlaceholder = fieldSchema.placeholder
+    ? t(fieldSchema.placeholder, { defaultValue: fieldSchema.placeholder })
+    : ''
 
   const handleChange = (value: string) => {
     onUpdate({ value })
@@ -95,7 +104,7 @@ function RichTextBlock({ block, fieldSchema, isSelected, onUpdate, onInsertVaria
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
-          {fieldSchema.label}
+          {translatedLabel}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           {variables.length > 0 && (
@@ -132,9 +141,9 @@ function RichTextBlock({ block, fieldSchema, isSelected, onUpdate, onInsertVaria
           )}
         </Box>
       </Box>
-      {fieldSchema.description && (
+      {translatedDescription && (
         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-          {fieldSchema.description}
+          {translatedDescription}
         </Typography>
       )}
       
@@ -188,7 +197,7 @@ function RichTextBlock({ block, fieldSchema, isSelected, onUpdate, onInsertVaria
           <textarea
             value={block.data.value || ''}
             onChange={(e) => handleChange(e.target.value)}
-            placeholder={fieldSchema.placeholder || t('template.enterContent', { defaultValue: 'Enter content... Use {variable} for dynamic content' })}
+            placeholder={translatedPlaceholder || t('template.enterContent', { defaultValue: 'Enter content... Use {variable} for dynamic content' })}
             style={{
               width: '100%',
               minHeight: '300px',

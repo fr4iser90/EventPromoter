@@ -54,6 +54,15 @@ function TemplateBuilder({
   const [showPreview, setShowPreview] = useState(true)
   const [showPalette, setShowPalette] = useState(true)
 
+  const resolveMaybeTranslation = useCallback((value: unknown) => {
+    const text = typeof value === 'string' ? value : String(value ?? '')
+    if (!text || /\s/.test(text) || !text.includes('.')) {
+      return text
+    }
+    const translated = t(text, { defaultValue: text })
+    return translated
+  }, [t])
+
   // Drag-and-Drop Sensoren
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -66,14 +75,26 @@ function TemplateBuilder({
   // Konvertiere Template zu Blöcken wenn Schema geladen ist
   useEffect(() => {
     if (schema?.template?.defaultStructure && template?.template) {
-      const initialBlocks = schemaToBlocks(template.template, schema as any) as TemplateBlock[]
+      const initialBlocks = (schemaToBlocks(template.template, schema as any) as TemplateBlock[]).map((block) => ({
+        ...block,
+        data: {
+          ...block.data,
+          value: resolveMaybeTranslation(block.data?.value)
+        }
+      }))
       setBlocks(initialBlocks)
     } else if (schema?.template?.defaultStructure) {
       // Neues Template - erstelle Blöcke aus Schema
-      const initialBlocks = schemaToBlocks({}, schema as any) as TemplateBlock[]
+      const initialBlocks = (schemaToBlocks({}, schema as any) as TemplateBlock[]).map((block) => ({
+        ...block,
+        data: {
+          ...block.data,
+          value: resolveMaybeTranslation(block.data?.value)
+        }
+      }))
       setBlocks(initialBlocks)
     }
-  }, [schema, template])
+  }, [schema, template, resolveMaybeTranslation])
 
   // Benachrichtige Parent über Änderungen
   useEffect(() => {
@@ -338,7 +359,7 @@ function TemplateBuilder({
             <Box sx={{ width: '400px', borderLeft: 1, borderColor: 'divider', overflow: 'hidden' }}>
               <LivePreview
                 platform={platform}
-                blocks={visualBlocks}
+                blocks={blocks}
                 schema={schema}
               />
             </Box>
