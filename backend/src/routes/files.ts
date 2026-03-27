@@ -4,19 +4,18 @@ import { uploadSingle, uploadMultiple } from '../middleware/upload.js'
 import { fileOperationsRateLimit } from '../middleware/rateLimit.js'
 
 const router = express.Router()
-router.use(fileOperationsRateLimit)
 
 // Upload routes
-router.post('/upload', uploadSingle, FileController.uploadFile)
-router.post('/upload-multiple', uploadMultiple, FileController.uploadFiles)
+router.post('/upload', fileOperationsRateLimit, uploadSingle, FileController.uploadFile)
+router.post('/upload-multiple', fileOperationsRateLimit, uploadMultiple, FileController.uploadFiles)
 
 // File serving route (THIS IS THE MAIN ONE)
-router.get('/:eventId/:filename', FileController.getFile)
+router.get('/:eventId/:filename', fileOperationsRateLimit, FileController.getFile)
 
 // Metadata & Listing
-router.get('/list/:eventId', FileController.listFiles)
-router.get('/:eventId/:filename/content', FileController.getFileContent)
-router.patch('/:eventId/:filename', FileController.updateFileMetadata)
-router.delete('/:eventId/:filename', FileController.deleteFile)
+router.get('/list/:eventId', fileOperationsRateLimit, FileController.listFiles)
+router.get('/:eventId/:filename/content', fileOperationsRateLimit, FileController.getFileContent)
+router.patch('/:eventId/:filename', fileOperationsRateLimit, FileController.updateFileMetadata)
+router.delete('/:eventId/:filename', fileOperationsRateLimit, FileController.deleteFile)
 
 export default router

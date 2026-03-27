@@ -30,7 +30,6 @@ import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import { getApiUrl } from '../../utils/api'
 import ReactMarkdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
 
 type MarkdownPart =
   | { type: 'markdown'; content: string }
@@ -105,7 +104,7 @@ function MarkdownWithAccordions({ content }: { content: string }) {
   // If no accordions found, render everything as markdown
   if (accordions.length === 0) {
     return (
-      <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+      <ReactMarkdown>
         {content}
       </ReactMarkdown>
     )
@@ -133,7 +132,7 @@ function MarkdownWithAccordions({ content }: { content: string }) {
                   '& ul': { pl: 2, mb: 1 },
                   '& ol': { pl: 2, mb: 1 }
                 }}>
-                  <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                  <ReactMarkdown>
                     {accordion.content}
                   </ReactMarkdown>
                 </Box>
@@ -142,7 +141,7 @@ function MarkdownWithAccordions({ content }: { content: string }) {
           )
         } else {
           return (
-            <ReactMarkdown key={`markdown-${index}`} rehypePlugins={[rehypeRaw]}>
+            <ReactMarkdown key={`markdown-${index}`}>
               {part.content}
             </ReactMarkdown>
           )

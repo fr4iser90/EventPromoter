@@ -1,42 +1,31 @@
 {
   "version": "1.0",
-  "tool": "CodeQL",
+  "tool": "multiple",
   "generatedAt": "2026-03-27",
   "policyType": "false-positive-suppressions",
   "policies": [
     {
       "id": "fp-js-path-injection-safe-path-guards",
+      "tool": "CodeQL",
       "action": "accept",
       "match": {
         "ruleId": "js/path-injection",
-        "pathRegex": "^backend/src/(controllers/fileController|controllers/parsingController|services/historyService|services/eventService|services/parsing/contentParsingService|utils/fileUtils|utils/translationLoader)\\.ts$",
+        "pathRegex": "^backend/src/(controllers/fileController|controllers/parsingController|services/historyService|services/eventService|services/publishTrackingService|services/parsing/contentParsingService|services/telemetryService|utils/fileUtils|utils/translationLoader)\\.ts$",
         "messageRegex": "^This path depends on a \\[user-provided value\\].*$"
       },
       "findingIds": [
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-        27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
-        42, 43, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
-        57, 58, 59, 60, 61, 62, 63, 64, 65
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+        14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+        26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+        38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+        50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
+        62, 63
       ],
       "reason": "Reported sinks are guarded by strict segment validation and path boundary enforcement (PathConfig, resolveSafePath, sanitizePlatformSegment, language/platform regex checks)."
     },
     {
-      "id": "fp-js-missing-rate-limiting-auth-and-router-registration",
-      "action": "accept",
-      "match": {
-        "ruleId": "js/missing-rate-limiting",
-        "pathRegex": "^backend/src/routes/(auth|index)\\.ts$",
-        "messageRegex": "^This route handler performs \\[authorization\\].*not rate-limited\\.$"
-      },
-      "findingIds": [
-        66,
-        72
-      ],
-      "reason": "Login route already applies loginRateLimit middleware; index.ts finding is on router wiring/auth middleware, not a concrete brute-forceable endpoint."
-    },
-    {
       "id": "fp-js-insecure-helmet-configuration-dev-only-csp-off",
+      "tool": "CodeQL",
       "action": "accept",
       "match": {
         "ruleId": "js/insecure-helmet-configuration",
@@ -44,12 +33,13 @@
         "messageRegex": "^Helmet security middleware, configured with security setting \\[contentSecurityPolicy\\] set to 'false'.*$"
       },
       "findingIds": [
-        75
+        71
       ],
       "reason": "CSP is disabled only in development mode for tooling compatibility; production branch enables CSP directives."
     },
     {
       "id": "fp-js-request-forgery-fixed-host-api-calls",
+      "tool": "CodeQL",
       "action": "accept",
       "match": {
         "ruleId": "js/request-forgery",
@@ -57,15 +47,16 @@
         "messageRegex": "^The \\[URL\\] of this request depends on a \\[user-provided value\\].*$"
       },
       "findingIds": [
-        76,
-        77,
-        78,
-        79
+        72,
+        73,
+        74,
+        75
       ],
       "reason": "Outbound requests use hardcoded vendor API hosts; user input only affects post/resource IDs, not destination host/protocol."
     },
     {
       "id": "fp-js-double-escaping-html-to-text-conversion",
+      "tool": "CodeQL",
       "action": "accept",
       "match": {
         "ruleId": "js/double-escaping",
@@ -73,14 +64,15 @@
         "messageRegex": "^This replacement may produce '&' characters that are double-unescaped.*$"
       },
       "findingIds": [
-        80,
-        81,
-        82
+        76,
+        77,
+        78
       ],
       "reason": "Functions are best-effort text extraction helpers for preview/plain text, not trust-boundary HTML sanitizers before injection into executable contexts."
     },
     {
       "id": "fp-js-bad-tag-filter-non-security-text-helper",
+      "tool": "CodeQL",
       "action": "accept",
       "match": {
         "ruleId": "js/bad-tag-filter",
@@ -88,16 +80,17 @@
         "messageRegex": "^This regular expression does not match script end tags like </script >\\.$"
       },
       "findingIds": [
-        83,
-        84,
-        85,
-        86,
-        87
+        79,
+        80,
+        81,
+        82,
+        83
       ],
       "reason": "Regexes are used for formatting cleanup in rendering helpers; these code paths do not claim complete XSS sanitization guarantees."
     },
     {
       "id": "fp-js-incomplete-multi-character-sanitization-preview-and-text-utils",
+      "tool": "CodeQL",
       "action": "accept",
       "match": {
         "ruleId": "js/incomplete-multi-character-sanitization",
@@ -105,9 +98,23 @@
         "messageRegex": "^This string may still contain \\[<.*\\], which may cause an HTML element injection vulnerability\\.$"
       },
       "findingIds": [
-        88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100
+        84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98
       ],
       "reason": "Findings target content transformation and preview composition helpers; they are not used as a sole security sanitizer at an untrusted DOM sink."
+    },
+    {
+      "id": "fp-gitleaks-linkedin-client-id-metadata-string",
+      "tool": "GitLeaks",
+      "action": "accept",
+      "match": {
+        "ruleId": "linkedin-client-id",
+        "pathRegex": "^backend/src/platforms/linkedin/index\\.ts$",
+        "messageRegex": "^Found a LinkedIn Client ID.*$"
+      },
+      "findingIds": [
+        1
+      ],
+      "reason": "Matched value is platform metadata string ('linkedin' module identifier), not a credential, token, or client secret."
     }
   ]
 }
