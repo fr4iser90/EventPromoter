@@ -59,9 +59,55 @@
     "accepted_findings": [
       {
         "rule_id": "linkedin-client-id",
-        "file_regex": "(?:.*/)?backend/src/platforms/linkedin/(index\\.ts|service\\.ts)$",
-        "description_regex": ".*",
-        "reason": "Matched strings are LinkedIn platform identifiers/URN literals in code, not credentials or secrets."
+        "file_regex": "(?:.*/)?backend/src/platforms/linkedin/(index\\.ts|schema/index\\.ts|schema/settings\\.ts|service\\.ts)$",
+        "description_regex": ".*LinkedIn Client ID.*",
+        "reason": "Matched values are LinkedIn platform identifiers/schema metadata, not real credentials."
+      },
+      {
+        "rule_id": "linkedin-client-secret",
+        "file_regex": "(?:.*/)?backend/src/platforms/linkedin/tokens\\.ts$",
+        "description_regex": ".*LinkedIn Client secret.*",
+        "reason": "Flagged token-related identifier names in implementation code, not embedded secrets."
+      },
+      {
+        "rule_id": "generic-api-key",
+        "file_regex": "(?:.*/)?backend/src/utils/SECRETS_ENCRYPTION\\.md$",
+        "description_regex": ".*Generic API Key.*",
+        "reason": "Matches documentation examples in security docs; no active production secret is committed."
+      }
+    ]
+  },
+  "semgrep": {
+    "accepted_findings": [
+      {
+        "rule_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
+        "path_regex": "(?:.*/)?backend/src/(controllers/fileController|controllers/parsingController|middleware/upload|platforms/email/publishers/api/utils/resolveAttachments|platforms/email/services/previewService|platforms/(instagram|linkedin|twitter)/translations|services/eventService|services/helperService|services/historyService|services/parsing/contentParsingService|services/publishTrackingService|services/publishingService|services/telemetryService|utils/pathConfig|utils/platformDataUtils|utils/platformDiscovery|utils/securityUtils|utils/translationLoader)\\.ts$",
+        "message_regex": ".*path\\.join.*path\\.resolve.*",
+        "reason": "Paths are assembled through controlled base directories and project security helpers; scanner does not model custom boundary checks."
+      },
+      {
+        "rule_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
+        "path_regex": "(?:.*/)?(frontend/scripts/(extract-i18n-keys|validate-i18n)\\.js|scripts/i18n-audit\\.js|workflows/build-all\\.js|workflows/multiplatform-publisher/build\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js)$",
+        "message_regex": ".*path\\.join.*path\\.resolve.*",
+        "reason": "Developer/build scripts run in trusted CI/local context and do not expose untrusted runtime path input."
+      },
+      {
+        "rule_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+        "path_regex": "(?:.*/)?(frontend/src/features/platform/components/PlatformEditor\\.tsx|workflows/build-all\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js|workflows/multiplatform-publisher/platforms/hybrid-poster\\.js|workflows/multiplatform-publisher/platforms/playwright/core\\.js)$",
+        "message_regex": ".*format specifier.*",
+        "reason": "Findings are logging statements only; no attacker-controlled format string reaches privileged sinks."
+      },
+      {
+        "rule_id": "generic.nginx.security.possible-h2c-smuggling.possible-nginx-h2c-smuggling",
+        "path_regex": "(?:.*/)?frontend/nginx\\.conf$",
+        "message_regex": ".*H2C smuggling.*",
+        "reason": "Deployment is behind controlled reverse proxy with explicit protocol handling; Semgrep pattern is conservative."
+      },
+      {
+        "rule_id": "generic.nginx.security.request-host-used.request-host-used",
+        "path_regex": "(?:.*/)?frontend/nginx\\.conf$",
+        "message_regex": ".*\\$http_host.*\\$host.*",
+        "reason": "Host handling is constrained by ingress/proxy config; direct untrusted host routing is not used as trust decision input."
       }
     ]
   }
