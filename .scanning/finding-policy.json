@@ -3,49 +3,61 @@
     "enabled": true,
     "line_window": 2
   },
-  "codeql": {
+  "semgrep": {
     "accepted_findings": [
       {
-        "rule_id": "js/path-injection",
-        "path_regex": "(?:.*/)?backend/src/(controllers/fileController|controllers/parsingController|services/historyService|services/eventService|services/publishTrackingService|services/parsing/contentParsingService|services/telemetryService|utils/fileUtils|utils/translationLoader)\\.ts$",
-        "message_regex": "This path depends on a .*user-provided value",
-        "reason": "Paths are guarded by validation and boundary checks (PathConfig, resolveSafePath, sanitizePlatformSegment). Findings are static-analysis false positives."
+        "rule_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
+        "path_regex": "(?:.*/)?(backend/src/(controllers/fileController\\.ts|controllers/parsingController\\.ts|middleware/upload\\.ts|platforms/email/publishers/api/utils/resolveAttachments\\.ts|platforms/email/services/previewService\\.ts|platforms/(instagram|linkedin|twitter)/translations\\.ts|services/eventService\\.ts|services/helperService\\.ts|services/historyService\\.ts|services/parsing/contentParsingService\\.ts|services/publishTrackingService\\.ts|services/publishingService\\.ts|services/telemetryService\\.ts|utils/pathConfig\\.ts|utils/platformDataUtils\\.ts|utils/platformDiscovery\\.ts|utils/securityUtils\\.ts|utils/translationLoader\\.ts)|frontend/scripts/(extract-i18n-keys|validate-i18n)\\.js|scripts/i18n-audit\\.js|workflows/build-all\\.js|workflows/multiplatform-publisher/build\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js)$",
+        "message_regex": "Detected possible user input going into a `path\\.join` or `path\\.resolve`",
+        "reason": "Flagged joins/resolves are in helper/config/build paths or are protected by validation and boundary checks (resolveSafePath, segment sanitization, controlled platform IDs)."
       },
       {
-        "rule_id": "js/missing-rate-limiting",
-        "path_regex": "(?:.*/)?backend/src/routes/(auth|files|parsing|index)\\.ts$",
-        "message_regex": "not rate-limited",
-        "reason": "Routes are protected by explicit login/file/parsing rate-limit middleware and auth middleware; scanner may miss middleware chaining."
+        "rule_id": "javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal",
+        "path_regex": "(?:.*/)?backend/src/controllers/fileController\\.ts$",
+        "message_regex": "Possible writing outside of the destination",
+        "reason": "The file path is derived through safe path resolution and constrained to event file directories; Semgrep cannot follow custom guard logic."
       },
       {
-        "rule_id": "js/insecure-helmet-configuration",
-        "path_regex": "(?:.*/)?backend/src/middleware/helmet\\.ts$",
-        "message_regex": "contentSecurityPolicy.*false",
-        "reason": "CSP disabled only in development mode for tooling compatibility; production branch enables CSP."
+        "rule_id": "javascript.express.security.audit.res-render-injection.res-render-injection",
+        "path_regex": "(?:.*/)?backend/src/controllers/platformController\\.ts$",
+        "message_regex": "res\\.render",
+        "reason": "Controller uses PreviewRenderer.render helper, not Express template rendering with user-selected view names."
       },
       {
-        "rule_id": "js/request-forgery",
-        "path_regex": "(?:.*/)?backend/src/services/telemetryService\\.ts$",
-        "message_regex": "URL.*user-provided value",
-        "reason": "Outbound hosts are hardcoded vendor APIs; user input affects only resource IDs, not host/protocol."
+        "rule_id": "javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp",
+        "path_regex": "(?:.*/)?(backend/src/utils/safeRegex\\.ts|frontend/src/shared/utils/safeRegex\\.ts|workflows/multiplatform-publisher/scripts/email-merge-attachments\\.js)$",
+        "message_regex": "RegExp\\(\\) called with",
+        "reason": "Regex creation is intentionally wrapped with source-length and pattern safety guards; usage is controlled and not exposed as arbitrary attacker input regex execution."
       },
       {
-        "rule_id": "js/double-escaping",
-        "path_regex": "(?:.*/)?backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
-        "message_regex": "double-unescaped",
-        "reason": "Utility functions are best-effort text conversion helpers, not trust-boundary sanitizers at executable sinks."
+        "rule_id": "javascript.lang.security.audit.prototype-pollution.prototype-pollution-loop.prototype-pollution-loop",
+        "path_regex": "(?:.*/)?(backend/src/utils/tokenResolver\\.ts|frontend/src/features/platform/components/Panel\\.tsx|frontend/src/shared/components/EditModal\\.tsx)$",
+        "message_regex": "Possibility of prototype polluting function detected",
+        "reason": "Looped objects are schema/config controlled and not merged from untrusted prototype-bearing payloads; no unsafe Object.assign/deep-merge on attacker-controlled objects."
       },
       {
-        "rule_id": "js/bad-tag-filter",
-        "path_regex": "(?:.*/)?backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
-        "message_regex": "regular expression does not match script end tags",
-        "reason": "Regex is used for formatting cleanup in preview/text helpers, not as a complete security sanitizer."
+        "rule_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+        "path_regex": "(?:.*/)?(frontend/src/features/platform/components/PlatformEditor\\.tsx|workflows/build-all\\.js|workflows/multiplatform-publisher/build\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js|workflows/multiplatform-publisher/platforms/hybrid-poster\\.js|workflows/multiplatform-publisher/platforms/playwright/core\\.js)$",
+        "message_regex": "Detected string concatenation with a non-literal variable in a util\\.format / console\\.log function",
+        "reason": "Findings are informational logging patterns; not a security boundary and no attacker-controlled format strings are executed as code."
       },
       {
-        "rule_id": "js/incomplete-multi-character-sanitization",
-        "path_regex": "(?:.*/)?backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$",
-        "message_regex": "This string may still contain",
-        "reason": "Findings are in content transformation/preview helper paths, not at a primary untrusted DOM or script execution sink."
+        "rule_id": "generic.nginx.security.possible-h2c-smuggling.possible-nginx-h2c-smuggling",
+        "path_regex": "(?:.*/)?frontend/nginx\\.conf$",
+        "message_regex": "H2C smuggling|Upgrade",
+        "reason": "Upgrade headers are required for websocket support; backend upstream is fixed and not attacker-selectable."
+      },
+      {
+        "rule_id": "generic.nginx.security.request-host-used.request-host-used",
+        "path_regex": "(?:.*/)?frontend/nginx\\.conf$",
+        "message_regex": "\\$http_host|\\$host",
+        "reason": "Host forwarding is intentional behind controlled reverse proxy routing; upstream target is fixed and not derived from user input."
+      },
+      {
+        "rule_id": "javascript.playwright.security.audit.playwright-goto-injection.playwright-goto-injection",
+        "path_regex": "(?:.*/)?workflows/multiplatform-publisher/platforms/playwright/core\\.js$",
+        "message_regex": "goto",
+        "reason": "Navigation URLs come from platform workflow configuration and login endpoints, not arbitrary user-supplied URLs in a public request context."
       }
     ]
   },
@@ -53,9 +65,21 @@
     "accepted_findings": [
       {
         "rule_id": "linkedin-client-id",
-        "file_regex": "(?:.*/)?backend/src/platforms/linkedin/(index\\.ts|schema/index\\.ts|service\\.ts)$",
+        "file_regex": "(?:.*/)?backend/src/platforms/linkedin/schema/settings\\.ts$",
         "description_regex": ".*",
-        "reason": "Matched text is platform metadata identifier, not a credential, token, or client secret."
+        "reason": "Matched value is LinkedIn schema identifier text, not a credential."
+      },
+      {
+        "rule_id": "linkedin-client-secret",
+        "file_regex": "(?:.*/)?backend/src/platforms/linkedin/tokens\\.ts$",
+        "description_regex": ".*",
+        "reason": "File contains UI color/token constants; no secret material is present."
+      },
+      {
+        "rule_id": "generic-api-key",
+        "file_regex": "(?:.*/)?backend/src/utils/SECRETS_ENCRYPTION\\.md$",
+        "description_regex": ".*",
+        "reason": "Matches are documentation/example placeholders used for encryption docs, not real API keys."
       }
     ]
   }
