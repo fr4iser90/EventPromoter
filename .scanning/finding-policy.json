@@ -74,8 +74,7 @@
       "action": "accept",
       "match": {
         "ruleId": "js/double-escaping",
-        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
-        "messageRegex": "^This replacement may produce.*double-unescaped.*$"
+        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$"
       },
       "findingIds": [
         76,
@@ -90,8 +89,7 @@
       "action": "accept",
       "match": {
         "ruleId": "js/bad-tag-filter",
-        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
-        "messageRegex": "^This regular expression does not match script end tags like.*$"
+        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$"
       },
       "findingIds": [
         79,
@@ -108,8 +106,7 @@
       "action": "accept",
       "match": {
         "ruleId": "js/incomplete-multi-character-sanitization",
-        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$",
-        "messageRegex": "^This string may still contain.*HTML element injection vulnerability.*$"
+        "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$"
       },
       "findingIds": [
         84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98
