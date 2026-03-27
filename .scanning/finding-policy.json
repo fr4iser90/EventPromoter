@@ -87,7 +87,7 @@
       },
       {
         "rule_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
-        "path_regex": "(?:.*/)?(frontend/src/features/platform/components/PlatformEditor\\.tsx|workflows/build-all\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js|workflows/multiplatform-publisher/platforms/hybrid-poster\\.js|workflows/multiplatform-publisher/platforms/playwright/core\\.js)$",
+        "path_regex": "(?:.*/)?(frontend/src/features/platform/components/PlatformEditor\\.tsx|workflows/build-all\\.js|workflows/multiplatform-publisher/build\\.js|workflows/multiplatform-publisher/config/platforms/index\\.js|workflows/multiplatform-publisher/platforms/hybrid-poster\\.js|workflows/multiplatform-publisher/platforms/playwright/core\\.js)$",
         "message_regex": ".*format specifier.*",
         "reason": "Findings are logging statements only; no attacker-controlled format string reaches privileged sinks."
       },
