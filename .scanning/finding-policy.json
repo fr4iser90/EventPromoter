@@ -58,7 +58,7 @@
       "match": {
         "ruleId": "js/request-forgery",
         "pathRegex": "^backend/src/services/telemetryService\\.ts$",
-        "messageRegex": "^The \\[URL\\] of this request depends on a \\[user-provided value\\].*$"
+        "messageRegex": "^The .*URL.* depends on a .*user-provided value.*$"
       },
       "findingIds": [
         72,
@@ -75,7 +75,7 @@
       "match": {
         "ruleId": "js/double-escaping",
         "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
-        "messageRegex": "^This replacement may produce '&' characters that are double-unescaped.*$"
+        "messageRegex": "^This replacement may produce.*double-unescaped.*$"
       },
       "findingIds": [
         76,
@@ -91,7 +91,7 @@
       "match": {
         "ruleId": "js/bad-tag-filter",
         "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|services/templateMappingService)\\.ts$",
-        "messageRegex": "^This regular expression does not match script end tags like </script >\\.$"
+        "messageRegex": "^This regular expression does not match script end tags like.*$"
       },
       "findingIds": [
         79,
@@ -109,7 +109,7 @@
       "match": {
         "ruleId": "js/incomplete-multi-character-sanitization",
         "pathRegex": "^backend/src/(platforms/email/publishers/api/utils/htmlToText|platforms/email/publishers/playwright/utils/htmlToText|platforms/email/services/emailService|platforms/email/services/previewService|services/templateMappingService)\\.ts$",
-        "messageRegex": "^This string may still contain \\[<.*\\], which may cause an HTML element injection vulnerability\\.$"
+        "messageRegex": "^This string may still contain.*HTML element injection vulnerability.*$"
       },
       "findingIds": [
         84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98
