@@ -16,11 +16,21 @@ function isImageUrl(url: string): boolean {
 }
 
 function filenameFromUrl(url: string): string {
+  const decodeSafe = (value: string): string => {
+    try {
+      return decodeURIComponent(value)
+    } catch {
+      return value
+    }
+  }
+
   try {
     const pathname = new URL(url, 'http://dummy').pathname
-    return pathname.split('/').pop()?.split('?')[0] || ''
+    const raw = pathname.split('/').pop()?.split('?')[0] || ''
+    return decodeSafe(raw)
   } catch {
-    return url.split('/').pop()?.split('?')[0] || ''
+    const raw = url.split('/').pop()?.split('?')[0] || ''
+    return decodeSafe(raw)
   }
 }
 
@@ -51,13 +61,17 @@ export function findFileIdsForImageUrls(
   const ids = new Set<string>()
   for (const { url, filename } of imageInfos) {
     if (!filename) continue
+    const lowerUrl = url.toLowerCase()
     const lower = filename.toLowerCase()
+    const encodedLower = encodeURIComponent(filename).toLowerCase()
     const file = files.find(
       (f) =>
         (f.name && f.name.toLowerCase() === lower) ||
         (f.filename && f.filename.toLowerCase() === lower) ||
         (f.path && f.path.replace(/\\/g, '/').toLowerCase().endsWith(lower)) ||
-        (f.id && url.includes(f.id))
+        (f.id && (url.includes(f.id) || lowerUrl.includes(encodeURIComponent(f.id).toLowerCase()))) ||
+        (f.filename && lowerUrl.includes(encodeURIComponent(f.filename).toLowerCase())) ||
+        lowerUrl.includes(encodedLower)
     )
     if (file) {
       ids.add(file.id)
