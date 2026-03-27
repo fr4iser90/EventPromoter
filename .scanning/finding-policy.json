@@ -24,6 +24,20 @@
       "reason": "Reported sinks are guarded by strict segment validation and path boundary enforcement (PathConfig, resolveSafePath, sanitizePlatformSegment, language/platform regex checks)."
     },
     {
+      "id": "fp-js-missing-rate-limiting-router-middleware-coverage",
+      "tool": "CodeQL",
+      "action": "accept",
+      "match": {
+        "ruleId": "js/missing-rate-limiting",
+        "pathRegex": "^backend/src/routes/(auth|files|parsing|index)\\.ts$",
+        "messageRegex": "^This route handler performs \\[(authorization|a file system access)\\].*not rate-limited\\.$"
+      },
+      "findingIds": [
+        64, 65, 66, 67, 68, 69, 70
+      ],
+      "reason": "Routes are protected by explicit rate-limit middleware and auth middleware, but static analysis can miss middleware chaining across router definitions."
+    },
+    {
       "id": "fp-js-insecure-helmet-configuration-dev-only-csp-off",
       "tool": "CodeQL",
       "action": "accept",

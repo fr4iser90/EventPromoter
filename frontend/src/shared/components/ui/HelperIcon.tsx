@@ -51,6 +51,13 @@ type HelperPayload = {
   type?: 'markdown' | 'structured' | 'text'
 }
 
+function toPlainTextSummary(input: string): string {
+  if (!input) return ''
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(input, 'text/html')
+  return (doc.body.textContent || '').trim()
+}
+
 /**
  * Markdown component with Accordion support for details/summary blocks
  * Processes markdown content and converts HTML details/summary to Material-UI Accordions
@@ -76,7 +83,7 @@ function MarkdownWithAccordions({ content }: { content: string }) {
     }
     
     // Extract summary and content
-    const summaryText = match[1].replace(/<[^>]+>/g, '').trim()
+    const summaryText = toPlainTextSummary(match[1])
     const detailsContent = match[2]
     
     accordions.push({
